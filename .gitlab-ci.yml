@@ -1,0 +1,126 @@
+image: docker:latest
+
+services:
+  - name: docker:dind
+    command: ["--tls=false"] # Docker Daemon에서 TLS 비활성화
+
+variables:
+  DOCKER_IMAGE_MYSQL: "$DOCKER_HUB_USERNAME/ttabong:deploy-mysql"
+  DOCKER_IMAGE_REDIS: "$DOCKER_HUB_USERNAME/ttabong:deploy-redis"
+  DOCKER_IMAGE_RABBITMQ: "$DOCKER_HUB_USERNAME/ttabong:deploy-rabbitmq"
+  DOCKER_IMAGE_BACKEND: "$DOCKER_HUB_USERNAME/ttabong:deploy-backend"
+  DOCKER_IMAGE_NGINX: "$DOCKER_HUB_USERNAME/ttabong:deploy-nginx"
+  VERSION: "$CI_COMMIT_REF_NAME-$CI_PIPELINE_ID"
+  DOCKER_HOST: "tcp://docker:2375" # TLS 없이 Docker 데몬과 통신
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "" # TLS 인증 디렉토리 제거
+  DOCKER_HUB_USERNAME: "" # Docker Hub 사용자명 (빈 값)
+  DOCKER_HUB_TOKEN: "" # Docker Hub Access Token (빈 값)
+  DEPLOY_SERVER: "ubuntu@i12a707.p.ssafy.io" # 배포 서버 주소 (빈 값)
+stages:
+  - test
+  - build
+  - deploy
+  - deploy_dev
+  - deploy_staging
+  - deploy_prod
+
+run_front_unit_test:
+  stage: test
+  image: node:22-alpine
+  cache:
+    key: "$CI_COMMIT_REF_NAME"
+    paths:
+      - app/node_modules
+  before_script:
+    - cd frontend/ttabong
+    - npm ci # `npm install` 대신 `npm ci` 사용 (더 빠름)
+    - npm run build
+    - npm run test
+  script:
+    - npm test
+  artifacts:
+    when: always
+    paths:
+      - frontend/ttabong/app/junit.xml
+    reports:
+      junit: frontend/ttabong/app/junit.xml
+run_back_unit_test:
+  stage: test
+  image: gradle:jdk17
+  before_script:
+    - cd backend/ttabong
+    - chmod +x gradlew
+    - ./gradlew build # `npm install` 대신 `npm ci` 사용 (더 빠름)
+  script:
+    - ./gradlew test
+  artifacts:
+    when: always
+    paths:
+      - backend/ttabong/build/test-results/test/
+    reports:
+      junit: backend/ttabong/build/test-results/test/*.xml # 개별 XML 파일 업로드
+# ✅ MySQL 이미지 빌드 및 푸시
+build_push:
+  stage: build
+  only:
+    - main
+  script:
+    - echo "$DOCKER_HUB_TOKEN" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
+    - docker-compose -f docker-compose.ec2.yml build
+    - docker-compose -f docker-compose.ec2.yml push
+
+    # 1️⃣ 환경변수 포함된 `docker-compose config` 저장
+    - docker-compose -f docker-compose.ec2.yml config > docker-compose.processed.yml
+    - cat docker-compose.processed.yml # ✅ 디버깅용 로그 (GitLab에서 확인 가능)
+
+    # 2️⃣ 환경변수를 포함한 파일을 GitLab Artifacts에 저장
+  artifacts:
+    paths:
+      - docker-compose.processed.yml
+    expire_in: 6h # 1시간 동안 보관 (필요하면 늘릴 수 있음)
+# ✅ MySQL 이미지 빌드 및 푸시
+.build:
+  stage: build
+  only:
+    - main
+
+deploy:
+  stage: deploy
+  only:
+    - main
+  image: debian:latest
+  dependencies:
+    - build_push # ✅ build_push 단계의 artifacts 가져오기
+  script:
+    # 1️⃣ SSH Key 설정
+    - apt-get update && apt-get install -y openssh-client basez
+    - mkdir -p ~/.ssh
+    - echo "$BASE32_PEM" | base32 --decode > ~/.ssh/test.pem
+    - chmod 600 ~/.ssh/test.pem
+
+    # 2️⃣ 배포 서버에 Docker 로그인 정보 전송
+    - ssh -T -o StrictHostKeyChecking=no -i ~/.ssh/test.pem $DEPLOY_SERVER "
+      echo '$DOCKER_HUB_TOKEN' | docker login -u '$DOCKER_HUB_USERNAME' --password-stdin"
+
+    # 3️⃣ 환경변수가 반영된 `docker-compose.processed.yml`을 배포 서버로 전송
+    - scp -o StrictHostKeyChecking=no -i ~/.ssh/test.pem docker-compose.processed.yml $DEPLOY_SERVER:/home/ubuntu/docker-compose.yml
+
+    # 4️⃣ 배포 서버에서 `docker-compose` 실행 (로그인 유지됨)
+    - ssh -T -o StrictHostKeyChecking=no -i ~/.ssh/test.pem $DEPLOY_SERVER "
+      cd /home/ubuntu && docker-compose pull && docker-compose up -d --remove-orphans"
+deploy_to_staging:
+  stage: deploy_staging
+  only:
+    - main
+  script:
+    - echo "happy"
+
+deploy_to_production:
+  stage: deploy_prod
+  only:
+    - main
+
+  when: manual
+  script:
+    - echo "happy"
