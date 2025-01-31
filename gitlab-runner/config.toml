@@ -9,7 +9,7 @@ shutdown_timeout = 0
 [[runners]]
   name = "alpine-runner"
   url = "https://lab.ssafy.com"
-  token = "glrt-t3_-QsqzG3UchQbdG_nZUsY"
+  token = ""
   executor = "docker"
   [runners.custom_build_dir]
   [runners.cache]

@@ -9,7 +9,7 @@ services:
       - gitlab_network
     environment:
       - GITLAB_URL=https://lab.ssafy.com
-      - REGISTRATION_TOKEN=glrt-t3_-QsqzG3UchQbdG_nZUsY
+      - REGISTRATION_TOKEN=
       - EXECUTOR=docker
       - DEFAULT_IMAGE=alpine:latest
     volumes:
