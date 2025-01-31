@@ -27,6 +27,8 @@ stages:
 
 run_front_unit_test:
   stage: test
+  only:
+    - main
   image: node:22-alpine
   cache:
     key: "$CI_COMMIT_REF_NAME"
@@ -47,6 +49,8 @@ run_front_unit_test:
       junit: frontend/ttabong/app/junit.xml
 run_back_unit_test:
   stage: test
+  only:
+    - main
   image: gradle:jdk17
   before_script:
     - cd backend/ttabong
