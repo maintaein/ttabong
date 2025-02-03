@@ -89,6 +89,9 @@ run_back_unit_test:
 
 # ✅ MySQL 이미지 빌드 및 푸시
 build_push:
+  only:
+    - dev
+    - master
   tags:
     - $GITLAB_USER_EMAIL
   stage: build
@@ -129,6 +132,9 @@ build_push:
 # ✅ MySQL 이미지 빌드 및 푸시
 
 deploy:
+  only:
+    - dev
+    - master
   tags:
     - $GITLAB_USER_EMAIL
   stage: deploy
@@ -157,7 +163,7 @@ deploy_to_staging:
     - $GITLAB_USER_EMAIL
   stage: deploy_staging
   only:
-    - main
+    - none
   script:
     - echo "happy"
 
@@ -166,7 +172,7 @@ deploy_to_production:
     - $GITLAB_USER_EMAIL
   stage: deploy_prod
   only:
-    - main
+    - none
 
   when: manual
   script:
