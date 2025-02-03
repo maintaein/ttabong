@@ -98,7 +98,7 @@ networks:
     driver: bridge
     internal: true # 🔥 내부 네트워크이므로 외부 접근 차단
   external:
-    driver: bridge # 🔥 외부에서 접근 가능 (nginx만 연결)
+    driver: bridge # 🔥 외부에서 접근 가능 (nginx만연결)
 
 volumes:
   mysql_data:
