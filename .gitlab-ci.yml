@@ -1,98 +1,137 @@
-image: docker:latest
-
-services:
-  - name: docker:dind
-    command: ["--tls=false"] # Docker Daemon에서 TLS 비활성화
-
 variables:
-  DOCKER_IMAGE_MYSQL: "$DOCKER_HUB_USERNAME/ttabong:deploy-mysql"
-  DOCKER_IMAGE_REDIS: "$DOCKER_HUB_USERNAME/ttabong:deploy-redis"
-  DOCKER_IMAGE_RABBITMQ: "$DOCKER_HUB_USERNAME/ttabong:deploy-rabbitmq"
-  DOCKER_IMAGE_BACKEND: "$DOCKER_HUB_USERNAME/ttabong:deploy-backend"
-  DOCKER_IMAGE_NGINX: "$DOCKER_HUB_USERNAME/ttabong:deploy-nginx"
+  CI_DEBUG: "true"
   VERSION: "$CI_COMMIT_REF_NAME-$CI_PIPELINE_ID"
-  DOCKER_HOST: "tcp://docker:2375" # TLS 없이 Docker 데몬과 통신
+  DOCKER_HOST: "unix:///var/run/docker.sock" # TLS 없이 Docker 데몬과 통신d
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: "" # TLS 인증 디렉토리 제거
-  DOCKER_HUB_USERNAME: "" # Docker Hub 사용자명 (빈 값)
-  DOCKER_HUB_TOKEN: "" # Docker Hub Access Token (빈 값)
-  DEPLOY_SERVER: "ubuntu@i12a707.p.ssafy.io" # 배포 서버 주소 (빈 값)
+  #DOCKER_HUB_USERNAME: "recreatekang" # Docker Hub 사용자명 (빈 값)
+  #DOCKER_HUB_TOKEN: "dckr_pat_HflBU0C83v3PQ6WeLj3S3s3rods" # Docker Hub Access Token (빈 값)
+  #DEPLOY_SERVER: "ubuntu@i12a707.p.ssafy.io" # 배포 서버 주소 (빈 값
 stages:
-  - test
+  - build_test
+  - unit_test
   - build
   - deploy
   - deploy_dev
   - deploy_staging
   - deploy_prod
-
-run_front_unit_test:
-  stage: test
-  only:
-    - main
+run_front_build:
+  tags:
+    - $GITLAB_USER_EMAIL
+  stage: build_test
   image: node:22-alpine
   cache:
-    key: "$CI_COMMIT_REF_NAME"
+    key: "$GITLAB_USER_EMAIL"
     paths:
-      - app/node_modules
+      - frontend/ttabong/node_modules
+  before_script:
+    - echo "사용자 ID $GITLAB_USER_ID"
+    - echo "로그인 ID $GITLAB_USER_LOGIN"
+    - echo "이름 $GITLAB_USER_NAME"
+    - echo "이메일 $GITLAB_USER_EMAIL"
+    - echo "커밋 작성자 $CI_COMMIT_AUTHOR"
+    - echo "커밋 이메일 $CI_COMMIT_AUTHOR_EMAIL"
+    - cd frontend/ttabong
+    - npm ci # `npm install` 대신 `npm ci` 사용 (더 빠
+  script:
+    - npm run build
+  artifacts:
+    when: always
+    paths:
+      - frontend/ttabong/app/build/
+run_front_unit_test:
+  tags:
+    - $GITLAB_USER_EMAIL
+  stage: unit_test
+  image: node:22-alpine
   before_script:
     - cd frontend/ttabong
-    - npm ci # `npm install` 대신 `npm ci` 사용 (더 빠름)
-    - npm run build
-    - npm run test
+    - npm ci
   script:
-    - npm test
+    - npm run test
   artifacts:
     when: always
     paths:
       - frontend/ttabong/app/junit.xml
     reports:
       junit: frontend/ttabong/app/junit.xml
-run_back_unit_test:
-  stage: test
-  only:
-    - main
+
+run_back_build:
+  tags:
+    - $GITLAB_USER_EMAIL
+  stage: build_test
   image: gradle:jdk17
   before_script:
     - cd backend/ttabong
     - chmod +x gradlew
-    - ./gradlew build # `npm install` 대신 `npm ci` 사용 (더 빠름)
   script:
-    - ./gradlew test
+    - ./gradlew build # 백엔드 빌드
+  artifacts:
+    when: always
+    paths:
+      - backend/ttabong/build/libs/
+run_back_unit_test:
+  tags:
+    - $GITLAB_USER_EMAIL
+  stage: unit_test
+  image: gradle:jdk17
+  before_script:
+    - cd backend/ttabong
+    - chmod +x gradlew
+  script:
+    - ./gradlew test # 백엔드 유닛 테스트
   artifacts:
     when: always
     paths:
       - backend/ttabong/build/test-results/test/
     reports:
-      junit: backend/ttabong/build/test-results/test/*.xml # 개별 XML 파일 업로드
+      junit: backend/ttabong/build/test-results/test/*.xml # 개별 XML 파일 업로
+
 # ✅ MySQL 이미지 빌드 및 푸시
 build_push:
+  tags:
+    - $GITLAB_USER_EMAIL
   stage: build
-  only:
-    - main
+  image: docker:latest # Use the Docker image for the CI job
+  services:
+    - name: docker:20.10-dind
+      entrypoint: ["/bin/sh", "-c", "dockerd-entrypoint.sh & exec /bin/sh"]
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs" # Required for Docker-in-Docke
+
+  before_script:
+    # Docker Daemon 시작 (백그라운드)
+    - echo "Starting Docker Daemon"
+    - dockerd &
+
   script:
+    # Docker Hub에 로그인
     - echo "$DOCKER_HUB_TOKEN" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
-    - docker-compose -f docker-compose.ec2.yml build
-    - docker-compose -f docker-compose.ec2.yml push
+    - docker -v
+    # Docker Daemon이 실행되었는지 확인
+    - until docker info; do echo "Waiting for Docker daemon to start..."; sleep 1; done
 
-    # 1️⃣ 환경변수 포함된 `docker-compose config` 저장
-    - docker-compose -f docker-compose.ec2.yml config > docker-compose.processed.yml
-    - cat docker-compose.processed.yml # ✅ 디버깅용 로그 (GitLab에서 확인 가능)
+    # Enable experimental features for buildxx
+    # docker compose (v2) 명령어로 빌드
+    - docker compose -f docker-compose.ec2.yml build
+    - docker images
+    - docker compose -f docker-compose.ec2.yml push
 
-    # 2️⃣ 환경변수를 포함한 파일을 GitLab Artifacts에 저장
+    # 빌드 후 config 파일을 아티팩트로 저장
+    - docker compose -f docker-compose.ec2.yml config > docker-compose.processed.yml
+    - cat docker-compose.processed.yml # 디버깅용 로그
+
   artifacts:
     paths:
       - docker-compose.processed.yml
-    expire_in: 6h # 1시간 동안 보관 (필요하면 늘릴 수 있음)
+    expire_in: 6h # The artifact will be avail
+
 # ✅ MySQL 이미지 빌드 및 푸시
-.build:
-  stage: build
-  only:
-    - main
 
 deploy:
+  tags:
+    - $GITLAB_USER_EMAIL
   stage: deploy
-  only:
-    - main
   image: debian:latest
   dependencies:
     - build_push # ✅ build_push 단계의 artifacts 가져오기
@@ -114,6 +153,8 @@ deploy:
     - ssh -T -o StrictHostKeyChecking=no -i ~/.ssh/test.pem $DEPLOY_SERVER "
       cd /home/ubuntu && docker-compose pull && docker-compose up -d --remove-orphans"
 deploy_to_staging:
+  tags:
+    - $GITLAB_USER_EMAIL
   stage: deploy_staging
   only:
     - main
@@ -121,6 +162,8 @@ deploy_to_staging:
     - echo "happy"
 
 deploy_to_production:
+  tags:
+    - $GITLAB_USER_EMAIL
   stage: deploy_prod
   only:
     - main

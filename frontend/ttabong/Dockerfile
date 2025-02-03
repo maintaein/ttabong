@@ -22,11 +22,8 @@ WORKDIR /usr/share/nginx/html
 # ✅ 빌드된 `build` 폴더를 제대로 복사
 COPY --from=builder /app/build/ /usr/share/nginx/html 
 
-# nginx default 설정 삭제
-RUN rm /etc/nginx/conf.d/default.conf
+# ✅ Nginx 설정 파일을 Dockerfile로 복사
+COPY ./nginx.conf /etc/nginx/nginx.conf
 
-# custom 설정파일을 컨테이너 내부로 복사한다.
-COPY nginx.conf /etc/nginx/nginx.conf
-
-# Nginx 실행
+# ✅ Nginx 실행
 CMD ["nginx", "-g", "daemon off;"]

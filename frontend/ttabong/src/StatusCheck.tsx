@@ -7,7 +7,7 @@ const StatusCheck = () => {
   const checkBackend = async () => {
     setLoading(true);
     try {
-      const response = await fetch("http://i12a707.p.ssafy.io/api/health");
+      const response = await fetch("https://ttabong.store/api/health");
       if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
       setStatus(`✅ 서버 온라인`);
     } catch (error) {

@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   gitlab-runner:
     build: .
@@ -9,12 +11,10 @@ services:
       - gitlab_network
     environment:
       - GITLAB_URL=https://lab.ssafy.com
-      - REGISTRATION_TOKEN=
       - EXECUTOR=docker
       - DEFAULT_IMAGE=alpine:latest
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./entrypoint.sh:/entrypoint.sh
 
   docker:
     image: docker:dind
