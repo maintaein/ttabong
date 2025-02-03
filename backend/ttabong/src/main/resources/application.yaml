@@ -1,0 +1,104 @@
+
+spring:
+    application:
+        name: ttabong
+    datasource:
+        driver-class-name: com.mysql.cj.jdbc.Driver
+    jpa:
+        database-platform: org.hibernate.dialect.MySQL8Dialect
+        show-sql: true
+        hibernate:
+            ddl-auto: update
+        properties:
+            hibernate:
+                format_sql: true
+    logging:
+        file:
+            name: logs/common.log
+server:
+    servlet:
+        context-path: /api
+    port: 8080
+
+---
+spring:
+    config:
+        activate:
+            on-profile: default
+    datasource:
+        url: jdbc:mysql://localhost:3307/volunteer_service
+        username: ddabong
+        password: 707
+    data:
+        redis:
+            host: localhost
+            port: 6379
+    rabbitmq:
+        host: localhost
+        port: 5672
+        username: user
+        password: password
+    logging:
+        level:
+            org.springframework: DEBUG
+        file:
+            name: logs/local.log
+
+---
+spring:
+    config:
+        activate:
+            on-profile: dev
+    datasource:
+        url: jdbc:mysql://mysqldeploy:3306/volunteer_service
+        username: user
+        password: password
+    data:
+        redis:
+            host: redisdeploy
+            port: 6379
+    rabbitmq:
+        host: rabbitmqdeploy
+        port: 5672
+    logging:
+        level:
+            org.springframework: DEBUG
+        file:
+            name: logs/dev.log
+
+---
+spring:
+    config:
+        activate:
+            on-profile: prod
+    datasource:
+        url: jdbc:mysql://mysqldeploy:3306/volunteer_service
+        username: ddabong
+        password: 707
+    data:
+        redis:
+            host: redisdeploy
+            port: 6379
+    rabbitmq:
+        host: rabbitmqdeploy
+        port: 5672
+    jpa:
+        hibernate:
+            ddl-auto: none
+    logging:
+        level:
+            org.springframework: INFO
+        file:
+            name: logs/prod.log
+    management:
+        endpoints:
+            web:
+                exposure:
+                    include: health,info
+logging:
+    level:
+        org.hibernate.SQL: DEBUG   # Hibernate SQL 쿼리 로그 출력
+        org.hibernate.type.descriptor.sql: TRACE  # SQL 바인딩된 파라미터 값 출력
+        com.zaxxer.hikari: DEBUG   # HikariCP (DB Connection Pool) 연결 로그 출력
+        org.springframework.jdbc.core: DEBUG  # Spring JDBC 로그 출력
+        org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration: DEBUG  # 데이터 소스 설정 로깅
