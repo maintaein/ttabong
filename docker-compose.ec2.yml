@@ -84,6 +84,8 @@ services:
       - internal # 내부 네트워크 연결 (Backend, Frontend 연결)
       - external
   certbot:
+    build:
+      context: ./docker/certbot               # 현재 디렉토리에서 빌드
     image: ${DOCKER_HUB_USERNAME}/ttabong:$CI_PIPELINE_ID-certbot
     container_name: certbot
     platform: "linux/amd64"
