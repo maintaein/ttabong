@@ -3,7 +3,7 @@ services:
     build:
       context: ./docker/mysql
     platform: "linux/amd64"
-    image: ${DOCKER_HUB_USERNAME}/ttabong:$CI_COMMIT_REF_NAME-$CI_PIPELINE_ID-mysql
+    image: ${DOCKER_HUB_USERNAME}/ttabong:$CI_PIPELINE_ID-mysql
     container_name: mysqldeploy
     restart: always
     environment:
@@ -20,7 +20,7 @@ services:
     build:
       context: ./docker/rabbitmq
     platform: "linux/amd64"
-    image: ${DOCKER_HUB_USERNAME}/ttabong:$CI_COMMIT_REF_NAME-$CI_PIPELINE_ID-rabbitmq
+    image: ${DOCKER_HUB_USERNAME}/ttabong:$CI_PIPELINE_ID-rabbitmq
     container_name: rabbitmqdeploy
     restart: always
     environment:
@@ -36,7 +36,7 @@ services:
     build:
       context: ./docker/redis
     platform: "linux/amd64"
-    image: ${DOCKER_HUB_USERNAME}/ttabong:$CI_COMMIT_REF_NAME-$CI_PIPELINE_ID-redis
+    image: ${DOCKER_HUB_USERNAME}/ttabong:$CI_PIPELINE_ID-redis
     container_name: redisdeploy
     restart: always
     networks:
@@ -48,7 +48,7 @@ services:
     build:
       context: ./backend/ttabong
     platform: "linux/amd64"
-    image: ${DOCKER_HUB_USERNAME}/ttabong:$CI_COMMIT_REF_NAME-$CI_PIPELINE_ID-spring
+    image: ${DOCKER_HUB_USERNAME}/ttabong:$CI_PIPELINE_ID-spring
     container_name: springdeploy
     environment:
       SPRING_PROFILES_ACTIVE: prod
@@ -60,13 +60,13 @@ services:
     networks:
       - internal
     expose:
-      - "8080" # 외부에 직접 공개되지 않고 내부 네트워크에서만 접근 가능
+      - "8080" # 외부에 직접 공개되지 않고 내부 네트워크에서만 접근
 
   nginxc:
     build:
       context: ./frontend/ttabong
     platform: "linux/amd64"
-    image: ${DOCKER_HUB_USERNAME}/ttabong:$CI_COMMIT_REF_NAME-$CI_PIPELINE_ID-nginx
+    image: ${DOCKER_HUB_USERNAME}/ttabong:$CI_PIPELINE_ID-nginx
     container_name: nginxdeploy
     restart: no
     volumes:
@@ -84,7 +84,7 @@ services:
       - internal # 내부 네트워크 연결 (Backend, Frontend 연결)
       - external
   certbot:
-    image: certbot/certbot
+    image: ${DOCKER_HUB_USERNAME}/ttabong:$CI_PIPELINE_ID-certbot
     container_name: certbot
     platform: "linux/amd64"
     volumes:
