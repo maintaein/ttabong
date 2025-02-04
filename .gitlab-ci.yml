@@ -4,7 +4,7 @@ variables:
   DOCKER_HOST: "unix:///var/run/docker.sock" # TLS 없이 Docker 데몬과 통신d
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: "" # TLS 인증 디렉토리 제거
-workflows:
+workflow:
   rules:
     - if: $CI_COMMIT_BRANCH =infra && $GITLAB_USER_EMAIL == $ADMIN_EMAIL
       when: never
