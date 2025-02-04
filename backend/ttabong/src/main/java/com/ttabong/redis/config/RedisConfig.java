@@ -1,13 +1,11 @@
 package com.ttabong.redis.config;
 
-import com.ttabong.redis.redis.vo.KeyWord;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 
 @Configuration
 public class RedisConfig {
@@ -19,7 +17,6 @@ public class RedisConfig {
 
     @Bean
     LettuceConnectionFactory lettuceConnectionFactory() {
-        System.out.println(host +"----------------------------------------------------------------"+ port);
         return new LettuceConnectionFactory(new RedisStandaloneConfiguration(host, port));
     }
 
@@ -27,7 +24,7 @@ public class RedisConfig {
     RedisTemplate<String, String> redisTemplate() {
         RedisTemplate<String, String> template = new RedisTemplate<>();
         template.setConnectionFactory(lettuceConnectionFactory());
-        template.setHashValueSerializer(new Jackson2JsonRedisSerializer<>(KeyWord.class));
+        //template.setHashValueSerializer(new Jackson2JsonRedisSerializer<>(KeyWord.class));
         return template;
     }
 }
