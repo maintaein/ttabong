@@ -11,7 +11,6 @@ interface ReviewContentProps {
   category: ReviewDetail['category'];
   isOrganization: boolean;
   orgReviewId?: number;
-  recruit: ReviewDetail['recruit'];
 }
 
 export function ReviewContent({ 
@@ -20,8 +19,7 @@ export function ReviewContent({
   content, 
   category, 
   isOrganization,
-  orgReviewId,
-  recruit
+  orgReviewId 
 }: ReviewContentProps) {
   const navigate = useNavigate();
 

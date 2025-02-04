@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Review, ReviewDetail, Comment } from '@/types/review';
+import type { Review, ReviewDetail } from '@/types/review';
 import { reviewApi } from '@/api/reviewApi';
 
 interface ReviewStore {

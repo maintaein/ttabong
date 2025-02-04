@@ -43,10 +43,10 @@ export default function ReviewDetail() {
         category={reviewDetail.category}
         isOrganization={isOrganization}
         orgReviewId={reviewDetail.orgReviewId}
-        recruit={reviewDetail.recruit}
       />
       <ReviewComments
         comments={reviewDetail.comments}
+
         commentContent={commentContent}
         onCommentChange={(e) => setCommentContent(e.target.value)}
         onSubmit={handleSubmitComment}
