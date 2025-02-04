@@ -74,6 +74,8 @@ build_push:
   rules:
     - if: '$CI_COMMIT_BRANCH =~ /^infra/ && "$GITLAB_USER_EMAIL" == "$ADMIN_EMAIL"'
       when: never
+    - if: '$CI_COMMIT_BRANCH =~ "dev" || $CI_COMMIT_BRANCH =~ "master"'
+      when: on_success  
   only:
     - dev
     - master
@@ -112,6 +114,8 @@ deploy:
   rules:
     - if: '$CI_COMMIT_BRANCH =~ /^infra/ && "$GITLAB_USER_EMAIL" == "$ADMIN_EMAIL"'
       when: never
+    - if: '$CI_COMMIT_BRANCH =~ "dev" || $CI_COMMIT_BRANCH =~ "master"'
+      when: on_success  
   only:
     - dev
     - master
