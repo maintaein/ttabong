@@ -114,9 +114,6 @@ deploy:
       when: never
     - if: '$CI_COMMIT_BRANCH =~ "dev" || $CI_COMMIT_BRANCH =~ "master"'
       when: on_success  
-  only:
-    - dev
-    - master
   tags:
     - $GITLAB_USER_EMAIL
   stage: deploy
