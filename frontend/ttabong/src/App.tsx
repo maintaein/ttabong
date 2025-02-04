@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import reactLogo from './assets/react.svg';
 import './App.css';
-import StatusCheck from "./StatusCheck";
+import StatusCheck from './StatusCheck';
 
 function App() {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    window.location.href = "https://paven.kro.kr";
+    window.location.href = 'https://paven.kro.kr';
   }, []);
 
   return (
