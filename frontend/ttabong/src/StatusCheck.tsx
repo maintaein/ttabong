@@ -11,7 +11,7 @@ const StatusCheck = () => {
       if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
       setStatus(`✅ 서버 온라인`);
     } catch (error) {
-      setStatus(`❌ 연결 실패 `);
+      setStatus(`❌ 연결 실패s `);
     }
     setLoading(false);
   };
