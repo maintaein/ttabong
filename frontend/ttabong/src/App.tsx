@@ -1,9 +1,14 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import './App.css'
-import StatusCheck from "./StatusCheck"
+import { useEffect, useState } from 'react';
+import reactLogo from './assets/react.svg';
+import './App.css';
+import StatusCheck from "./StatusCheck";
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    window.location.href = "https://paven.kro.kr";
+  }, []);
 
   return (
     <>
@@ -20,7 +25,7 @@ function App() {
       </div>
       <StatusCheck /> {/* ✅ 백엔드 상태 확인 컴포넌트 추가 */}
     </>
-  )
+  );
 }
 
-export default App
+export default App;
