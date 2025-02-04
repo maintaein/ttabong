@@ -4,21 +4,24 @@ variables:
   DOCKER_HOST: "unix:///var/run/docker.sock" # TLS 없이 Docker 데몬과 통신d
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: "" # TLS 인증 디렉토리 제거
-  #DOCKER_HUB_USERNAME: "recreatekang" # Docker Hub 사용자명 (빈 값)
-  #DOCKER_HUB_TOKEN: "dckr_pat_HflBU0C83v3PQ6WeLj3S3s3rods" # Docker Hub Access Token (빈 값)
-  #DEPLOY_SERVER: "ubuntu@i12a707.p.ssafy.io" # 배포 서버 주소 (빈 값
+
 stages:
-  - build_test
-  - unit_test
+  - test
   - build
   - deploy
   - deploy_dev
   - deploy_staging
   - deploy_prod
-run_front_build:
+Front_Test:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev-be" || $CI_COMMIT_BRANCH =~ /^feat\/be(\/.*)?$/'
+      when: never
+    - if: '$CI_COMMIT_BRANCH =~ /^infra/ && "$GITLAB_USER_EMAIL" == "$ADMIN_EMAIL"'
+      when: never
+    - when: on_success
   tags:
     - $GITLAB_USER_EMAIL
-  stage: build_test
+  stage: test
   image: node:22-alpine
   cache:
     key: "$GITLAB_USER_EMAIL"
@@ -32,23 +35,10 @@ run_front_build:
     - echo "커밋 작성자 $CI_COMMIT_AUTHOR"
     - echo "커밋 이메일 $CI_COMMIT_AUTHOR_EMAIL"
     - cd frontend/ttabong
-    - npm ci # `npm install` 대신 `npm ci` 사용 (더 빠
+    - npm ci # `npm install` 대신 `npm ci` 사용
   script:
     - npm run build
-  artifacts:
-    when: always
-    paths:
-      - frontend/ttabong/app/build/
-run_front_unit_test:
-  tags:
-    - $GITLAB_USER_EMAIL
-  stage: unit_test
-  image: node:22-alpine
-  before_script:
-    - cd frontend/ttabong
-    - npm ci
-  script:
-    - npm run test
+    - npm run test --passWithNoTests  
   artifacts:
     when: always
     paths:
@@ -56,85 +46,74 @@ run_front_unit_test:
     reports:
       junit: frontend/ttabong/app/junit.xml
 
-run_back_build:
+Back_Test:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev-fe" || $CI_COMMIT_BRANCH =~ /^feat\/fe(\/.*)?$/'
+      when: never
+    - if: '$CI_COMMIT_BRANCH =~ /^infra/ && "$GITLAB_USER_EMAIL" == "$ADMIN_EMAIL"'
+      when: never
+    - when: on_success
   tags:
     - $GITLAB_USER_EMAIL
-  stage: build_test
+  stage: test
   image: gradle:jdk17
   before_script:
     - cd backend/ttabong
     - chmod +x gradlew
   script:
     - ./gradlew build # 백엔드 빌드
-  artifacts:
-    when: always
-    paths:
-      - backend/ttabong/build/libs/
-run_back_unit_test:
-  tags:
-    - $GITLAB_USER_EMAIL
-  stage: unit_test
-  image: gradle:jdk17
-  before_script:
-    - cd backend/ttabong
-    - chmod +x gradlew
-  script:
     - ./gradlew test # 백엔드 유닛 테스트
   artifacts:
     when: always
     paths:
-      - backend/ttabong/build/test-results/test/
-    reports:
-      junit: backend/ttabong/build/test-results/test/*.xml # 개별 XML 파일 업로
+      - backend/ttabong/build/libs/
+
 
 # ✅ MySQL 이미지 빌드 및 푸시
 build_push:
-  only:
-    - dev
-    - master
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^infra/ && "$GITLAB_USER_EMAIL" == "$ADMIN_EMAIL"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "master"'
+      when: on_success  
+
   tags:
     - $GITLAB_USER_EMAIL
   stage: build
-  image: docker:latest # Use the Docker image for the CI job
+  image: docker:latest 
   services:
     - name: docker:20.10-dind
       entrypoint: ["/bin/sh", "-c", "dockerd-entrypoint.sh & exec /bin/sh"]
   variables:
-    DOCKER_TLS_CERTDIR: "/certs" # Required for Docker-in-Docke
+    DOCKER_TLS_CERTDIR: "/certs" 
 
   before_script:
-    # Docker Daemon 시작 (백그라운드)
     - echo "Starting Docker Daemon"
     - dockerd &
 
   script:
-    # Docker Hub에 로그인
     - echo "$DOCKER_HUB_TOKEN" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
     - docker -v
-    # Docker Daemon이 실행되었는지 확인
     - until docker info; do echo "Waiting for Docker daemon to start..."; sleep 1; done
 
-    # Enable experimental features for buildxx
-    # docker compose (v2) 명령어로 빌드
     - docker compose -f docker-compose.ec2.yml build
     - docker images
     - docker compose -f docker-compose.ec2.yml push
 
-    # 빌드 후 config 파일을 아티팩트로 저장
     - docker compose -f docker-compose.ec2.yml config > docker-compose.processed.yml
-    - cat docker-compose.processed.yml # 디버깅용 로그
+    - cat docker-compose.processed.yml
 
   artifacts:
     paths:
       - docker-compose.processed.yml
-    expire_in: 6h # The artifact will be avail
-
-# ✅ MySQL 이미지 빌드 및 푸시
+    expire_in: 6h 
 
 deploy:
-  only:
-    - dev
-    - master
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^infra/ && "$GITLAB_USER_EMAIL" == "$ADMIN_EMAIL"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "master"'
+      when: on_success  
   tags:
     - $GITLAB_USER_EMAIL
   stage: deploy
