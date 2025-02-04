@@ -145,3 +145,7 @@ deploy_to_production:
   when: manual
   script:
     - echo "happy"
+workflow:
+  rules:
+    - if: '$CI_COMMIT_BRANCH =infra// && $GITLAB_USER_EMAIL == #ADMIN_EMAIL
+      when: never
