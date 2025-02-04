@@ -17,7 +17,7 @@ stages:
 run_front_build:
   only:
     - dev
-    - ^dev-fe.*
+    - dev-fe
   tags:
     - $GITLAB_USER_EMAIL
   stage: test
@@ -49,7 +49,7 @@ run_front_build:
 run_back_build:
   only:
   - dev
-  - ^dev-be.*
+  - dev-be
   - ^feat/be.*
   tags:
     - $GITLAB_USER_EMAIL
