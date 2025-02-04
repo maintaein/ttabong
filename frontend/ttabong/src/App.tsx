@@ -1,31 +1,9 @@
-import { useEffect, useState } from 'react';
-import reactLogo from './assets/react.svg';
-import './App.css';
-import StatusCheck from "./StatusCheck";
+import React from 'react'
 
 function App() {
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    window.location.href = "https://paven.kro.kr";
-  }, []);
-
   return (
-    <>
-      <div>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h4>Vite + React</h4>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-      </div>
-      <StatusCheck /> {/* ✅ 백엔드 상태 확인 컴포넌트 추가 */}
-    </>
-  );
+    <div>App</div>
+  )
 }
 
-export default App;
+export default App
