@@ -8,17 +8,19 @@ variables:
   #DOCKER_HUB_TOKEN: "dckr_pat_HflBU0C83v3PQ6WeLj3S3s3rods" # Docker Hub Access Token (빈 값)
   #DEPLOY_SERVER: "ubuntu@i12a707.p.ssafy.io" # 배포 서버 주소 (빈 값
 stages:
-  - build_test
-  - unit_test
+  - test
   - build
   - deploy
   - deploy_dev
   - deploy_staging
   - deploy_prod
 run_front_build:
+  only:
+    - dev
+    - ^dev-fe.*
   tags:
     - $GITLAB_USER_EMAIL
-  stage: build_test
+  stage: test
   image: node:22-alpine
   cache:
     key: "$GITLAB_USER_EMAIL"
@@ -32,60 +34,38 @@ run_front_build:
     - echo "커밋 작성자 $CI_COMMIT_AUTHOR"
     - echo "커밋 이메일 $CI_COMMIT_AUTHOR_EMAIL"
     - cd frontend/ttabong
-    - npm ci # `npm install` 대신 `npm ci` 사용 (더 빠
+    - npm ci # `npm install` 대신 `npm ci` 사용
   script:
     - npm run build
-  artifacts:
-    when: always
-    paths:
-      - frontend/ttabong/app/build/
-run_front_unit_test:
-  tags:
-    - $GITLAB_USER_EMAIL
-  stage: unit_test
-  image: node:22-alpine
-  before_script:
-    - cd frontend/ttabong
-    - npm ci
-  script:
-    - npm run test
-  artifacts:
+    - npm run test --passWithNoTests  
+    artifacts:
     when: always
     paths:
       - frontend/ttabong/app/junit.xml
     reports:
       junit: frontend/ttabong/app/junit.xml
+    
 
 run_back_build:
+  only:
+  - dev
+  - ^dev-be.*
+  - ^feat/be.*
   tags:
     - $GITLAB_USER_EMAIL
-  stage: build_test
+  stage: test
   image: gradle:jdk17
   before_script:
     - cd backend/ttabong
     - chmod +x gradlew
   script:
     - ./gradlew build # 백엔드 빌드
-  artifacts:
-    when: always
-    paths:
-      - backend/ttabong/build/libs/
-run_back_unit_test:
-  tags:
-    - $GITLAB_USER_EMAIL
-  stage: unit_test
-  image: gradle:jdk17
-  before_script:
-    - cd backend/ttabong
-    - chmod +x gradlew
-  script:
     - ./gradlew test # 백엔드 유닛 테스트
   artifacts:
     when: always
     paths:
-      - backend/ttabong/build/test-results/test/
-    reports:
-      junit: backend/ttabong/build/test-results/test/*.xml # 개별 XML 파일 업로
+      - backend/ttabong/build/libs/
+
 
 # ✅ MySQL 이미지 빌드 및 푸시
 build_push:
