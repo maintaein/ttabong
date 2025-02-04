@@ -5,10 +5,21 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import "./styles/GlobalStyle.css";
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <BrowserRouter>
+async function enableMocking() {
+  if (process.env.NODE_ENV === 'development') {
+    const { worker } = await import('./mocks/browser');
+    return worker.start({
+      onUnhandledRequest: 'bypass',
+    });
+  }
+}
+
+enableMocking().then(() => {
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <BrowserRouter>
         <App />
-    </BrowserRouter>
-  </StrictMode>,
-);
+      </BrowserRouter>
+    </StrictMode>,
+  );
+});

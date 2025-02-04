@@ -1,6 +1,9 @@
 import { useEffect } from 'react';
 import { useReviewStore } from '@/stores/review';
 import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
+import { ReviewGalleryGrid } from '@/pages/ReviewFind/components/ReviewGalleryGrid';
+
 
 export default function ReviewFind() {
   const { reviews, isLoading, error, fetchReviews } = useReviewStore();
@@ -9,34 +12,20 @@ export default function ReviewFind() {
     fetchReviews();
   }, [fetchReviews]);
 
-  if (isLoading) return <div>로딩 중...</div>;
-  if (error) return <div>{error}</div>;
+  if (isLoading) return <div className="flex justify-center items-center h-[50vh]">로딩 중...</div>;
+  if (error) return <div className="flex justify-center items-center h-[50vh] text-destructive">{error}</div>;
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="mb-6">
+    <div className="container mx-auto px-4 pt-6">
+      <div className="mb-6 relative max-w-md mx-auto">
         <Input
           type="search"
           placeholder="리뷰 검색..."
-          className="max-w-md mx-auto"
+          className="pl-10"
         />
+        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
       </div>
-      
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {reviews.map((review) => (
-          <div
-            key={review.reviewId}
-            className="aspect-square overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow"
-          >
-            <img
-              src={review.thumbnailImageUrl}
-              alt={`리뷰 ${review.reviewId}`}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-          </div>
-        ))}
-      </div>
+      <ReviewGalleryGrid reviews={reviews} />
     </div>
   );
 }

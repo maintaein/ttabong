@@ -3,9 +3,8 @@ import { ThemeProvider } from "@/hooks/theme-provider";
 import { MainLayout } from "@/layout/MainLayout";
 import { PageLayout } from "@/layout/PageLayout";
 import ReviewFind from '@/pages/ReviewFind';
-import MainPage from '@/pages/MainPage';
-import RecruitFind from '@/pages/RecruitFind';
-import Me from '@/pages/Me';
+import ReviewDetail from '@/pages/ReviewFind/ReviewDetail';
+import ReviewDetailList from '@/pages/ReviewFind/ReviewDetailList';
 
 function App() {
   return (
@@ -15,11 +14,9 @@ function App() {
           <MainLayout>
             <PageLayout>
               <Routes>
-                <Route path="/" element={<MainPage />} />
-                <Route path="/main-page" element={<MainPage />} />
-                <Route path="/recruit-find" element={<RecruitFind />} />
                 <Route path="/review-find" element={<ReviewFind />} />
-                <Route path="/my-page" element={<Me />} />
+                <Route path="/review-find/:reviewId" element={<ReviewDetail />} />
+                <Route path="/review-find/:reviewId/reviews" element={<ReviewDetailList />} />
               </Routes>
             </PageLayout>
           </MainLayout>
