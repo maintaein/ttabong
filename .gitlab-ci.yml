@@ -38,7 +38,7 @@ run_front_build:
   script:
     - npm run build
     - npm run test --passWithNoTests  
-    artifacts:
+  artifacts:
     when: always
     paths:
       - frontend/ttabong/app/junit.xml
