@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "jest --passWithNoTests"
+    "test": "jest"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -88,6 +88,11 @@
     "moduleFileExtensions": ["js", "cjs", "mjs", "jsx"],
     "transform": {
       "^.+\\.js$": "babel-jest"
-    }
+    },
+    "testMatch": [
+      "**/__tests__/**/*.[jt]s?(x)",
+      "**/?(*.)+(spec|test).[jt]s?(x)",
+      "**/?(*.)+(spec|test).cjs"
+    ]
   }
 }
