@@ -16,7 +16,7 @@ Front_Test:
   rules:
     - if: $CI_COMMIT_BRANCH == "dev-be" || $CI_COMMIT_BRANCH =~ /^feat\/be.*/'
       when: never
-    - if: $CI_COMMIT_BRANCH =infra && $GITLAB_USER_EMAIL == "$ADMIN_EMAIL"
+    - if: $CI_COMMIT_BRANCH =~ /^infra/ && "$GITLAB_USER_EMAIL" == "$ADMIN_EMAIL"
       when: never
     - when: on_success
   tags:
