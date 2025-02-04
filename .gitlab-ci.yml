@@ -4,9 +4,6 @@ variables:
   DOCKER_HOST: "unix:///var/run/docker.sock" # TLS 없이 Docker 데몬과 통신d
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: "" # TLS 인증 디렉토리 제거
-  #DOCKER_HUB_USERNAME: "recreatekang" # Docker Hub 사용자명 (빈 값)
-  #DOCKER_HUB_TOKEN: "dckr_pat_HflBU0C83v3PQ6WeLj3S3s3rods" # Docker Hub Access Token (빈 값)
-  #DEPLOY_SERVER: "ubuntu@i12a707.p.ssafy.io" # 배포 서버 주소 (빈 값
 stages:
   - test
   - build
@@ -14,7 +11,7 @@ stages:
   - deploy_dev
   - deploy_staging
   - deploy_prod
-run_front_build:
+Front_Test:
   only:
     - dev
     - dev-fe
@@ -44,9 +41,8 @@ run_front_build:
       - frontend/ttabong/app/junit.xml
     reports:
       junit: frontend/ttabong/app/junit.xml
-    
 
-run_back_build:
+Back_Test:
   only:
   - dev
   - dev-be
@@ -75,41 +71,33 @@ build_push:
   tags:
     - $GITLAB_USER_EMAIL
   stage: build
-  image: docker:latest # Use the Docker image for the CI job
+  image: docker:latest 
   services:
     - name: docker:20.10-dind
       entrypoint: ["/bin/sh", "-c", "dockerd-entrypoint.sh & exec /bin/sh"]
   variables:
-    DOCKER_TLS_CERTDIR: "/certs" # Required for Docker-in-Docke
+    DOCKER_TLS_CERTDIR: "/certs" 
 
   before_script:
-    # Docker Daemon 시작 (백그라운드)
     - echo "Starting Docker Daemon"
     - dockerd &
 
   script:
-    # Docker Hub에 로그인
     - echo "$DOCKER_HUB_TOKEN" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
     - docker -v
-    # Docker Daemon이 실행되었는지 확인
     - until docker info; do echo "Waiting for Docker daemon to start..."; sleep 1; done
 
-    # Enable experimental features for buildxx
-    # docker compose (v2) 명령어로 빌드
     - docker compose -f docker-compose.ec2.yml build
     - docker images
     - docker compose -f docker-compose.ec2.yml push
 
-    # 빌드 후 config 파일을 아티팩트로 저장
     - docker compose -f docker-compose.ec2.yml config > docker-compose.processed.yml
-    - cat docker-compose.processed.yml # 디버깅용 로그
+    - cat docker-compose.processed.yml
 
   artifacts:
     paths:
       - docker-compose.processed.yml
-    expire_in: 6h # The artifact will be avail
-
-# ✅ MySQL 이미지 빌드 및 푸시
+    expire_in: 6h 
 
 deploy:
   only:
