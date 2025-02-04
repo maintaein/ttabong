@@ -16,7 +16,7 @@ Front_Test:
   rules:
     - if: '$CI_COMMIT_BRANCH == "dev-be" || $CI_COMMIT_BRANCH =~ /^feat\/be(\/.*)?$/'
       when: never
-    - if: '$CI_COMMIT_BRANCH =~ /^infra/ && "$GITLAB_USER_EMAIL" == "$ADMIN_EMAIL"'
+    - if: '$CI_COMMIT_BRANCH =- "infra" && "$GITLAB_USER_EMAIL" == "$ADMIN_EMAIL"'
       when: never
     - when: on_success
   tags:
@@ -50,7 +50,7 @@ Back_Test:
   rules:
     - if: '$CI_COMMIT_BRANCH == "dev-fe" || $CI_COMMIT_BRANCH =~ /^feat\/fe(\/.*)?$/'
       when: never
-    - if: '$CI_COMMIT_BRANCH == "infra"&& "$GITLAB_USER_EMAIL" == "$ADMIN_EMAIL"'
+    - if: '$CI_COMMIT_BRANCH == "infra" && "$GITLAB_USER_EMAIL" == "$ADMIN_EMAIL"'
       when: never
     - when: on_success
   tags:
@@ -110,7 +110,7 @@ build_push:
 
 deploy:
   rules:
-    - if: '$CI_COMMIT_BRANCH =~ /^infra/ && "$GITLAB_USER_EMAIL" == "$ADMIN_EMAIL"'
+    - if: '$CI_COMMIT_BRANCH == "infra" && "$GITLAB_USER_EMAIL" == "$ADMIN_EMAIL"'
       when: never
     - if: '$CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "master"'
       when: on_success  
