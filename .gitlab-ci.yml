@@ -17,11 +17,10 @@ stages:
   - deploy_staging
   - deploy_prod
 Front_Test:
-  
-
-  only:
-    - dev
-    - dev-fe
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev-be" || $CI_COMMIT_BRANCH =~ /^feat\/be.*/'
+      when: never
+    - when: on_success
   tags:
     - $GITLAB_USER_EMAIL
   stage: test
@@ -50,10 +49,10 @@ Front_Test:
       junit: frontend/ttabong/app/junit.xml
 
 Back_Test:
-  only:
-  - dev
-  - dev-be
-  - ^feat/be.*
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev-fe" || $CI_COMMIT_BRANCH =~ /^feat\/fe.*/'
+      when: never
+    - when: on_success
   tags:
     - $GITLAB_USER_EMAIL
   stage: test
