@@ -48,9 +48,9 @@ Front_Test:
 
 Back_Test:
   rules:
-    - if: $CI_COMMIT_BRANCH == "dev-fe" || $CI_COMMIT_BRANCH =~ /^feat\/fe.*/'
+    - if: '$CI_COMMIT_BRANCH == "dev-fe" || $CI_COMMIT_BRANCH =~ /^feat\/fe.*/'
       when: never
-    - if: $CI_COMMIT_BRANCH =infra && $GITLAB_USER_EMAIL == "$ADMIN_EMAIL"
+    - if: '$CI_COMMIT_BRANCH =infra && $GITLAB_USER_EMAIL == "$ADMIN_EMAIL"'
       when: never
     - when: on_success
   tags:
@@ -72,7 +72,7 @@ Back_Test:
 # ✅ MySQL 이미지 빌드 및 푸시
 build_push:
   rules:
-    - if: $CI_COMMIT_BRANCH =infra && $GITLAB_USER_EMAIL == "$ADMIN_EMAIL"
+    - if: '$CI_COMMIT_BRANCH =infra && $GITLAB_USER_EMAIL == "$ADMIN_EMAIL"'
       when: never
   only:
     - dev
@@ -110,7 +110,7 @@ build_push:
 
 deploy:
   rules:
-    - if: $CI_COMMIT_BRANCH =infra && $GITLAB_USER_EMAIL == "$ADMIN_EMAIL"
+    - if: '$CI_COMMIT_BRANCH =infra && $GITLAB_USER_EMAIL == "$ADMIN_EMAIL"'
       when: never
   only:
     - dev
