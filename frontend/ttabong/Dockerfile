@@ -1,5 +1,5 @@
 # 🔹 1단계: React 빌드 (builder 스테이지)
-FROM node:20 AS builder
+FROM node:22 AS builder
 WORKDIR /app
 
 # package.json과 package-lock.json만 먼저 복사 후 의존성 설치
