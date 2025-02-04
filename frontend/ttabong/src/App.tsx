@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes } from 'react-router-dom';
 import { ThemeProvider } from "@/hooks/theme-provider";
 import { MainLayout } from "@/layout/MainLayout";
 import { PageLayout } from "@/layout/PageLayout";
