@@ -9,7 +9,7 @@ function App() {
   useEffect(() => {
     window.location.href = "https://paven.kro.kr";
   }, []);
-
+//asd
   return (
     <>
       <div>
