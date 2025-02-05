@@ -23,8 +23,8 @@ USE volunteer_service;
 11. ReviewImage
 12. ReviewComment
 13. VolunteerReaction
-14. main_category
-15. sub_category
+14. main_Category
+15. sub_Category
 */
 
 
@@ -76,20 +76,20 @@ CREATE TABLE Organization (
         ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='봉사기관 기본 정보';
 
--- category 테이블 (main이랑 sub 합침)
-DROP TABLE IF EXISTS category;
-CREATE TABLE category (
-    category_id INT AUTO_INCREMENT PRIMARY KEY COMMENT 'category PK',
+-- Category 테이블 (main이랑 sub 합침)
+DROP TABLE IF EXISTS Category;
+CREATE TABLE Category (
+    Category_id INT AUTO_INCREMENT PRIMARY KEY COMMENT 'Category PK',
     name VARCHAR(50) NOT NULL COMMENT '카테고리 이름',
     parent_id INT NULL COMMENT '부모 카테고리 ID, NULL이면 대분류',
-    CONSTRAINT fk_category_parent
-        FOREIGN KEY (parent_id) REFERENCES category(category_id)
+    CONSTRAINT fk_Category_parent
+        FOREIGN KEY (parent_id) REFERENCES Category(Category_id)
         ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 -- 기관 측은 관련 템플릿들을 하나로 묶어(그룹화) 관리할 수 있음
-DROP TABLE IF EXISTS template_group;
-CREATE TABLE IF NOT EXISTS template_group (
+DROP TABLE IF EXISTS Template_group;
+CREATE TABLE IF NOT EXISTS Template_group (
     group_id INT AUTO_INCREMENT PRIMARY KEY COMMENT '템플릿그룹 id',
     org_id INT NOT NULL COMMENT '해당 그룹을 관리 및 이용 중인 기관ID',
     group_name VARCHAR(100) NOT NULL DEFAULT '봉사' COMMENT '그룹명(사용자가 입력할 수 있음_기본은 "봉사")',
@@ -99,12 +99,12 @@ CREATE TABLE IF NOT EXISTS template_group (
         ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
-DROP TABLE IF EXISTS template;
-CREATE TABLE IF NOT EXISTS template (
+DROP TABLE IF EXISTS Template;
+CREATE TABLE IF NOT EXISTS Template (
     template_id INT AUTO_INCREMENT PRIMARY KEY COMMENT '개별 템플릿 id',
     group_id INT NOT NULL COMMENT '그룹id',
     org_id INT COMMENT '관련 기관 id',
-    category_id INT COMMENT '봉사 분류',
+    Category_id INT COMMENT '봉사 분류',
     title VARCHAR(255) COMMENT '공고 제목(봉사 제목)',
     activity_location VARCHAR(255) NOT NULL COMMENT '봉사 활동 장소(재택 또는 도로명주소)',
     status ENUM('ALL', 'YOUTH', 'ADULT') NOT NULL DEFAULT 'ALL' COMMENT '봉사자 유형',
@@ -115,18 +115,18 @@ CREATE TABLE IF NOT EXISTS template (
     is_deleted     BOOLEAN DEFAULT FALSE COMMENT '삭제 여부',
 	created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '템플릿 생성 일시',
     CONSTRAINT fk_template_group
-        FOREIGN KEY (group_id) REFERENCES template_group(group_id)
+        FOREIGN KEY (group_id) REFERENCES Template_group(group_id)
         ON UPDATE CASCADE ON DELETE CASCADE,
 	CONSTRAINT fk_template_org
         FOREIGN KEY (org_id) REFERENCES Organization(org_id)
         ON UPDATE CASCADE ON DELETE CASCADE,
-	CONSTRAINT fk_template_category
-        FOREIGN KEY (category_id) REFERENCES category(category_id)
+	CONSTRAINT fk_template_Category
+        FOREIGN KEY (Category_id) REFERENCES Category(Category_id)
         ON UPDATE CASCADE ON DELETE SET NULL
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
-DROP TABLE IF EXISTS recruit;
-CREATE TABLE IF NOT EXISTS recruit (
+DROP TABLE IF EXISTS Recruit;
+CREATE TABLE IF NOT EXISTS Recruit (
     recruit_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '봉사공고 ID',
     template_id INT NOT NULL COMMENT '개별 템플릿 id',
     deadline DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '공고 마감일 (디폴트는 오늘 날짜)',
@@ -139,14 +139,14 @@ CREATE TABLE IF NOT EXISTS recruit (
 	is_deleted     BOOLEAN DEFAULT FALSE COMMENT '삭제 여부',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '공고 등록 일시',
     CONSTRAINT fk_recruit_template_id
-        FOREIGN KEY (template_id) REFERENCES template (template_id)
+        FOREIGN KEY (template_id) REFERENCES Template (template_id)
         ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 
 -- 봉사공고 신청 테이블 (자동 취소 상태 및 평가 여부 추가)
-DROP TABLE IF EXISTS application;
-CREATE TABLE application (
+DROP TABLE IF EXISTS Application;
+CREATE TABLE Application (
     application_id     INT AUTO_INCREMENT PRIMARY KEY COMMENT '신청 ID',
     volunteer_id INT NOT NULL COMMENT '신청한 봉사자', -- 봉사자만 신청할 수 있으니까 user_id가 아닌, volunteer_id로 함!
     recruit_id   INT NOT NULL COMMENT '신청 대상 공고',
@@ -165,8 +165,8 @@ CREATE TABLE application (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='봉사공고 신청 상태 관리 테이블';
 
 -- 리뷰 이미지
-DROP TABLE IF EXISTS review_image;
-CREATE TABLE IF NOT EXISTS review_image (
+DROP TABLE IF EXISTS Review_image;
+CREATE TABLE IF NOT EXISTS Review_image (
     image_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '이미지 id',
     review_id INT NOT NULL COMMENT '어느 후기에 대한 이미지인가?',
     image_url VARCHAR(500) NOT NULL COMMENT '이미지 url',
@@ -176,8 +176,8 @@ CREATE TABLE IF NOT EXISTS review_image (
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- 후기 테이블(쓰레드를 열어줌)
-DROP TABLE IF EXISTS review;
-CREATE TABLE review (
+DROP TABLE IF EXISTS Review;
+CREATE TABLE Review (
     review_id      INT AUTO_INCREMENT PRIMARY KEY COMMENT '후기 ID', 
     parent_review_id INT NULL DEFAULT NULL COMMENT '자기참조 (FK)',
     group_id INT NULL DEFAULT NULL COMMENT '비슷한 것을 거르기 위해 생성',
@@ -205,8 +205,8 @@ CREATE TABLE review (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='후기 테이블';
 
 
-DROP TABLE IF EXISTS review_comment;
-CREATE TABLE review_comment (
+DROP TABLE IF EXISTS Review_comment;
+CREATE TABLE Review_comment (
     comment_id    INT AUTO_INCREMENT PRIMARY KEY COMMENT '댓글 ID',
     writer_id     INT NOT NULL COMMENT '작성자(User(user_id)) (FK)',
     review_id     INT NOT NULL COMMENT '어느 봉사자 후기에 대한 댓글인지 (FK)',
@@ -223,8 +223,8 @@ CREATE TABLE review_comment (
 
 
 -- 봉사자의 "좋아요 or 싫어요"한 봉사공고 목록
-DROP TABLE IF EXISTS volunteer_reaction;
-CREATE TABLE volunteer_reaction (
+DROP TABLE IF EXISTS Volunteer_reaction;
+CREATE TABLE Volunteer_reaction (
     reaction_id   INT AUTO_INCREMENT PRIMARY KEY COMMENT '봉사자의 반응 ID',
     volunteer_id  INT NOT NULL COMMENT '봉사자 ID (FK)',  -- 얘도 마찬가지로 봉사자만 할 수 있으니까 user_id로 안 했는데 .. 뭐가 좋을까?<- 일단 저는 user_id로 찬성이요!(유진)
     recruit_id    INT NOT NULL COMMENT '반응한 대상 봉사공고 (FK)',
@@ -236,42 +236,42 @@ CREATE TABLE volunteer_reaction (
         FOREIGN KEY (volunteer_id) REFERENCES Volunteer(volunteer_id)
         ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT fk_reaction_recruit
-        FOREIGN KEY (recruit_id) REFERENCES recruit(recruit_id)
+        FOREIGN KEY (recruit_id) REFERENCES Recruit(recruit_id)
         ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='봉사자가 좋아요한 공고 정보';
 
 
--- 아래는 category에 값 추가하는 ddl
-INSERT INTO category (name, parent_id) VALUES
+-- 아래는 Category에 값 추가하는 ddl
+INSERT INTO Category (name, parent_id) VALUES
 ('활동보조', 1), ('이동지원', 1), ('청결지도', 1), ('급식지원', 1), ('식사·반찬지원', 1), ('기타', 1);
-INSERT INTO category (name, parent_id) VALUES
+INSERT INTO Category (name, parent_id) VALUES
 ('주거개선', 2), ('마을공동체활동', 2), ('기타', 2);
-INSERT INTO category (name, parent_id) VALUES
+INSERT INTO Category (name, parent_id) VALUES
 ('말벗·상담', 3), ('전문상담', 3), ('기타', 3);
-INSERT INTO category (name, parent_id) VALUES
+INSERT INTO Category (name, parent_id) VALUES
 ('방과후 교육', 4), ('학습지도 교육', 4), ('특수교육', 4), ('평생교육', 4), ('전문교육', 4), ('진로체험지도', 4), ('기타', 4);
-INSERT INTO category (name, parent_id) VALUES
+INSERT INTO Category (name, parent_id) VALUES
 ('간호·간병', 5), ('의료지원', 5), ('헌혈', 5), ('기타', 5);
-INSERT INTO category (name, parent_id) VALUES
+INSERT INTO Category (name, parent_id) VALUES
 ('일손지원', 6), ('기타', 6);
-INSERT INTO category (name, parent_id) VALUES
+INSERT INTO Category (name, parent_id) VALUES
 ('행사보조', 7), ('공연활동', 7), ('캠페인', 7), ('관광안내', 7), ('사진촬영', 7), ('기타', 7);
-INSERT INTO category (name, parent_id) VALUES
+INSERT INTO Category (name, parent_id) VALUES
 ('환경정화', 8), ('환경감시', 8), ('기타', 8);
-INSERT INTO category (name, parent_id) VALUES
+INSERT INTO Category (name, parent_id) VALUES
 ('사무지원', 9), ('업무지원', 9), ('기타', 9);
-INSERT INTO category (name, parent_id) VALUES
+INSERT INTO Category (name, parent_id) VALUES
 ('어린이 안전', 10), ('청소년 안전', 10), ('취약계층 안전', 10), ('안전신고·활동', 10), ('기타', 10);
-INSERT INTO category (name, parent_id) VALUES
+INSERT INTO Category (name, parent_id) VALUES
 ('인권개선', 11), ('공익보호', 11), ('기타', 11);
-INSERT INTO category (name, parent_id) VALUES
+INSERT INTO Category (name, parent_id) VALUES
 ('긴급구조', 12), ('예방접종지원', 12), ('기타', 12);
-INSERT INTO category (name, parent_id) VALUES
+INSERT INTO Category (name, parent_id) VALUES
 ('해외봉사', 13), ('국제행사단체지원', 13), ('통·번역', 13), ('기타', 13);
-INSERT INTO category (name, parent_id) VALUES
+INSERT INTO Category (name, parent_id) VALUES
 ('멘토링', 14), ('학습지도 교육', 14), ('진로적성', 14), ('취업', 14), ('창업', 14), ('기타', 14);
-INSERT INTO category (name, parent_id) VALUES ('기타', 15);
+INSERT INTO Category (name, parent_id) VALUES ('기타', 15);
 
 
--- SELECT * FROM main_category;
--- SELECT * FROM sub_category;
+-- SELECT * FROM main_Category;
+-- SELECT * FROM sub_Category;
