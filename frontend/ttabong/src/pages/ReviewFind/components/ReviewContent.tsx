@@ -35,6 +35,7 @@ export function ReviewContent({
             className="w-full" 
             variant="outline"
             onClick={() => navigate(`/review-find/${reviewId}/reviews`)}
+            
           >
             이 봉사활동의 다른 후기 보기
           </Button>
