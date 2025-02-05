@@ -1,48 +1,53 @@
 package com.ttabong.entity.user;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import com.ttabong.entity.sns.Review;
+import com.ttabong.entity.recruit.Template;
+import com.ttabong.entity.recruit.TemplateGroup;
+import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import java.time.LocalDateTime;
+import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 
-@Entity
+import java.time.Instant;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
-@Builder
-@Table(name = "Organization")
+@Setter
+@Entity
 public class Organization {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long orgId;
+    @Column(name = "org_id", nullable = false)
+    private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(nullable = false, length = 30)
+    @Column(name = "business_reg_number", nullable = false, length = 30)
     private String businessRegNumber;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "org_name", nullable = false, length = 100)
     private String orgName;
 
-    @Column(nullable = false, length = 80)
+    @Column(name = "representative_name", nullable = false, length = 80)
     private String representativeName;
 
-    @Column(nullable = false, length = 200)
+    @Column(name = "org_address", nullable = false, length = 200)
     private String orgAddress;
 
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @ColumnDefault("CURRENT_TIMESTAMP")
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
+
+    @OneToMany(mappedBy = "org")
+    private Set<Review> reviews = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "org")
+    private Set<Template> templates = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "org")
+    private Set<TemplateGroup> templateGroups = new LinkedHashSet<>();
+
 }
