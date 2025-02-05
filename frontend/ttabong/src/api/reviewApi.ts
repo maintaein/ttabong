@@ -1,23 +1,24 @@
-import axios from 'axios';
+import axiosInstance from './axiosInstance';
 import type { Review, ReviewDetail, Comment } from '@/types/review';
-
-const BASE_URL = '/api';
 
 export const reviewApi = {
   getReviews: async (): Promise<Review[]> => {
-    const response = await axios.get(`${BASE_URL}/reviews`);
+    const response = await axiosInstance.get('/reviews');
     return response.data;
   },
+  
   getReviewDetail: async (id: number): Promise<ReviewDetail> => {
-    const response = await axios.get(`${BASE_URL}/reviews/${id}`);
+    const response = await axiosInstance.get(`/reviews/${id}`);
     return response.data;
   },
+  
   addComment: async (reviewId: number, content: string): Promise<Comment> => {
-    const response = await axios.post(`${BASE_URL}/reviews/${reviewId}/comments`, { content });
+    const response = await axiosInstance.post(`/reviews/${reviewId}/comments`, { content });
     return response.data;
   },
+  
   getRecruitReviews: async (recruitId: number): Promise<Review[]> => {
-    const response = await axios.get(`${BASE_URL}/recruits/${recruitId}/reviews`);
+    const response = await axiosInstance.get(`/recruits/${recruitId}/reviews`);
     return response.data;
   },
 }; 

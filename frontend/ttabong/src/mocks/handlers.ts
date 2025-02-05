@@ -80,30 +80,57 @@ function generateRecruitReviews(recruitId: number) {
 export const handlers = [
   // 리뷰 목록 조회
   http.get('/api/reviews', () => {
-    return HttpResponse.json(reviews);
+    return new HttpResponse(JSON.stringify(reviews), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
   }),
 
   // 리뷰 상세 조회
   http.get('/api/reviews/:id', ({ params }) => {
     const { id } = params;
-    return HttpResponse.json(generateReviewDetail(Number(id)));
+    return new HttpResponse(JSON.stringify(generateReviewDetail(Number(id))), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
   }),
 
   // 댓글 작성
   http.post('/api/reviews/:id/comments', async ({ request }) => {
     const { content } = await request.json() as { content: string };
-    return HttpResponse.json({
+    return new HttpResponse(JSON.stringify({
       commentId: Math.floor(Math.random() * 1000),
       writerId: 1,
       writerName: "테스트 사용자",
       content,
       createdAt: new Date().toISOString()
-    }, { status: 201 });
+    }), {
+      status: 201,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
   }),
 
   // 봉사활동별 리뷰 목록 조회
   http.get('/api/recruits/:recruitId/reviews', ({ params }) => {
     const { recruitId } = params;
     return HttpResponse.json(generateRecruitReviews(Number(recruitId)));
+  }),
+
+  // CORS Preflight 처리
+  http.options('*', () => {
+    return new HttpResponse(null, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      },
+    });
   }),
 ]; 
