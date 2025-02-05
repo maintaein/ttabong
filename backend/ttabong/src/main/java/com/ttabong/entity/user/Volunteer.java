@@ -18,7 +18,6 @@ import java.util.Set;
 @Entity
 public class Volunteer {
 
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "volunteer_id", nullable = false)
