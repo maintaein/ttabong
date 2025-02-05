@@ -127,18 +127,18 @@ CREATE TABLE IF NOT EXISTS Template (
 
 DROP TABLE IF EXISTS Recruit;
 CREATE TABLE IF NOT EXISTS Recruit (
-    recruit_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '봉사공고 ID',
+    Recruit_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '봉사공고 ID',
     template_id INT NOT NULL COMMENT '개별 템플릿 id',
     deadline DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '공고 마감일 (디폴트는 오늘 날짜)',
     activity_date DATE NOT NULL COMMENT '봉사활동 날짜',
     activity_time VARCHAR(50) NOT NULL COMMENT '활동 시간(=봉사해야하는 시간)', -- 현재 varchar타입으로 받는데, 이를 어떻게 매칭해 줄 것인가?
     max_volunteer INT DEFAULT 0 COMMENT '모집할 봉사자 수',
     participate_vol_count INT DEFAULT 0 COMMENT '참여한 봉사자 수', -- 봉사가 끝난 후, 몇 명이 참여했는지
-    status ENUM('RECRUITING', 'RECRUITMENT_CLOSED', 'ACTIVITY_COMPLETED')
-          NOT NULL DEFAULT 'RECRUITING' COMMENT '공고 모집 상태',
+    status ENUM('RecruitING', 'RecruitMENT_CLOSED', 'ACTIVITY_COMPLETED')
+          NOT NULL DEFAULT 'RecruitING' COMMENT '공고 모집 상태',
 	is_deleted     BOOLEAN DEFAULT FALSE COMMENT '삭제 여부',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '공고 등록 일시',
-    CONSTRAINT fk_recruit_template_id
+    CONSTRAINT fk_Recruit_template_id
         FOREIGN KEY (template_id) REFERENCES Template (template_id)
         ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
@@ -149,7 +149,7 @@ DROP TABLE IF EXISTS Application;
 CREATE TABLE Application (
     application_id     INT AUTO_INCREMENT PRIMARY KEY COMMENT '신청 ID',
     volunteer_id INT NOT NULL COMMENT '신청한 봉사자', -- 봉사자만 신청할 수 있으니까 user_id가 아닌, volunteer_id로 함!
-    recruit_id   INT NOT NULL COMMENT '신청 대상 공고',
+    Recruit_id   INT NOT NULL COMMENT '신청 대상 공고',
     status ENUM('PENDING', 'APPROVED', 'REJECTED', 'COMPLETED', 'AUTO_CANCEL', 'NO_SHOW')
           NOT NULL DEFAULT 'PENDING' COMMENT '신청 상태', -- 신청하면 생기는 데이터니까 디폴트가 PENDING임
     evaluation_done BOOLEAN DEFAULT FALSE COMMENT '평가 여부',
@@ -159,8 +159,8 @@ CREATE TABLE Application (
     CONSTRAINT fk_application_volunteer
         FOREIGN KEY (volunteer_id) REFERENCES Volunteer(volunteer_id)
         ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT fk_application_recruit
-        FOREIGN KEY (recruit_id) REFERENCES recruit(recruit_id)
+    CONSTRAINT fk_application_Recruit
+        FOREIGN KEY (Recruit_id) REFERENCES Recruit(Recruit_id)
         ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='봉사공고 신청 상태 관리 테이블';
 
@@ -168,7 +168,7 @@ CREATE TABLE Application (
 DROP TABLE IF EXISTS Review_image;
 CREATE TABLE IF NOT EXISTS Review_image (
     image_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '이미지 id',
-    review_id INT NOT NULL COMMENT '어느 후기에 대한 이미지인가?',
+    Review_id INT NOT NULL COMMENT '어느 후기에 대한 이미지인가?',
     image_url VARCHAR(500) NOT NULL COMMENT '이미지 url',
     is_deleted     BOOLEAN DEFAULT FALSE COMMENT '삭제 여부',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '이미지 생성시간',
@@ -178,10 +178,10 @@ CREATE TABLE IF NOT EXISTS Review_image (
 -- 후기 테이블(쓰레드를 열어줌)
 DROP TABLE IF EXISTS Review;
 CREATE TABLE Review (
-    review_id      INT AUTO_INCREMENT PRIMARY KEY COMMENT '후기 ID', 
-    parent_review_id INT NULL DEFAULT NULL COMMENT '자기참조 (FK)',
+    Review_id      INT AUTO_INCREMENT PRIMARY KEY COMMENT '후기 ID', 
+    parent_Review_id INT NULL DEFAULT NULL COMMENT '자기참조 (FK)',
     group_id INT NULL DEFAULT NULL COMMENT '비슷한 것을 거르기 위해 생성',
-    recruit_id INT NULL DEFAULT NULL COMMENT '어느 공고에 대한 글인가? (FK)',
+    Recruit_id INT NULL DEFAULT NULL COMMENT '어느 공고에 대한 글인가? (FK)',
     org_id     	   INT NOT NULL COMMENT '작성하는 기관 (FK)',
     writer_id INT NULL DEFAULT NULL COMMENT '작성자 ID(FK)',
     content        VARCHAR(500) NOT NULL COMMENT '후기 내용',
@@ -190,18 +190,18 @@ CREATE TABLE Review (
 	thumbnail_img INT NULL DEFAULT NULL COMMENT '썸네일 이미지 한 장 보여줄 것임(FK)',
 	img_count INT NULL DEFAULT NULL COMMENT '몇 개 이미지를 올렸는가?',
     created_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '기록 생성 일시',
-    CONSTRAINT fk_parent_review_id
-		FOREIGN KEY (parent_review_id) REFERENCES review (review_id),
-	CONSTRAINT fk_review_recruit
-        FOREIGN KEY (recruit_id) REFERENCES recruit(recruit_id)
+    CONSTRAINT fk_parent_Review_id
+		FOREIGN KEY (parent_Review_id) REFERENCES Review (Review_id),
+	CONSTRAINT fk_Review_Recruit
+        FOREIGN KEY (Recruit_id) REFERENCES Recruit(Recruit_id)
         ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT fk_review_org
+    CONSTRAINT fk_Review_org
         FOREIGN KEY (org_id) REFERENCES Organization(org_id)
         ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT fk_writer_id
 		FOREIGN KEY (writer_id) REFERENCES User (user_id),
 	CONSTRAINT fk_thumbnail_img_id
-		FOREIGN KEY (thumbnail_img) REFERENCES review_image (image_id)
+		FOREIGN KEY (thumbnail_img) REFERENCES Review_image (image_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='후기 테이블';
 
 
@@ -209,15 +209,15 @@ DROP TABLE IF EXISTS Review_comment;
 CREATE TABLE Review_comment (
     comment_id    INT AUTO_INCREMENT PRIMARY KEY COMMENT '댓글 ID',
     writer_id     INT NOT NULL COMMENT '작성자(User(user_id)) (FK)',
-    review_id     INT NOT NULL COMMENT '어느 봉사자 후기에 대한 댓글인지 (FK)',
+    Review_id     INT NOT NULL COMMENT '어느 봉사자 후기에 대한 댓글인지 (FK)',
     content       VARCHAR(500) NOT NULL COMMENT '댓글 내용',
     is_deleted     BOOLEAN DEFAULT FALSE COMMENT '삭제 여부',
     created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '댓글 작성 일시',
     CONSTRAINT fk_comment_writer
         FOREIGN KEY (writer_id) REFERENCES User(user_id)
         ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT fk_comment_review
-        FOREIGN KEY (review_id) REFERENCES review(review_id)
+    CONSTRAINT fk_comment_Review
+        FOREIGN KEY (Review_id) REFERENCES Review(Review_id)
         ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='후기에 대한 댓글 테이블';
 
@@ -227,7 +227,7 @@ DROP TABLE IF EXISTS Volunteer_reaction;
 CREATE TABLE Volunteer_reaction (
     reaction_id   INT AUTO_INCREMENT PRIMARY KEY COMMENT '봉사자의 반응 ID',
     volunteer_id  INT NOT NULL COMMENT '봉사자 ID (FK)',  -- 얘도 마찬가지로 봉사자만 할 수 있으니까 user_id로 안 했는데 .. 뭐가 좋을까?<- 일단 저는 user_id로 찬성이요!(유진)
-    recruit_id    INT NOT NULL COMMENT '반응한 대상 봉사공고 (FK)',
+    Recruit_id    INT NOT NULL COMMENT '반응한 대상 봉사공고 (FK)',
     is_like      BOOLEAN NOT NULL COMMENT '리액션종류가 좋아요인가? TRUE(1) : 좋아요, FALSE(0) : 싫어요',
     is_deleted     BOOLEAN DEFAULT FALSE COMMENT '삭제 여부',
     created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '좋아요 or 싫어요 반응 누른 일시',
@@ -235,8 +235,8 @@ CREATE TABLE Volunteer_reaction (
     CONSTRAINT fk_reaction_volunteer
         FOREIGN KEY (volunteer_id) REFERENCES Volunteer(volunteer_id)
         ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT fk_reaction_recruit
-        FOREIGN KEY (recruit_id) REFERENCES Recruit(recruit_id)
+    CONSTRAINT fk_reaction_Recruit
+        FOREIGN KEY (Recruit_id) REFERENCES Recruit(Recruit_id)
         ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='봉사자가 좋아요한 공고 정보';
 
