@@ -20,14 +20,15 @@ import java.util.Set;
 @Table(name="Review")
 public class Review {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Review_id", nullable = false)
-    private Integer ReviewId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_Review_id")
     private Review parentReview;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "Review_id", nullable = false)
+    private Integer id;
 
     @Column(name = "group_id")
     private Integer groupId;
@@ -36,6 +37,15 @@ public class Review {
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "Recruit_id")
     private Recruit recruit;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "org_id", nullable = false)
+    private Organization org;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "writer_id")
+    private User writer;
 
     @Column(name = "content", nullable = false, length = 500)
     private String content;
@@ -58,14 +68,6 @@ public class Review {
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "writer_id")
-    private User writer;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "org_id")
-    private Organization org;
 
     @OneToMany(mappedBy = "parentReview")
     private Set<Review> reviews = new LinkedHashSet<>();

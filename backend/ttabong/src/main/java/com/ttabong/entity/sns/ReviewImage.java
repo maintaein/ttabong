@@ -15,7 +15,6 @@ import java.util.Set;
 @Table(name = "Review_image")
 public class ReviewImage {
 
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "image_id", nullable = false)
