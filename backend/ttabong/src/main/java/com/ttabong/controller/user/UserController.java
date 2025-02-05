@@ -6,6 +6,7 @@ import com.ttabong.dto.user.VolunteerRegisterRequest;
 import com.ttabong.entity.user.User;
 import com.ttabong.service.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,10 +30,12 @@ public class UserController {
         try {
             User user = userService.login(loginRequest);
             System.out.println("user : " + user);
-            // 토큰 발급하자
+            // 로그인 성공 시 200 OK와 함께 사용자 정보를 반환 (토큰 발급 로직 추가 가능)
             return ResponseEntity.ok(user);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            // 로그인 실패 시 401 Unauthorized 반환
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Invalid credentials");
         }
     }
 
