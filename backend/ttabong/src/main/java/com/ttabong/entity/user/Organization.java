@@ -1,48 +1,44 @@
 package com.ttabong.entity.user;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
 import java.time.LocalDateTime;
 
 @Entity
-@Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "Organization")
+@Data
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "Organization")
 public class Organization {
+
+    //org_id가 auto_increment 기본키임
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long orgId;
+    @Column(name = "org_id")
+    private Integer orgId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    // User와 1:1 관계
+    @OneToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false, length = 30)
+    @Column(name = "business_reg_number", nullable = false, length = 30)
     private String businessRegNumber;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "org_name", nullable = false, length = 100)
     private String orgName;
 
-    @Column(nullable = false, length = 80)
+    @Column(name = "representative_name", nullable = false, length = 80)
     private String representativeName;
 
-    @Column(nullable = false, length = 200)
+    @Column(name = "org_address", nullable = false, length = 200)
     private String orgAddress;
 
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false)
+//    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 }

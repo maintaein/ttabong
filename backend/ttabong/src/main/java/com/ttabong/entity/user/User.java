@@ -6,23 +6,22 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Entity
-@Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "User")
+@Data
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "User")
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long userId;
+    @Column(name = "user_id")
+    private Integer userId;
 
     @Column(nullable = false, unique = true, length = 80)
     private String email;
@@ -30,18 +29,20 @@ public class User {
     @Column(nullable = false, length = 50)
     private String name;
 
+    // 저장 전 BCrypt 암호화 할 것
     @Column(nullable = false, length = 256)
     private String password;
 
     @Column(nullable = false, length = 20)
     private String phone;
 
-    @Column(length = 200)
+    // 얘는 널값 허용
+    @Column(name = "profile_image", length = 200)
     private String profileImage;
 
-    @Column(nullable = false)
+    @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted = false;
 
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 }
