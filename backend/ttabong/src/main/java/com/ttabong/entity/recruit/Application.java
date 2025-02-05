@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
 
@@ -16,15 +18,17 @@ public class Application {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "application_id", nullable = false)
-    private Integer applicationId;
+    private Integer id;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "volunteer_id", nullable = false)
+    private Volunteer volunteer;
 
-    @Column(name = "volunteer_id", nullable = false)
-    private Integer volunteerId;
-
-
-    @Column(name = "Recruit_id", nullable = false)
-    private Integer recruitId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "Recruit_id", nullable = false)
+    private Recruit recruit;
 
     @ColumnDefault("'PENDING'")
     @Lob
@@ -42,13 +46,5 @@ public class Application {
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "volunteer_id")
-    private Volunteer volunteer;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "Recruit_id")
-    private Recruit recruit;
 
 }

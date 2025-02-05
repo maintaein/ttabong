@@ -14,20 +14,17 @@ import java.util.Set;
 @Entity
 public class Category {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Category_id", nullable = false)
-    private Integer CategoryId;
-
-    @Column(name = "name", nullable = false, length = 50)
-    private String name;
-
-    @Column()
-    private Integer parentId;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     private Category parent;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "Category_id", nullable = false)
+    private Integer id;
+
+    @Column(name = "name", nullable = false, length = 50)
+    private String name;
 
     @OneToMany(mappedBy = "parent")
     private Set<Category> categories = new LinkedHashSet<>();

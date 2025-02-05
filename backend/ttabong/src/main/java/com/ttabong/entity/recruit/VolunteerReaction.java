@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
 
@@ -13,17 +15,21 @@ import java.time.Instant;
 @Entity
 @Table(name = "Volunteer_reaction")
 public class VolunteerReaction {
+
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "reaction_id", nullable = false)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "volunteer_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "volunteer_id", nullable = false)
     private Volunteer volunteer;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "Recruit_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "Recruit_id", nullable = false)
     private Recruit recruit;
 
     @Column(name = "is_like", nullable = false)

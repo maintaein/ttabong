@@ -22,7 +22,7 @@ public class Recruit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "Recruit_id", nullable = false)
-    private Integer RecuitId;
+    private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
