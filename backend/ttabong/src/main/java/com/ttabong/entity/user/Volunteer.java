@@ -3,8 +3,7 @@ package com.ttabong.entity.user;
 import com.ttabong.entity.recruit.Application;
 import com.ttabong.entity.recruit.VolunteerReaction;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDate;
@@ -14,6 +13,9 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Volunteer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

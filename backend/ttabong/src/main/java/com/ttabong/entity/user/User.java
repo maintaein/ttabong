@@ -3,8 +3,7 @@ package com.ttabong.entity.user;
 import com.ttabong.entity.sns.Review;
 import com.ttabong.entity.sns.ReviewComment;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.Instant;
@@ -15,6 +14,9 @@ import java.util.Set;
 @Getter
 @Setter
 @Table(name="User")
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class User {
 
     @Id

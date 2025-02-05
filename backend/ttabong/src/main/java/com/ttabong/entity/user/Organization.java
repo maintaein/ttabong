@@ -4,8 +4,7 @@ import com.ttabong.entity.sns.Review;
 import com.ttabong.entity.recruit.Template;
 import com.ttabong.entity.recruit.TemplateGroup;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.Instant;
@@ -15,6 +14,10 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
+@Table(name="Organization")
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Organization {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
