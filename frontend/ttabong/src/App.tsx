@@ -6,6 +6,7 @@ import ReviewFind from '@/pages/ReviewFind';
 import ReviewDetail from '@/pages/ReviewFind/ReviewDetail';
 import ReviewDetailList from '@/pages/ReviewFind/ReviewDetailList';
 import ReviewWrite from '@/pages/ChooseRecruit/ReviewWrite';
+import ChooseRecruit from '@/pages/ChooseRecruit';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
                 <Route path="/review-find/:reviewId" element={<ReviewDetail />} />
                 <Route path="/review-find/:reviewId/reviews" element={<ReviewDetailList />} />
                 <Route path="/review-write" element={<ReviewWrite />} />
+                <Route path="/choose-recruit" element={<ChooseRecruit />} />
               </Routes>
             </PageLayout>
           </MainLayout>

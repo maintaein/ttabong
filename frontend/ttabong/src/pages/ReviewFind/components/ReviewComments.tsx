@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Send } from 'lucide-react';
-import type { Comment } from '@/types/review';
+import type { Comment } from '@/types/reviewType';
 
 interface ReviewCommentsProps {
   comments: Comment[];

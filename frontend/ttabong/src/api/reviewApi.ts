@@ -1,5 +1,5 @@
 import axiosInstance from './axiosInstance';
-import type { Review, ReviewDetail, Comment } from '@/types/review';
+import type { Review, ReviewDetail, Comment } from '@/types/reviewType';
 
 export const reviewApi = {
   getReviews: async (): Promise<Review[]> => {
@@ -20,5 +20,14 @@ export const reviewApi = {
   getRecruitReviews: async (recruitId: number): Promise<Review[]> => {
     const response = await axiosInstance.get(`/recruits/${recruitId}/reviews`);
     return response.data;
+  },
+  
+  updateReview: async (reviewId: number, data: Partial<ReviewDetail>): Promise<ReviewDetail> => {
+    const response = await axiosInstance.patch(`/reviews/${reviewId}`, data);
+    return response.data;
+  },
+  
+  deleteReview: async (reviewId: number): Promise<void> => {
+    await axiosInstance.patch(`/reviews/${reviewId}/delete`);
   },
 }; 

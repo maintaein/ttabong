@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import type { ReviewDetail } from '@/types/review';
+import type { ReviewDetail } from '@/types/reviewType';
 import { useNavigate } from 'react-router-dom';
 
 interface ReviewContentProps {

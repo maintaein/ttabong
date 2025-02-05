@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Review, ReviewDetail } from '@/types/review';
+import type { Review, ReviewDetail } from '@/types/reviewType';
 import { reviewApi } from '@/api/reviewApi';
 
 interface ReviewStore {
@@ -12,6 +12,7 @@ interface ReviewStore {
   addComment: (reviewId: number, content: string) => Promise<void>;
   recruitReviews: Review[];
   fetchRecruitReviews: (recruitId: number) => Promise<void>;
+  deleteReview: (reviewId: number) => Promise<void>;
 }
 
 export const useReviewStore = create<ReviewStore>((set) => ({
@@ -68,6 +69,18 @@ export const useReviewStore = create<ReviewStore>((set) => ({
       set({ error: '리뷰 목록을 불러오는데 실패했습니다.' });
     } finally {
       set({ isLoading: false });
+    }
+  },
+
+  deleteReview: async (reviewId: number) => {
+    try {
+      await reviewApi.deleteReview(reviewId);
+      set((state) => ({
+        reviews: state.reviews.filter(review => review.reviewId !== reviewId)
+      }));
+    } catch (error) {
+      console.error('리뷰 삭제 실패:', error);
+      throw error;
     }
   },
 })); 

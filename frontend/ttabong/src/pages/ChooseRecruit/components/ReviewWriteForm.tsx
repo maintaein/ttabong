@@ -2,6 +2,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Card } from '@/components/ui/card';
 
 interface ReviewWriteFormProps {
   title: string;
@@ -47,14 +48,21 @@ export function ReviewWriteForm({
         <p className="text-sm text-muted-foreground text-right">{content.length}/2000</p>
       </div>
 
-      <div className="flex items-center justify-between">
-        <Label htmlFor="public">공개 설정</Label>
-        <Switch
-          id="public"
-          checked={isPublic}
-          onCheckedChange={onPublicChange}
-        />
-      </div>
+      <Card className="p-4">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <Label htmlFor="public" className="text-base">공개 설정</Label>
+            <p className="text-sm text-muted-foreground">
+              {isPublic ? '모든 사용자가 볼 수 있습니다' : '나만 볼 수 있습니다'}
+            </p>
+          </div>
+          <Switch
+            id="public"
+            checked={isPublic}
+            onCheckedChange={onPublicChange}
+          />
+        </div>
+      </Card>
     </div>
   );
 } 

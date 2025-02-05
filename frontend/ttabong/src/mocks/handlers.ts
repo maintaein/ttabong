@@ -133,4 +133,45 @@ export const handlers = [
       },
     });
   }),
+
+  // 기존 핸들러에 추가
+  http.get('/api/applications/mine', () => {
+    return HttpResponse.json([
+      {
+        applicationId: 55,
+        status: "PENDING",
+        evaluationDone: false,
+        isDeleted: false,
+        createdAt: "2024-02-02T12:00:00",
+        template: {
+          templateId: 1,
+          title: "환경 보호 봉사",
+          activityLocation: "서울특별시 강남구 테헤란로 123",
+          status: "ALL",
+          imageId: "https://example.com/image.jpg",
+          contactName: "김봉사",
+          contactPhone: "010-1234-5678",
+          description: "환경 보호를 위한 봉사활동입니다.",
+          isDeleted: false,
+          createdAt: "2024-02-02T12:00:00",
+          group: {
+            groupId: 10,
+            groupName: "환경 봉사팀"
+          }
+        },
+        recruit: {
+          recruitId: 101,
+          deadline: "2024-02-10T23:59:59",
+          activityDate: "2024-02-15",
+          activityTime: "10:00 ~ 14:00",
+          maxVolunteer: 20,
+          participateVolCount: 15,
+          status: "RECRUITING",
+          isDeleted: false,
+          createdAt: "2024-02-02T12:00:00"
+        }
+      },
+      // ... 더 많은 더미 데이터
+    ]);
+  }),
 ]; 

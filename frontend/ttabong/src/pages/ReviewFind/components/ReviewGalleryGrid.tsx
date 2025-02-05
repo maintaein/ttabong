@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import type { Review } from '@/types/review';
+import type { Review } from '@/types/reviewType';
 
 interface ReviewGalleryGridProps {
   reviews: Review[];

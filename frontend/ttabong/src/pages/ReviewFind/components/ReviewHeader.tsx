@@ -1,6 +1,6 @@
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import type { ReviewDetail } from '@/types/review';
+import type { ReviewDetail } from '@/types/reviewType';
 
 interface ReviewHeaderProps {
   writer: ReviewDetail['writer'];
@@ -32,9 +32,6 @@ export function ReviewHeader({ writer, organization }: ReviewHeaderProps) {
           </div>
         </div>
       </div>
-      <Button variant="ghost" size="icon">
-        <span className="sr-only">Edit review</span>
-      </Button>
     </div>
   );
 } 

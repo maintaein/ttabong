@@ -1,5 +1,5 @@
 import { ReviewHeader } from '@/pages/ReviewFind/components/ReviewHeader';
-import type { ReviewDetail } from '@/types/review';
+import type { ReviewDetail } from '@/types/reviewType';
 
 interface ReviewWriteHeaderProps {
   writer: ReviewDetail['writer'];
