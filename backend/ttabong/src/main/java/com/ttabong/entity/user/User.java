@@ -1,48 +1,60 @@
 package com.ttabong.entity.user;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import lombok.*;
+import com.ttabong.entity.sns.Review;
+import com.ttabong.entity.sns.ReviewComment;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
-@Table(name = "User")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter
+@Setter
+@Table(name="User")
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
-    private Integer userId;
+    @Column(name = "user_id", nullable = false)
+    private Integer id;
 
-    @Column(nullable = false, unique = true, length = 80)
+    @Column(name = "email", nullable = false, length = 80)
     private String email;
 
-    @Column(nullable = false, length = 50)
+    @Column(name = "name", nullable = false, length = 50)
     private String name;
 
-    // 저장 전 BCrypt 암호화 할 것
-    @Column(nullable = false, length = 256)
+    @Column(name = "password", nullable = false, length = 256)
     private String password;
 
-    @Column(nullable = false, length = 20)
+    @Column(name = "phone", nullable = false, length = 20)
     private String phone;
 
-    // 얘는 널값 허용
     @Column(name = "profile_image", length = 200)
     private String profileImage;
 
-    @Column(name = "is_deleted", nullable = false)
-    private Boolean isDeleted = false;
+    @ColumnDefault("0")
+    @Column(name = "is_deleted")
+    private Boolean isDeleted;
 
+    @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Instant createdAt;
+
+    @OneToMany(mappedBy = "user")
+    private Set<Organization> organizations = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "writer")
+    private Set<Review> reviews = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "writer")
+    private Set<ReviewComment> reviewComments = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "user")
+    private Set<Volunteer> volunteers = new LinkedHashSet<>();
+
 }

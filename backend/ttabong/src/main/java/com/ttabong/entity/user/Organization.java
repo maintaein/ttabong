@@ -1,28 +1,28 @@
 package com.ttabong.entity.user;
 
+import com.ttabong.entity.sns.Review;
+import com.ttabong.entity.recruit.Template;
+import com.ttabong.entity.recruit.TemplateGroup;
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
+@Getter
+@Setter
 @Entity
-@Table(name = "Organization")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Organization {
-
-    //org_id가 auto_increment 기본키임
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "org_id")
-    private Integer orgId;
+    @Column(name = "org_id", nullable = false)
+    private Integer id;
 
-    // User와 1:1 관계
-    @OneToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
     private User user;
 
     @Column(name = "business_reg_number", nullable = false, length = 30)
@@ -37,8 +37,17 @@ public class Organization {
     @Column(name = "org_address", nullable = false, length = 200)
     private String orgAddress;
 
-    @CreationTimestamp
+    @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_at", nullable = false)
-//    private LocalDateTime createdAt = LocalDateTime.now();
-    private LocalDateTime createdAt;
+    private Instant createdAt;
+
+    @OneToMany(mappedBy = "org")
+    private Set<Review> reviews = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "org")
+    private Set<Template> templates = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "org")
+    private Set<TemplateGroup> templateGroups = new LinkedHashSet<>();
+
 }
