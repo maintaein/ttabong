@@ -36,6 +36,9 @@ public class User {
     @Column(name = "phone", nullable = false, length = 20)
     private String phone;
 
+    @Column(name = "total_volunteer_hours", nullable = false, columnDefinition = "DECIMAL(7,2) DEFAULT 0.00")
+    private Double totalVolunteerHours = 0.0;
+
     @Column(name = "profile_image", length = 200)
     private String profileImage;
 
