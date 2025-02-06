@@ -16,7 +16,7 @@ interface ReviewWriteFormProps {
 export function ReviewWriteForm({
   title,
   content,
-  isPublic,
+  isPublic, 
   onTitleChange,
   onContentChange,
   onPublicChange,

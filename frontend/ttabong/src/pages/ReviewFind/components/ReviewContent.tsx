@@ -1,7 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import type { ReviewDetail } from '@/types/reviewType';
-import { useNavigate } from 'react-router-dom';
 
 interface ReviewContentProps {
   reviewId: number;
