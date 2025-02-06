@@ -1,4 +1,4 @@
 package com.ttabong.dto.recruit.responseDto.org;
 
-public class UpdateTemplateIdResponse {
+public class UpdateTemplateResponse {
 }
