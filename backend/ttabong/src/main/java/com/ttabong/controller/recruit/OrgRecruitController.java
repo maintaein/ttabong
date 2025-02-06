@@ -39,7 +39,7 @@ public class OrgRecruitController {
 
     //7 6
     @PatchMapping("groups")
-    public ResponseEntity<?> updateGroups() {
+    public ResponseEntity<?> updateGroup() {
         return ResponseEntity.ok().build();
     }
 

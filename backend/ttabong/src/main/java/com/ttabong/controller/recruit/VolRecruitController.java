@@ -11,6 +11,7 @@ public class VolRecruitController {
     public ResponseEntity<?> listRecruits(@RequestParam Integer cursor, @RequestParam Integer limit) {
         return ResponseEntity.ok().build();
     }
+
     @GetMapping("templates/{templateId}")
     public ResponseEntity<?> RecruitsDetail(@PathVariable String templateId) {
         return ResponseEntity.ok().build();
@@ -46,8 +47,9 @@ public class VolRecruitController {
     public ResponseEntity<?> likeOnRecruit() {
         return ResponseEntity.ok().build();
     }
+
     @PatchMapping("volunteer_reactions/cancel")
-    public ResponseEntity<?> deleteRecruitfromLike(@RequestParam Integer cursor, @RequestParam Integer limit) {
+    public ResponseEntity<?> deleteRecruitFromLike(@RequestParam Integer cursor, @RequestParam Integer limit) {
         return ResponseEntity.ok().build();
     }
 }
