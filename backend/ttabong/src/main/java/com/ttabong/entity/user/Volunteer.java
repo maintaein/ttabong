@@ -1,48 +1,59 @@
 package com.ttabong.entity.user;
 
-import lombok.*;
+import com.ttabong.entity.recruit.Application;
+import com.ttabong.entity.recruit.VolunteerReaction;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
+
 import java.time.LocalDate;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
+@Getter
+@Setter
 @Entity
-@Table(name = "Volunteer")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Volunteer {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "volunteer_id")
-    private Integer volunteerId;
+    @Column(name = "volunteer_id", nullable = false)
+    private Integer id;
 
-    // User와 1:1 관계
-    @OneToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
     private User user;
 
-    // 봉사자 전용 정보들
-    @Column(name = "preferred_time")
+    @Column(name = "preferred_time", length = 100)
     private String preferredTime;
 
-    @Column(name = "interest_theme")
+    @Column(name = "interest_theme", length = 100)
     private String interestTheme;
 
-    @Column(name = "duration_time")
+    @Column(name = "duration_time", length = 100)
     private String durationTime;
 
+    @Column(name = "region", length = 30)
     private String region;
 
     @Column(name = "birth_date")
     private LocalDate birthDate;
 
-    @Column(length = 1)
+    @Column(name = "gender")
     private Character gender;
 
+    @ColumnDefault("0")
     @Column(name = "recommended_count")
-    private Integer recommendedCount = 0;
+    private Integer recommendedCount;
 
+    @ColumnDefault("0")
     @Column(name = "not_recommended_count")
-    private Integer notRecommendedCount = 0;
+    private Integer notRecommendedCount;
+
+    @OneToMany(mappedBy = "volunteer")
+    private Set<Application> applications = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "volunteer")
+    private Set<VolunteerReaction> volunteerReactions = new LinkedHashSet<>();
+
 }
