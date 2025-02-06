@@ -1,17 +1,18 @@
 package com.ttabong.entity.sns;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-@Getter
-@Setter
 @Entity
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED) // 외부에서 new User() 막기
+@AllArgsConstructor(access = AccessLevel.PRIVATE) // Builder에서만 생성 가능
+@Builder
 @Table(name = "Review_image")
 public class ReviewImage {
 

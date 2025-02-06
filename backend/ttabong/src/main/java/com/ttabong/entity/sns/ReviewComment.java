@@ -2,18 +2,17 @@ package com.ttabong.entity.sns;
 
 import com.ttabong.entity.user.User;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
 
-@Getter
-@Setter
 @Entity
-@Table(name="Review_comment")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED) // 외부에서 new User() 막기
+@AllArgsConstructor(access = AccessLevel.PRIVATE) // Builder에서만 생성 가능
+@Builder
+@Table(name = "Review_comment")
 public class ReviewComment {
 
     @Id
