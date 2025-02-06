@@ -1,7 +1,9 @@
 package com.ttabong.dto.sns.response;
 
-import lombok.*;
-
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import java.time.LocalDateTime;
 
 /*
@@ -17,4 +19,3 @@ public class ReviewVisibilitySettingResponseDto {
     private Boolean isPublic;
     private LocalDateTime updatedAt;
 }
-

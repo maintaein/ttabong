@@ -1,6 +1,9 @@
 package com.ttabong.dto.sns.response;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 
 /*
  * 8. 후기 _ 수정
