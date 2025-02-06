@@ -10,5 +10,10 @@
         <module name="ttabong.main" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="ttabong" target="17" />
+      <module name="ttabong.main" target="17" />
+      <module name="ttabong.test" target="17" />
+    </bytecodeTargetLevel>
   </component>
 </project>
