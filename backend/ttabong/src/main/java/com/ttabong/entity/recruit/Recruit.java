@@ -25,7 +25,6 @@ public class Recruit {
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "template_id", nullable = false)
     private Template template;
 
@@ -47,9 +46,8 @@ public class Recruit {
     @Column(name = "participate_vol_count")
     private Integer participateVolCount;
 
-    @ColumnDefault("'RecruitING'")
     @Lob
-    @Column(name = "status", nullable = false)
+    @Column(name = "status", nullable = false, columnDefinition = "ENUM('ALL', 'ACTIVE', 'INACTIVE') DEFAULT 'ALL'")
     private String status;
 
     @ColumnDefault("0")

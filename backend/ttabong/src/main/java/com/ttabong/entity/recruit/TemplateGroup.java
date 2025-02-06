@@ -24,7 +24,6 @@ public class TemplateGroup {
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "org_id", nullable = false)
     private Organization org;
 

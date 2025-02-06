@@ -23,12 +23,10 @@ public class VolunteerReaction {
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "volunteer_id", nullable = false)
     private Volunteer volunteer;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "Recruit_id", nullable = false)
     private Recruit recruit;
 

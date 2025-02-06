@@ -24,12 +24,10 @@ public class Template {
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "group_id", nullable = false)
     private TemplateGroup group;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "org_id")
     private Organization org;
 
@@ -44,9 +42,8 @@ public class Template {
     @Column(name = "activity_location", nullable = false)
     private String activityLocation;
 
-    @ColumnDefault("'ALL'")
     @Lob
-    @Column(name = "status", nullable = false)
+    @Column(name = "status", nullable = false, columnDefinition = "ENUM('ALL', 'ACTIVE', 'INACTIVE') DEFAULT 'ALL'")
     private String status;
 
     @Column(name = "image_id", length = 500)

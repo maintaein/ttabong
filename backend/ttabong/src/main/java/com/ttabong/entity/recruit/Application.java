@@ -21,18 +21,15 @@ public class Application {
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "volunteer_id", nullable = false)
     private Volunteer volunteer;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "Recruit_id", nullable = false)
     private Recruit recruit;
 
-    @ColumnDefault("'PENDING'")
     @Lob
-    @Column(name = "status", nullable = false)
+    @Column(name = "status", nullable = false, columnDefinition = "enum('PENDING','APPROVED','REJECTED','COMPLETED','AUTO_CANCEL','NO_SHOW') DEFAULT 'PENDING'")
     private String status;
 
     @ColumnDefault("0")
