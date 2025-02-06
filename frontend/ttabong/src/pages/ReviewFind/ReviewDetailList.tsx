@@ -1,7 +1,9 @@
+import React from 'react';
 import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useReviewStore } from '@/stores/reviewStore';
 import { ReviewGalleryGrid } from './components/ReviewGalleryGrid';
+
 
 export default function ReviewDetailList() {
   const { reviewId } = useParams();

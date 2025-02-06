@@ -18,9 +18,16 @@ export const useRecruitStore = create<RecruitStore>((set) => ({
     set({ isLoading: true });
     try {
       const recruits = await recruitApi.getMyRecruits();
-      set({ myRecruits: recruits, error: null });
+      set({ 
+        myRecruits: Array.isArray(recruits) ? recruits : [], 
+        error: null 
+      });
     } catch (error) {
-      set({ error: '봉사내역을 불러오는데 실패했습니다.' });
+      console.error('봉사내역 불러오기 실패:', error);
+      set({ 
+        myRecruits: [],
+        error: '봉사내역을 불러오는데 실패했습니다.' 
+      });
     } finally {
       set({ isLoading: false });
     }

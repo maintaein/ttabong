@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +26,7 @@ export default function ChooseRecruit() {
 
   if (isLoading) return <div className="flex justify-center items-center h-[50vh]">로딩 중...</div>;
   if (error) return <div className="flex justify-center items-center h-[50vh] text-destructive">{error}</div>;
+  if (!myRecruits) return <div className="flex justify-center items-center h-[50vh]">봉사 내역이 없습니다.</div>;
 
   const handleCardClick = async (application: Application) => {
     const orgId = application.template.group.groupId;
@@ -41,7 +42,7 @@ export default function ChooseRecruit() {
     <div className="container mx-auto px-4 py-6">
       <h1 className="text-2xl font-bold mb-6">나의 봉사내역</h1>
       <div className="space-y-4">
-        {myRecruits.map((application) => (
+        {Array.isArray(myRecruits) && myRecruits.map((application) => (
           <Card 
             key={application.applicationId}
             className="p-4 hover:shadow-md transition-shadow cursor-pointer"

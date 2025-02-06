@@ -134,6 +134,13 @@ function generateRecruitReviews(recruitId: number) {
   }));
 }
 
+interface ReviewSubmission {
+  title: string;
+  content: string;
+  recruitId: number;
+  images?: string[];
+}
+
 export const handlers = [
   // 리뷰 목록 조회
   http.get('/api/reviews', () => {
@@ -267,7 +274,7 @@ export const handlers = [
 
   // 리뷰 작성 API
   http.post('/api/reviews', async ({ request }) => {
-    const reviewData = await request.json() as Record<string, any>;
+    const reviewData = await request.json() as ReviewSubmission;
     return HttpResponse.json({
       reviewId: Math.random(),
       ...reviewData
