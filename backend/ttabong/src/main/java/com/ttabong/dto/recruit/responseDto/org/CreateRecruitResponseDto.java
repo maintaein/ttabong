@@ -1,4 +1,4 @@
-package com.ttabong.dto.recruit;
+package com.ttabong.dto.recruit.responseDto.org;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,9 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CategoryDto {
-
-    private Long categoryId;
-    private String name;
-    private Long parentId;
+public class CreateRecruitResponseDto {
+    String message;
+    Integer recruitId;
 }
