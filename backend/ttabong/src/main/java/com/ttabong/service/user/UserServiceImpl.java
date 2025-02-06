@@ -35,7 +35,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User login(LoginRequest loginRequest) {
-        Optional<User> userOpt = userRepository.findByEmail(loginRequest.getEmail());
+        Optional<User> userOpt = userRepository.findByEmailAndIsDeletedFalse(loginRequest.getEmail());
         if (userOpt.isEmpty()) {
             throw new RuntimeException("User not found");
         }
@@ -48,8 +48,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User registerVolunteer(VolunteerRegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exists");
+        if (userRepository.existsByEmailAndIsDeletedFalse(request.getEmail())) {
+            throw new RuntimeException("이미 계정이 존재합니다.");
         }
 
         // 기본 User 정보 저장 (비밀번호는 암호화)
@@ -81,8 +81,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User registerOrganization(OrganizationRegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exists");
+        if (userRepository.existsByEmailAndIsDeletedFalse(request.getEmail())) {
+            throw new RuntimeException("이미 계정이 존재합니다.");
         }
 
         // 기본 User 정보 저장 (비밀번호는 암호화)
