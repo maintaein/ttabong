@@ -12,7 +12,6 @@ import java.sql.SQLException;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @DataJpaTest
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE) // 실제 DB 사용
 public class MySQLConnectionTest {
 /*
     @Autowired
