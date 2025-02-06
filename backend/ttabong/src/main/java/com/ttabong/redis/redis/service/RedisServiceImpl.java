@@ -19,7 +19,7 @@ public class RedisServiceImpl implements RedisService {
     private final String STREAM_CLIENT = "ranking:stream";
     private final Integer RANK_NUM = 10;
     private final RedisTemplate<String, String> redisTemplate;
-    private RecordId lastCreatedRanking = RecordId.of("0-0");
+    private final RecordId lastCreatedRanking = RecordId.of("0-0");
 
     RedisServiceImpl(RedisTemplate<String, String> redisTemplate) {
         this.redisTemplate = redisTemplate;
