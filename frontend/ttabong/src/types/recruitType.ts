@@ -17,8 +17,9 @@ interface Template {
   group: Group;
 }
 
-interface Recruit {
+export interface Recruit {
   recruitId: number;
+  templateId: number;
   deadline: string;
   activityDate: string;
   activityTime: string;
@@ -26,6 +27,7 @@ interface Recruit {
   participateVolCount: number;
   status: 'RECRUITING' | 'CLOSED';
   isDeleted: boolean;
+  updatedAt: string;
   createdAt: string;
 }
 
@@ -37,4 +39,20 @@ export interface Application {
   createdAt: string;
   template: Template;
   recruit: Recruit;
+}
+
+export interface CreateRecruitRequest {
+  templateId: number;
+  deadline: string;
+  activityDate: string;
+  activityTime: string;
+  maxVolunteer: number;
+}
+
+export interface UpdateRecruitRequest {
+  deadline?: string;
+  activityDate?: string;
+  activityTime?: string;
+  maxVolunteer?: number;
+  status?: 'RECRUITING' | 'CLOSED';
 } 

@@ -1,6 +1,31 @@
 import axiosInstance from './axiosInstance';
 import type { Review, ReviewDetail, Comment } from '@/types/reviewType';
 
+interface RecruitReview {
+  review: {
+    reviewId: number;
+    recruitId: number;
+    title: string;
+    content: string;
+    isDeleted: boolean;
+    updatedAt: string;
+    createdAt: string;
+  };
+  writer: {
+    writerId: number;
+    name: string;
+  };
+  group: {
+    groupId: number;
+    groupName: string;
+  };
+  organization: {
+    orgId: number;
+    orgName: string;
+  };
+  images: string[];
+}
+
 export const reviewApi = {
   getReviews: async (): Promise<Review[]> => {
     const response = await axiosInstance.get('/reviews');
@@ -17,7 +42,7 @@ export const reviewApi = {
     return response.data;
   },
   
-  getRecruitReviews: async (recruitId: number): Promise<Review[]> => {
+  getRecruitReviews: async (recruitId: number): Promise<RecruitReview[]> => {
     const response = await axiosInstance.get(`/recruits/${recruitId}/reviews`);
     return response.data;
   },

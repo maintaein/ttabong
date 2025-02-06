@@ -76,7 +76,7 @@ export const useReviewStore = create<ReviewStore>((set) => ({
     try {
       await reviewApi.deleteReview(reviewId);
       set((state) => ({
-        reviews: state.reviews.filter(review => review.reviewId !== reviewId)
+        reviews: state.reviews.filter(review => review.review.reviewId !== reviewId)
       }));
     } catch (error) {
       console.error('리뷰 삭제 실패:', error);

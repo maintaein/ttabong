@@ -2,8 +2,10 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import type { Application } from '@/types/recruitType';
 import { useRecruitStore } from '@/stores/recruitStore';
 import { cn } from '@/lib/utils';
+import { useReviewWriteStore } from '@/stores/reviewWriteStore';
 
 
 const STATUS_MAP = {
@@ -16,6 +18,7 @@ const STATUS_MAP = {
 export default function ChooseRecruit() {
   const navigate = useNavigate();
   const { myRecruits, isLoading, error, fetchMyRecruits } = useRecruitStore();
+  const setReviewInfo = useReviewWriteStore(state => state.setReviewInfo);
 
   useEffect(() => {
     fetchMyRecruits();
@@ -23,6 +26,16 @@ export default function ChooseRecruit() {
 
   if (isLoading) return <div className="flex justify-center items-center h-[50vh]">로딩 중...</div>;
   if (error) return <div className="flex justify-center items-center h-[50vh] text-destructive">{error}</div>;
+
+  const handleCardClick = async (application: Application) => {
+    const orgId = application.template.group.groupId;
+    const recruitId = application.recruit.recruitId;
+    
+    if (orgId && recruitId) {
+      await Promise.resolve(setReviewInfo(recruitId, orgId));
+      navigate('/review-write');
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -32,7 +45,7 @@ export default function ChooseRecruit() {
           <Card 
             key={application.applicationId}
             className="p-4 hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => navigate(`/review-write/${application.recruit.recruitId}`)}
+            onClick={() => handleCardClick(application)}
           >
             <div className="flex justify-between items-start">
               <div className="space-y-2">

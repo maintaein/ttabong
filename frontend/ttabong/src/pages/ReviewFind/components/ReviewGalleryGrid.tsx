@@ -1,25 +1,22 @@
-import { useNavigate } from 'react-router-dom';
 import type { Review } from '@/types/reviewType';
 
 interface ReviewGalleryGridProps {
   reviews: Review[];
-  basePath?: string;
+  onReviewClick: (reviewId: number) => void;
 }
 
-export function ReviewGalleryGrid({ reviews, basePath = '/review-find' }: ReviewGalleryGridProps) {
-  const navigate = useNavigate();
-
+export function ReviewGalleryGrid({ reviews, onReviewClick }: ReviewGalleryGridProps) {
   return (
     <div className="grid grid-cols-3 gap-1">
       {reviews.map((review) => (
         <div
-          key={review.reviewId}
+          key={review.review.reviewId}
           className="aspect-square group relative cursor-pointer"
-          onClick={() => navigate(`${basePath}/${review.reviewId}`)}
+          onClick={() => onReviewClick(review.review.reviewId)}
         >
           <img
-            src={review.thumbnailImageUrl}
-            alt={`리뷰 ${review.reviewId}`}
+            src={review.images[0]}
+            alt={`리뷰 ${review.review.reviewId}`}
             className="w-full h-full object-cover"
             loading="lazy"
           />

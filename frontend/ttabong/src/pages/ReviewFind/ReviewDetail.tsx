@@ -92,9 +92,39 @@ export default function ReviewDetail() {
         isOrganization={isOrganization}
         orgReviewId={reviewDetail.orgReviewId}
       />
+      
+      <div className="px-4 mt-4 flex gap-2">
+        {reviewDetail.recruit?.recruitId && (
+          <Button 
+            variant="outline" 
+            className="flex-1"
+            onClick={() => navigate(`/recruits/${reviewDetail.recruit.recruitId}`)}
+          >
+            봉사 공고 보러가기
+          </Button>
+        )}
+        
+        {isOrganization ? (
+          <Button 
+            variant="outline"
+            className="flex-1"
+            onClick={() => navigate(`/review-find/${reviewDetail.recruit.recruitId}/reviews`)}
+          >
+            다른 후기 보기
+          </Button>
+        ) : reviewDetail.orgReviewId && (
+          <Button 
+            variant="outline"
+            className="flex-1"
+            onClick={() => navigate(`/review-find/${reviewDetail.orgReviewId}`)}
+          >
+            기관 후기 보기
+          </Button>
+        )}
+      </div>
+
       <ReviewComments
         comments={reviewDetail.comments}
-
         commentContent={commentContent}
         onCommentChange={(e) => setCommentContent(e.target.value)}
         onSubmit={handleSubmitComment}

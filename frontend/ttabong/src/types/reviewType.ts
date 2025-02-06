@@ -1,6 +1,26 @@
 interface Review {
-  reviewId: number;
-  thumbnailImageUrl: string;
+  review: {
+    reviewId: number;
+    recruitId: number;
+    title: string;
+    content: string;
+    isDeleted: boolean;
+    updatedAt: string;
+    createdAt: string;
+  };
+  writer: {
+    writerId: number;
+    name: string;
+  };
+  group: {
+    groupId: number;
+    groupName: string;
+  };
+  organization: {
+    orgId: number;
+    orgName: string;
+  };
+  images: string[];
 }
 
 interface Comment {
