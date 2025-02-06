@@ -6,20 +6,21 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class RecruitDto {
+
     private Long recruitId;
     private Long templateId;
     private LocalDateTime deadline;
     private LocalDate activityDate;
-    private String activityTime;
-    private Integer maxVolunteer;
-    private Integer participateVolCount;
+    private Double activityStart;
+    private Double activityEnd;
+    private Long maxVolunteer;
+    private Long participateVolCount;
     private String status;
-    private Boolean isDeleted;
+    private Long isDeleted;
     private LocalDateTime updatedAt;
     private LocalDateTime createdAt;
 }

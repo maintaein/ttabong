@@ -5,11 +5,11 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class TemplateDto {
+
     private Long templateId;
     private Long groupId;
     private Long orgId;
@@ -23,4 +23,5 @@ public class TemplateDto {
     private String description;
     private Boolean isDeleted;
     private LocalDateTime createdAt;
+
 }
