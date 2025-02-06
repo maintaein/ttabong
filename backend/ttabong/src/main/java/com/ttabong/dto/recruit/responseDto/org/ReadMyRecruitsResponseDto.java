@@ -1,17 +1,21 @@
 package com.ttabong.dto.recruit.responseDto.org;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ReadMyRecruitsResponseDto {
     private List<RecruitDetail> recruits;
 
     @Getter
     @Setter
+    @NoArgsConstructor
     public static class RecruitDetail {
         private Group group;
         private Template template;
@@ -20,6 +24,7 @@ public class ReadMyRecruitsResponseDto {
 
     @Getter
     @Setter
+    @NoArgsConstructor
     public static class Group {
         private int groupId;
         private String groupName;
@@ -27,6 +32,7 @@ public class ReadMyRecruitsResponseDto {
 
     @Getter
     @Setter
+    @NoArgsConstructor
     public static class Template {
         private int templateId;
         private String title;
@@ -34,6 +40,7 @@ public class ReadMyRecruitsResponseDto {
 
     @Getter
     @Setter
+    @NoArgsConstructor
     public static class Recruit {
         private int recruitId;
         private String status;

@@ -1,12 +1,15 @@
 package com.ttabong.dto.recruit.responseDto.vol;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ReadRecruitDetailResponseDto {
     private Template template;
     private Group group;
