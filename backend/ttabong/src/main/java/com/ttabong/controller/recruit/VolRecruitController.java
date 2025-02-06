@@ -2,7 +2,7 @@ package com.ttabong.controller.recruit;
 
 import com.ttabong.dto.recruit.requestDto.vol.likeOnRecruitRequestDto;
 import com.ttabong.dto.recruit.requestDto.vol.ApplyRecruitRequestDto;
-import com.ttabong.dto.recruit.requestDto.vol.deleteLikesRequestDto;
+import com.ttabong.dto.recruit.requestDto.vol.DeleteLikesRequestDto;
 import com.ttabong.dto.recruit.responseDto.vol.likeOnRecruitResponseDto;
 import com.ttabong.dto.recruit.responseDto.vol.*;
 import org.springframework.http.ResponseEntity;
@@ -54,7 +54,7 @@ public class VolRecruitController {
     }
 
     @PatchMapping("volunteer_reactions/cancel")
-    public ResponseEntity<?> deleteRecruitFromLike(@RequestBody deleteLikesRequestDto deleteLikeRequest) {
+    public ResponseEntity<?> deleteRecruitFromLike(@RequestBody DeleteLikesRequestDto deleteLikeRequest) {
         return ResponseEntity.noContent().build();
     }
 }

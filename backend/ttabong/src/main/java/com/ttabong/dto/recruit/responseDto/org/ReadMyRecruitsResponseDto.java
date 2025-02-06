@@ -1,4 +1,4 @@
-package com.ttabong.dto.recruit.responseDto.vol;
+package com.ttabong.dto.recruit.responseDto.org;
 
 import lombok.Getter;
 import lombok.Setter;

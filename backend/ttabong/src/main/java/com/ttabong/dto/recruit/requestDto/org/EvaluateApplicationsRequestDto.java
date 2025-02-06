@@ -7,8 +7,6 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class EvaluateApplicationsRequestDto {
-    public static class VolunteerRecommendation {
-        private int volunteerId;
-        private String recommendationStatus;
-    }
+    private int volunteerId;
+    private String recommendationStatus;
 }

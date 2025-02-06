@@ -1,7 +1,7 @@
 package com.ttabong.controller.recruit;
 
 import com.ttabong.dto.recruit.requestDto.org.*;
-import com.ttabong.dto.recruit.responseDto.vol.ReadMyRecruitsResponseDto;
+import com.ttabong.dto.recruit.responseDto.org.ReadMyRecruitsResponseDto;
 import com.ttabong.dto.recruit.responseDto.org.ReadAvailableRecruitsResponseDto;
 import com.ttabong.dto.recruit.responseDto.org.*;
 import org.springframework.http.ResponseEntity;
@@ -93,7 +93,7 @@ public class OrgRecruitController {
 
     //14
     @GetMapping("recruits/{recruitId}")
-    public ResponseEntity<readRecruitResponseDto> readRecruit() {//@PathVariable int recruitId) {
+    public ResponseEntity<ReadRecruitResponseDto> readRecruit() {//@PathVariable int recruitId) {
         return ResponseEntity.ok().build();
     }
 
