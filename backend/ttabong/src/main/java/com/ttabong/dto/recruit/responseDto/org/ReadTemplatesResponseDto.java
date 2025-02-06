@@ -1,22 +1,29 @@
 package com.ttabong.dto.recruit.responseDto.org;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ReadTemplatesResponseDto {
     private List<GroupDto> groups;
+
     @Getter
     @Setter
+    @NoArgsConstructor
     public class GroupDto {
         private int groupId;
         private String groupName;
         private List<TemplateDto> templates;
     }
+
     @Getter
     @Setter
+    @NoArgsConstructor
     public class TemplateDto {
         private int templateId;
         private int orgId;

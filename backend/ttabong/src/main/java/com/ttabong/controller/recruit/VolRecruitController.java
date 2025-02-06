@@ -1,9 +1,8 @@
 package com.ttabong.controller.recruit;
 
-import com.ttabong.dto.recruit.requestDto.vol.likeOnRecruitRequestDto;
 import com.ttabong.dto.recruit.requestDto.vol.ApplyRecruitRequestDto;
 import com.ttabong.dto.recruit.requestDto.vol.DeleteLikesRequestDto;
-import com.ttabong.dto.recruit.responseDto.vol.likeOnRecruitResponseDto;
+import com.ttabong.dto.recruit.requestDto.vol.LikeOnRecruitRequestDto;
 import com.ttabong.dto.recruit.responseDto.vol.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -43,14 +42,14 @@ public class VolRecruitController {
 
     }
 
-    @GetMapping("volunteer-reactions/like")
+    @GetMapping("volunteer-reactions/likes")
     public ResponseEntity<MyLikesRecruitsResponseDto> myLikesOnRecruits(@RequestParam Integer cursor, @RequestParam Integer limit) {
         return ResponseEntity.ok().body(new MyLikesRecruitsResponseDto());
     }
 
     @PostMapping("volunteer_reactions")
-    public ResponseEntity<likeOnRecruitResponseDto> likeOnRecruit(@RequestBody likeOnRecruitRequestDto likeOnRecruitRequest) {
-        return ResponseEntity.ok().body(new likeOnRecruitResponseDto());
+    public ResponseEntity<LikeOnRecruitResponseDto> likeOnRecruit(@RequestBody LikeOnRecruitRequestDto likeOnRecruitRequest) {
+        return ResponseEntity.ok().body(new LikeOnRecruitResponseDto());
     }
 
     @PatchMapping("volunteer_reactions/cancel")

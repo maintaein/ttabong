@@ -1,13 +1,11 @@
 package com.ttabong.controller.recruit;
 
 import com.ttabong.dto.recruit.requestDto.org.*;
-import com.ttabong.dto.recruit.responseDto.org.ReadMyRecruitsResponseDto;
-import com.ttabong.dto.recruit.responseDto.org.ReadAvailableRecruitsResponseDto;
 import com.ttabong.dto.recruit.responseDto.org.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -71,7 +69,31 @@ public class OrgRecruitController {
     //10
     @GetMapping("templates")
     public ResponseEntity<ReadTemplatesResponseDto> readTemplates(@RequestParam(defaultValue = "0") int cursor, @RequestParam(defaultValue = "10") int limit) {
-        return ResponseEntity.ok().body(new ReadTemplatesResponseDto());
+        // ✅ 부모 객체 먼저 생성
+        ReadTemplatesResponseDto responseDto = new ReadTemplatesResponseDto();
+
+        // ✅ 부모 객체를 통해 내부 클래스 인스턴스 생성
+        ReadTemplatesResponseDto.GroupDto groupDto = responseDto.new GroupDto();
+        groupDto.setGroupId(1);
+        groupDto.setGroupName("청소년 봉사");
+
+        ReadTemplatesResponseDto.TemplateDto templateDto = responseDto.new TemplateDto();
+        templateDto.setTemplateId(10);
+        templateDto.setOrgId(5);
+        templateDto.setCategoryId(3);
+        templateDto.setTitle("환경 정화 봉사");
+        templateDto.setActivityLocation("서울특별시 종로구");
+        templateDto.setStatus("ALL");
+        templateDto.setImageId("https://example.com/image.jpg");
+        templateDto.setContactName("김봉사");
+        templateDto.setContactPhone("010-1234-5678");
+        templateDto.setDescription("환경 보호 봉사활동");
+        templateDto.setCreatedAt(LocalDateTime.now());
+
+        // ✅ 리스트에 추가
+        groupDto.setTemplates(List.of(templateDto));
+        responseDto.setGroups(List.of(groupDto));
+        return ResponseEntity.ok().body(responseDto);
     }
 
     //11 b
@@ -100,8 +122,8 @@ public class OrgRecruitController {
 
     //15
     @GetMapping("recruits/{recruitId}/applications")
-    public ResponseEntity<readApplicationsResponseDto> readApplications(@PathVariable int recruitId) {
-        return ResponseEntity.ok().body(new readApplicationsResponseDto());
+    public ResponseEntity<ReadApplicationsResponseDto> readApplications(@PathVariable int recruitId) {
+        return ResponseEntity.ok().body(new ReadApplicationsResponseDto());
     }
 
     //16 b
