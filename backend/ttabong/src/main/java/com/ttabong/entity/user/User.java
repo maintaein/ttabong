@@ -12,7 +12,7 @@ import java.util.Set;
 
 @Entity
 @Getter
-@Setter
+//@Setter //builder를 사용하자!
 @Table(name="User")
 @NoArgsConstructor
 @AllArgsConstructor
