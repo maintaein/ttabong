@@ -2,8 +2,7 @@ package com.ttabong.entity.recruit;
 
 import com.ttabong.entity.user.Organization;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -12,10 +11,12 @@ import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-@Getter
-@Setter
 @Entity
-@Table(name="Template")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED) // 외부에서 new User() 막기
+@AllArgsConstructor(access = AccessLevel.PRIVATE) // Builder에서만 생성 가능
+@Builder
+@Table(name = "Template")
 public class Template {
 
     @Id
@@ -24,12 +25,10 @@ public class Template {
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "group_id", nullable = false)
     private TemplateGroup group;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "org_id")
     private Organization org;
 
@@ -44,9 +43,8 @@ public class Template {
     @Column(name = "activity_location", nullable = false)
     private String activityLocation;
 
-    @ColumnDefault("'ALL'")
     @Lob
-    @Column(name = "status", nullable = false)
+    @Column(name = "status", nullable = false, columnDefinition = "ENUM('ALL', 'ACTIVE', 'INACTIVE') DEFAULT 'ALL'")
     private String status;
 
     @Column(name = "image_id", length = 500)

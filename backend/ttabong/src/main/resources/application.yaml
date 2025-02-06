@@ -8,7 +8,7 @@ spring:
         database-platform: org.hibernate.dialect.MySQL8Dialect
         show-sql: true
         hibernate:
-            ddl-auto: validate
+            ddl-auto: update
         properties:
             hibernate:
                 format_sql: true
@@ -102,5 +102,3 @@ logging:
         com.zaxxer.hikari: DEBUG   # HikariCP (DB Connection Pool) 연결 로그 출력
         org.springframework.jdbc.core: DEBUG  # Spring JDBC 로그 출력
         org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration: DEBUG  # 데이터 소스 설정 로깅
-
----

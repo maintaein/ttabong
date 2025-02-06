@@ -9,4 +9,6 @@ public interface UserService {
     User login(LoginRequest loginRequest);
     User registerVolunteer(VolunteerRegisterRequest request);
     User registerOrganization(OrganizationRegisterRequest request);
+
+    boolean checkEmail(String email, String type);
 }

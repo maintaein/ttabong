@@ -2,28 +2,30 @@ package com.ttabong.entity.recruit;
 
 import com.ttabong.entity.user.Volunteer;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.Instant;
 
-@Getter
-@Setter
 @Entity
-@Table(name = "Volunteer_reaction")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED) // 외부에서 new User() 막기
+@AllArgsConstructor(access = AccessLevel.PRIVATE) // Builder에서만 생성 가능
+@Builder
+@Table(name = "`Volunteer_reaction`")
 public class VolunteerReaction {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "reaction_id", nullable = false)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "volunteer_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "volunteer_id", nullable = false)
     private Volunteer volunteer;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "Recruit_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "Recruit_id", nullable = false)
     private Recruit recruit;
 
     @Column(name = "is_like", nullable = false)

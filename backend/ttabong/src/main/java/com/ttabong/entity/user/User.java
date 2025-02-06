@@ -3,18 +3,20 @@ package com.ttabong.entity.user;
 import com.ttabong.entity.sns.Review;
 import com.ttabong.entity.sns.ReviewComment;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Entity
 @Getter
-@Setter
-@Table(name="User")
+@NoArgsConstructor(access = AccessLevel.PROTECTED) // 외부에서 new User() 막기
+@AllArgsConstructor(access = AccessLevel.PRIVATE) // Builder에서만 생성 가능
+@Builder
+@Table(name = "User")
 public class User {
 
     @Id
@@ -56,5 +58,9 @@ public class User {
 
     @OneToMany(mappedBy = "user")
     private Set<Volunteer> volunteers = new LinkedHashSet<>();
+
+    @ColumnDefault("0.00")
+    @Column(name = "total_volunteer_hours", nullable = false, precision = 7, scale = 2)
+    private BigDecimal totalVolunteerHours;
 
 }

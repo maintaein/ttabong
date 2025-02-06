@@ -2,33 +2,34 @@ package com.ttabong.entity.recruit;
 
 import com.ttabong.entity.user.Volunteer;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.Instant;
 
-@Getter
-@Setter
 @Entity
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED) // 외부에서 new User() 막기
+@AllArgsConstructor(access = AccessLevel.PRIVATE) // Builder에서만 생성 가능
+@Builder
+@Table(name = "Application")
 public class Application {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "application_id", nullable = false)
-    private Integer applicationId;
+    private Integer id;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "volunteer_id", nullable = false)
+    private Volunteer volunteer;
 
-    @Column(name = "volunteer_id", nullable = false)
-    private Integer volunteerId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "Recruit_id", nullable = false)
+    private Recruit recruit;
 
-
-    @Column(name = "Recruit_id", nullable = false)
-    private Integer recruitId;
-
-    @ColumnDefault("'PENDING'")
     @Lob
-    @Column(name = "status", nullable = false)
+    @Column(name = "status", nullable = false, columnDefinition = "enum('PENDING','APPROVED','REJECTED','COMPLETED','AUTO_CANCEL','NO_SHOW') DEFAULT 'PENDING'")
     private String status;
 
     @ColumnDefault("0")
@@ -42,13 +43,5 @@ public class Application {
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "volunteer_id")
-    private Volunteer volunteer;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "Recruit_id")
-    private Recruit recruit;
 
 }
