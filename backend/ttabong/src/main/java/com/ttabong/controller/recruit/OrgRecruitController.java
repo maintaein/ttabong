@@ -1,5 +1,7 @@
 package com.ttabong.controller.recruit;
 
+import com.ttabong.dto.recruit.requestDto.org.*;
+import com.ttabong.dto.recruit.responseDto.org.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,43 +23,43 @@ public class OrgRecruitController {
 
     //3 b
     @PatchMapping("recruits/delete")
-    public ResponseEntity<?> deleteRecruits() {
+    public ResponseEntity<DeleteRecruitsResponse> deleteRecruits(@RequestBody DeleteRecruitsRequestDto deleteRecruitDto) {
         return ResponseEntity.ok().build();
     }
 
     //4 b
     @PatchMapping("recruits/{recruitId}")
-    public ResponseEntity<?> updateRecruit(@PathVariable int recruitId) {
+    public ResponseEntity<UpdateRecruitsResponse> updateRecruit(@PathVariable int recruitId, @RequestBody UpdateRecruitsRequestDto updateRecruitDto) {
         return ResponseEntity.ok().build();
     }
 
     //5 b
     @PatchMapping("recruits/close")
-    public ResponseEntity<?> closeRecruit() {
+    public ResponseEntity<CloseRecruitResponse> closeRecruit(@RequestBody CloseRecruitRequestDto closeRecruitDto) {
         return ResponseEntity.ok().build();
     }
 
     //7 6
     @PatchMapping("groups")
-    public ResponseEntity<?> updateGroup() {
+    public ResponseEntity<UpdateGroupResponse> updateGroup(@RequestBody UpdateGroupRequestDto updateGroupDto) {
         return ResponseEntity.ok().build();
     }
 
     //7 b
     @PatchMapping("templates")
-    public ResponseEntity<?> updateTemplate() {
+    public ResponseEntity<UpdateTemplateResponse> updateTemplate(@RequestBody UpdateTemplateRequestDto updateTemplateDto) {
         return ResponseEntity.ok().build();
     }
 
     //8 b
     @PatchMapping("templates/delete")
-    public ResponseEntity<?> deleteTemplates() {
+    public ResponseEntity<DeleteTemplatesResponse> deleteTemplates(@RequestBody DeleteTemplatesRequestDto deleteTemplatesDto) {
         return ResponseEntity.ok().build();
     }
 
     //9 b
     @PatchMapping("groups/delete")
-    public ResponseEntity<?> deleteGroup() {//@RequestBody Object object) {
+    public ResponseEntity<DeleteGroupResponse> deleteGroup(@RequestBody DeleteGroupDto deleteGroupDto) {//@RequestBody Object object) {
         return ResponseEntity.ok().build();
     }
 
@@ -69,19 +71,19 @@ public class OrgRecruitController {
 
     //11 b
     @PostMapping("templates")
-    public ResponseEntity<?> createTemplate() {//@RequestBody Object object) {
+    public ResponseEntity<CreateTemplateResponse> createTemplate(@RequestBody CreateTemplateRequestDto createTemplateDto) {//@RequestBody Object object) {
         return ResponseEntity.ok().build();
     }
 
     //12 b
     @PostMapping("groups")
-    public ResponseEntity<?> createGroup() {//@RequestBody Object object) {
+    public ResponseEntity<CreateGroupResponse> createGroup(@RequestBody CreateGroupRequestDto createGroupDto) {//@RequestBody Object object) {
         return ResponseEntity.ok().build();
     }
 
     //13 b
     @PostMapping("recruits")
-    public ResponseEntity<?> createRecruit() {//@RequestBody Object object) {
+    public ResponseEntity<CreateRecruitResponse> createRecruit(@RequestBody CreateRecruitRequestDto createRecruitDto) {//@RequestBody Object object) {
         return ResponseEntity.ok().build();
     }
 
@@ -99,13 +101,13 @@ public class OrgRecruitController {
 
     //16 b
     @PatchMapping("applications/status")
-    public ResponseEntity<?> updateStatuses() {//@RequestBody Object object) {
+    public ResponseEntity<UpdateApplicationsResponse> updateStatuses(@RequestBody UpdateApplicationsRequestDto updateApplicationDto) {//@RequestBody Object object) {
         return ResponseEntity.ok().build();
     }
 
     //17 b
     @PatchMapping("recruits/{recruitId}/applications/evaluate")
-    public ResponseEntity<?> evaluateApplicants(@PathVariable int recruitId) {//}, @RequestBody Object object) {
+    public ResponseEntity<EvaluateApplicationsResponse> evaluateApplicants(@PathVariable int recruitId, EvaluateApplicationsRequestDto evaluateApplicationDto) {//}, @RequestBody Object object) {
         return ResponseEntity.ok().build();
     }
 }
