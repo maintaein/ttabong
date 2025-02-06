@@ -34,12 +34,10 @@ public class Review {
     private Integer groupId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "Recruit_id")
     private Recruit recruit;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "org_id", nullable = false)
     private Organization org;
 
