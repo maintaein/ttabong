@@ -272,5 +272,20 @@ export const handlers = [
       reviewId: Math.random(),
       ...reviewData
     }, { status: 201 });
-  })
+  }),
+
+  // 리뷰 삭제 API
+  http.patch('/api/reviews/:reviewId/delete', ({ params }) => {
+    const { reviewId } = params;
+    console.log(`Review ${reviewId} deleted`);
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // 리뷰 공개여부 토글 API
+  http.patch('/api/reviews/:reviewId/toggle-public', async ({ request, params }) => {
+    const { reviewId } = params;
+    const { isPublic } = await request.json() as { isPublic: boolean };
+    console.log(`Review ${reviewId} visibility toggled from ${isPublic} to ${!isPublic}`);
+    return new HttpResponse(null, { status: 204 });
+  }),
 ]; 

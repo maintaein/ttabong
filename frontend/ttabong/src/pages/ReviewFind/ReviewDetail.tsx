@@ -16,7 +16,8 @@ import { MoreVertical } from 'lucide-react';
 
 export default function ReviewDetail() {
   const { reviewId } = useParams();
-  const { reviewDetail, isLoading, error, fetchReviewDetail, addComment, deleteReview } = useReviewStore();
+  const { reviewDetail, isLoading, error, fetchReviewDetail, addComment, deleteReview, toggleReviewPublic, updateComment, deleteComment } = useReviewStore();
+  const [isOpen, setIsOpen] = useState(false);
 
   const [commentContent, setCommentContent] = useState('');
   const navigate = useNavigate();
@@ -53,32 +54,47 @@ export default function ReviewDetail() {
     }
   };
 
+  const handleTogglePublic = async () => {
+    if (!reviewDetail) return;
+    
+    setIsOpen(false);
+    
+    setTimeout(() => {
+      toggleReviewPublic(reviewDetail.reviewId, reviewDetail.isPublic);
+    }, 300);
+  };
+
   return (
     <div className="pb-32">
-      <div className="flex justify-between items-center p-4">
-        <ReviewHeader writer={reviewDetail.writer} organization={reviewDetail.organization} />
-        
-        {isOwner && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreVertical className="h-5 w-5" />
-                <span className="sr-only">더보기 메뉴</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleEdit}>
-                수정하기
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={handleDelete}
-                className="text-destructive"
-              >
-                삭제하기
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+      <div className="p-4 border-b">
+        <div className="flex items-center justify-between">
+          <ReviewHeader 
+            writer={reviewDetail.writer} 
+            organization={reviewDetail.organization} 
+            isPublic={reviewDetail.isPublic} 
+          />
+          {isOwner && (
+            <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreVertical className="h-4 w-4" />
+                  <span className="sr-only">더보기 메뉴</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleEdit}>
+                  수정하기
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+                  삭제하기
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleTogglePublic}>
+                  {reviewDetail.isPublic ? '비공개하기' : '공개하기'}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
       </div>
       <ReviewGallery 
         images={reviewDetail.images} 
@@ -128,6 +144,8 @@ export default function ReviewDetail() {
         commentContent={commentContent}
         onCommentChange={(e) => setCommentContent(e.target.value)}
         onSubmit={handleSubmitComment}
+        onUpdateComment={updateComment}
+        onDeleteComment={deleteComment}
       />
     </div>
   );

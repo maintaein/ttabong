@@ -76,6 +76,7 @@ export default function ReviewWrite() {
           orgId: 1,
           orgName: "서울 환경 봉사단"
         }}
+        isPublic={isPublic}
       />
       
       <ReviewWriteImages

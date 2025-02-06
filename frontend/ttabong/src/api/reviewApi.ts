@@ -37,11 +37,6 @@ export const reviewApi = {
     return response.data;
   },
   
-  addComment: async (reviewId: number, content: string): Promise<Comment> => {
-    const response = await axiosInstance.post(`/reviews/${reviewId}/comments`, { content });
-    return response.data;
-  },
-  
   getRecruitReviews: async (recruitId: number): Promise<RecruitReview[]> => {
     const response = await axiosInstance.get(`/recruits/${recruitId}/reviews`);
     return response.data;
@@ -54,5 +49,23 @@ export const reviewApi = {
   
   deleteReview: async (reviewId: number): Promise<void> => {
     await axiosInstance.patch(`/reviews/${reviewId}/delete`);
+  },
+  
+  toggleReviewPublic: async (reviewId: number, isPublic: boolean): Promise<void> => {
+    await axiosInstance.patch(`/reviews/${reviewId}/toggle-public`, { isPublic });
+  },
+
+  addComment: async (reviewId: number, content: string): Promise<Comment> => {
+    const response = await axiosInstance.post(`/reviews/${reviewId}/comments`, { content });
+    return response.data;
+  },
+  
+  updateComment: async (commentId: number, content: string): Promise<Comment> => {
+    const response = await axiosInstance.patch(`/comments/${commentId}`, { content });
+    return response.data;
+  },
+  
+  deleteComment: async (commentId: number): Promise<void> => {
+    await axiosInstance.patch(`/comments/${commentId}/delete`);
   },
 }; 

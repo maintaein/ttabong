@@ -30,7 +30,7 @@ export default function ChooseRecruit() {
   const handleCardClick = async (application: Application) => {
     const orgId = application.template.group.groupId;
     const recruitId = application.recruit.recruitId;
-    
+    console.log(orgId, recruitId); 
     if (orgId && recruitId) {
       await Promise.resolve(setReviewInfo(recruitId, orgId));
       navigate('/review-write');
