@@ -1,4 +1,4 @@
 package com.ttabong.dto.recruit.requestDto.org;
 
-public class UpdateGroupIdRequestDto {
+public class CloseRecruitRequestDto {
 }
