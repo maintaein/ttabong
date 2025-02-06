@@ -6,17 +6,17 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Entity
 @Getter
-//@Setter //builder를 사용하자!
-@Table(name="User")
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED) // 외부에서 new User() 막기
+@AllArgsConstructor(access = AccessLevel.PRIVATE) // Builder에서만 생성 가능
 @Builder
+@Table(name = "User")
 public class User {
 
     @Id
@@ -35,9 +35,6 @@ public class User {
 
     @Column(name = "phone", nullable = false, length = 20)
     private String phone;
-
-    @Column(name = "total_volunteer_hours", nullable = false, columnDefinition = "DECIMAL(7,2) DEFAULT 0.00")
-    private Double totalVolunteerHours = 0.0;
 
     @Column(name = "profile_image", length = 200)
     private String profileImage;
@@ -61,5 +58,9 @@ public class User {
 
     @OneToMany(mappedBy = "user")
     private Set<Volunteer> volunteers = new LinkedHashSet<>();
+
+    @ColumnDefault("0.00")
+    @Column(name = "total_volunteer_hours", nullable = false, precision = 7, scale = 2)
+    private BigDecimal totalVolunteerHours;
 
 }

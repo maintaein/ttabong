@@ -1,21 +1,19 @@
+
 spring:
     application:
         name: ttabong
     datasource:
         driver-class-name: com.mysql.cj.jdbc.Driver
     jpa:
-        database-platform: org.hibernate.dialect.MySQLDialect  # MySQL8Dialect는 deprecated → 최신 버전 사용
+        database-platform: org.hibernate.dialect.MySQL8Dialect
         show-sql: true
         hibernate:
-            ddl-auto: update
+            ddl-auto: validate
             naming:
-                physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl  # ✅ 대소문자 유지
+                physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
         properties:
             hibernate:
                 format_sql: true
-    logging:
-        file:
-            name: logs/common.log
 
 server:
     servlet:
@@ -40,11 +38,7 @@ spring:
         port: 5672
         username: user
         password: password
-    logging:
-        level:
-            org.springframework: DEBUG
-        file:
-            name: logs/local.log
+
 
 ---
 spring:
@@ -62,11 +56,7 @@ spring:
     rabbitmq:
         host: rabbitmqdeploy
         port: 5672
-    logging:
-        level:
-            org.springframework: DEBUG
-        file:
-            name: logs/dev.log
+
 
 ---
 spring:
@@ -87,19 +77,6 @@ spring:
     jpa:
         hibernate:
             ddl-auto: none
-            naming:
-                physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl  # ✅ 대소문자 유지
-    logging:
-        level:
-            org.springframework: INFO
-        file:
-            name: logs/prod.log
-    management:
-        endpoints:
-            web:
-                exposure:
-                    include: health,info
-
 logging:
     level:
         org.hibernate.SQL: DEBUG   # Hibernate SQL 쿼리 로그 출력

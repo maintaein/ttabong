@@ -37,17 +37,10 @@ dependencies {
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'com.mysql:mysql-connector-j'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
-    //가빈 : 밑 3개는 JWT사용하기 위해 추가함
-    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-    implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
-    implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5' // JSON 처리 지원
+    testImplementation 'org.mockito:mockito-core'
 
-    //가빈 : 스프링 시큐리티 추가
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    
-    //가빈 : thymeleaf추가
-    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
 }
 
