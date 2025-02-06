@@ -1,18 +1,20 @@
 package com.ttabong.dto.sns;
 
 import lombok.*;
+
 import java.time.LocalDateTime;
 
+/*
+ * 5. 후기 _ 공개 여부 설정
+ * */
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ReviewCommentDto {
-    private Long commentId;
-    private Long writerId;
+public class ReviewVisibilitySettingResDto {
+    private String message;
     private Long reviewId;
-    private String content;
-    private Boolean isDeleted;
+    private Boolean isPublic;
     private LocalDateTime updatedAt;
-    private LocalDateTime createdAt;
 }
+
