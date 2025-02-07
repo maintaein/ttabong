@@ -2,17 +2,16 @@ package com.ttabong.controller.user;
 
 import com.ttabong.dto.user.EmailCheckResponse;
 import com.ttabong.dto.user.LoginRequest;
+import com.ttabong.dto.user.LoginResponse;
 import com.ttabong.dto.user.OrganizationRegisterRequest;
 import com.ttabong.dto.user.VolunteerRegisterRequest;
 import com.ttabong.entity.user.User;
+import com.ttabong.jwt.JwtProvider;
 import com.ttabong.service.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("") //자동 기본값이 /api
@@ -26,7 +25,6 @@ public class UserController {
         this.userService = userService;
         this.jwtProvider = jwtProvider;
     }
-
     // 로그인 엔드포인트
     @PostMapping("/user/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {

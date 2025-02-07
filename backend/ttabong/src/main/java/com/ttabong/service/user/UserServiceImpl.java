@@ -105,4 +105,12 @@ public class UserServiceImpl implements UserService {
                 .build();
         organizationRepository.save(organization);
     }
+
+    @Override
+    public boolean checkEmail(String email, String type) {
+        boolean exists = userRepository.existsByEmailAndIsDeletedFalse(email);
+
+        //이메일이 있다면 true, 없다면 false를 반환하는데, 이를 상황에 따라 어떻게 응답할 지는 컨트롤러에서 정할 것임.
+        return exists;
+    }
 }
