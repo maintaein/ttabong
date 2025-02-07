@@ -6,7 +6,9 @@ import com.ttabong.dto.user.OrganizationRegisterRequest;
 import com.ttabong.entity.user.User;
 
 public interface UserService {
-    User login(LoginRequest loginRequest);
-    User registerVolunteer(VolunteerRegisterRequest request);
-    User registerOrganization(OrganizationRegisterRequest request);
+    long login(LoginRequest loginRequest);
+    void registerVolunteer(VolunteerRegisterRequest request);
+    void registerOrganization(OrganizationRegisterRequest request);
+
+    boolean checkEmail(String email, String type);
 }
