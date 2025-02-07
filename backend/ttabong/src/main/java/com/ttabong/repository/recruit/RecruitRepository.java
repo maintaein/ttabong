@@ -6,6 +6,10 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
@@ -18,5 +22,23 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
     @Modifying
     @Query("UPDATE Recruit r SET r.isDeleted = true WHERE r.id IN :deleteIds")
     void markAsDeleted(@Param("deleteIds") List<Integer> deleteIds);
+
+    @Modifying
+    @Query("UPDATE Recruit r " +
+            "SET r.deadline = :deadline, " +
+            "r.activityDate = :activityDate, " +
+            "r.activityStart = :activityStart, " +
+            "r.activityEnd = :activityEnd, " +
+            "r.maxVolunteer = :maxVolunteer, " +
+            "r.updatedAt = CURRENT_TIMESTAMP " +
+            "WHERE r.id = :recruitId")
+    void updateRecruit(
+            @Param("recruitId") Integer recruitId,
+            @Param("deadline") Instant deadline,
+            @Param("activityDate") Date activityDate,
+            @Param("activityStart") Double activityStart,
+            @Param("activityEnd") Double activityEnd,
+            @Param("maxVolunteer") Integer maxVolunteer
+    );
 
 }

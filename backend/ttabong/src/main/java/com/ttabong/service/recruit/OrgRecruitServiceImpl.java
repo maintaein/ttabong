@@ -1,11 +1,13 @@
 package com.ttabong.service.recruit;
 
 import com.ttabong.dto.recruit.requestDto.org.DeleteRecruitsRequestDto;
+import com.ttabong.dto.recruit.requestDto.org.UpdateRecruitsRequestDto;
 import com.ttabong.dto.recruit.responseDto.org.DeleteRecruitsResponseDto;
 import com.ttabong.dto.recruit.responseDto.org.ReadAvailableRecruitsResponseDto;
 import com.ttabong.dto.recruit.responseDto.org.ReadAvailableRecruitsResponseDto.*;
 import com.ttabong.dto.recruit.responseDto.org.ReadMyRecruitsResponseDto;
 import com.ttabong.dto.recruit.responseDto.org.ReadMyRecruitsResponseDto.*;
+import com.ttabong.dto.recruit.responseDto.org.UpdateRecruitsResponseDto;
 import com.ttabong.entity.recruit.Recruit;
 import com.ttabong.entity.recruit.Template;
 import com.ttabong.entity.recruit.TemplateGroup;
@@ -17,7 +19,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Date;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -36,6 +41,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
     // TODO: 마지막 공고까지 다 로드했다면? & db에서 정보 누락된게 있다면? , 삭제여부 확인
     @Override
+    @Transactional(readOnly = true)
     public ReadAvailableRecruitsResponseDto readAvailableRecruits(Integer cursor, Integer limit) {
 
         List<Template> templates = templateRepository.findAvailableTemplates(cursor, limit);
@@ -99,6 +105,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
     // TODO: 마지막 공고까지 다 로드했다면? & db에서 정보 누락된게 있다면?, 삭제여부 확인
     @Override
+    @Transactional(readOnly = true)
     public ReadMyRecruitsResponseDto readMyRecruits(Integer cursor, Integer limit) {
 
         List<Recruit> recruits = recruitRepository.findAvailableRecruits(cursor, limit);
@@ -160,6 +167,28 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         return DeleteRecruitsResponseDto.builder()
                 .message("공고 삭제 완료")
                 .deletedRecruits(recruitIds)
+                .build();
+    }
+
+    @Override
+    public UpdateRecruitsResponseDto updateRecruit(Integer recruitId, UpdateRecruitsRequestDto requestDto) {
+
+        Instant deadlineInstant = requestDto.getDeadline() != null
+                ? requestDto.getDeadline().atZone(ZoneId.systemDefault()).toInstant()
+                : null;
+
+        recruitRepository.updateRecruit(
+                recruitId,
+                deadlineInstant,
+                requestDto.getActivityDate(),
+                requestDto.getActivityStart(),
+                requestDto.getActivityEnd(),
+                requestDto.getMaxVolunteer()
+        );
+
+        return UpdateRecruitsResponseDto.builder()
+                .message("공고 수정 완료")
+                .recruitId(recruitId)
                 .build();
     }
 

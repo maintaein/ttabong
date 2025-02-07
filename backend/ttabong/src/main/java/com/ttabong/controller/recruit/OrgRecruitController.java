@@ -51,15 +51,14 @@ public class OrgRecruitController {
         return ResponseEntity.ok(response);
     }
 
-    //4 b
+    //4. 공고 _ 공고 수정 /api/org/recruits/{recruitId}
     @PatchMapping("/recruits/{recruitId}")
-    public ResponseEntity<UpdateRecruitsResponseDto> updateRecruit(@PathVariable int recruitId, @RequestBody UpdateRecruitsRequestDto updateRecruitDto) {
-        UpdateRecruitsResponseDto responseDto = UpdateRecruitsResponseDto.builder()
-                .message("수정 성공")
-                .recruitId(recruitId)
-                .build();
+    public ResponseEntity<UpdateRecruitsResponseDto> updateRecruit(
+            @PathVariable Integer recruitId,
+            @RequestBody UpdateRecruitsRequestDto requestDto) {
 
-        return ResponseEntity.ok().body(responseDto);
+        UpdateRecruitsResponseDto response = orgRecruitService.updateRecruit(recruitId, requestDto);
+        return ResponseEntity.ok(response);
     }
 
     //5 b
