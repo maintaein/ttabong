@@ -34,8 +34,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User login(LoginRequest loginRequest) {
-        Optional<User> userOpt = userRepository.findByEmail(loginRequest.getEmail());
+    public long login(LoginRequest loginRequest) {
+        Optional<User> userOpt = userRepository.findByEmailAndIsDeletedFalse(loginRequest.getEmail());
         if (userOpt.isEmpty()) {
             throw new RuntimeException("User not found");
         }
@@ -43,13 +43,13 @@ public class UserServiceImpl implements UserService {
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid password");
         }
-        return user;
+        return user.getId();
     }
 
     @Override
-    public User registerVolunteer(VolunteerRegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exists");
+    public void registerVolunteer(VolunteerRegisterRequest request) {
+        if (userRepository.existsByEmailAndIsDeletedFalse(request.getEmail())) {
+            throw new RuntimeException("이미 계정이 존재합니다.");
         }
 
         // 기본 User 정보 저장 (비밀번호는 암호화)
@@ -76,13 +76,12 @@ public class UserServiceImpl implements UserService {
                 .notRecommendedCount(0)
                 .build();
         volunteerRepository.save(volunteer);
-        return user;
     }
 
     @Override
-    public User registerOrganization(OrganizationRegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exists");
+    public void registerOrganization(OrganizationRegisterRequest request) {
+        if (userRepository.existsByEmailAndIsDeletedFalse(request.getEmail())) {
+            throw new RuntimeException("이미 계정이 존재합니다.");
         }
 
         // 기본 User 정보 저장 (비밀번호는 암호화)
@@ -105,6 +104,13 @@ public class UserServiceImpl implements UserService {
                 .orgAddress(request.getOrgAddress())
                 .build();
         organizationRepository.save(organization);
-        return user;
+    }
+
+    @Override
+    public boolean checkEmail(String email, String type) {
+        boolean exists = userRepository.existsByEmailAndIsDeletedFalse(email);
+
+        //이메일이 있다면 true, 없다면 false를 반환하는데, 이를 상황에 따라 어떻게 응답할 지는 컨트롤러에서 정할 것임.
+        return exists;
     }
 }

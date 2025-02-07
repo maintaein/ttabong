@@ -22,7 +22,7 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id", nullable = false)
-    private Integer id;
+    private Long id;
 
     @Column(name = "email", nullable = false, length = 80)
     private String email;
@@ -44,7 +44,7 @@ public class User {
     private Boolean isDeleted;
 
     @ColumnDefault("CURRENT_TIMESTAMP")
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, insertable=false, updatable=false)
     private Instant createdAt;
 
     @OneToMany(mappedBy = "user")
@@ -60,7 +60,7 @@ public class User {
     private Set<Volunteer> volunteers = new LinkedHashSet<>();
 
     @ColumnDefault("0.00")
-    @Column(name = "total_volunteer_hours", nullable = false, precision = 7, scale = 2)
+    @Column(name = "total_volunteer_hours", nullable = false, precision = 7, scale = 2, insertable=false, updatable=false)
     private BigDecimal totalVolunteerHours;
 
 }
