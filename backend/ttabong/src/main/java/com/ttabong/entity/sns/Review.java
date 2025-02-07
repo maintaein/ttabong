@@ -6,7 +6,9 @@ import com.ttabong.entity.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.JdbcTypeCode;
 
+import java.sql.SQLType;
 import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -15,11 +17,9 @@ import java.util.Set;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // 외부에서 new User() 막기
 @AllArgsConstructor(access = AccessLevel.PRIVATE) // Builder에서만 생성 가능
-@Builder
+@Builder(toBuilder = true)
 @Table(name = "Review")
 public class Review {
-
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_Review_id")
     private Review parentReview;
@@ -43,6 +43,9 @@ public class Review {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "writer_id")
     private User writer;
+
+    @Column(name = "title", length = 255)
+    private String title;
 
     @Column(name = "content", nullable = false, length = 500)
     private String content;

@@ -15,11 +15,11 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class CommentCreateAndUpdateResponseDto {
-    private Long commentId;
-    private Long reviewId;
+    private Integer commentId;
+    private Integer reviewId;
 
     // 작성자 정보
-    private Long writerId;
+    private Integer writerId;
     private String writerName;
     private String writerProfileImage;
 

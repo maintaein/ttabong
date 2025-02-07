@@ -33,7 +33,7 @@ dependencies {
 
     // validation 사용을 위해 추가
     implementation 'org.springframework.boot:spring-boot-starter-validation'
-    implementation 'org.springframework.boot:spring-boot-starter-security'
+    
 
     testImplementation 'org.springframework.amqp:spring-rabbit-test'
     compileOnly 'org.projectlombok:lombok'
@@ -45,9 +45,19 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
     testImplementation 'org.mockito:mockito-core'
+
     implementation 'org.slf4j:slf4j-api:2.0.9'
     implementation 'ch.qos.logback:logback-classic:1.4.11'
     implementation 'io.minio:minio:8.5.17'
+
+    //가빈 : 밑 3개는 JWT사용하기 위해 추가함
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5' // JSON 처리 지원
+
+    //가빈 : 스프링 시큐리티 추가
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
 }
 
 tasks.named('test') {

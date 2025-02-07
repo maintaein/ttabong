@@ -18,10 +18,10 @@ public class ReviewImage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "image_id", nullable = false)
+    @Column(name = "image_id")
     private Integer id;
 
-    @Column(name = "Review_id", nullable = false)
+    @Column(name = "Review_id")
     private Integer reviewId;
 
     @Column(name = "image_url", nullable = false, length = 500)

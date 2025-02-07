@@ -11,9 +11,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class ReviewCommentDto {
-    private Long commentId;
-    private Long writerId;
-    private Long reviewId;
+    private Integer commentId;
+    private Integer writerId;
+    private Integer reviewId;
     private String content;
     private Boolean isDeleted;
     private LocalDateTime updatedAt;
