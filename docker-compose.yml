@@ -32,7 +32,16 @@ services:
     ports:
       - "5672:5672" # AMQP 프로토콜
       - "15672:15672" # 관리 웹 콘솔
-
+  minio:
+    build:
+      context: ./docker/minio
+      dockerfile: Dockerfile
+    image: local-minio:local
+    container_name: minio_container
+    restart: always
+    ports:
+      - "9000:9000"
+      - "9001:9001"
   nginx:
     build:
       context: ./docker/nginx
