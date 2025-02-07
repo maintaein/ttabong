@@ -15,6 +15,7 @@ public class UserDto {
     private String name;
     private String password;
     private String phone;
+    private Long total_volunteer_hours;
     private String profileImage;
     private Boolean isDeleted;
     private LocalDateTime createdAt;

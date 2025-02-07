@@ -1,11 +1,12 @@
 package com.ttabong.dto.sns;
 
-import lombok.*;
-
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import java.time.LocalDateTime;
 
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -15,5 +16,5 @@ public class ReviewImageDto {
     private String imageUrl;
     private Boolean isDeleted;
     private LocalDateTime createdAt;
-    private Long nextImageId;
+    private Long nextImageId; // 다음 이미지 ID
 }
