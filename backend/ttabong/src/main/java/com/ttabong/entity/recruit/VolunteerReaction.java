@@ -4,6 +4,7 @@ import com.ttabong.entity.user.Volunteer;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
 
@@ -12,7 +13,7 @@ import java.time.Instant;
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // 외부에서 new User() 막기
 @AllArgsConstructor(access = AccessLevel.PRIVATE) // Builder에서만 생성 가능
 @Builder
-@Table(name = "`Volunteer_reaction`")
+@Table(name = "Volunteer_reaction")
 public class VolunteerReaction {
 
     @Id
@@ -31,10 +32,11 @@ public class VolunteerReaction {
     @Column(name = "is_like", nullable = false)
     private Boolean isLike = false;
 
-    @ColumnDefault("0")
+    @ColumnDefault("false")
     @Column(name = "is_deleted")
     private Boolean isDeleted;
 
+    @CreationTimestamp
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
