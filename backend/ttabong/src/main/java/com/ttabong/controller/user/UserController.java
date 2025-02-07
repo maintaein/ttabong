@@ -2,9 +2,11 @@ package com.ttabong.controller.user;
 
 import com.ttabong.dto.user.EmailCheckResponse;
 import com.ttabong.dto.user.LoginRequest;
+import com.ttabong.dto.user.LoginResponse;
 import com.ttabong.dto.user.OrganizationRegisterRequest;
 import com.ttabong.dto.user.VolunteerRegisterRequest;
 import com.ttabong.entity.user.User;
+import com.ttabong.jwt.JwtProvider;
 import com.ttabong.service.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,33 +18,43 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+    private final JwtProvider jwtProvider;
 
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService, JwtProvider jwtProvider) {
         this.userService = userService;
+        this.jwtProvider = jwtProvider;
     }
-
     // 로그인 엔드포인트
     @PostMapping("/user/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+        String message;
+        LoginResponse loginResponse;
         try {
-            User user = userService.login(loginRequest);
-            System.out.println("user : " + user);
-            // 로그인 성공 시 200 OK와 함께 사용자 정보를 반환 (토큰 발급 로직 추가 가능)
-            return ResponseEntity.ok(user);
+            Long userId = userService.login(loginRequest);
+
+            //액세스토큰을 발급받자.
+            //토큰에 담을 내용 : userId, loginRequest.getUserType()
+            String accessToken = jwtProvider.createToken(userId, loginRequest.getUserType());
+
+            message = "로그인 성공";
+
+            loginResponse = new LoginResponse(message, accessToken); //여기에 토큰도 담아서 주면 됨
+
+            return ResponseEntity.ok(loginResponse);
         } catch (RuntimeException e) {
             // 로그인 실패 시 401 Unauthorized 반환
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Invalid credentials");
+                    .body("이메일 또는 비밀번호가 일치하지 않습니다.");
         }
     }
 
     // 봉사자 회원가입 엔드포인트
     @PostMapping("/volunteer/register")
-    public ResponseEntity<?> signUpVolunteer(@RequestBody VolunteerRegisterRequest request) {
+    public ResponseEntity<?> registerVolunteer(@RequestBody VolunteerRegisterRequest request) {
         try {
-            User user = userService.registerVolunteer(request);
-            return ResponseEntity.ok(user);
+            userService.registerVolunteer(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body("봉사자 회원가입이 완료되었습니다.");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -50,10 +62,10 @@ public class UserController {
 
     // 기관 회원가입 엔드포인트
     @PostMapping("/org/register")
-    public ResponseEntity<?> signUpOrganization(@RequestBody OrganizationRegisterRequest request) {
+    public ResponseEntity<?> registerOrganization(@RequestBody OrganizationRegisterRequest request) {
         try {
-            User user = userService.registerOrganization(request);
-            return ResponseEntity.ok(user);
+            userService.registerOrganization(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body("기관 회원가입이 완료되었습니다.");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

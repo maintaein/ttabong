@@ -34,7 +34,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User login(LoginRequest loginRequest) {
+    public long login(LoginRequest loginRequest) {
         Optional<User> userOpt = userRepository.findByEmailAndIsDeletedFalse(loginRequest.getEmail());
         if (userOpt.isEmpty()) {
             throw new RuntimeException("User not found");
@@ -43,11 +43,11 @@ public class UserServiceImpl implements UserService {
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid password");
         }
-        return user;
+        return user.getId();
     }
 
     @Override
-    public User registerVolunteer(VolunteerRegisterRequest request) {
+    public void registerVolunteer(VolunteerRegisterRequest request) {
         if (userRepository.existsByEmailAndIsDeletedFalse(request.getEmail())) {
             throw new RuntimeException("이미 계정이 존재합니다.");
         }
@@ -76,11 +76,10 @@ public class UserServiceImpl implements UserService {
                 .notRecommendedCount(0)
                 .build();
         volunteerRepository.save(volunteer);
-        return user;
     }
 
     @Override
-    public User registerOrganization(OrganizationRegisterRequest request) {
+    public void registerOrganization(OrganizationRegisterRequest request) {
         if (userRepository.existsByEmailAndIsDeletedFalse(request.getEmail())) {
             throw new RuntimeException("이미 계정이 존재합니다.");
         }
@@ -105,7 +104,6 @@ public class UserServiceImpl implements UserService {
                 .orgAddress(request.getOrgAddress())
                 .build();
         organizationRepository.save(organization);
-        return user;
     }
 
     @Override
