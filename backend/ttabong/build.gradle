@@ -45,8 +45,9 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
     testImplementation 'org.mockito:mockito-core'
-
-
+    implementation 'org.slf4j:slf4j-api:2.0.9'
+    implementation 'ch.qos.logback:logback-classic:1.4.11'
+    implementation 'io.minio:minio:8.5.17'
 }
 
 tasks.named('test') {

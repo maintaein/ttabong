@@ -60,7 +60,7 @@ CREATE TABLE Volunteer(
     CONSTRAINT fk_volunteer_extra_user
         FOREIGN KEY (user_id) REFERENCES User(user_id)
         ON UPDATE CASCADE ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='봉사자 추가 정보 테이블';
+) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; COMMENT='봉사자 추가 정보 테이블';
 
 -- 봉사기관 기본 정보 테이블
 DROP TABLE IF EXISTS Organization;
@@ -279,6 +279,97 @@ INSERT INTO Category (name, parent_id) VALUES
 INSERT INTO Category (name, parent_id) VALUES
 ('멘토링', 14), ('학습지도 교육', 14), ('진로적성', 14), ('취업', 14), ('창업', 14), ('기타', 14);
 INSERT INTO Category (name, parent_id) VALUES ('기타', 15);
+USE volunteer_service;
 
+INSERT INTO User (email, name, password, phone, total_volunteer_hours, profile_image, is_deleted, created_at)
+VALUES
+('user1@example.com', '김철수', 'hashed_password_1', '010-1234-5678', 10.50, 'profile1.jpg', FALSE, NOW()),
+('user2@example.com', '이영희', 'hashed_password_2', '010-2345-6789', 20.00, 'profile2.jpg', FALSE, NOW()),
+('user3@example.com', '박지훈', 'hashed_password_3', '010-3456-7890', 5.75, 'profile3.jpg', FALSE, NOW()),
+('user4@example.com', '최민호', 'hashed_password_4', '010-4567-8901', 15.30, 'profile4.jpg', FALSE, NOW()),
+('user5@example.com', '정유진', 'hashed_password_5', '010-5678-9012', 8.25, 'profile5.jpg', FALSE, NOW());
+
+INSERT INTO Volunteer (user_id, preferred_time, interest_theme, duration_time, region, birth_date, gender, recommended_count, not_recommended_count)
+VALUES
+(1, '오전', '환경보호', '2시간', '서울', '1995-06-15', 'M', 3, 1),
+(2, '오후', '노인복지', '3시간', '부산', '1990-11-25', 'F', 5, 0),
+(3, '저녁', '아동교육', '1시간', '대전', '2000-02-10', 'M', 2, 2),
+(4, '오전', '장애인 복지', '4시간', '광주', '1987-09-05', 'M', 1, 3),
+(5, '오후', '동물 보호', '2시간', '대구', '1998-07-30', 'F', 4, 1);
+
+
+INSERT INTO Organization (user_id, business_reg_number, org_name, representative_name, org_address, created_at)
+VALUES
+(1, '123-45-67890', '희망복지센터', '이상호', '서울시 강남구 테헤란로 123', NOW()),
+(2, '234-56-78901', '행복나눔재단', '김지수', '부산시 해운대구 센텀로 45', NOW()),
+(3, '345-67-89012', '사랑의집', '박영철', '대구시 동구 동대구로 10', NOW()),
+(4, '456-78-90123', '푸른환경센터', '정은지', '광주시 북구 문화로 22', NOW()),
+(5, '567-89-01234', '어린이사랑재단', '최민기', '대전시 서구 둔산대로 77', NOW());
+
+INSERT INTO Template_group (org_id, group_name, is_deleted)
+VALUES
+(1, '환경 봉사팀', FALSE),
+(2, '노인 돌봄 봉사단', FALSE),
+(3, '아동 교육 봉사', FALSE),
+(4, '장애인 지원팀', FALSE),
+(5, '동물 보호 단체', FALSE);
+
+INSERT INTO Template (group_id, org_id, category_id, title, activity_location, status, image_id, contact_name, contact_phone, description, is_deleted, created_at)
+VALUES
+(1, 1, 1, '강남구 환경 정화 봉사', '서울시 강남구 코엑스 앞', 'ALL', 'image1.jpg', '김철수', '010-1234-5678', '환경 보호 활동', FALSE, NOW()),
+(2, 2, 2, '부산 노인 돌봄 봉사', '부산시 해운대구', 'YOUTH', 'image2.jpg', '이영희', '010-2345-6789', '노인 돌봄 활동', FALSE, NOW()),
+(3, 3, 3, '아동 교육 봉사', '대구시 동구 어린이 도서관', 'ADULT', 'image3.jpg', '박지훈', '010-3456-7890', '아이들과 함께하는 교육', FALSE, NOW()),
+(4, 4, 4, '장애인 지원 활동', '광주시 북구', 'ALL', 'image4.jpg', '최민호', '010-4567-8901', '장애인 지원 프로그램', FALSE, NOW()),
+(5, 5, 5, '유기 동물 보호소 봉사', '대전시 서구', 'ALL', 'image5.jpg', '정유진', '010-5678-9012', '유기 동물 보호 활동', FALSE, NOW());
+
+INSERT INTO Recruit (template_id, deadline, activity_date, activity_start, activity_end, max_volunteer, participate_vol_count, status, is_deleted, updated_at, created_at)
+VALUES
+(1, '2025-12-31', '2025-06-15', 10.00, 12.00, 20, 5, 'RECRUITING', FALSE, NOW(), NOW()),
+(2, '2025-11-30', '2025-07-20', 13.00, 16.00, 15, 7, 'RECRUITING', FALSE, NOW(), NOW()),
+(3, '2025-10-15', '2025-08-10', 14.00, 17.00, 10, 8, 'RECRUITING', FALSE, NOW(), NOW()),
+(4, '2025-09-25', '2025-09-05', 09.00, 11.00, 25, 12, 'RECRUITING', FALSE, NOW(), NOW()),
+(5, '2025-08-10', '2025-10-20', 15.00, 18.00, 30, 15, 'RECRUITING', FALSE, NOW(), NOW());
+
+INSERT INTO Review (recruit_id, org_id, writer_id, title, content, is_deleted, is_public, img_count, updated_at, created_at)
+VALUES
+(1, 1, 1, '환경 정화 봉사 후기', '이번 봉사는 정말 뜻깊은 경험이었습니다!', FALSE, TRUE, 2, NOW(), NOW()),
+(2, 2, 2, '노인 돌봄 봉사 후기', '어르신들과 함께 시간을 보내며 많은 것을 배웠습니다.', FALSE, TRUE, 3, NOW(), NOW()),
+(3, 3, 3, '아동 교육 봉사 후기', '아이들에게 유익한 시간을 제공할 수 있어서 보람찼습니다.', FALSE, TRUE, 1, NOW(), NOW()),
+(4, 4, 4, '장애인 지원 활동 후기', '도움이 필요한 분들에게 직접적인 지원을 할 수 있어 좋았습니다.', FALSE, TRUE, 4, NOW(), NOW()),
+(5, 5, 5, '유기 동물 보호소 봉사 후기', '동물들이 편안한 환경에서 지낼 수 있도록 돕는 것이 뜻깊었습니다.', FALSE, TRUE, 2, NOW(), NOW());
+
+INSERT INTO Application (volunteer_id, recruit_id, status, evaluation_done, is_deleted, created_at, updated_at)
+VALUES
+(1, 1, 'PENDING', FALSE, FALSE, NOW(), NOW()),
+(2, 2, 'APPROVED', TRUE, FALSE, NOW(), NOW()),
+(3, 3, 'REJECTED', FALSE, FALSE, NOW(), NOW()),
+(4, 4, 'COMPLETED', TRUE, FALSE, NOW(), NOW()),
+(5, 5, 'AUTO_CANCEL', FALSE, FALSE, NOW(), NOW());
+
+INSERT INTO Review_image (review_id, image_url, is_deleted, created_at, next_image_id)
+VALUES
+(1, 'https://example.com/review1_image1.jpg', FALSE, NOW(), NULL),
+(1, 'https://example.com/review1_image2.jpg', FALSE, NOW(), NULL),
+(2, 'https://example.com/review2_image1.jpg', FALSE, NOW(), NULL),
+(3, 'https://example.com/review3_image1.jpg', FALSE, NOW(), NULL),
+(4, 'https://example.com/review4_image1.jpg', FALSE, NOW(), NULL);
+
+INSERT INTO Review_comment (writer_id, review_id, content, is_deleted, updated_at, created_at)
+VALUES
+(1, 1, '정말 좋은 후기네요! 저도 참여하고 싶어요.', FALSE, NOW(), NOW()),
+(2, 1, '환경 보호 활동이 중요하죠!', FALSE, NOW(), NOW()),
+(3, 2, '노인분들과 함께하는 시간이 뜻깊어 보이네요.', FALSE, NOW(), NOW()),
+(4, 3, '아동 교육 봉사에 관심이 많아요!', FALSE, NOW(), NOW()),
+(5, 4, '장애인 지원 활동에 더 많은 관심이 필요합니다.', FALSE, NOW(), NOW());
+
+INSERT INTO Volunteer_reaction (volunteer_id, recruit_id, is_like, is_deleted, created_at)
+VALUES
+(1, 1, TRUE, FALSE, NOW()),
+(2, 2, FALSE, FALSE, NOW()),
+(3, 3, TRUE, FALSE, NOW()),
+(4, 4, TRUE, FALSE, NOW()),
+(5, 5, FALSE, FALSE, NOW());
+
+select * from reviews;
 
 -- SELECT * FROM Category;
