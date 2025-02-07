@@ -2,6 +2,8 @@ package com.ttabong.controller.recruit;
 
 import com.ttabong.dto.recruit.requestDto.org.*;
 import com.ttabong.dto.recruit.responseDto.org.*;
+import com.ttabong.service.recruit.OrgRecruitService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,53 +15,19 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("org")
+@RequiredArgsConstructor
 public class OrgRecruitController {
+    private final OrgRecruitService orgRecruitService;
 
-    //1
+    //1. 메인페이지 /api/org/templates/available?cursor={templateId}&limit={limit}
     @GetMapping("/templates/available")
-    public ResponseEntity<ReadAvailableRecruitsResponseDto> readAvailableRecruits(@RequestParam Integer cursor, @RequestParam Integer limit) {
-        ReadAvailableRecruitsResponseDto.Template template = ReadAvailableRecruitsResponseDto.Template.builder()
-                .templateId(1)
-                .categoryId(3)
-                .title("환경 정화 봉사")
-                .activityLocation("서울특별시 종로구")
-                .status("ALL")
-                .imageId("https://example.com/template_image.jpg")
-                .contactName("김봉사")
-                .contactPhone("010-1234-5678")
-                .description("서울 시내 공원에서 환경 정화 활동을 진행합니다.")
-                .createdAt(LocalDateTime.now())
-                .build();
+    public ResponseEntity<ReadAvailableRecruitsResponseDto> readAvailableRecruits(
+            @RequestParam(required = false, name = "templateId") Integer cursor,
+            @RequestParam(defaultValue = "10", name = "limit") Integer limit) {
 
-        ReadAvailableRecruitsResponseDto.Group group = ReadAvailableRecruitsResponseDto.Group.builder()
-                .groupId(10)
-                .groupName("환경 보호 단체")
-                .build();
+        ReadAvailableRecruitsResponseDto response = orgRecruitService.readAvailableRecruits(cursor, limit);
 
-        ReadAvailableRecruitsResponseDto.Recruit recruit = ReadAvailableRecruitsResponseDto.Recruit.builder()
-                .recruitId(100)
-                .deadline(LocalDateTime.now().plusDays(10))
-                .activityDate(LocalDateTime.now().toLocalDate())
-                .activityStart(1000)
-                .activityEnd(1400)
-                .maxVolunteer(20)
-                .participateVolCount(5)
-                .status("모집중")
-                .updatedAt(LocalDateTime.now())
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        ReadAvailableRecruitsResponseDto.TemplateDetail templateDetail = ReadAvailableRecruitsResponseDto.TemplateDetail.builder()
-                .template(template)
-                .group(group)
-                .recruits(Collections.singletonList(recruit))
-                .build();
-
-        ReadAvailableRecruitsResponseDto responseDto = ReadAvailableRecruitsResponseDto.builder()
-                .templates(Collections.singletonList(templateDetail))
-                .build();
-
-        return ResponseEntity.ok().body(responseDto);
+        return ResponseEntity.ok().body(response);
     }
 
 
