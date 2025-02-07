@@ -17,8 +17,8 @@ public class ReviewComment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "comment_id", nullable = false)
-    private Integer id;
+    @Column(name = "comment_id", nullable = false, columnDefinition = "INT")
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "writer_id", nullable = false)

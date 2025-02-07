@@ -15,22 +15,20 @@ import java.util.Set;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // 외부에서 new User() 막기
 @AllArgsConstructor(access = AccessLevel.PRIVATE) // Builder에서만 생성 가능
-@Builder
+@Builder(toBuilder = true)
 @Table(name = "Review")
 public class Review {
-
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_Review_id")
     private Review parentReview;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Review_id", nullable = false)
-    private Integer id;
+    @Column(name = "Review_id", nullable = false, columnDefinition = "INT")
+    private Long id;
 
-    @Column(name = "group_id")
-    private Integer groupId;
+    @Column(name = "group_id", columnDefinition = "INT")
+    private Long groupId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "Recruit_id")
@@ -43,6 +41,9 @@ public class Review {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "writer_id")
     private User writer;
+
+    @Column(name = "title", length = 255)
+    private String title;
 
     @Column(name = "content", nullable = false, length = 500)
     private String content;
@@ -71,5 +72,6 @@ public class Review {
 
     @OneToMany(mappedBy = "review")
     private Set<ReviewComment> reviewComments = new LinkedHashSet<>();
+
 
 }

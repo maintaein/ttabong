@@ -21,8 +21,8 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id", nullable = false)
-    private Integer id;
+    @Column(name = "user_id", nullable = false, columnDefinition = "INT")
+    private Long id;
 
     @Column(name = "email", nullable = false, length = 80)
     private String email;

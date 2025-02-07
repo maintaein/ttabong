@@ -20,8 +20,8 @@ public class Volunteer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "volunteer_id", nullable = false)
-    private Integer id;
+    @Column(name = "volunteer_id", nullable = false, columnDefinition = "INT")
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)

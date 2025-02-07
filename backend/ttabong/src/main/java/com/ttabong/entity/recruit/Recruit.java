@@ -23,8 +23,8 @@ public class Recruit {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "recruit_id", nullable = false)
-    private Integer id;
+    @Column(name = "recruit_id", nullable = false, columnDefinition = "INT")
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)

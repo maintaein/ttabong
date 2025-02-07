@@ -17,8 +17,8 @@ public class Application {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "application_id", nullable = false)
-    private Integer id;
+    @Column(name = "application_id", nullable = false, columnDefinition = "INT")
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "volunteer_id", nullable = false)

@@ -19,8 +19,8 @@ public class TemplateGroup {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "group_id", nullable = false)
-    private Integer id;
+    @Column(name = "group_id", nullable = false, columnDefinition = "INT")
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "org_id", nullable = false)
