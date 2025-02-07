@@ -12,7 +12,8 @@ public class CancelRecruitResponseDto {
 
     @Getter
     @Setter
-    private class Application {
+    @Builder
+    public static class Application {
         Integer applicationId;
         Boolean isDeleted;
     }

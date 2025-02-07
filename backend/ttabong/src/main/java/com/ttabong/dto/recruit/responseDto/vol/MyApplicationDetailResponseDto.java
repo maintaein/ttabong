@@ -19,6 +19,7 @@ public class MyApplicationDetailResponseDto {
 
     @Getter
     @Setter
+    @Builder
     public static class Group {
         private Integer groupId;
         private String groupName;
@@ -26,6 +27,7 @@ public class MyApplicationDetailResponseDto {
 
     @Getter
     @Setter
+    @Builder
     public static class Template {
         private Integer templateId;
         private Integer categoryId;
@@ -41,6 +43,7 @@ public class MyApplicationDetailResponseDto {
 
     @Getter
     @Setter
+    @Builder
     public static class Recruit {
         private int recruitId;
         private LocalDateTime deadline;
@@ -56,6 +59,7 @@ public class MyApplicationDetailResponseDto {
 
     @Getter
     @Setter
+    @Builder
     public static class Organization {
         private Integer orgId;
         private String name;
@@ -63,6 +67,7 @@ public class MyApplicationDetailResponseDto {
 
     @Getter
     @Setter
+    @Builder
     public static class Application {
         private Integer applicationId;
         private String name;

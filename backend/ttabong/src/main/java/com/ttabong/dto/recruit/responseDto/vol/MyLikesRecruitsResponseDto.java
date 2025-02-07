@@ -14,6 +14,7 @@ public class MyLikesRecruitsResponseDto {
 
     @Getter
     @Setter
+    @Builder
     public static class LikedTemplate {
         private Integer templateId;
         private String thumbnailImg;
@@ -25,12 +26,14 @@ public class MyLikesRecruitsResponseDto {
 
     @Getter
     @Setter
+    @Builder
     public static class Recruit {
         private LocalDateTime deadline;
     }
 
     @Getter
     @Setter
+    @Builder
     public static class Group {
         private Integer groupId;
         private String groupName;

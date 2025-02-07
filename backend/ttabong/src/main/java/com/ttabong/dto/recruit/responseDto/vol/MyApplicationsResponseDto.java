@@ -21,6 +21,7 @@ public class MyApplicationsResponseDto {
 
     @Getter
     @Setter
+    @Builder
     public static class Template {
         private Integer templateId;
         private String title;
@@ -35,6 +36,7 @@ public class MyApplicationsResponseDto {
 
     @Getter
     @Setter
+    @Builder
     public static class Group {
         private Integer groupId;
         private String groupName;
@@ -42,6 +44,7 @@ public class MyApplicationsResponseDto {
 
     @Getter
     @Setter
+    @Builder
     public static class Recruit {
         private Integer recruitId;
         private LocalDateTime deadline;
