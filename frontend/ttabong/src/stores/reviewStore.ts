@@ -7,7 +7,8 @@ interface ReviewStore {
   reviewDetail: ReviewDetail | null;
   isLoading: boolean;
   error: string | null;
-  fetchReviews: () => Promise<void>;
+  hasMore: boolean;
+  fetchReviews: (cursor: number) => Promise<void>;
   fetchReviewDetail: (id: number) => Promise<void>;
   addComment: (reviewId: number, content: string) => Promise<void>;
   recruitReviews: Review[];
@@ -23,13 +24,26 @@ export const useReviewStore = create<ReviewStore>((set) => ({
   reviewDetail: null,
   isLoading: false,
   error: null,
+  hasMore: true,
   recruitReviews: [],
   
-  fetchReviews: async () => {
-    set({ isLoading: true });
+  fetchReviews: async (cursor: number) => {
+    const LIMIT = 9;
+    
+    set(state => ({
+      isLoading: true,
+      error: null,
+      // 커서가 0이면 초기 로딩이므로 기존 reviews 초기화
+      reviews: cursor === 0 ? [] : state.reviews
+    }));
+
     try {
-      const reviews = await reviewApi.getReviews();
-      set({ reviews, error: null });
+      const response = await reviewApi.getReviews(cursor, LIMIT);
+      
+      set(state => ({
+        reviews: [...state.reviews, ...response.reviews],
+        hasMore: response.reviews.length === LIMIT
+      }));
     } catch (error) {
       set({ error: '리뷰를 불러오는데 실패했습니다.' });
     } finally {

@@ -26,9 +26,14 @@ interface RecruitReview {
   images: string[];
 }
 
+interface ReviewResponse {
+  reviews: Review[];
+  hasMore: boolean;
+}
+
 export const reviewApi = {
-  getReviews: async (): Promise<Review[]> => {
-    const response = await axiosInstance.get('/reviews');
+  getReviews: async (cursor: number, limit: number): Promise<ReviewResponse> => {
+    const response = await axiosInstance.get(`/reviews?cursor=${cursor}&limit=${limit}`);
     return response.data;
   },
   

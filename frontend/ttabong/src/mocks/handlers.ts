@@ -1,17 +1,23 @@
 import { http, HttpResponse } from 'msw';
 
-// 리뷰 목록 데이터
-const reviews = Array.from({ length: 20 }, (_, i) => ({
+// 리뷰 목록 데이터 (50개로 증가)
+const reviews = Array.from({ length: 50 }, (_, i) => ({
   review: {
-    reviewId: 100 + i,
-    recruitId: 55 + i,
-    title: i % 2 === 0 ? "환경 정화 활동 후기" : "노인 복지센터 방문 후기",
-    content: i % 2 === 0 
+    reviewId: 1000 + i,
+    recruitId: 500 + i,
+    title: i % 3 === 0 
+      ? "환경 정화 활동 후기" 
+      : i % 3 === 1 
+        ? "노인 복지센터 방문 후기"
+        : "아동 센터 봉사 후기",
+    content: i % 3 === 0 
       ? "이번 봉사는 정말 뜻깊은 경험이었습니다!" 
-      : "어르신들과 함께 시간을 보내며 많은 것을 배웠습니다.",
+      : i % 3 === 1
+        ? "어르신들과 함께 시간을 보내며 많은 것을 배웠습니다."
+        : "아이들과 함께한 즐거운 시간이었습니다.",
     isDeleted: false,
-    updatedAt: "2025-02-10T14:30:00",
-    createdAt: "2025-02-05T12:00:00"
+    updatedAt: new Date(2025, 1, 10 + Math.floor(i/10)).toISOString(),
+    createdAt: new Date(2025, 1, 5 + Math.floor(i/10)).toISOString()
   },
   writer: {
     writerId: 10,
@@ -136,12 +142,18 @@ function generateRecruitReviews(recruitId: number) {
 
 export const handlers = [
   // 리뷰 목록 조회
-  http.get('/api/reviews', () => {
-    return new HttpResponse(JSON.stringify(reviews), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
+  http.get('/api/reviews', ({ request }) => {
+    const url = new URL(request.url);
+    const cursor = Number(url.searchParams.get('cursor')) || 0;
+    const limit = Number(url.searchParams.get('limit')) || 9;
+    
+    const startIndex = cursor === 0 ? 0 : reviews.findIndex(r => r.review.reviewId === cursor) + 1;
+    const endIndex = startIndex + limit;
+    const slicedReviews = reviews.slice(startIndex, endIndex);
+    
+    return HttpResponse.json({
+      reviews: slicedReviews,
+      hasMore: endIndex < reviews.length
     });
   }),
 
