@@ -11,10 +11,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class ReviewImageDto {
-    private Long imageId;
-    private Long reviewId;
+    private Integer imageId;
+    private Integer reviewId;
     private String imageUrl;
     private Boolean isDeleted;
     private LocalDateTime createdAt;
-    private Long nextImageId; // 다음 이미지 ID
+    private Integer nextImageId; // 다음 이미지 ID
 }

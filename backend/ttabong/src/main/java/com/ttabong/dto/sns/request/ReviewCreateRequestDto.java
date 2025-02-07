@@ -17,13 +17,13 @@ import java.util.List;
 @Builder
 public class ReviewCreateRequestDto {
     @NotNull
-    private Long recruitId;  // 공고 ID
+    private Integer recruitId;  // 공고 ID
 
     @NotNull
-    private Long orgId;  // 기관 ID
+    private Integer orgId;  // 기관 ID
 
     @NotNull
-    private Long writerId;  // 작성자 ID
+    private Integer writerId;  // 작성자 ID
 
     @NotBlank
     private String title;  // 후기 제목

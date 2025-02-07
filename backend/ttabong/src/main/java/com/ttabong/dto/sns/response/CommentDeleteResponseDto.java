@@ -14,5 +14,5 @@ import lombok.Builder;
 @Builder
 public class CommentDeleteResponseDto {
     private String message;
-    private Long commentId;
+    private Integer commentId;
 }

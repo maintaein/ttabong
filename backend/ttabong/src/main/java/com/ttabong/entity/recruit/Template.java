@@ -21,8 +21,8 @@ public class Template {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "template_id", nullable = false, columnDefinition = "INT")
-    private Long id;
+    @Column(name = "template_id", nullable = false)
+    private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "group_id", nullable = false)

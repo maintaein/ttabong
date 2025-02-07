@@ -9,8 +9,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class OrganizationDto {
-    private Long orgId;
-    private Long userId;
+    private Integer orgId;
+    private Integer userId;
     private String businessRegNumber;
     private String orgName;
     private String representativeName;

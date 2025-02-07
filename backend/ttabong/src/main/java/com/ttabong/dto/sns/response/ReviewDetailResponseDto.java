@@ -17,7 +17,7 @@ import java.util.List;
 @Builder
 public class ReviewDetailResponseDto {
     // 후기 정보
-    private Long reviewId;
+    private Integer reviewId;
     private String title;
     private String content;
     private Boolean isPublic;
@@ -26,38 +26,38 @@ public class ReviewDetailResponseDto {
     private List<String> images;
 
     // 공고 정보
-    private Long recruitId;
+    private Integer recruitId;
     private LocalDate activityDate;
     private Double activityStart;
     private Double activityEnd;
     private String status;
 
     // 카테고리 정보
-    private Long categoryId;
+    private Integer categoryId;
     private String categoryName;
 
     // 작성자 정보
-    private Long writerId;
+    private Integer writerId;
     private String writerName;
     private String writerEmail;
     private String writerProfileImage;
 
     // 템플릿 정보
-    private Long templateId;
+    private Integer templateId;
     private String templateTitle;
     private String activityLocation;
     private String templateStatus;
 
     // 그룹 정보 (템플릿 내부)
-    private Long groupId;
+    private Integer groupId;
     private String groupName;
 
     // 기관 정보
-    private Long orgId;
+    private Integer orgId;
     private String orgName;
 
     // 부모 후기 ID (nullable)
-    private Long parentReviewId;
+    private Integer parentReviewId;
 
     // 댓글 정보
     private List<CommentDto> comments;
@@ -67,8 +67,8 @@ public class ReviewDetailResponseDto {
     @AllArgsConstructor
     @Builder
     public static class CommentDto {
-        private Long commentId;
-        private Long writerId;
+        private Integer commentId;
+        private Integer writerId;
         private String writerName;
         private String content;
         private LocalDateTime createdAt;

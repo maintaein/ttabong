@@ -20,15 +20,15 @@ public class MyApplicationDetailResponseDto {
     @Getter
     @Setter
     public static class Group {
-        private int groupId;
+        private Integer groupId;
         private String groupName;
     }
 
     @Getter
     @Setter
     public static class Template {
-        private int templateId;
-        private int categoryId;
+        private Integer templateId;
+        private Integer categoryId;
         private String title;
         private String activityLocation;
         private String status;
@@ -45,10 +45,10 @@ public class MyApplicationDetailResponseDto {
         private int recruitId;
         private LocalDateTime deadline;
         private LocalDate activityDate;
-        private int activityStart;
-        private int activityEnd;
-        private int maxVolunteer;
-        private int participateVolCount;
+        private Integer activityStart;
+        private Integer activityEnd;
+        private Integer maxVolunteer;
+        private Integer participateVolCount;
         private String status;
         private LocalDateTime updatedAt;
         private LocalDateTime createdAt;
@@ -57,14 +57,14 @@ public class MyApplicationDetailResponseDto {
     @Getter
     @Setter
     public static class Organization {
-        private int orgId;
+        private Integer orgId;
         private String name;
     }
 
     @Getter
     @Setter
     public static class Application {
-        private int applicationId;
+        private Integer applicationId;
         private String name;
         private String status;
     }

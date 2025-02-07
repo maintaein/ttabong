@@ -6,7 +6,9 @@ import com.ttabong.entity.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.JdbcTypeCode;
 
+import java.sql.SQLType;
 import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -24,11 +26,11 @@ public class Review {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Review_id", nullable = false, columnDefinition = "INT")
-    private Long id;
+    @Column(name = "Review_id", nullable = false)
+    private Integer id;
 
-    @Column(name = "group_id", columnDefinition = "INT")
-    private Long groupId;
+    @Column(name = "group_id")
+    private Integer groupId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "Recruit_id")
@@ -72,6 +74,5 @@ public class Review {
 
     @OneToMany(mappedBy = "review")
     private Set<ReviewComment> reviewComments = new LinkedHashSet<>();
-
 
 }

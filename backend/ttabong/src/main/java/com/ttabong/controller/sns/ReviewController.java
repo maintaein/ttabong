@@ -24,7 +24,7 @@ public class ReviewController {
 
     /* 후기 삭제 */
     @PatchMapping("/{reviewId}/delete")
-    public ResponseEntity<ReviewDeleteResponseDto> deleteReview(@PathVariable Long reviewId) {
+    public ResponseEntity<ReviewDeleteResponseDto> deleteReview(@PathVariable Integer reviewId) {
         ReviewDeleteResponseDto response = reviewService.deleteReview(reviewId);
         return ResponseEntity.ok(response);
     }

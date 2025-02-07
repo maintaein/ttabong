@@ -17,7 +17,7 @@ public class ReadTemplatesResponseDto {
     @Setter
     @NoArgsConstructor
     public class GroupDto {
-        private int groupId;
+        private Integer groupId;
         private String groupName;
         private List<TemplateDto> templates;
     }
@@ -26,9 +26,9 @@ public class ReadTemplatesResponseDto {
     @Setter
     @NoArgsConstructor
     public class TemplateDto {
-        private int templateId;
-        private int orgId;
-        private int categoryId;
+        private Integer templateId;
+        private Integer orgId;
+        private Integer categoryId;
         private String title;
         private String activityLocation;
         private String status;

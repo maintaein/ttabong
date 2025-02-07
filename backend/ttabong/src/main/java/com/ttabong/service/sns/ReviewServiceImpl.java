@@ -64,7 +64,7 @@ public class ReviewServiceImpl implements ReviewService {
     /* 삭제 */
     @Transactional
     @Override
-    public ReviewDeleteResponseDto deleteReview(Long reviewId) {
+    public ReviewDeleteResponseDto deleteReview(Integer reviewId) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 후기를 찾을 수 없습니다. ID: " + reviewId));
 

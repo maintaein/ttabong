@@ -4,7 +4,7 @@ import com.ttabong.entity.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, Integer> {
     //이메일을 찾되, 삭제되지 않은 이메일이어야 한다.
 
     //로그인 할 때 사용

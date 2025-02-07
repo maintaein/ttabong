@@ -15,7 +15,7 @@ public class MyLikesRecruitsResponseDto {
     @Getter
     @Setter
     public static class LikedTemplate {
-        private int templateId;
+        private Integer templateId;
         private String thumbnailImg;
         private String activityLocation;
         private String title;
@@ -32,7 +32,7 @@ public class MyLikesRecruitsResponseDto {
     @Getter
     @Setter
     public static class Group {
-        private int groupId;
+        private Integer groupId;
         private String groupName;
     }
 }

@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class EvaluateApplicationsRequestDto {
-    private int volunteerId;
+    private Integer volunteerId;
     private String recommendationStatus;
 }

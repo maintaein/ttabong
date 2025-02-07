@@ -26,7 +26,7 @@ public class ReadMyRecruitsResponseDto {
     @Setter
     @NoArgsConstructor
     public static class Group {
-        private int groupId;
+        private Integer groupId;
         private String groupName;
     }
 
@@ -34,7 +34,7 @@ public class ReadMyRecruitsResponseDto {
     @Setter
     @NoArgsConstructor
     public static class Template {
-        private int templateId;
+        private Integer templateId;
         private String title;
     }
 
@@ -42,10 +42,10 @@ public class ReadMyRecruitsResponseDto {
     @Setter
     @NoArgsConstructor
     public static class Recruit {
-        private int recruitId;
+        private Integer recruitId;
         private String status;
-        private int maxVolunteer;
-        private int participateVolCount;
+        private Integer maxVolunteer;
+        private Integer participateVolCount;
         private LocalDate activityDate;
         private double activityStart;
         private double activityEnd;

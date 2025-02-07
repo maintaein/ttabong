@@ -23,8 +23,8 @@ public class ReadRecruitsResponseDto {
     @Getter
     @Setter
     public static class Template {
-        private int templateId;
-        private int categoryId;
+        private Integer templateId;
+        private Integer categoryId;
         private String title;
         private String activityLocation;
         private String status;
@@ -38,14 +38,14 @@ public class ReadRecruitsResponseDto {
     @Getter
     @Setter
     public static class Group {
-        private int groupId;
+        private Integer groupId;
         private String groupName;
     }
 
     @Getter
     @Setter
     public static class Organization {
-        private int orgId;
+        private Integer orgId;
         private String orgName;
     }
 }

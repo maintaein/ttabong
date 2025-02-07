@@ -17,8 +17,8 @@ public class VolunteerReaction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "reaction_id", nullable = false, columnDefinition = "INT")
-    private Long id;
+    @Column(name = "reaction_id", nullable = false)
+    private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "volunteer_id", nullable = false)

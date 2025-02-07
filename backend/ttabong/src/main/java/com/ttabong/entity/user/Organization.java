@@ -21,8 +21,8 @@ public class Organization {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "org_id", nullable = false, columnDefinition = "INT")
-    private Long id;
+    @Column(name = "org_id", nullable = false)
+    private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
