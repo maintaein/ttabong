@@ -1,5 +1,7 @@
 package com.ttabong.service.recruit;
 
+import com.ttabong.dto.recruit.requestDto.org.DeleteRecruitsRequestDto;
+import com.ttabong.dto.recruit.responseDto.org.DeleteRecruitsResponseDto;
 import com.ttabong.dto.recruit.responseDto.org.ReadAvailableRecruitsResponseDto;
 import com.ttabong.dto.recruit.responseDto.org.ReadAvailableRecruitsResponseDto.*;
 import com.ttabong.dto.recruit.responseDto.org.ReadMyRecruitsResponseDto;
@@ -11,6 +13,7 @@ import com.ttabong.repository.recruit.RecruitRepository;
 import com.ttabong.repository.recruit.TemplateGroupRepository;
 import com.ttabong.repository.recruit.TemplateRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,7 +24,9 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+//@Transactional(readOnly = true)
+@Transactional
+@Slf4j
 public class OrgRecruitServiceImpl implements OrgRecruitService {
 
     private final RecruitRepository recruitRepository;
@@ -29,9 +34,10 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     private final TemplateGroupRepository templateGroupRepository;
 
 
-    // TODO: 마지막 공고까지 다 로드했다면? & db에서 정보 누락된게 있다면?
+    // TODO: 마지막 공고까지 다 로드했다면? & db에서 정보 누락된게 있다면? , 삭제여부 확인
     @Override
     public ReadAvailableRecruitsResponseDto readAvailableRecruits(Integer cursor, Integer limit) {
+
         List<Template> templates = templateRepository.findAvailableTemplates(cursor, limit);
 
         List<TemplateDetail> templateDetails = templates.stream().map(template -> {
@@ -91,9 +97,10 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build();
     }
 
-    // TODO: 마지막 공고까지 다 로드했다면? & db에서 정보 누락된게 있다면?
+    // TODO: 마지막 공고까지 다 로드했다면? & db에서 정보 누락된게 있다면?, 삭제여부 확인
     @Override
     public ReadMyRecruitsResponseDto readMyRecruits(Integer cursor, Integer limit) {
+
         List<Recruit> recruits = recruitRepository.findAvailableRecruits(cursor, limit);
 
         List<RecruitDetail> recruitDetails = recruits.stream().map(recruit -> {
@@ -139,6 +146,20 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         return ReadMyRecruitsResponseDto.builder()
                 .recruits(recruitDetails)
+                .build();
+    }
+
+    // TODO: 이미 삭제된 공고는 어떻게 처리? 삭제 실패시 처리
+    @Override
+    public DeleteRecruitsResponseDto deleteRecruits(DeleteRecruitsRequestDto deleteRecruitDto) {
+
+        List<Integer> recruitIds = deleteRecruitDto.getDeletedRecruits();
+
+        recruitRepository.markAsDeleted(recruitIds);
+
+        return DeleteRecruitsResponseDto.builder()
+                .message("공고 삭제 완료")
+                .deletedRecruits(recruitIds)
                 .build();
     }
 

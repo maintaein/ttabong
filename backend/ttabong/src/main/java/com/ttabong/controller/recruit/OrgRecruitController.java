@@ -4,6 +4,7 @@ import com.ttabong.dto.recruit.requestDto.org.*;
 import com.ttabong.dto.recruit.responseDto.org.*;
 import com.ttabong.service.recruit.OrgRecruitService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,8 +15,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("org")
+@RequestMapping("/org")
 @RequiredArgsConstructor
+@Slf4j
 public class OrgRecruitController {
     private final OrgRecruitService orgRecruitService;
 
@@ -36,25 +38,21 @@ public class OrgRecruitController {
     public ResponseEntity<ReadMyRecruitsResponseDto> readRecruits(
             @RequestParam(required = false, name = "recruitId") Integer cursor,
             @RequestParam(defaultValue = "10", name = "limit") Integer limit) {
+
         ReadMyRecruitsResponseDto response = orgRecruitService.readMyRecruits(cursor, limit);
         return ResponseEntity.ok(response);
     }
 
-    //3 b
-    @PatchMapping("recruits/delete")
+    //3. 공고 _ 공고 삭제 (여러개 선택 후 한 번에 삭제) /api/org/recruits/delete
+    @PatchMapping("/recruits/delete")
     public ResponseEntity<DeleteRecruitsResponseDto> deleteRecruits(@RequestBody DeleteRecruitsRequestDto deleteRecruitDto) {
-        List<Integer> deletedRecruits = deleteRecruitDto.getDeletedRecruits();
 
-        DeleteRecruitsResponseDto responseDto = DeleteRecruitsResponseDto.builder()
-                .message("삭제 성공")
-                .deletedRecruits(deletedRecruits)
-                .build();
-
-        return ResponseEntity.ok().body(responseDto);
+        DeleteRecruitsResponseDto response = orgRecruitService.deleteRecruits(deleteRecruitDto);
+        return ResponseEntity.ok(response);
     }
 
     //4 b
-    @PatchMapping("recruits/{recruitId}")
+    @PatchMapping("/recruits/{recruitId}")
     public ResponseEntity<UpdateRecruitsResponseDto> updateRecruit(@PathVariable int recruitId, @RequestBody UpdateRecruitsRequestDto updateRecruitDto) {
         UpdateRecruitsResponseDto responseDto = UpdateRecruitsResponseDto.builder()
                 .message("수정 성공")

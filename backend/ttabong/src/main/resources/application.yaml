@@ -19,7 +19,10 @@ server:
     servlet:
         context-path: /api
     port: 8080
-
+logging:
+    level:
+        org.hibernate.SQL: DEBUG   # Hibernate SQL 쿼리 로그 출력
+        org.hibernate.type.descriptor.sql: TRACE  # SQL 바인딩된 파라미터 값 출력
 ---
 spring:
     config:
@@ -38,7 +41,10 @@ spring:
         port: 5672
         username: user
         password: password
-
+logging:
+    level:
+        org.hibernate.SQL: DEBUG   # Hibernate SQL 쿼리 로그 출력
+        org.hibernate.type.descriptor.sql: TRACE  # SQL 바인딩된 파라미터 값 출력
 
 ---
 spring:
@@ -56,7 +62,10 @@ spring:
     rabbitmq:
         host: rabbitmqdeploy
         port: 5672
-
+logging:
+    level:
+        org.hibernate.SQL: DEBUG   # Hibernate SQL 쿼리 로그 출력
+        org.hibernate.type.descriptor.sql: TRACE  # SQL 바인딩된 파라미터 값 출력
 
 ---
 spring:

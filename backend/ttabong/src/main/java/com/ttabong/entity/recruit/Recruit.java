@@ -78,4 +78,9 @@ public class Recruit {
 
     @OneToMany(mappedBy = "recruit")
     private Set<VolunteerReaction> volunteerReactions = new LinkedHashSet<>();
+
+    // 공고 삭제시 사용할 메서드
+    public void delete() {
+        this.isDeleted = true;
+    }
 }

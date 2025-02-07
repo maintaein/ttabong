@@ -1,5 +1,7 @@
 package com.ttabong.service.recruit;
 
+import com.ttabong.dto.recruit.requestDto.org.DeleteRecruitsRequestDto;
+import com.ttabong.dto.recruit.responseDto.org.DeleteRecruitsResponseDto;
 import com.ttabong.dto.recruit.responseDto.org.ReadAvailableRecruitsResponseDto;
 import com.ttabong.dto.recruit.responseDto.org.ReadMyRecruitsResponseDto;
 
@@ -9,4 +11,6 @@ public interface OrgRecruitService {
     ReadAvailableRecruitsResponseDto readAvailableRecruits(Integer cursor, Integer limit);
 
     ReadMyRecruitsResponseDto readMyRecruits(Integer cursor, Integer limit);
+
+    DeleteRecruitsResponseDto deleteRecruits(DeleteRecruitsRequestDto deleteRecruitDto);
 }
