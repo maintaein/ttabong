@@ -1,18 +1,19 @@
+
 spring:
-  application:
-    name: ttabong
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-  jpa:
-    database-platform: org.hibernate.dialect.MySQL8Dialect
-    show-sql: true
-    hibernate:
-      ddl-auto: validate
-      naming:
-        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-    properties:
-      hibernate:
-        format_sql: true
+    application:
+        name: ttabong
+    datasource:
+        driver-class-name: com.mysql.cj.jdbc.Driver
+    jpa:
+        database-platform: org.hibernate.dialect.MySQL8Dialect
+        show-sql: true
+        hibernate:
+            ddl-auto: validate
+            naming:
+                physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        properties:
+            hibernate:
+                format_sql: true
 
 server:
     servlet:
@@ -82,6 +83,9 @@ logging:
   level:
     org.hibernate.SQL: DEBUG   # Hibernate SQL 쿼리 로그 출력
     org.hibernate.type.descriptor.sql: TRACE  # SQL 바인딩된 파라미터 값 출력
+jwt:
+    secret: "6K/YHWDOwo33EhQngFpfxRIazkzhRG7X+LaIOPBfgeM"
+    expiration: 1800000
 ---
 spring:
   config:

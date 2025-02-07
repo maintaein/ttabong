@@ -1,6 +1,11 @@
 package com.ttabong.controller.user;
 
-import com.ttabong.dto.user.*;
+import com.ttabong.dto.user.EmailCheckResponse;
+import com.ttabong.dto.user.LoginRequest;
+import com.ttabong.dto.user.LoginResponse;
+import com.ttabong.dto.user.OrganizationRegisterRequest;
+import com.ttabong.dto.user.VolunteerRegisterRequest;
+import com.ttabong.entity.user.User;
 import com.ttabong.jwt.JwtProvider;
 import com.ttabong.service.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +38,7 @@ public class UserController {
             return ResponseEntity.ok(loginResponse);
 
         } catch (RuntimeException e) {
+            // 로그인 실패 시 401 Unauthorized 반환
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("이메일 또는 비밀번호가 일치하지 않습니다.");
         }
