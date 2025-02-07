@@ -1,16 +1,17 @@
 package com.ttabong.dto.recruit.responseDto.org;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class UpdateTemplateResponse {
-    String message;
-    Integer templateId;
-    Integer orgId;
+    private String message;
+    private Integer templateId;
+    private Integer orgId;
 }

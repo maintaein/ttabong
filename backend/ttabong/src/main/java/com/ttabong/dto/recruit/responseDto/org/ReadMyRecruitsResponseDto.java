@@ -14,8 +14,9 @@ public class ReadMyRecruitsResponseDto {
     private List<RecruitDetail> recruits;
 
     @Getter
-    @Setter
     @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
     public static class RecruitDetail {
         private Group group;
         private Template template;
@@ -23,32 +24,35 @@ public class ReadMyRecruitsResponseDto {
     }
 
     @Getter
-    @Setter
     @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
     public static class Group {
         private Integer groupId;
         private String groupName;
     }
 
     @Getter
-    @Setter
     @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
     public static class Template {
         private Integer templateId;
         private String title;
     }
 
     @Getter
-    @Setter
     @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
     public static class Recruit {
         private Integer recruitId;
         private String status;
         private Integer maxVolunteer;
         private Integer participateVolCount;
         private LocalDate activityDate;
-        private double activityStart;
-        private double activityEnd;
+        private Double activityStart;
+        private Double activityEnd;
         private LocalDateTime deadline;
         private LocalDateTime createdAt;
     }

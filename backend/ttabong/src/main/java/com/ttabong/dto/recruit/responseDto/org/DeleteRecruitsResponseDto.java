@@ -1,10 +1,9 @@
 package com.ttabong.dto.recruit.responseDto.org;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -12,6 +11,6 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class DeleteRecruitsResponseDto {
-    String message;
-    List<Integer> deletedRecruits;
+    private String message;
+    private List<Integer> deletedRecruits;
 }

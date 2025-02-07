@@ -3,6 +3,7 @@ package com.ttabong.dto.recruit.responseDto.org;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @Getter
@@ -13,8 +14,9 @@ public class ReadAvailableRecruitsResponseDto {
     private List<TemplateDetail> templates;
 
     @Getter
-    @Setter
     @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
     public static class TemplateDetail {
         private Template template;
         private Group group;
@@ -22,8 +24,9 @@ public class ReadAvailableRecruitsResponseDto {
     }
 
     @Getter
-    @Setter
     @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
     public static class Template {
         private Integer templateId;
         private Integer categoryId;
@@ -38,20 +41,22 @@ public class ReadAvailableRecruitsResponseDto {
     }
 
     @Getter
-    @Setter
     @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
     public static class Group {
         private Integer groupId;
         private String groupName;
     }
 
     @Getter
-    @Setter
     @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
     public static class Recruit {
         private Integer recruitId;
         private LocalDateTime deadline;
-        private LocalDateTime activityDate;
+        private LocalDate activityDate;
         private Integer activityStart; // 시간은 4자리 숫자로 표현 (1000, 1400)
         private Integer activityEnd;
         private Integer maxVolunteer;
