@@ -19,7 +19,7 @@ public class ReadRecruitResponseDto {
     @Setter
     @NoArgsConstructor
     public static class Group {
-        private int groupId;
+        private Integer groupId;
         private String groupName;
     }
 
@@ -27,8 +27,8 @@ public class ReadRecruitResponseDto {
     @Setter
     @NoArgsConstructor
     public static class Template {
-        private int templateId;
-        private int categoryId;
+        private Integer templateId;
+        private Integer categoryId;
         private String title;
         private String activityLocation;
         private String status;
@@ -43,13 +43,13 @@ public class ReadRecruitResponseDto {
     @Setter
     @NoArgsConstructor
     public static class Recruit {
-        private int recruitId;
+        private Integer recruitId;
         private LocalDateTime deadline;
         private LocalDate activityDate;
-        private int activityStart; // 1000, 1400 같은 4자리 숫자로 표현
-        private int activityEnd;
-        private int maxVolunteer;
-        private int participateVolCount;
+        private Integer activityStart; // 1000, 1400 같은 4자리 숫자로 표현
+        private Integer activityEnd;
+        private Integer maxVolunteer;
+        private Integer participateVolCount;
         private String status;
         private LocalDateTime updatedAt;
         private LocalDateTime createdAt;
@@ -59,7 +59,7 @@ public class ReadRecruitResponseDto {
     @Setter
     @NoArgsConstructor
     public static class Organization {
-        private int orgId;
+        private Integer orgId;
         private String name;
     }
 }

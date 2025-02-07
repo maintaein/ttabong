@@ -1,9 +1,6 @@
 package com.ttabong.dto.recruit.responseDto.org;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
@@ -12,6 +9,6 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class DeleteTemplatesResponseDto {
-    String message;
-    List<Integer> deletedTemplates;
+    private String message;
+    private List<Integer> deletedTemplates;
 }

@@ -10,7 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class ReadApplicationsResponseDto {
-    private int recruitId;
+    private Integer recruitId;
     private List<ApplicationDetail> applications;
 
     @Getter
@@ -25,7 +25,7 @@ public class ReadApplicationsResponseDto {
     @Setter
     @NoArgsConstructor
     public static class User {
-        private int userId;
+        private Integer userId;
         private String email;
         private String name;
         private String profileImage;
@@ -35,17 +35,17 @@ public class ReadApplicationsResponseDto {
     @Setter
     @NoArgsConstructor
     public static class Volunteer {
-        private int volunteerId;
-        private int recommendedCount;
-        private int totalVolunteerHours;
+        private Integer volunteerId;
+        private Integer recommendedCount;
+        private Integer totalVolunteerHours;
     }
 
     @Getter
     @Setter
     @NoArgsConstructor
     public static class Application {
-        private int applicationId;
-        private int recruitId;
+        private Integer applicationId;
+        private Integer recruitId;
         private String status;
         private LocalDateTime createdAt;
     }

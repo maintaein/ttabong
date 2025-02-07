@@ -44,7 +44,7 @@ public class User {
     private Boolean isDeleted;
 
     @ColumnDefault("CURRENT_TIMESTAMP")
-    @Column(name = "created_at", nullable = false, insertable=false, updatable=false)
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
     @OneToMany(mappedBy = "user")
@@ -60,8 +60,7 @@ public class User {
     private Set<Volunteer> volunteers = new LinkedHashSet<>();
 
     @ColumnDefault("0.00")
-    @Column(name = "total_volunteer_hours", nullable = false, precision = 7, scale = 2, insertable=false, updatable=false)
+    @Column(name = "total_volunteer_hours", nullable = false, precision = 7, scale = 2)
     private BigDecimal totalVolunteerHours;
 
 }
-

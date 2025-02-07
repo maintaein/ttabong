@@ -16,8 +16,8 @@ public class UpdateApplicationsResponseDto {
     @Setter
     @NoArgsConstructor
     public static class Application {
-        private int applicationId;
-        private int recruitId;
+        private Integer applicationId;
+        private Integer recruitId;
         private String status;
         private LocalDateTime createdAt;
     }

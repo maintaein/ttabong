@@ -3,8 +3,10 @@ package com.ttabong.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.config.Customizer;
 
 @Configuration
 public class SecurityConfig {
@@ -26,11 +28,8 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
 
-                // 3) httpBasic 설정해줘야 함
+                // 3) httpBasic 설정(필요하다면)
                 .httpBasic();
-
-
         return http.build();
     }
-
 }

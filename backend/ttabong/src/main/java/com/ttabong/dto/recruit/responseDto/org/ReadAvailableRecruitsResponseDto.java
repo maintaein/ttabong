@@ -3,6 +3,7 @@ package com.ttabong.dto.recruit.responseDto.org;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @Getter
@@ -13,8 +14,9 @@ public class ReadAvailableRecruitsResponseDto {
     private List<TemplateDetail> templates;
 
     @Getter
-    @Setter
     @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
     public static class TemplateDetail {
         private Template template;
         private Group group;
@@ -22,11 +24,12 @@ public class ReadAvailableRecruitsResponseDto {
     }
 
     @Getter
-    @Setter
     @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
     public static class Template {
-        private int templateId;
-        private int categoryId;
+        private Integer templateId;
+        private Integer categoryId;
         private String title;
         private String activityLocation;
         private String status;
@@ -38,24 +41,26 @@ public class ReadAvailableRecruitsResponseDto {
     }
 
     @Getter
-    @Setter
     @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
     public static class Group {
-        private int groupId;
+        private Integer groupId;
         private String groupName;
     }
 
     @Getter
-    @Setter
     @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
     public static class Recruit {
-        private int recruitId;
+        private Integer recruitId;
         private LocalDateTime deadline;
-        private LocalDateTime activityDate;
-        private int activityStart; // 시간은 4자리 숫자로 표현 (1000, 1400)
-        private int activityEnd;
-        private int maxVolunteer;
-        private int participateVolCount;
+        private LocalDate activityDate;
+        private Integer activityStart; // 시간은 4자리 숫자로 표현 (1000, 1400)
+        private Integer activityEnd;
+        private Integer maxVolunteer;
+        private Integer participateVolCount;
         private String status;
         private LocalDateTime updatedAt;
         private LocalDateTime createdAt;

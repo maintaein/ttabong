@@ -20,8 +20,8 @@ public class ReadRecruitDetailResponseDto {
     @Getter
     @Setter
     public static class Template {
-        private int templateId;
-        private int categoryId;
+        private Integer templateId;
+        private Integer categoryId;
         private String title;
         private String activityLocation;
         private String status;
@@ -35,34 +35,34 @@ public class ReadRecruitDetailResponseDto {
     @Getter
     @Setter
     public static class Group {
-        private int groupId;
+        private Integer groupId;
         private String groupName;
     }
 
     @Getter
     @Setter
     public static class Category {
-        private int categoryId;
+        private Integer categoryId;
         private String name;
     }
 
     @Getter
     @Setter
     public static class Organization {
-        private int orgId;
+        private Integer orgId;
         private String name;
     }
 
     @Getter
     @Setter
     public static class Recruit {
-        private int recruitId;
+        private Integer recruitId;
         private LocalDateTime deadline;
         private LocalDate activityDate;
-        private int activityStart;
-        private int activityEnd;
-        private int maxVolunteer;
-        private int participateVolCount;
+        private Integer activityStart;
+        private Integer activityEnd;
+        private Integer maxVolunteer;
+        private Integer participateVolCount;
         private String status;
         private LocalDateTime updatedAt;
         private LocalDateTime createdAt;

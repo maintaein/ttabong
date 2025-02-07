@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class UpdateApplicationsRequestDto {
-
     Integer recruitId;
     Integer volunteerId;
     Integer applicationId;

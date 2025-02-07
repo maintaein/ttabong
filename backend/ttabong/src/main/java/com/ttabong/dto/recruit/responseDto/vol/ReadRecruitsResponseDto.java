@@ -14,6 +14,7 @@ public class ReadRecruitsResponseDto {
 
     @Getter
     @Setter
+    @Builder
     public static class TemplateDetail {
         private Template template;
         private Group group;
@@ -22,9 +23,10 @@ public class ReadRecruitsResponseDto {
 
     @Getter
     @Setter
+    @Builder
     public static class Template {
-        private int templateId;
-        private int categoryId;
+        private Integer templateId;
+        private Integer categoryId;
         private String title;
         private String activityLocation;
         private String status;
@@ -37,15 +39,17 @@ public class ReadRecruitsResponseDto {
 
     @Getter
     @Setter
+    @Builder
     public static class Group {
-        private int groupId;
+        private Integer groupId;
         private String groupName;
     }
 
     @Getter
     @Setter
+    @Builder
     public static class Organization {
-        private int orgId;
+        private Integer orgId;
         private String orgName;
     }
 }

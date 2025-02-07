@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Builder
 public class MyApplicationsResponseDto {
 
-    private int applicationId;
+    private Integer applicationId;
     private String status;
     private boolean evaluationDone;
     private LocalDateTime createdAt;
@@ -21,8 +21,9 @@ public class MyApplicationsResponseDto {
 
     @Getter
     @Setter
+    @Builder
     public static class Template {
-        private int templateId;
+        private Integer templateId;
         private String title;
         private String activityLocation;
         private String status;
@@ -35,21 +36,23 @@ public class MyApplicationsResponseDto {
 
     @Getter
     @Setter
+    @Builder
     public static class Group {
-        private int groupId;
+        private Integer groupId;
         private String groupName;
     }
 
     @Getter
     @Setter
+    @Builder
     public static class Recruit {
-        private int recruitId;
+        private Integer recruitId;
         private LocalDateTime deadline;
         private LocalDate activityDate;
         private double activityStart;
         private double activityEnd;
-        private int maxVolunteer;
-        private int participateVolCount;
+        private Integer maxVolunteer;
+        private Integer participateVolCount;
         private String status;
         private LocalDateTime createdAt;
     }

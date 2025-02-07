@@ -10,11 +10,15 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class ApplyRecruitResponseDto {
-    String message;
-    Application application;
+    private String message;
+    private Application application;
 
-    private class Application {
-        Integer applicationId;
-        String status;
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class Application {
+        private Integer applicationId;
+        private String status;
     }
 }
