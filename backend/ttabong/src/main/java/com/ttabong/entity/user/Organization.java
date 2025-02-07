@@ -41,7 +41,7 @@ public class Organization {
     private String orgAddress;
 
     @ColumnDefault("CURRENT_TIMESTAMP")
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, insertable=false, updatable=false)
     private Instant createdAt;
 
     @OneToMany(mappedBy = "org")
