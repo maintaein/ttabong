@@ -31,37 +31,13 @@ public class OrgRecruitController {
     }
 
 
-    //2
+    //2. 공고 _ 공고 전체 조회(그룹+템플릿+공고) /api/org/recruits?cursor={recruitId}&limit={limit}
     @GetMapping("/recruits")
-    public ResponseEntity<ReadMyRecruitsResponseDto> readRecruits(@RequestParam(required = true) int cursor, @RequestParam(defaultValue = "10") int limit) {
-        ReadMyRecruitsResponseDto.Group group = ReadMyRecruitsResponseDto.Group.builder()
-                .groupId(1)
-                .groupName("청소년 봉사").build();
-
-        ReadMyRecruitsResponseDto.Template template = ReadMyRecruitsResponseDto.Template.builder()
-                .templateId(10)
-                .title("환경 정화 봉사").build();
-
-        ReadMyRecruitsResponseDto.Recruit recruit = ReadMyRecruitsResponseDto.Recruit.builder()
-                .recruitId(100)
-                .status("모집중")
-                .maxVolunteer(20)
-                .participateVolCount(10)
-                .activityDate(LocalDate.now())
-                .activityStart(10.00)
-                .activityEnd(14.00)
-                .deadline(LocalDateTime.now().plusDays(10))
-                .createdAt(LocalDateTime.now()).build();
-
-        ReadMyRecruitsResponseDto.RecruitDetail recruitDetail = ReadMyRecruitsResponseDto.RecruitDetail.builder()
-                .group(group)
-                .template(template)
-                .recruit(recruit).build();
-
-        ReadMyRecruitsResponseDto responseDto = ReadMyRecruitsResponseDto.builder()
-                .recruits(Collections.singletonList(recruitDetail)).build();
-
-        return ResponseEntity.ok().body(responseDto);
+    public ResponseEntity<ReadMyRecruitsResponseDto> readRecruits(
+            @RequestParam(required = false, name = "recruitId") Integer cursor,
+            @RequestParam(defaultValue = "10", name = "limit") Integer limit) {
+        ReadMyRecruitsResponseDto response = orgRecruitService.readMyRecruits(cursor, limit);
+        return ResponseEntity.ok(response);
     }
 
     //3 b
