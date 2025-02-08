@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
@@ -36,8 +37,8 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
             @Param("recruitId") Integer recruitId,
             @Param("deadline") Instant deadline,
             @Param("activityDate") Date activityDate,
-            @Param("activityStart") Double activityStart,
-            @Param("activityEnd") Double activityEnd,
+            @Param("activityStart") BigDecimal activityStart,
+            @Param("activityEnd") BigDecimal activityEnd,
             @Param("maxVolunteer") Integer maxVolunteer
     );
 

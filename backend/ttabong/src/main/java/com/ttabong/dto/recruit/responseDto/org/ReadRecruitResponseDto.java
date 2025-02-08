@@ -1,10 +1,13 @@
 package com.ttabong.dto.recruit.responseDto.org;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @Getter
 @NoArgsConstructor
@@ -49,7 +52,7 @@ public class ReadRecruitResponseDto {
     public static class Recruit {
         private Integer recruitId;
         private LocalDateTime deadline;
-        private LocalDate activityDate;
+        private Date activityDate;
         private BigDecimal activityStart;
         private BigDecimal activityEnd;
         private Integer maxVolunteer;

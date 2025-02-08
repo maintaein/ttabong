@@ -2,11 +2,9 @@ package com.ttabong.service.recruit;
 
 import com.ttabong.dto.recruit.requestDto.org.*;
 import com.ttabong.dto.recruit.responseDto.org.*;
-import com.ttabong.dto.recruit.responseDto.org.ReadAvailableRecruitsResponseDto.*;
-import com.ttabong.dto.recruit.responseDto.org.ReadMyRecruitsResponseDto.*;
+import com.ttabong.dto.recruit.responseDto.org.ReadAvailableRecruitsResponseDto.TemplateDetail;
+import com.ttabong.dto.recruit.responseDto.org.ReadMyRecruitsResponseDto.RecruitDetail;
 import com.ttabong.entity.recruit.*;
-import com.ttabong.entity.recruit.Recruit;
-import com.ttabong.entity.recruit.Template;
 import com.ttabong.entity.user.Organization;
 import com.ttabong.repository.recruit.*;
 import com.ttabong.repository.user.OrganizationRepository;
@@ -20,9 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -50,7 +48,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         List<Template> templates = templateRepository.findAvailableTemplates(cursor, limit);
 
         List<TemplateDetail> templateDetails = templates.stream().map(template -> {
-            // 그룹 정보 가져오기
             TemplateGroup templateGroup = template.getGroup();
             ReadAvailableRecruitsResponseDto.Group group = Optional.ofNullable(templateGroup)
                     .map(g -> ReadAvailableRecruitsResponseDto.Group.builder()
@@ -59,28 +56,27 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                             .build())
                     .orElse(null);
 
-            // 모집 정보 가져오기
             List<Recruit> recruitEntities = recruitRepository.findByTemplateId(template.getId());
             List<ReadAvailableRecruitsResponseDto.Recruit> recruits = recruitEntities.stream()
                     .map(recruit -> ReadAvailableRecruitsResponseDto.Recruit.builder()
                             .recruitId(recruit.getId())
-
                             .deadline(recruit.getDeadline() != null ?
-                                    LocalDateTime.ofInstant(recruit.getDeadline(), java.time.ZoneId.systemDefault()) : null)
-
-                            .activityDate(recruit.getActivityDate() != null ?
-                                    recruit.getActivityDate().toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate() : null)
-
+                                    recruit.getDeadline().atZone(ZoneId.systemDefault()).toLocalDateTime()
+                                    : LocalDateTime.now())
+                            .activityDate(recruit.getActivityDate() != null
+                                    ? recruit.getActivityDate()
+                                    : new Date())
                             .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.ZERO)
                             .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.ZERO)
-
                             .maxVolunteer(recruit.getMaxVolunteer())
                             .participateVolCount(recruit.getParticipateVolCount())
                             .status(recruit.getStatus())
                             .updatedAt(recruit.getUpdatedAt() != null ?
-                                    LocalDateTime.ofInstant(recruit.getUpdatedAt(), java.time.ZoneId.systemDefault()) : null)
+                                    recruit.getUpdatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime()
+                                    : LocalDateTime.now())
                             .createdAt(recruit.getCreatedAt() != null ?
-                                    LocalDateTime.ofInstant(recruit.getCreatedAt(), java.time.ZoneId.systemDefault()) : null)
+                                    recruit.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime()
+                                    : LocalDateTime.now())
                             .build())
                     .collect(Collectors.toList());
 
@@ -96,7 +92,8 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                             .contactPhone(template.getContactPhone())
                             .description(template.getDescription())
                             .createdAt(template.getCreatedAt() != null ?
-                                    LocalDateTime.ofInstant(template.getCreatedAt(), java.time.ZoneId.systemDefault()) : null)
+                                    template.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime()
+                                    : LocalDateTime.now())
                             .build())
                     .group(group)
                     .recruits(recruits)
@@ -117,37 +114,32 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         List<Recruit> recruits = recruitRepository.findAvailableRecruits(cursor, limit);
 
         List<RecruitDetail> recruitDetails = recruits.stream().map(recruit -> {
-            // 그룹 정보 가져오기
             Template template = recruit.getTemplate();
             TemplateGroup templateGroup = template.getGroup();
-
             ReadMyRecruitsResponseDto.Group group = Optional.ofNullable(templateGroup)
                     .map(g -> ReadMyRecruitsResponseDto.Group.builder()
                             .groupId(g.getId())
                             .groupName(g.getGroupName())
                             .build())
                     .orElse(null);
-
             ReadMyRecruitsResponseDto.Template dtoTemplate = ReadMyRecruitsResponseDto.Template.builder()
                     .templateId(template.getId())
                     .title(template.getTitle())
                     .build();
-
             ReadMyRecruitsResponseDto.Recruit dtoRecruit = ReadMyRecruitsResponseDto.Recruit.builder()
                     .recruitId(recruit.getId())
                     .status(recruit.getStatus())
                     .maxVolunteer(recruit.getMaxVolunteer())
                     .participateVolCount(recruit.getParticipateVolCount())
-                    .activityDate(recruit.getActivityDate() != null ?
-                            recruit.getActivityDate().toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate() : null)
-
+                    .activityDate(recruit.getActivityDate() != null ? recruit.getActivityDate() : new Date())
                     .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.ZERO)
                     .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.ZERO)
-
                     .deadline(recruit.getDeadline() != null ?
-                            LocalDateTime.ofInstant(recruit.getDeadline(), java.time.ZoneId.systemDefault()) : null)
+                            recruit.getDeadline().atZone(ZoneId.systemDefault()).toLocalDateTime()
+                            : LocalDateTime.now())
                     .createdAt(recruit.getCreatedAt() != null ?
-                            LocalDateTime.ofInstant(recruit.getCreatedAt(), java.time.ZoneId.systemDefault()) : null)
+                            recruit.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime()
+                            : LocalDateTime.now())
                     .build();
 
             return RecruitDetail.builder()
@@ -182,14 +174,18 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         Instant deadlineInstant = requestDto.getDeadline() != null
                 ? requestDto.getDeadline().atZone(ZoneId.systemDefault()).toInstant()
-                : null;
+                : Instant.now(); // null일 경우 현재 시간 설정
+
+        Date activityDate = requestDto.getActivityDate() != null
+                ? new java.sql.Date(requestDto.getActivityDate().getTime())
+                : new java.sql.Date(System.currentTimeMillis());
 
         recruitRepository.updateRecruit(
                 recruitId,
                 deadlineInstant,
-                requestDto.getActivityDate(),
-                requestDto.getActivityStart(),
-                requestDto.getActivityEnd(),
+                activityDate,
+                requestDto.getActivityStart() != null ? requestDto.getActivityStart() : BigDecimal.ZERO,
+                requestDto.getActivityEnd() != null ? requestDto.getActivityEnd() : BigDecimal.ZERO,
                 requestDto.getMaxVolunteer()
         );
 
@@ -203,11 +199,10 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     // TODO: db에 있는지 보고, 마감으로 수정하기
     @Override
     public CloseRecruitResponseDto closeRecruit(CloseRecruitRequestDto closeRecruitDto) {
-        // 마감할 공고
+
         Integer recruitId = closeRecruitDto.getRecruitId();
 
         recruitRepository.closeRecruit(recruitId);
-
 
         return CloseRecruitResponseDto.builder()
                 .message("공고 마감 완료")
@@ -219,9 +214,9 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     @Override
     public UpdateGroupResponseDto updateGroup(UpdateGroupRequestDto updateGroupDto) {
 
-        // 토큰 인증 할거지만, 일단 기관까지 그냥 체크해주자 +그룹id로 하자
+        // TODO: 토큰 인증 할거지만, 일단 기관까지 그냥 체크해주자 +그룹id로 하자
         Organization org = organizationRepository.findById(updateGroupDto.getOrgId())
-                .orElseThrow(() -> new IllegalArgumentException("Organization not found"));
+                .orElseThrow(() -> new IllegalArgumentException("해당 기관 없음"));
 
         templateGroupRepository.updateGroup(updateGroupDto.getGroupId(), org, updateGroupDto.getGroupName());
 
@@ -236,16 +231,13 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     @Override
     public UpdateTemplateResponse updateTemplate(UpdateTemplateRequestDto updateTemplateDto) {
 
-        // 조직 ID를 이용해 Organization 객체를 조회
         Organization org = organizationRepository.findById(updateTemplateDto.getOrgId())
-                .orElseThrow(() -> new IllegalArgumentException("Organization not found"));
+                .orElseThrow(() -> new IllegalArgumentException("해당 기관 없음"));
 
-        // 템플릿을 업데이트
         templateRepository.updateTemplate(updateTemplateDto.getTemplateId(), org, updateTemplateDto.getTitle(),
                 updateTemplateDto.getDescription(), updateTemplateDto.getActivityLocation(),
                 updateTemplateDto.getContactName(), updateTemplateDto.getContactPhone());
 
-        // 응답 DTO 생성
         return UpdateTemplateResponse.builder()
                 .message("템플릿 수정 성공")
                 .templateId(updateTemplateDto.getTemplateId())
@@ -257,13 +249,11 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     @Override
     @Transactional
     public DeleteTemplatesResponseDto deleteTemplates(DeleteTemplatesRequestDto deleteTemplatesDto) {
-        // 템플릿 ID 리스트를 받아 삭제
+
         List<Integer> deleteTemplateIds = deleteTemplatesDto.getDeletedTemplates();
 
-        // 템플릿 삭제 (DB에서 논리적으로 삭제)
         templateRepository.deleteTemplates(deleteTemplateIds);
 
-        // 응답 DTO 생성
         return DeleteTemplatesResponseDto.builder()
                 .message("템플릿 삭제 성공")
                 .deletedTemplates(deleteTemplateIds)  // 삭제된 템플릿 ID 리스트 전달
@@ -273,14 +263,12 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
     @Override
     public DeleteGroupResponseDto deleteGroup(DeleteGroupDto deleteGroupDto) {
-        // 삭제할 그룹 ID와 기관 ID를 받아서 그룹을 삭제하는 로직 구현
+
         Integer groupId = deleteGroupDto.getGroupId();
         Integer orgId = deleteGroupDto.getOrgId();
 
-        // 해당 그룹을 논리 삭제 (is_deleted = true로 업데이트)
         templateGroupRepository.deleteGroupByIdAndOrg(groupId, orgId);
 
-        // 응답 DTO 반환
         return DeleteGroupResponseDto.builder()
                 .message("삭제 성공")
                 .groupId(groupId)
@@ -295,10 +283,8 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         // Pageable 생성: cursor가 페이지 번호(0부터 시작), limit가 한 페이지에 보여줄 데이터 수
         Pageable pageable = PageRequest.of(cursor, limit);
 
-        // 그룹 조회 (페이지네이션 적용)
         List<TemplateGroup> groups = templateGroupRepository.findGroups(pageable);
 
-        // 그룹별 템플릿 조회 및 dto 변환
         List<ReadTemplatesResponseDto.GroupDto> groupDtos = groups.stream()
                 .map(group -> {
                     // 그룹 dto 생성
@@ -320,14 +306,15 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                                                     .contactPhone(template.getContactPhone())
                                                     .description(template.getDescription())
                                                     .createdAt(template.getCreatedAt() != null
-                                                            ? template.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime()
-                                                            : null)
+                                                            ? LocalDateTime.ofInstant(template.getCreatedAt(), ZoneId.systemDefault())
+                                                            : LocalDateTime.now())
                                                     .build()
                                             ).collect(Collectors.toList())
                             )
                             .build();
 
                     return groupDto;
+
                 })
                 .collect(Collectors.toList());
 
@@ -341,14 +328,13 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     @Override
     public CreateTemplateResponseDto createTemplate(CreateTemplateRequestDto createTemplateDto) {
 
-        // 요청받은 데이터를 바탕으로 Template 엔티티 생성
         Template template = Template.builder()
                 .group(templateGroupRepository.findById(createTemplateDto.getGroupId())
-                        .orElseThrow(() -> new IllegalArgumentException("Group not found")))
+                        .orElseThrow(() -> new IllegalArgumentException("해당 그룹 없음")))
                 .org(organizationRepository.findById(createTemplateDto.getOrgId())
-                        .orElseThrow(() -> new IllegalArgumentException("Organization not found")))
+                        .orElseThrow(() -> new IllegalArgumentException("해당 기관 없음")))
                 .category(categoryRepository.findById(createTemplateDto.getCategoryId())
-                        .orElseThrow(() -> new IllegalArgumentException("Category not found")))
+                        .orElseThrow(() -> new IllegalArgumentException("해당 카테고리 없음")))
                 .title(createTemplateDto.getTitle())
                 .activityLocation(createTemplateDto.getActivityLocation())
                 .status(createTemplateDto.getStatus())
@@ -356,22 +342,20 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .contactPhone(createTemplateDto.getContactPhone())
                 .description(createTemplateDto.getDescription())
                 .isDeleted(false)
-                .createdAt(Instant.now()) // createdAt 필드는 Instant 타입으로 설정
+                .createdAt(Instant.now())
                 .build();
 
-        // Template을 디비에 저장
         Template savedTemplate = templateRepository.save(template);
 
         // 이미지 처리: 받은 이미지 리스트에서 각 이미지를 TemplateImage 테이블에 저장
         if (createTemplateDto.getImages() != null && !createTemplateDto.getImages().isEmpty()) {
             List<TemplateImage> templateImages = createTemplateDto.getImages().stream()
                     .map(imageUrl -> TemplateImage.builder()
-                            .template(savedTemplate)  // 템플릿과 연결
+                            .template(savedTemplate)
                             .imageUrl(imageUrl)
                             .createdAt(Instant.now())
                             .build())
                     .collect(Collectors.toList());
-
 
             templateImageRepository.saveAll(templateImages);
         }
@@ -386,23 +370,20 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     @Override
     public CreateGroupResponseDto createGroup(CreateGroupRequestDto createGroupDto) {
 
-        // orgId에 해당하는게 있는지 없는지
         Organization org = organizationRepository.findById(createGroupDto.getOrgId())
-                .orElseThrow(() -> new IllegalArgumentException("Organization not found"));
+                .orElseThrow(() -> new IllegalArgumentException("기관 없음"));
 
-        // 그룹 객체 생성
         TemplateGroup newGroup = TemplateGroup.builder()
                 .org(org)
-                .groupName(createGroupDto.getGroupName())
-                .isDeleted(false)  // 기본값으로 false로 설정
+                .groupName(createGroupDto.getGroupName() != null ? createGroupDto.getGroupName() : "봉사")
+                .isDeleted(false)
                 .build();
 
-        // 그룹 저장
         TemplateGroup savedGroup = templateGroupRepository.save(newGroup);
 
         return CreateGroupResponseDto.builder()
                 .message("그룹 생성 성공")
-                .groupId(savedGroup.getId())  // 생성된 그룹의 ID 반환
+                .groupId(savedGroup.getId())
                 .build();
 
     }
@@ -410,71 +391,66 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     @Override
     public CreateRecruitResponseDto createRecruit(CreateRecruitRequestDto createRecruitDto) {
 
-        // 마감일이 LocalDateTime인데 이를 Instant로 바꾸기
         Instant deadlineInstant = createRecruitDto.getDeadline() != null
                 ? createRecruitDto.getDeadline().atZone(ZoneId.systemDefault()).toInstant()
-                : null;
+                : Instant.now();
 
-        // 템플릿 id로 템플릿 엔티티 찾기
         Template template = templateRepository.findById(createRecruitDto.getTemplateId())
-                .orElseThrow(() -> new IllegalArgumentException("해당 템플릿 없습니다"));
+                .orElseThrow(() -> new IllegalArgumentException("해당 템플릿이 존재하지 않습니다."));
 
-        // Recruit 엔티티 생성
         Recruit recruit = Recruit.builder()
                 .template(template)
                 .deadline(deadlineInstant)
-                .activityDate(createRecruitDto.getActivityDate())
+                .activityDate(createRecruitDto.getActivityDate() != null ? createRecruitDto.getActivityDate() : new Date())
                 .activityStart(createRecruitDto.getActivityStart() != null ? createRecruitDto.getActivityStart() : BigDecimal.ZERO)
                 .activityEnd(createRecruitDto.getActivityEnd() != null ? createRecruitDto.getActivityEnd() : BigDecimal.ZERO)
-                .maxVolunteer(createRecruitDto.getMaxVolunteer())
+                .maxVolunteer(createRecruitDto.getMaxVolunteer() != null ? createRecruitDto.getMaxVolunteer() : 0)
                 .status("RECRUITING")
                 .isDeleted(false)
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();
 
-        // 공고 저장
         recruit = recruitRepository.save(recruit);
 
         return CreateRecruitResponseDto.builder()
                 .message("공고 생성 완료")
                 .recruitId(recruit.getId())
                 .build();
+
     }
 
     @Override
     public ReadRecruitResponseDto readRecruit(Integer recruitId) {
 
-        // Recruit 엔티티 조회
         Recruit recruit = recruitRepository.findById(recruitId)
                 .orElseThrow(() -> new RuntimeException("해당 공고가 없습니다"));
 
-        // Instant를 LocalDateTime으로 변환 (UTC -> 시스템 기본 시간대)
         LocalDateTime deadlineLocalDateTime = recruit.getDeadline() != null
                 ? LocalDateTime.ofInstant(recruit.getDeadline(), ZoneId.systemDefault())
                 : null;
 
-        // Date를 LocalDate로 변환 (Date -> LocalDate)
-        LocalDate activityLocalDate = recruit.getActivityDate() != null
-                ? recruit.getActivityDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
-                : null;
+        LocalDateTime updatedAtLocalDateTime = recruit.getUpdatedAt() != null
+                ? LocalDateTime.ofInstant(recruit.getUpdatedAt(), ZoneId.systemDefault())
+                : LocalDateTime.now();
 
-        LocalDateTime createdAtLocalDateTime = recruit.getTemplate().getCreatedAt() != null
-                ? LocalDateTime.ofInstant(recruit.getTemplate().getCreatedAt(), ZoneId.systemDefault())
-                : null;
+        LocalDateTime createdAtLocalDateTime = recruit.getCreatedAt() != null
+                ? LocalDateTime.ofInstant(recruit.getCreatedAt(), ZoneId.systemDefault())
+                : LocalDateTime.now();
 
-        // recruit부분 값 설정하기
+        Date activityDate = recruit.getActivityDate() != null ? recruit.getActivityDate() : new Date();
+
         ReadRecruitResponseDto.Recruit recruitDto = ReadRecruitResponseDto.Recruit.builder()
                 .recruitId(recruit.getId())
                 .deadline(deadlineLocalDateTime)
-                .activityDate(activityLocalDate)
+                .activityDate(activityDate)
                 .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.ZERO)
                 .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.ZERO)
                 .maxVolunteer(recruit.getMaxVolunteer())
                 .participateVolCount(recruit.getParticipateVolCount())
                 .status(recruit.getStatus())
-                .updatedAt(LocalDateTime.ofInstant(recruit.getUpdatedAt(), ZoneId.systemDefault()))
-                .createdAt(LocalDateTime.ofInstant(recruit.getCreatedAt(), ZoneId.systemDefault()))
+                .updatedAt(updatedAtLocalDateTime)
+                .createdAt(createdAtLocalDateTime)
                 .build();
 
         ReadRecruitResponseDto.Group groupDto = new ReadRecruitResponseDto.Group(
@@ -482,9 +458,13 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 recruit.getTemplate().getGroup().getGroupName()
         );
 
+        LocalDateTime templateCreatedAt = recruit.getTemplate().getCreatedAt() != null
+                ? LocalDateTime.ofInstant(recruit.getTemplate().getCreatedAt(), ZoneId.systemDefault())
+                : LocalDateTime.now();
+
         ReadRecruitResponseDto.Template templateDto = ReadRecruitResponseDto.Template.builder()
                 .templateId(recruit.getTemplate().getId())
-                .categoryId(recruit.getTemplate().getCategory().getId())
+                .categoryId(recruit.getTemplate().getCategory() != null ? recruit.getTemplate().getCategory().getId() : null)
                 .title(recruit.getTemplate().getTitle())
                 .activityLocation(recruit.getTemplate().getActivityLocation())
                 .status(recruit.getTemplate().getStatus())
@@ -492,9 +472,8 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .contactName(recruit.getTemplate().getContactName())
                 .contactPhone(recruit.getTemplate().getContactPhone())
                 .description(recruit.getTemplate().getDescription())
-                .createdAt(createdAtLocalDateTime)
+                .createdAt(templateCreatedAt)
                 .build();
-
 
         ReadRecruitResponseDto.Organization orgDto = new ReadRecruitResponseDto.Organization(
                 recruit.getTemplate().getOrg().getId(),
@@ -536,7 +515,9 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                                 .applicationId(application.getId())
                                 .recruitId(application.getRecruit().getId())
                                 .status(application.getStatus())
-                                .createdAt(LocalDateTime.ofInstant(application.getCreatedAt(), ZoneId.systemDefault()))
+                                .createdAt(application.getCreatedAt() != null
+                                        ? LocalDateTime.ofInstant(application.getCreatedAt(), ZoneId.systemDefault())
+                                        : LocalDateTime.now())
                                 .build())
                         .build())
                 .collect(Collectors.toList());
