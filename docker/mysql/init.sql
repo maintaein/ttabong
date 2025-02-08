@@ -126,6 +126,16 @@ CREATE TABLE IF NOT EXISTS Template (
         ON UPDATE CASCADE ON DELETE SET NULL
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
+-- template 이미지 (테스트용)
+CREATE TABLE IF NOT EXISTS Template_image (
+    template_image_id INT AUTO_INCREMENT PRIMARY KEY COMMENT '이미지 아이디',
+    template_id INT NOT NULL COMMENT '템플릿 ID',
+    image_url VARCHAR(500) NOT NULL COMMENT '이미지 URL',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '이미지 생성 일시',
+    CONSTRAINT fk_template_id FOREIGN KEY (template_id) REFERENCES Template(template_id)
+    ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 DROP TABLE IF EXISTS Recruit;
 CREATE TABLE IF NOT EXISTS Recruit (
     recruit_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '봉사공고 ID',
