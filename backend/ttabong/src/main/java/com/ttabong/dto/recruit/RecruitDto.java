@@ -14,7 +14,7 @@ public class RecruitDto {
     private Long recruitId;
     private Long templateId;
     private LocalDateTime deadline;
-    private LocalDate activityDate;
+    private LocalDateTime activityDate;
     private String activityTime;
     private Integer maxVolunteer;
     private Integer participateVolCount;
