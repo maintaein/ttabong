@@ -47,8 +47,7 @@ public class ImageConfig implements LoggerConfig {
     public void ensureBucketExists() {
         try {
             MinioClient client = this.minioClient;
-            logger().info("✅ Bucket '" + bucketName + "' 관리를 시작합니다!");
-            // ✅ 버킷 존재 여부 확인 및 생성
+            logger().info(" Bucket '" + bucketName + "' 관리를 시작합니다!");
             boolean found = client.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
             if (!found) {
                 client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());

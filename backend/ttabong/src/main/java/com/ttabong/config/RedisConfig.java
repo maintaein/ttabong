@@ -1,4 +1,4 @@
-package com.ttabong.redis.config;
+package com.ttabong.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

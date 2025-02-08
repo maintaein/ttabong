@@ -14,7 +14,6 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class ImageUtil {
 
-
     private final MinioClient minioClient;
 
     @Value("${minio.url}")
@@ -38,7 +37,7 @@ public class ImageUtil {
                         .bucket(bucketName)
                         .object(objectName)
                         .method(Method.PUT)
-                        .expiry(10, TimeUnit.MINUTES) // 10분 동안 유효
+                        .expiry(60, TimeUnit.MINUTES) // 10분 동안 유효
                         .build()
         );
     }
@@ -77,11 +76,6 @@ public class ImageUtil {
         );
     }
 
-    /**
-     * ✅ 직접 MinIO 서버에서 파일 삭제 (서버 측 삭제)
-     *
-     * @param objectName 삭제할 파일명
-     */
     public void deleteObject(String objectName) throws Exception {
         minioClient.removeObject(
                 RemoveObjectArgs.builder()
@@ -89,6 +83,9 @@ public class ImageUtil {
                         .object(objectName)
                         .build()
         );
+    }
+
+    public void validateTest(){
     }
 }
 
