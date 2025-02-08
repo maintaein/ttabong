@@ -10,8 +10,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class VolunteerDto {
-    private Long volunteerId;
-    private Long userId;
+    private Integer volunteerId;
+    private Integer userId;
     private String preferredTime;
     private String interestTheme;
     private String durationTime;

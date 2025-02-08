@@ -14,6 +14,6 @@ import lombok.Builder;
 @Builder
 public class ReviewCreateResponseDto {
     private String message;
-    private Long reviewId;
-    private Long writerId;
+    private Integer reviewId;
+    private Integer writerId;
 }

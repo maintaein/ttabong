@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Builder
 public class ReviewVisibilitySettingResponseDto {
     private String message;
-    private Long reviewId;
+    private Integer reviewId;
     private Boolean isPublic;
     private LocalDateTime updatedAt;
 }

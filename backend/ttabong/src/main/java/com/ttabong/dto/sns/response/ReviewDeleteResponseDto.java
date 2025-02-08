@@ -14,7 +14,7 @@ import lombok.Builder;
 @Builder
 public class ReviewDeleteResponseDto {
     private String message;
-    private Long reviewId;
+    private Integer reviewId;
     private String title;
     private String content;
 }

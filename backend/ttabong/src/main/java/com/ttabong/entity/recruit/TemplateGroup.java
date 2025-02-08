@@ -15,8 +15,7 @@ import java.util.Set;
 @Builder
 @Table(name = "Template_group")
 public class TemplateGroup {
-
-
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "group_id", nullable = false)
