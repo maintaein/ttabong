@@ -6,9 +6,7 @@ import com.ttabong.entity.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.JdbcTypeCode;
 
-import java.sql.SQLType;
 import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.Set;

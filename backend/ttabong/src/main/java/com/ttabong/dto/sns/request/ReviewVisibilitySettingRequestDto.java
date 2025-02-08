@@ -1,9 +1,9 @@
 package com.ttabong.dto.sns.request;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /*
  * 5. 후기 _ 공개 여부 설정
