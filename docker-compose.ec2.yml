@@ -61,7 +61,19 @@ services:
       - internal
     expose:
       - "8080" # 외부에 직접 공개되지 않고 내부 네트워크에서만 접근
-
+  minio:
+    build:
+      context: ./docker/minio
+      dockerfile: Dockerfile
+    platform: "linux/amd64"
+    image: ${DOCKER_HUB_USERNAME}/ttabong:$CI_PIPELINE_ID-minio
+    container_name: minio_deploy
+    restart: always
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - external
   nginxc:
     build:
       context: ./frontend/ttabong

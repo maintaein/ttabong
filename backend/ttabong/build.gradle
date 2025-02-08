@@ -38,9 +38,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
 
     // jwt 토큰으로 테스트하기 위함
-//    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-//    implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
-//    implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5' // JSON 파싱용
+    //    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    //    implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    //    implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5' // JSON 파싱용
 
     testImplementation 'org.springframework.amqp:spring-rabbit-test'
     compileOnly 'org.projectlombok:lombok'
@@ -53,6 +53,7 @@ dependencies {
 
     testImplementation 'org.mockito:mockito-core'
 
+    implementation 'io.minio:minio:8.5.17'
 
 
     //가빈 : 밑 3개는 JWT사용하기 위해 추가함

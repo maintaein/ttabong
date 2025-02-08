@@ -41,6 +41,11 @@ spring:
         port: 5672
         username: user
         password: password
+minio:
+    url: http://localhost:9000
+    access-key: ttabong
+    secret-key: ttabong-bongteum
+    bucket-name: ttabong-bucket
 logging:
     level:
         org.hibernate.SQL: DEBUG   # Hibernate SQL 쿼리 로그 출력
@@ -62,6 +67,11 @@ spring:
     rabbitmq:
         host: rabbitmqdeploy
         port: 5672
+minio:
+    url: http://localhost:9000
+    access-key: ttabong
+    secret-key: ttabong-bongteum
+    bucket-name: ttabong-bucket
 logging:
     level:
         org.hibernate.SQL: DEBUG   # Hibernate SQL 쿼리 로그 출력
@@ -93,6 +103,11 @@ logging:
         com.zaxxer.hikari: DEBUG   # HikariCP (DB Connection Pool) 연결 로그 출력
         org.springframework.jdbc.core: DEBUG  # Spring JDBC 로그 출력
         org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration: DEBUG  # 데이터 소스 설정 로깅
+minio:
+    url: http://localhost:9000
+    access-key: ttabong
+    secret-key: ttabong-bongteum
+    bucket-name: ttabong-bucket
 ---
 spring:
     security:
