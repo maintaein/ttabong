@@ -173,17 +173,14 @@ public class OrgRecruitController {
         return ResponseEntity.ok().body(response);
     }
 
-    //17 b
+    //17. 봉사자 관리 _ 봉사자 평가
     @PatchMapping("/recruits/{recruitId}/applications/evaluate")
-    public ResponseEntity<List<EvaluateApplicationsResponseDto>> evaluateApplicants(@PathVariable int recruitId, @RequestBody List<EvaluateApplicationsRequestDto> evaluateApplicationDtoList) {
+    public ResponseEntity<List<EvaluateApplicationsResponseDto>> evaluateApplicants(
+            @PathVariable(name = "recruitId") Integer recruitId,
+            @RequestBody List<EvaluateApplicationsRequestDto> evaluateApplicationDtoList) {
 
-        List<EvaluateApplicationsResponseDto> responseList = evaluateApplicationDtoList.stream()
-                .map(dto -> EvaluateApplicationsResponseDto.builder()
-                        .volunteerId(dto.getVolunteerId())
-                        .recommendationStatus(dto.getRecommendationStatus())
-                        .build())
-                .collect(Collectors.toList());
+        List<EvaluateApplicationsResponseDto> response = orgRecruitService.evaluateApplicants(recruitId,evaluateApplicationDtoList);
 
-        return ResponseEntity.ok().body(responseList);
+        return ResponseEntity.ok().body(response);
     }
 }

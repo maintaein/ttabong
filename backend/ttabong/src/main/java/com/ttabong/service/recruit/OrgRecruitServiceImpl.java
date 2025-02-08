@@ -8,8 +8,10 @@ import com.ttabong.entity.recruit.*;
 import com.ttabong.entity.recruit.Recruit;
 import com.ttabong.entity.recruit.Template;
 import com.ttabong.entity.user.Organization;
+import com.ttabong.entity.user.Volunteer;
 import com.ttabong.repository.recruit.*;
 import com.ttabong.repository.user.OrganizationRepository;
+import com.ttabong.repository.user.VolunteerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -40,6 +42,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     private final CategoryRepository categoryRepository;
     private final TemplateImageRepository templateImageRepository;
     private final ApplicationRepository applicationRepository;
+    private final VolunteerRepository volunteerRepository;
 
 
     // TODO: 마지막 공고까지 다 로드했다면? & db에서 정보 누락된게 있다면? , 삭제여부 확인, 마감인건 빼고 가져오기
@@ -556,5 +559,26 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build();
     }
 
+    @Override
+    @Transactional
+    public List<EvaluateApplicationsResponseDto> evaluateApplicants(Integer recruitId, List<EvaluateApplicationsRequestDto> evaluateApplicationDtoList) {
+
+        return evaluateApplicationDtoList.stream().map(dto -> {
+            Integer volunteerId = dto.getVolunteerId();
+            String recommendationStatus = dto.getRecommendationStatus();
+
+            // 추천 , 비추천 처리
+            if ("RECOMMEND".equalsIgnoreCase(recommendationStatus)) {
+                volunteerRepository.incrementRecommendation(volunteerId);
+            } else if ("NOTRECOMMEND".equalsIgnoreCase(recommendationStatus)) {
+                volunteerRepository.incrementNotRecommendation(volunteerId);
+            }
+
+            return EvaluateApplicationsResponseDto.builder()
+                    .volunteerId(volunteerId)
+                    .recommendationStatus(recommendationStatus)
+                    .build();
+        }).collect(Collectors.toList());
+    }
 
 }

@@ -3,6 +3,8 @@ package com.ttabong.service.recruit;
 import com.ttabong.dto.recruit.requestDto.org.*;
 import com.ttabong.dto.recruit.responseDto.org.*;
 
+import java.util.List;
+
 
 public interface OrgRecruitService {
 
@@ -22,4 +24,5 @@ public interface OrgRecruitService {
     ReadRecruitResponseDto readRecruit(int recruitId);
     ReadApplicationsResponseDto readApplications(Integer recruitId);
     UpdateApplicationsResponseDto updateStatuses(UpdateApplicationsRequestDto updateApplicationDto);
+    List<EvaluateApplicationsResponseDto> evaluateApplicants(Integer recruitId, List<EvaluateApplicationsRequestDto> evaluateApplicationDtoList);
 }
