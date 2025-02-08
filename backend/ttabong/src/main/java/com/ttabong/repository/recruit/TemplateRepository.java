@@ -6,10 +6,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
 import java.util.List;
 
+@Repository
 public interface TemplateRepository extends JpaRepository<Template, Integer> {
     @Query("SELECT t FROM Template t WHERE (:cursor IS NULL OR t.id < :cursor) ORDER BY t.id DESC LIMIT :limit")
     List<Template> findAvailableTemplates(@Param("cursor") Integer cursor, @Param("limit") Integer limit);

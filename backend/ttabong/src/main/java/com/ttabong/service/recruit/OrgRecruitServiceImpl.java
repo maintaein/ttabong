@@ -7,10 +7,11 @@ import com.ttabong.dto.recruit.responseDto.org.ReadMyRecruitsResponseDto.*;
 import com.ttabong.entity.recruit.Recruit;
 import com.ttabong.entity.recruit.Template;
 import com.ttabong.entity.recruit.TemplateGroup;
+import com.ttabong.entity.recruit.TemplateImage;
+import com.ttabong.entity.sns.ReviewImage;
 import com.ttabong.entity.user.Organization;
-import com.ttabong.repository.recruit.RecruitRepository;
-import com.ttabong.repository.recruit.TemplateGroupRepository;
-import com.ttabong.repository.recruit.TemplateRepository;
+import com.ttabong.repository.recruit.*;
+import com.ttabong.repository.sns.ReviewImageRepository;
 import com.ttabong.repository.user.OrganizationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,8 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     private final TemplateRepository templateRepository;
     private final TemplateGroupRepository templateGroupRepository;
     private final OrganizationRepository organizationRepository;
+    private final CategoryRepository categoryRepository;
+    private final TemplateImageRepository templateImageRepository;
 
 
     // TODO: 마지막 공고까지 다 로드했다면? & db에서 정보 누락된게 있다면? , 삭제여부 확인, 마감인건 빼고 가져오기
@@ -321,6 +324,51 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         return ReadTemplatesResponseDto.builder()
                 .groups(groupDtos)
+                .build();
+    }
+
+    // TODO: 이미지 저장하기 (지금은 임시로 Template_image 테이블 하나 더 만들어서 사용중)
+    @Override
+    public CreateTemplateResponseDto createTemplate(CreateTemplateRequestDto createTemplateDto) {
+
+        // 요청받은 데이터를 바탕으로 Template 엔티티 생성
+        Template template = Template.builder()
+                .group(templateGroupRepository.findById(createTemplateDto.getGroupId())
+                        .orElseThrow(() -> new IllegalArgumentException("Group not found")))
+                .org(organizationRepository.findById(createTemplateDto.getOrgId())
+                        .orElseThrow(() -> new IllegalArgumentException("Organization not found")))
+                .category(categoryRepository.findById(createTemplateDto.getCategoryId())
+                        .orElseThrow(() -> new IllegalArgumentException("Category not found")))
+                .title(createTemplateDto.getTitle())
+                .activityLocation(createTemplateDto.getActivityLocation())
+                .status(createTemplateDto.getStatus())
+                .contactName(createTemplateDto.getContactName())
+                .contactPhone(createTemplateDto.getContactPhone())
+                .description(createTemplateDto.getDescription())
+                .isDeleted(false)
+                .createdAt(Instant.now()) // createdAt 필드는 Instant 타입으로 설정
+                .build();
+
+        // Template을 디비에 저장
+        Template savedTemplate = templateRepository.save(template);
+
+        // 이미지 처리: 받은 이미지 리스트에서 각 이미지를 TemplateImage 테이블에 저장
+        if (createTemplateDto.getImages() != null && !createTemplateDto.getImages().isEmpty()) {
+            List<TemplateImage> templateImages = createTemplateDto.getImages().stream()
+                    .map(imageUrl -> TemplateImage.builder()
+                            .template(savedTemplate)  // 템플릿과 연결
+                            .imageUrl(imageUrl)
+                            .createdAt(Instant.now())
+                            .build())
+                    .collect(Collectors.toList());
+
+
+            templateImageRepository.saveAll(templateImages);
+        }
+        
+        return CreateTemplateResponseDto.builder()
+                .message("템플릿 생성 성공")
+                .templateId(savedTemplate.getId())
                 .build();
     }
 

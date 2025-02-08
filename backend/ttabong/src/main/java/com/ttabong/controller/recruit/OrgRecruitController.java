@@ -119,28 +119,22 @@ public class OrgRecruitController {
         return ResponseEntity.ok().body(responseDto);
     }
 
-    //11 b
+    //11 공고 _ 템플릿 생성 /api/org/templates
     @PostMapping("/templates")
     public ResponseEntity<CreateTemplateResponseDto> createTemplate(@RequestBody CreateTemplateRequestDto createTemplateDto) {
 
-        CreateTemplateResponseDto responseDto = CreateTemplateResponseDto.builder()
-                .message("템플릿 생성 성공")
-                .templateId(1) // 임시값, 실제 생성된 templateId를 반환해야 함
-                .build();
+        CreateTemplateResponseDto response = orgRecruitService.createTemplate(createTemplateDto);
 
-        return ResponseEntity.ok().body(responseDto);
+        return ResponseEntity.ok().body(response);
     }
 
     //12 b
     @PostMapping("/groups")
     public ResponseEntity<CreateGroupResponseDto> createGroup(@RequestBody CreateGroupRequestDto createGroupDto) {
 
-        CreateGroupResponseDto responseDto = CreateGroupResponseDto.builder()
-                .message("그룹 생성 성공")
-                .groupId(1) // 임시값, 실제 생성된 groupId를 반환해야 함
-                .build();
+//        CreateTemplateResponseDto response = orgRecruitService.createTemplate(createGroupDto);
 
-        return ResponseEntity.ok().body(responseDto);
+        return ResponseEntity.ok().body(null);
     }
 
     //13 b
