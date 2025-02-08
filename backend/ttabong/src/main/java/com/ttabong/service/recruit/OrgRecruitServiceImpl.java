@@ -532,6 +532,29 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build();
     }
 
+    @Override
+    @Transactional
+    public UpdateApplicationsResponseDto updateStatuses(UpdateApplicationsRequestDto updateApplicationDto) {
+
+        Integer applicationId = updateApplicationDto.getApplicationId();
+        Integer recruitId = updateApplicationDto.getRecruitId();
+        Boolean accept = updateApplicationDto.getAccept();
+
+        // 신청 수락, 거절
+        String status = accept ? "APPROVED" : "REJECTED";
+
+        applicationRepository.updateApplicationStatus(applicationId, status);
+
+        return UpdateApplicationsResponseDto.builder()
+                .message("신청 상태 변경 완료")
+                .application(UpdateApplicationsResponseDto.Application.builder()
+                        .applicationId(applicationId)
+                        .recruitId(recruitId)
+                        .status(status)
+                        .createdAt(LocalDateTime.now())
+                        .build())
+                .build();
+    }
 
 
 }

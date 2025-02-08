@@ -164,20 +164,11 @@ public class OrgRecruitController {
         return ResponseEntity.ok().body(response);
     }
 
-    //16 b
+    //16. 봉사자 관리 _ 봉사자 수락/거절
     @PatchMapping("/applications/status")
     public ResponseEntity<UpdateApplicationsResponseDto> updateStatuses(@RequestBody UpdateApplicationsRequestDto updateApplicationDto) {
 
-        UpdateApplicationsResponseDto.Application application = new UpdateApplicationsResponseDto.Application();
-        application.setApplicationId(updateApplicationDto.getApplicationId());
-        application.setRecruitId(updateApplicationDto.getRecruitId());
-        application.setStatus(updateApplicationDto.getAccept() ? "ACCEPTED" : "REJECTED");
-        application.setCreatedAt(java.time.LocalDateTime.now());
-
-        UpdateApplicationsResponseDto response = UpdateApplicationsResponseDto.builder()
-                .message("신청 상태 변경 완료")
-                .application(application)
-                .build();
+        UpdateApplicationsResponseDto response = orgRecruitService.updateStatuses(updateApplicationDto);
 
         return ResponseEntity.ok().body(response);
     }

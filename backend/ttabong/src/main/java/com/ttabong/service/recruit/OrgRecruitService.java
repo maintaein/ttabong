@@ -21,4 +21,5 @@ public interface OrgRecruitService {
     CreateRecruitResponseDto createRecruit(CreateRecruitRequestDto createRecruitDto);
     ReadRecruitResponseDto readRecruit(int recruitId);
     ReadApplicationsResponseDto readApplications(Integer recruitId);
+    UpdateApplicationsResponseDto updateStatuses(UpdateApplicationsRequestDto updateApplicationDto);
 }
