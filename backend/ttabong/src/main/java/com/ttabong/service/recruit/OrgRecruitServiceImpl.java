@@ -2,6 +2,7 @@ package com.ttabong.service.recruit;
 
 import com.ttabong.dto.recruit.requestDto.org.CloseRecruitRequestDto;
 import com.ttabong.dto.recruit.requestDto.org.DeleteRecruitsRequestDto;
+import com.ttabong.dto.recruit.requestDto.org.UpdateGroupRequestDto;
 import com.ttabong.dto.recruit.requestDto.org.UpdateRecruitsRequestDto;
 import com.ttabong.dto.recruit.responseDto.org.*;
 import com.ttabong.dto.recruit.responseDto.org.ReadAvailableRecruitsResponseDto.*;
@@ -9,9 +10,11 @@ import com.ttabong.dto.recruit.responseDto.org.ReadMyRecruitsResponseDto.*;
 import com.ttabong.entity.recruit.Recruit;
 import com.ttabong.entity.recruit.Template;
 import com.ttabong.entity.recruit.TemplateGroup;
+import com.ttabong.entity.user.Organization;
 import com.ttabong.repository.recruit.RecruitRepository;
 import com.ttabong.repository.recruit.TemplateGroupRepository;
 import com.ttabong.repository.recruit.TemplateRepository;
+import com.ttabong.repository.user.OrganizationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,6 +38,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     private final RecruitRepository recruitRepository;
     private final TemplateRepository templateRepository;
     private final TemplateGroupRepository templateGroupRepository;
+    private final OrganizationRepository organizationRepository;
 
 
     // TODO: 마지막 공고까지 다 로드했다면? & db에서 정보 누락된게 있다면? , 삭제여부 확인, 마감인건 빼고 가져오기
@@ -209,6 +213,22 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         return CloseRecruitResponseDto.builder()
                 .message("공고 마감 완료")
                 .recruitId(recruitId)
+                .build();
+    }
+
+    @Override
+    public UpdateGroupResponseDto updateGroup(UpdateGroupRequestDto updateGroupDto) {
+
+        // 토큰 인증 할거지만, 일단 기관까지 그냥 체크해주자 +그룹id로 하자
+        Organization org = organizationRepository.findById(updateGroupDto.getOrgId())
+                .orElseThrow(() -> new IllegalArgumentException("Organization not found"));
+
+        templateGroupRepository.updateGroup(updateGroupDto.getGroupId(), org, updateGroupDto.getGroupName());
+
+        return UpdateGroupResponseDto.builder()
+                .message("수정 성공")
+                .groupId(updateGroupDto.getGroupId())
+                .orgId(updateGroupDto.getOrgId())
                 .build();
     }
 

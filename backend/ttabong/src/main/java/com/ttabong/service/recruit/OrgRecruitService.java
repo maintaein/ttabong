@@ -2,6 +2,7 @@ package com.ttabong.service.recruit;
 
 import com.ttabong.dto.recruit.requestDto.org.CloseRecruitRequestDto;
 import com.ttabong.dto.recruit.requestDto.org.DeleteRecruitsRequestDto;
+import com.ttabong.dto.recruit.requestDto.org.UpdateGroupRequestDto;
 import com.ttabong.dto.recruit.requestDto.org.UpdateRecruitsRequestDto;
 import com.ttabong.dto.recruit.responseDto.org.*;
 
@@ -17,4 +18,6 @@ public interface OrgRecruitService {
     UpdateRecruitsResponseDto updateRecruit(Integer recruitId, UpdateRecruitsRequestDto requestDto);
 
     CloseRecruitResponseDto closeRecruit(CloseRecruitRequestDto closeRecruitDto);
+
+    UpdateGroupResponseDto updateGroup(UpdateGroupRequestDto updateGroupDto);
 }

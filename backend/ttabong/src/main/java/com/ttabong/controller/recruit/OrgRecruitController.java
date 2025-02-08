@@ -64,27 +64,25 @@ public class OrgRecruitController {
     //5 공고 _ 공고 마감 /api/org/recruits/close
     @PatchMapping("recruits/close")
     public ResponseEntity<CloseRecruitResponseDto> closeRecruit(@RequestBody CloseRecruitRequestDto closeRecruitDto) {
-        CloseRecruitResponseDto responseDto = CloseRecruitResponseDto.builder()
-                .message("마감 완료")
-                .recruitId(closeRecruitDto.getRecruitId())
-                .build();
 
         CloseRecruitResponseDto response = orgRecruitService.closeRecruit(closeRecruitDto);
 
-        return ResponseEntity.ok().body(responseDto);
+        return ResponseEntity.ok().body(response);
     }
 
-    //7 6
+    // 6.공고 _ 그룹명 수정 /api/org/groups
     @PatchMapping("/groups")
     public ResponseEntity<UpdateGroupResponseDto> updateGroup(@RequestBody UpdateGroupRequestDto updateGroupDto) {
 
-        UpdateGroupResponseDto responseDto = UpdateGroupResponseDto.builder()
-                .message("수정 성공")
-                .groupId(updateGroupDto.getGroupId())
-                .orgId(updateGroupDto.getOrgId())
-                .build();
+//        UpdateGroupResponseDto responseDto = UpdateGroupResponseDto.builder()
+//                .message("수정 성공")
+//                .groupId(updateGroupDto.getGroupId())
+//                .orgId(updateGroupDto.getOrgId())
+//                .build();
 
-        return ResponseEntity.ok().body(responseDto);
+        UpdateGroupResponseDto response = orgRecruitService.updateGroup(updateGroupDto);
+
+        return ResponseEntity.ok().body(response);
     }
 
     //7 b
