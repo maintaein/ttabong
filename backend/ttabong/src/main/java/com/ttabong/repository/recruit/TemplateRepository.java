@@ -25,4 +25,9 @@ public interface TemplateRepository extends JpaRepository<Template, Integer> {
                         @Param("contactName") String contactName,
                         @Param("contactPhone") String contactPhone);
 
+    @Modifying
+    @Query("UPDATE Template t SET t.isDeleted = true WHERE t.id IN :deleteTemplateIds")
+    void deleteTemplates(@Param("deleteTemplateIds") List<Integer> deleteTemplateIds);
+
+
 }

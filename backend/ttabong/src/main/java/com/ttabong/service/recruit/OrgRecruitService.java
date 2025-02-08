@@ -19,4 +19,6 @@ public interface OrgRecruitService {
     UpdateGroupResponseDto updateGroup(UpdateGroupRequestDto updateGroupDto);
 
     UpdateTemplateResponse updateTemplate(UpdateTemplateRequestDto updateTemplateDto);
+
+    DeleteTemplatesResponseDto deleteTemplates(DeleteTemplatesRequestDto deleteTemplatesDto);
 }

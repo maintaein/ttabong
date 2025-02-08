@@ -197,13 +197,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         // 마감할 공고
         Integer recruitId = closeRecruitDto.getRecruitId();
 
-        // 공고 찾아서 마감처리하기
-//        Recruit recruit = recruitRepository.findById(recruitId)
-//                .orElseThrow(() -> new IllegalArgumentException("해당 공고가 존재하지 않습니다"));
-
-//        recruit.close();
-//        recruitRepository.save(recruit);
-
         recruitRepository.closeRecruit(recruitId);
 
 
@@ -246,6 +239,22 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .message("템플릿 수정 성공")
                 .templateId(updateTemplateDto.getTemplateId())
                 .orgId(updateTemplateDto.getOrgId())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public DeleteTemplatesResponseDto deleteTemplates(DeleteTemplatesRequestDto deleteTemplatesDto) {
+        // 템플릿 ID 리스트를 받아 삭제
+        List<Integer> deleteTemplateIds = deleteTemplatesDto.getDeletedTemplates();
+
+        // 템플릿 삭제 (DB에서 논리적으로 삭제)
+        templateRepository.deleteTemplates(deleteTemplateIds);
+
+        // 응답 DTO 생성
+        return DeleteTemplatesResponseDto.builder()
+                .message("템플릿 삭제 성공")
+                .deletedTemplates(deleteTemplateIds)  // 삭제된 템플릿 ID 리스트 전달
                 .build();
     }
 

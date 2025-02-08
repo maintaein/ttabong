@@ -88,18 +88,16 @@ public class OrgRecruitController {
         return ResponseEntity.ok().body(response);
     }
 
-    //8 b
+    //8. 공고 _ 템플릿 삭제 (여러개 선택 후 한 번에 삭제)
     @PatchMapping("/templates/delete")
     public ResponseEntity<DeleteTemplatesResponseDto> deleteTemplates(@RequestBody DeleteTemplatesRequestDto deleteTemplatesDto) {
+// 요청 본문을 출력하여 값이 잘 전달되는지 확인
+        System.out.println("삭제할 템플릿 ID 리스트: " + deleteTemplatesDto.getDeletedTemplates());
 
-        List<Integer> deletedTemplates = deleteTemplatesDto.getDeleteTemplateIds();
+        // 요청 처리
+        DeleteTemplatesResponseDto response = orgRecruitService.deleteTemplates(deleteTemplatesDto);
 
-        DeleteTemplatesResponseDto responseDto = DeleteTemplatesResponseDto.builder()
-                .message("삭제 성공")
-                .deletedTemplates(deletedTemplates)
-                .build();
-
-        return ResponseEntity.ok().body(responseDto);
+        return ResponseEntity.ok().body(response);
     }
 
     //9 b
