@@ -1,9 +1,6 @@
 package com.ttabong.service.recruit;
 
-import com.ttabong.dto.recruit.requestDto.org.CloseRecruitRequestDto;
-import com.ttabong.dto.recruit.requestDto.org.DeleteRecruitsRequestDto;
-import com.ttabong.dto.recruit.requestDto.org.UpdateGroupRequestDto;
-import com.ttabong.dto.recruit.requestDto.org.UpdateRecruitsRequestDto;
+import com.ttabong.dto.recruit.requestDto.org.*;
 import com.ttabong.dto.recruit.responseDto.org.*;
 import com.ttabong.dto.recruit.responseDto.org.ReadAvailableRecruitsResponseDto.*;
 import com.ttabong.dto.recruit.responseDto.org.ReadMyRecruitsResponseDto.*;
@@ -229,6 +226,26 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .message("수정 성공")
                 .groupId(updateGroupDto.getGroupId())
                 .orgId(updateGroupDto.getOrgId())
+                .build();
+    }
+
+    @Override
+    public UpdateTemplateResponse updateTemplate(UpdateTemplateRequestDto updateTemplateDto) {
+
+        // 조직 ID를 이용해 Organization 객체를 조회
+        Organization org = organizationRepository.findById(updateTemplateDto.getOrgId())
+                .orElseThrow(() -> new IllegalArgumentException("Organization not found"));
+
+        // 템플릿을 업데이트
+        templateRepository.updateTemplate(updateTemplateDto.getTemplateId(), org, updateTemplateDto.getTitle(),
+                updateTemplateDto.getDescription(), updateTemplateDto.getActivityLocation(),
+                updateTemplateDto.getContactName(), updateTemplateDto.getContactPhone());
+
+        // 응답 DTO 생성
+        return UpdateTemplateResponse.builder()
+                .message("템플릿 수정 성공")
+                .templateId(updateTemplateDto.getTemplateId())
+                .orgId(updateTemplateDto.getOrgId())
                 .build();
     }
 

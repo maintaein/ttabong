@@ -74,27 +74,18 @@ public class OrgRecruitController {
     @PatchMapping("/groups")
     public ResponseEntity<UpdateGroupResponseDto> updateGroup(@RequestBody UpdateGroupRequestDto updateGroupDto) {
 
-//        UpdateGroupResponseDto responseDto = UpdateGroupResponseDto.builder()
-//                .message("수정 성공")
-//                .groupId(updateGroupDto.getGroupId())
-//                .orgId(updateGroupDto.getOrgId())
-//                .build();
-
         UpdateGroupResponseDto response = orgRecruitService.updateGroup(updateGroupDto);
 
         return ResponseEntity.ok().body(response);
     }
 
-    //7 b
+    //7 공고 _ 템플릿 수정  /api/org/templates
     @PatchMapping("templates")
     public ResponseEntity<UpdateTemplateResponse> updateTemplate(@RequestBody UpdateTemplateRequestDto updateTemplateDto) {
-        UpdateTemplateResponse responseDto = UpdateTemplateResponse.builder()
-                .message("수정 성공")
-                .templateId(updateTemplateDto.getTemplateId())
-                .orgId(updateTemplateDto.getOrgId())
-                .build();
 
-        return ResponseEntity.ok().body(responseDto);
+        UpdateTemplateResponse response = orgRecruitService.updateTemplate(updateTemplateDto);
+
+        return ResponseEntity.ok().body(response);
     }
 
     //8 b
