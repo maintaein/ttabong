@@ -8,7 +8,6 @@ import com.ttabong.entity.recruit.*;
 import com.ttabong.entity.recruit.Recruit;
 import com.ttabong.entity.recruit.Template;
 import com.ttabong.entity.user.Organization;
-import com.ttabong.entity.user.Volunteer;
 import com.ttabong.repository.recruit.*;
 import com.ttabong.repository.user.OrganizationRepository;
 import com.ttabong.repository.user.VolunteerRepository;
@@ -30,7 +29,6 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-//@Transactional(readOnly = true)
 @Transactional
 @Slf4j
 public class OrgRecruitServiceImpl implements OrgRecruitService {
@@ -43,7 +41,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     private final TemplateImageRepository templateImageRepository;
     private final ApplicationRepository applicationRepository;
     private final VolunteerRepository volunteerRepository;
-
 
     // TODO: 마지막 공고까지 다 로드했다면? & db에서 정보 누락된게 있다면? , 삭제여부 확인, 마감인건 빼고 가져오기
     @Override
@@ -67,14 +64,16 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
             List<ReadAvailableRecruitsResponseDto.Recruit> recruits = recruitEntities.stream()
                     .map(recruit -> ReadAvailableRecruitsResponseDto.Recruit.builder()
                             .recruitId(recruit.getId())
+
                             .deadline(recruit.getDeadline() != null ?
                                     LocalDateTime.ofInstant(recruit.getDeadline(), java.time.ZoneId.systemDefault()) : null)
+
                             .activityDate(recruit.getActivityDate() != null ?
                                     recruit.getActivityDate().toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate() : null)
-                            .activityStart(recruit.getActivityStart() != null ?
-                                    recruit.getActivityStart().intValue() : null)
-                            .activityEnd(recruit.getActivityEnd() != null ?
-                                    recruit.getActivityEnd().intValue() : null)
+
+                            .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.ZERO)
+                            .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.ZERO)
+
                             .maxVolunteer(recruit.getMaxVolunteer())
                             .participateVolCount(recruit.getParticipateVolCount())
                             .status(recruit.getStatus())
@@ -107,6 +106,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         return ReadAvailableRecruitsResponseDto.builder()
                 .templates(templateDetails)
                 .build();
+
     }
 
     // TODO: 마지막 공고까지 다 로드했다면? & db에서 정보 누락된게 있다면?, 삭제여부 확인
@@ -140,10 +140,10 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                     .participateVolCount(recruit.getParticipateVolCount())
                     .activityDate(recruit.getActivityDate() != null ?
                             recruit.getActivityDate().toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate() : null)
-                    .activityStart(recruit.getActivityStart() != null ?
-                            recruit.getActivityStart().doubleValue() : null)
-                    .activityEnd(recruit.getActivityEnd() != null ?
-                            recruit.getActivityEnd().doubleValue() : null)
+
+                    .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.ZERO)
+                    .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.ZERO)
+
                     .deadline(recruit.getDeadline() != null ?
                             LocalDateTime.ofInstant(recruit.getDeadline(), java.time.ZoneId.systemDefault()) : null)
                     .createdAt(recruit.getCreatedAt() != null ?
@@ -174,6 +174,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .message("공고 삭제 완료")
                 .deletedRecruits(recruitIds)
                 .build();
+
     }
 
     @Override
@@ -196,6 +197,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .message("공고 수정 완료")
                 .recruitId(recruitId)
                 .build();
+
     }
 
     // TODO: db에 있는지 보고, 마감으로 수정하기
@@ -211,6 +213,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .message("공고 마감 완료")
                 .recruitId(recruitId)
                 .build();
+
     }
 
     @Override
@@ -227,6 +230,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .groupId(updateGroupDto.getGroupId())
                 .orgId(updateGroupDto.getOrgId())
                 .build();
+
     }
 
     @Override
@@ -247,6 +251,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .templateId(updateTemplateDto.getTemplateId())
                 .orgId(updateTemplateDto.getOrgId())
                 .build();
+
     }
 
     @Override
@@ -263,6 +268,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .message("템플릿 삭제 성공")
                 .deletedTemplates(deleteTemplateIds)  // 삭제된 템플릿 ID 리스트 전달
                 .build();
+
     }
 
     @Override
@@ -280,6 +286,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .groupId(groupId)
                 .orgId(orgId)
                 .build();
+
     }
 
     @Override
@@ -327,6 +334,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         return ReadTemplatesResponseDto.builder()
                 .groups(groupDtos)
                 .build();
+
     }
 
     // TODO: 이미지 저장하기 (지금은 임시로 Template_image 테이블 하나 더 만들어서 사용중)
@@ -372,6 +380,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .message("템플릿 생성 성공")
                 .templateId(savedTemplate.getId())
                 .build();
+
     }
 
     @Override
@@ -395,6 +404,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .message("그룹 생성 성공")
                 .groupId(savedGroup.getId())  // 생성된 그룹의 ID 반환
                 .build();
+
     }
 
     @Override
@@ -414,10 +424,10 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .template(template)
                 .deadline(deadlineInstant)
                 .activityDate(createRecruitDto.getActivityDate())
-                .activityStart(createRecruitDto.getActivityStart())
-                .activityEnd(createRecruitDto.getActivityEnd())
+                .activityStart(createRecruitDto.getActivityStart() != null ? createRecruitDto.getActivityStart() : BigDecimal.ZERO)
+                .activityEnd(createRecruitDto.getActivityEnd() != null ? createRecruitDto.getActivityEnd() : BigDecimal.ZERO)
                 .maxVolunteer(createRecruitDto.getMaxVolunteer())
-                .status("RECRUITING")  // 기본값으로 'RECRUITING' 넣기
+                .status("RECRUITING")
                 .isDeleted(false)
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
@@ -434,6 +444,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
     @Override
     public ReadRecruitResponseDto readRecruit(Integer recruitId) {
+
         // Recruit 엔티티 조회
         Recruit recruit = recruitRepository.findById(recruitId)
                 .orElseThrow(() -> new RuntimeException("해당 공고가 없습니다"));
@@ -455,15 +466,15 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         // recruit부분 값 설정하기
         ReadRecruitResponseDto.Recruit recruitDto = ReadRecruitResponseDto.Recruit.builder()
                 .recruitId(recruit.getId())
-                .deadline(deadlineLocalDateTime)  // 변환된 LocalDateTime 사용
-                .activityDate(activityLocalDate)  // 변환된 LocalDate 사용
-                .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.ZERO)  // BigDecimal 유지
-                .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.ZERO)        // BigDecimal 유지
+                .deadline(deadlineLocalDateTime)
+                .activityDate(activityLocalDate)
+                .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.ZERO)
+                .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.ZERO)
                 .maxVolunteer(recruit.getMaxVolunteer())
                 .participateVolCount(recruit.getParticipateVolCount())
                 .status(recruit.getStatus())
-                .updatedAt(LocalDateTime.ofInstant(recruit.getUpdatedAt(), ZoneId.systemDefault()))  // Instant -> LocalDateTime
-                .createdAt(LocalDateTime.ofInstant(recruit.getCreatedAt(), ZoneId.systemDefault()))  // Instant -> LocalDateTime
+                .updatedAt(LocalDateTime.ofInstant(recruit.getUpdatedAt(), ZoneId.systemDefault()))
+                .createdAt(LocalDateTime.ofInstant(recruit.getCreatedAt(), ZoneId.systemDefault()))
                 .build();
 
         ReadRecruitResponseDto.Group groupDto = new ReadRecruitResponseDto.Group(
@@ -481,7 +492,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .contactName(recruit.getTemplate().getContactName())
                 .contactPhone(recruit.getTemplate().getContactPhone())
                 .description(recruit.getTemplate().getDescription())
-                .createdAt(createdAtLocalDateTime)  // 변환된 LocalDateTime 사용
+                .createdAt(createdAtLocalDateTime)
                 .build();
 
 
@@ -496,10 +507,12 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .recruit(recruitDto)
                 .organization(orgDto)
                 .build();
+
     }
 
     @Override
     public ReadApplicationsResponseDto readApplications(Integer recruitId) {
+
         List<Application> applications = applicationRepository.findByRecruitIdWithUser(recruitId);
 
         List<ReadApplicationsResponseDto.ApplicationDetail> applicationDetails = applications.stream()
@@ -513,7 +526,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                         .volunteer(ReadApplicationsResponseDto.Volunteer.builder()
                                 .volunteerId(application.getVolunteer().getId())
                                 .recommendedCount(application.getVolunteer().getRecommendedCount())
-                                // 총 봉사 시간은  int형으로 해야겠다.
                                 .totalVolunteerHours(
                                         application.getVolunteer().getUser().getTotalVolunteerHours() != null
                                                 ? application.getVolunteer().getUser().getTotalVolunteerHours().intValue()
@@ -533,6 +545,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .recruitId(recruitId)
                 .applications(applicationDetails)
                 .build();
+
     }
 
     @Override
@@ -543,7 +556,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         Integer recruitId = updateApplicationDto.getRecruitId();
         Boolean accept = updateApplicationDto.getAccept();
 
-        // 신청 수락, 거절
         String status = accept ? "APPROVED" : "REJECTED";
 
         applicationRepository.updateApplicationStatus(applicationId, status);
@@ -557,6 +569,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                         .createdAt(LocalDateTime.now())
                         .build())
                 .build();
+
     }
 
     @Override
@@ -567,7 +580,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
             Integer volunteerId = dto.getVolunteerId();
             String recommendationStatus = dto.getRecommendationStatus();
 
-            // 추천 , 비추천 처리
             if ("RECOMMEND".equalsIgnoreCase(recommendationStatus)) {
                 volunteerRepository.incrementRecommendation(volunteerId);
             } else if ("NOTRECOMMEND".equalsIgnoreCase(recommendationStatus)) {
@@ -579,6 +591,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                     .recommendationStatus(recommendationStatus)
                     .build();
         }).collect(Collectors.toList());
+
     }
 
 }

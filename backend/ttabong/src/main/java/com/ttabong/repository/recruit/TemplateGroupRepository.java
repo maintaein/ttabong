@@ -27,5 +27,5 @@ public interface TemplateGroupRepository extends JpaRepository<TemplateGroup, In
 
     @Query("SELECT tg FROM TemplateGroup tg WHERE tg.isDeleted = false")
     List<TemplateGroup> findGroups(Pageable pageable);
-}
 
+}

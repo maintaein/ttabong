@@ -8,6 +8,7 @@ import java.util.List;
 
 @Repository
 public interface TemplateImageRepository extends JpaRepository<TemplateImage, Integer> {
-    List<TemplateImage> findByTemplateId(Integer templateId);
-}
 
+    List<TemplateImage> findByTemplateId(Integer templateId);
+
+}

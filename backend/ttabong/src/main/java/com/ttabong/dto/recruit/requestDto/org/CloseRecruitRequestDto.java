@@ -10,5 +10,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class CloseRecruitRequestDto {
-    Integer recruitId;
+    private Integer recruitId;
 }

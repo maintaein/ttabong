@@ -5,7 +5,6 @@ import com.ttabong.dto.recruit.responseDto.org.*;
 
 import java.util.List;
 
-
 public interface OrgRecruitService {
 
     ReadAvailableRecruitsResponseDto readAvailableRecruits(Integer cursor, Integer limit);
@@ -25,4 +24,5 @@ public interface OrgRecruitService {
     ReadApplicationsResponseDto readApplications(Integer recruitId);
     UpdateApplicationsResponseDto updateStatuses(UpdateApplicationsRequestDto updateApplicationDto);
     List<EvaluateApplicationsResponseDto> evaluateApplicants(Integer recruitId, List<EvaluateApplicationsRequestDto> evaluateApplicationDtoList);
+
 }

@@ -2,6 +2,7 @@ package com.ttabong.dto.recruit.responseDto.org;
 
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.util.List;
@@ -57,8 +58,8 @@ public class ReadAvailableRecruitsResponseDto {
         private Integer recruitId;
         private LocalDateTime deadline;
         private LocalDate activityDate;
-        private Integer activityStart; // 시간은 4자리 숫자로 표현 (1000, 1400)
-        private Integer activityEnd;
+        private BigDecimal activityStart;
+        private BigDecimal activityEnd;
         private Integer maxVolunteer;
         private Integer participateVolCount;
         private String status;

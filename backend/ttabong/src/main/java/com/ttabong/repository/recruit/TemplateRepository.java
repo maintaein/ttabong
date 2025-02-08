@@ -8,15 +8,14 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collection;
 import java.util.List;
 
 @Repository
 public interface TemplateRepository extends JpaRepository<Template, Integer> {
+
     @Query("SELECT t FROM Template t WHERE (:cursor IS NULL OR t.id < :cursor) ORDER BY t.id DESC LIMIT :limit")
     List<Template> findAvailableTemplates(@Param("cursor") Integer cursor, @Param("limit") Integer limit);
 
-    // 템플릿 업데이트 쿼리
     @Modifying
     @Query("UPDATE Template t SET t.title = :title, t.description = :description, t.activityLocation = :activityLocation, " +
             "t.contactName = :contactName, t.contactPhone = :contactPhone WHERE t.id = :templateId AND t.org = :org")
@@ -35,4 +34,5 @@ public interface TemplateRepository extends JpaRepository<Template, Integer> {
 
     @Query("SELECT t FROM Template t WHERE t.isDeleted = false AND t.group.id = :groupId")
     List<Template> findTemplatesByGroupId(@Param("groupId") Integer groupId);
+
 }
