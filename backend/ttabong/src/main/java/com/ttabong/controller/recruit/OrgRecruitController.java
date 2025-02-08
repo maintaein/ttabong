@@ -128,13 +128,13 @@ public class OrgRecruitController {
         return ResponseEntity.ok().body(response);
     }
 
-    //12 b
+    //12. 공고 _ 그룹 생성 /api/org/groups
     @PostMapping("/groups")
     public ResponseEntity<CreateGroupResponseDto> createGroup(@RequestBody CreateGroupRequestDto createGroupDto) {
 
-//        CreateTemplateResponseDto response = orgRecruitService.createTemplate(createGroupDto);
+        CreateGroupResponseDto response = orgRecruitService.createGroup(createGroupDto);
 
-        return ResponseEntity.ok().body(null);
+        return ResponseEntity.ok().body(response);
     }
 
     //13 b

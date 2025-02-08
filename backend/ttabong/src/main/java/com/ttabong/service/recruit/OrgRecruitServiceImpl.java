@@ -372,4 +372,27 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build();
     }
 
+    @Override
+    public CreateGroupResponseDto createGroup(CreateGroupRequestDto createGroupDto) {
+
+        // orgId에 해당하는게 있는지 없는지
+        Organization org = organizationRepository.findById(createGroupDto.getOrgId())
+                .orElseThrow(() -> new IllegalArgumentException("Organization not found"));
+
+        // 그룹 객체 생성
+        TemplateGroup newGroup = TemplateGroup.builder()
+                .org(org)
+                .groupName(createGroupDto.getGroupName())
+                .isDeleted(false)  // 기본값으로 false로 설정
+                .build();
+
+        // 그룹 저장
+        TemplateGroup savedGroup = templateGroupRepository.save(newGroup);
+
+        return CreateGroupResponseDto.builder()
+                .message("그룹 생성 성공")
+                .groupId(savedGroup.getId())  // 생성된 그룹의 ID 반환
+                .build();
+    }
+
 }

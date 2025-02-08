@@ -27,4 +27,6 @@ public interface OrgRecruitService {
     ReadTemplatesResponseDto readTemplates(int cursor, int limit);
 
     CreateTemplateResponseDto createTemplate(CreateTemplateRequestDto createTemplateDto);
+
+    CreateGroupResponseDto createGroup(CreateGroupRequestDto createGroupDto);
 }
