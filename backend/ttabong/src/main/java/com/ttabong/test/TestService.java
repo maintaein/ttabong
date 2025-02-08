@@ -39,10 +39,7 @@ public class TestService {
         }
 
         //4.필수 ResponseDto객체정보 입력(임시키, presignedUrl
-        CreatePostResponseDto responseDto = CreatePostResponseDto.builder()
-                .postingId(tempId)
-                .images(presignedUrls)
-                .build();
+        CreatePostResponseDto responseDto = CreatePostResponseDto.builder().postingId(tempId).images(presignedUrls).build();
 
         return responseDto;
     }
@@ -51,25 +48,12 @@ public class TestService {
     public void endPost(CreatePostRequestDto requestDto) throws Exception {
         List<String> objectPaths = new ArrayList<>();
 
-        Review review = Review.builder().id(null)
-                .parentReview(null)
-                .groupId(null)
-                .recruit(null)
-                .writer(User.builder().id(requestDto.getWriterId()).build())
-                .title(requestDto.getContent())
-                .content(requestDto.getContent())
-                .createdAt(Instant.now())
-                .imgCount(requestDto.getImages().size())
-                .build();
+        Review review = Review.builder().id(null).parentReview(null).groupId(null).recruit(null).writer(User.builder().id(requestDto.getWriterId()).build()).title(requestDto.getContent()).content(requestDto.getContent()).createdAt(Instant.now()).imgCount(requestDto.getImages().size()).build();
 
         Review reviewResult = testRepository.save(review);
         requestDto.getImages().forEach(e -> {
-                    imgTestRepository.save(ReviewImage.builder()
-                            .reviewId(reviewResult.getId())
-                            .imageUrl(cacheUtil.findObjectPath(e))
-                            .build());
-                }
-        );
+            imgTestRepository.save(ReviewImage.builder().reviewId(reviewResult.getId()).imageUrl(cacheUtil.findObjectPath(e)).build());
+        });
     }
 
     //imgId + _ + Img넘버 하면 이미지가 찾아짐

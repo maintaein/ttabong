@@ -37,12 +37,6 @@ public class ImageUtil {
         return presignedUrl;
     }
 
-    /**
-     * ✅ Presigned URL을 생성하여 클라이언트가 직접 다운로드할 수 있도록 함
-     *
-     * @param objectName 저장된 파일명
-     * @return presigned URL (GET 방식)
-     */
     public String getPresignedDownloadUrl(String objectName) throws Exception {
         return minioClient.getPresignedObjectUrl(
                 GetPresignedObjectUrlArgs.builder()
@@ -54,12 +48,6 @@ public class ImageUtil {
         );
     }
 
-    /**
-     * ✅ Presigned URL을 생성하여 클라이언트가 직접 삭제할 수 있도록 함
-     *
-     * @param objectName 삭제할 파일명
-     * @return presigned URL (DELETE 방식)
-     */
     public String getPresignedDeleteUrl(String objectName) throws Exception {
         return minioClient.getPresignedObjectUrl(
                 GetPresignedObjectUrlArgs.builder()
