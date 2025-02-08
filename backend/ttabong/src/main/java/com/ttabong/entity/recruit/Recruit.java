@@ -85,4 +85,9 @@ public class Recruit {
     public void delete() {
         this.isDeleted = true;
     }
+
+    //공고 마감할 때 사용할 메서드
+    public void close() {
+        this.status = "RECRUITMENT_CLOSED";
+    }
 }

@@ -41,4 +41,8 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
             @Param("maxVolunteer") Integer maxVolunteer
     );
 
+    @Modifying
+    @Query("UPDATE Recruit r SET r.status = 'RECRUITMENT_CLOSED' WHERE r.id = :closeId")
+    void closeRecruit(@Param("closeId") Integer closeId);
+
 }

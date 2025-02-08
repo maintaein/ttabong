@@ -61,13 +61,15 @@ public class OrgRecruitController {
         return ResponseEntity.ok(response);
     }
 
-    //5 b
+    //5 공고 _ 공고 마감 /api/org/recruits/close
     @PatchMapping("recruits/close")
     public ResponseEntity<CloseRecruitResponseDto> closeRecruit(@RequestBody CloseRecruitRequestDto closeRecruitDto) {
         CloseRecruitResponseDto responseDto = CloseRecruitResponseDto.builder()
                 .message("마감 완료")
                 .recruitId(closeRecruitDto.getRecruitId())
                 .build();
+
+        CloseRecruitResponseDto response = orgRecruitService.closeRecruit(closeRecruitDto);
 
         return ResponseEntity.ok().body(responseDto);
     }

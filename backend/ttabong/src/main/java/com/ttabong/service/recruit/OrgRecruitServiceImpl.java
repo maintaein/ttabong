@@ -1,13 +1,11 @@
 package com.ttabong.service.recruit;
 
+import com.ttabong.dto.recruit.requestDto.org.CloseRecruitRequestDto;
 import com.ttabong.dto.recruit.requestDto.org.DeleteRecruitsRequestDto;
 import com.ttabong.dto.recruit.requestDto.org.UpdateRecruitsRequestDto;
-import com.ttabong.dto.recruit.responseDto.org.DeleteRecruitsResponseDto;
-import com.ttabong.dto.recruit.responseDto.org.ReadAvailableRecruitsResponseDto;
+import com.ttabong.dto.recruit.responseDto.org.*;
 import com.ttabong.dto.recruit.responseDto.org.ReadAvailableRecruitsResponseDto.*;
-import com.ttabong.dto.recruit.responseDto.org.ReadMyRecruitsResponseDto;
 import com.ttabong.dto.recruit.responseDto.org.ReadMyRecruitsResponseDto.*;
-import com.ttabong.dto.recruit.responseDto.org.UpdateRecruitsResponseDto;
 import com.ttabong.entity.recruit.Recruit;
 import com.ttabong.entity.recruit.Template;
 import com.ttabong.entity.recruit.TemplateGroup;
@@ -39,7 +37,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     private final TemplateGroupRepository templateGroupRepository;
 
 
-    // TODO: 마지막 공고까지 다 로드했다면? & db에서 정보 누락된게 있다면? , 삭제여부 확인
+    // TODO: 마지막 공고까지 다 로드했다면? & db에서 정보 누락된게 있다면? , 삭제여부 확인, 마감인건 빼고 가져오기
     @Override
     @Transactional(readOnly = true)
     public ReadAvailableRecruitsResponseDto readAvailableRecruits(Integer cursor, Integer limit) {
@@ -188,6 +186,28 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         return UpdateRecruitsResponseDto.builder()
                 .message("공고 수정 완료")
+                .recruitId(recruitId)
+                .build();
+    }
+
+    // TODO: db에 있는지 보고, 마감으로 수정하기
+    @Override
+    public CloseRecruitResponseDto closeRecruit(CloseRecruitRequestDto closeRecruitDto) {
+        // 마감할 공고
+        Integer recruitId = closeRecruitDto.getRecruitId();
+
+        // 공고 찾아서 마감처리하기
+//        Recruit recruit = recruitRepository.findById(recruitId)
+//                .orElseThrow(() -> new IllegalArgumentException("해당 공고가 존재하지 않습니다"));
+
+//        recruit.close();
+//        recruitRepository.save(recruit);
+
+        recruitRepository.closeRecruit(recruitId);
+
+
+        return CloseRecruitResponseDto.builder()
+                .message("공고 마감 완료")
                 .recruitId(recruitId)
                 .build();
     }
