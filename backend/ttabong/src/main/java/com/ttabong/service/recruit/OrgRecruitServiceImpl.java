@@ -283,7 +283,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     }
 
     @Override
-    public ReadTemplatesResponseDto readTemplates(int cursor, int limit) {
+    public ReadTemplatesResponseDto readTemplates(Integer cursor, Integer limit) {
 
         // Pageable 생성: cursor가 페이지 번호(0부터 시작), limit가 한 페이지에 보여줄 데이터 수
         Pageable pageable = PageRequest.of(cursor, limit);
@@ -433,7 +433,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     }
 
     @Override
-    public ReadRecruitResponseDto readRecruit(int recruitId) {
+    public ReadRecruitResponseDto readRecruit(Integer recruitId) {
         // Recruit 엔티티 조회
         Recruit recruit = recruitRepository.findById(recruitId)
                 .orElseThrow(() -> new RuntimeException("해당 공고가 없습니다"));

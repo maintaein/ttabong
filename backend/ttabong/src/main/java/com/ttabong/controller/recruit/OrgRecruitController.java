@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 public class OrgRecruitController {
     private final OrgRecruitService orgRecruitService;
 
-    //1. 메인페이지 /api/org/templates/available?cursor={templateId}&limit={limit}
+    //1. 메인페이지
     @GetMapping("/templates/available")
     public ResponseEntity<ReadAvailableRecruitsResponseDto> readAvailableRecruits(
             @RequestParam(required = false, name = "templateId") Integer cursor,
@@ -32,36 +32,38 @@ public class OrgRecruitController {
         return ResponseEntity.ok().body(response);
     }
 
-
-    //2. 공고 _ 공고 전체 조회(그룹+템플릿+공고) /api/org/recruits?cursor={recruitId}&limit={limit}
+    //2. 공고 _ 공고 전체 조회(그룹+템플릿+공고)
     @GetMapping("/recruits")
     public ResponseEntity<ReadMyRecruitsResponseDto> readRecruits(
             @RequestParam(required = false, name = "recruitId") Integer cursor,
             @RequestParam(defaultValue = "10", name = "limit") Integer limit) {
 
         ReadMyRecruitsResponseDto response = orgRecruitService.readMyRecruits(cursor, limit);
+
         return ResponseEntity.ok(response);
     }
 
-    //3. 공고 _ 공고 삭제 (여러개 선택 후 한 번에 삭제) /api/org/recruits/delete
+    //3. 공고 _ 공고 삭제 (여러개 선택 후 한 번에 삭제)
     @PatchMapping("/recruits/delete")
     public ResponseEntity<DeleteRecruitsResponseDto> deleteRecruits(@RequestBody DeleteRecruitsRequestDto deleteRecruitDto) {
 
         DeleteRecruitsResponseDto response = orgRecruitService.deleteRecruits(deleteRecruitDto);
+
         return ResponseEntity.ok(response);
     }
 
-    //4. 공고 _ 공고 수정 /api/org/recruits/{recruitId}
+    //4. 공고 _ 공고 수정
     @PatchMapping("/recruits/{recruitId}")
     public ResponseEntity<UpdateRecruitsResponseDto> updateRecruit(
-            @PathVariable Integer recruitId,
+            @PathVariable(name = "recruitId") Integer recruitId,
             @RequestBody UpdateRecruitsRequestDto requestDto) {
 
         UpdateRecruitsResponseDto response = orgRecruitService.updateRecruit(recruitId, requestDto);
+
         return ResponseEntity.ok(response);
     }
 
-    //5 공고 _ 공고 마감 /api/org/recruits/close
+    //5 공고 _ 공고 마감
     @PatchMapping("recruits/close")
     public ResponseEntity<CloseRecruitResponseDto> closeRecruit(@RequestBody CloseRecruitRequestDto closeRecruitDto) {
 
@@ -70,7 +72,7 @@ public class OrgRecruitController {
         return ResponseEntity.ok().body(response);
     }
 
-    // 6.공고 _ 그룹명 수정 /api/org/groups
+    // 6.공고 _ 그룹명 수정
     @PatchMapping("/groups")
     public ResponseEntity<UpdateGroupResponseDto> updateGroup(@RequestBody UpdateGroupRequestDto updateGroupDto) {
 
@@ -79,7 +81,7 @@ public class OrgRecruitController {
         return ResponseEntity.ok().body(response);
     }
 
-    //7 공고 _ 템플릿 수정  /api/org/templates
+    //7 공고 _ 템플릿 수정
     @PatchMapping("templates")
     public ResponseEntity<UpdateTemplateResponse> updateTemplate(@RequestBody UpdateTemplateRequestDto updateTemplateDto) {
 
@@ -91,16 +93,13 @@ public class OrgRecruitController {
     //8. 공고 _ 템플릿 삭제 (여러개 선택 후 한 번에 삭제)
     @PatchMapping("/templates/delete")
     public ResponseEntity<DeleteTemplatesResponseDto> deleteTemplates(@RequestBody DeleteTemplatesRequestDto deleteTemplatesDto) {
-// 요청 본문을 출력하여 값이 잘 전달되는지 확인
-        System.out.println("삭제할 템플릿 ID 리스트: " + deleteTemplatesDto.getDeletedTemplates());
 
-        // 요청 처리
         DeleteTemplatesResponseDto response = orgRecruitService.deleteTemplates(deleteTemplatesDto);
 
         return ResponseEntity.ok().body(response);
     }
 
-    //9. 공고 _ 그룹 삭제 /api/org/groups/delete
+    //9. 공고 _ 그룹 삭제
     @PatchMapping("/groups/delete")
     public ResponseEntity<DeleteGroupResponseDto> deleteGroup(@RequestBody DeleteGroupDto deleteGroupDto) {
 
@@ -110,16 +109,18 @@ public class OrgRecruitController {
     }
 
 
-    //10 공고 _ 그룹+템플릿 조회 /api/org/templates?cursor={templateId}&limit={limit}
+    //10 공고 _ 그룹+템플릿 조회
     @GetMapping("templates")
-    public ResponseEntity<ReadTemplatesResponseDto> readTemplates(@RequestParam(defaultValue = "0") int cursor, @RequestParam(defaultValue = "10") int limit) {
+    public ResponseEntity<ReadTemplatesResponseDto> readTemplates(
+            @RequestParam(defaultValue = "0") int cursor,
+            @RequestParam(defaultValue = "10") int limit) {
 
         ReadTemplatesResponseDto responseDto = orgRecruitService.readTemplates(cursor, limit);
 
         return ResponseEntity.ok().body(responseDto);
     }
 
-    //11 공고 _ 템플릿 생성 /api/org/templates
+    //11 공고 _ 템플릿 생성
     @PostMapping("/templates")
     public ResponseEntity<CreateTemplateResponseDto> createTemplate(@RequestBody CreateTemplateRequestDto createTemplateDto) {
 
@@ -128,7 +129,7 @@ public class OrgRecruitController {
         return ResponseEntity.ok().body(response);
     }
 
-    //12. 공고 _ 그룹 생성 /api/org/groups
+    //12. 공고 _ 그룹 생성
     @PostMapping("/groups")
     public ResponseEntity<CreateGroupResponseDto> createGroup(@RequestBody CreateGroupRequestDto createGroupDto) {
 
@@ -148,7 +149,7 @@ public class OrgRecruitController {
 
     //14. 공고_상세조회
     @GetMapping("/recruits/{recruitId}")
-    public ResponseEntity<ReadRecruitResponseDto> readRecruit(@PathVariable(name = "recruitId") int recruitId) {
+    public ResponseEntity<ReadRecruitResponseDto> readRecruit(@PathVariable(name = "recruitId") Integer recruitId) {
 
         ReadRecruitResponseDto response = orgRecruitService.readRecruit(recruitId);
 
@@ -179,7 +180,7 @@ public class OrgRecruitController {
             @PathVariable(name = "recruitId") Integer recruitId,
             @RequestBody List<EvaluateApplicationsRequestDto> evaluateApplicationDtoList) {
 
-        List<EvaluateApplicationsResponseDto> response = orgRecruitService.evaluateApplicants(recruitId,evaluateApplicationDtoList);
+        List<EvaluateApplicationsResponseDto> response = orgRecruitService.evaluateApplicants(recruitId, evaluateApplicationDtoList);
 
         return ResponseEntity.ok().body(response);
     }

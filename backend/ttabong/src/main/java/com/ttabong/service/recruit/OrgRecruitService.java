@@ -17,11 +17,11 @@ public interface OrgRecruitService {
     UpdateTemplateResponse updateTemplate(UpdateTemplateRequestDto updateTemplateDto);
     DeleteTemplatesResponseDto deleteTemplates(DeleteTemplatesRequestDto deleteTemplatesDto);
     DeleteGroupResponseDto deleteGroup(DeleteGroupDto deleteGroupDto);
-    ReadTemplatesResponseDto readTemplates(int cursor, int limit);
+    ReadTemplatesResponseDto readTemplates(Integer cursor, Integer limit);
     CreateTemplateResponseDto createTemplate(CreateTemplateRequestDto createTemplateDto);
     CreateGroupResponseDto createGroup(CreateGroupRequestDto createGroupDto);
     CreateRecruitResponseDto createRecruit(CreateRecruitRequestDto createRecruitDto);
-    ReadRecruitResponseDto readRecruit(int recruitId);
+    ReadRecruitResponseDto readRecruit(Integer recruitId);
     ReadApplicationsResponseDto readApplications(Integer recruitId);
     UpdateApplicationsResponseDto updateStatuses(UpdateApplicationsRequestDto updateApplicationDto);
     List<EvaluateApplicationsResponseDto> evaluateApplicants(Integer recruitId, List<EvaluateApplicationsRequestDto> evaluateApplicationDtoList);
