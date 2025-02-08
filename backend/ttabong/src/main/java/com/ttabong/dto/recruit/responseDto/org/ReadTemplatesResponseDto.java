@@ -16,7 +16,9 @@ public class ReadTemplatesResponseDto {
     @Getter
     @Setter
     @NoArgsConstructor
-    public class GroupDto {
+    @AllArgsConstructor
+    @Builder
+    public static class GroupDto {
         private Integer groupId;
         private String groupName;
         private List<TemplateDto> templates;
@@ -25,7 +27,9 @@ public class ReadTemplatesResponseDto {
     @Getter
     @Setter
     @NoArgsConstructor
-    public class TemplateDto {
+    @AllArgsConstructor
+    @Builder
+    public static class TemplateDto {
         private Integer templateId;
         private Integer orgId;
         private Integer categoryId;

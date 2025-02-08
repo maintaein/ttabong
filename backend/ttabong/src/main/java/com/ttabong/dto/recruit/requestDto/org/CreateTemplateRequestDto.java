@@ -12,15 +12,15 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class CreateTemplateRequestDto {
-    private Integer groupId; // 그룹 ID
-    private Integer orgId; // 조직 ID
-    private Integer categoryId; // 카테고리 ID
-    private String title; // 봉사 제목
-    private String activityLocation; // 활동 장소
-    private String status; // 상태 (ALL, ACTIVE 등)
-    private List<String> images; // 이미지 리스트
-    private Integer imageCount; // 이미지 개수
-    private String contactName; // 담당자 이름
-    private String contactPhone; // 담당자 전화번호
-    private String description; // 봉사 설명
+    private Integer groupId;
+    private Integer orgId;
+    private Integer categoryId;
+    private String title;
+    private String activityLocation;
+    private String status;
+    private List<String> images;
+    private Integer imageCount;
+    private String contactName;
+    private String contactPhone;
+    private String description;
 }

@@ -13,4 +13,3 @@ public class EvaluateApplicationsResponseDto {
     private Integer volunteerId;
     private String recommendationStatus;
 }
-

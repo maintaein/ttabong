@@ -19,7 +19,10 @@ server:
     servlet:
         context-path: /api
     port: 8080
-
+logging:
+    level:
+        org.hibernate.SQL: DEBUG   # Hibernate SQL 쿼리 로그 출력
+        org.hibernate.type.descriptor.sql: TRACE  # SQL 바인딩된 파라미터 값 출력
 ---
 spring:
     config:
@@ -43,6 +46,10 @@ minio:
     access-key: ttabong
     secret-key: ttabong-bongteum
     bucket-name: ttabong-bucket
+logging:
+    level:
+        org.hibernate.SQL: DEBUG   # Hibernate SQL 쿼리 로그 출력
+        org.hibernate.type.descriptor.sql: TRACE  # SQL 바인딩된 파라미터 값 출력
 
 ---
 spring:
@@ -65,6 +72,10 @@ minio:
     access-key: ttabong
     secret-key: ttabong-bongteum
     bucket-name: ttabong-bucket
+logging:
+    level:
+        org.hibernate.SQL: DEBUG   # Hibernate SQL 쿼리 로그 출력
+        org.hibernate.type.descriptor.sql: TRACE  # SQL 바인딩된 파라미터 값 출력
 
 ---
 spring:

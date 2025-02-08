@@ -5,8 +5,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Getter
@@ -59,9 +60,9 @@ public class ReadAvailableRecruitsResponseDto {
     public static class Recruit {
         private Integer recruitId;
         private LocalDateTime deadline;
-        private LocalDate activityDate;
-        private Integer activityStart; // 시간은 4자리 숫자로 표현 (1000, 1400)
-        private Integer activityEnd;
+        private Date activityDate;
+        private BigDecimal activityStart;
+        private BigDecimal activityEnd;
         private Integer maxVolunteer;
         private Integer participateVolCount;
         private String status;

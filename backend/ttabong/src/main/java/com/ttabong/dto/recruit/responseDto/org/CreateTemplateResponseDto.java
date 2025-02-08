@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class CreateTemplateResponseDto {
-    String message;
-    Integer templateId;
+    private String message;
+    private Integer templateId;
 }

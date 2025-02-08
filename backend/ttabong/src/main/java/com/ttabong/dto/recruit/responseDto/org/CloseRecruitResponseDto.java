@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class CloseRecruitResponseDto {
-    String message;
-    Integer recruitId;
+    private String message;
+    private Integer recruitId;
 }
