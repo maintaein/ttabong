@@ -4,14 +4,11 @@ import com.ttabong.dto.recruit.requestDto.org.*;
 import com.ttabong.dto.recruit.responseDto.org.*;
 import com.ttabong.dto.recruit.responseDto.org.ReadAvailableRecruitsResponseDto.*;
 import com.ttabong.dto.recruit.responseDto.org.ReadMyRecruitsResponseDto.*;
+import com.ttabong.entity.recruit.*;
 import com.ttabong.entity.recruit.Recruit;
 import com.ttabong.entity.recruit.Template;
-import com.ttabong.entity.recruit.TemplateGroup;
-import com.ttabong.entity.recruit.TemplateImage;
-import com.ttabong.entity.sns.ReviewImage;
 import com.ttabong.entity.user.Organization;
 import com.ttabong.repository.recruit.*;
-import com.ttabong.repository.sns.ReviewImageRepository;
 import com.ttabong.repository.user.OrganizationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.sql.Date;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -43,6 +39,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     private final OrganizationRepository organizationRepository;
     private final CategoryRepository categoryRepository;
     private final TemplateImageRepository templateImageRepository;
+    private final ApplicationRepository applicationRepository;
 
 
     // TODO: 마지막 공고까지 다 로드했다면? & db에서 정보 누락된게 있다면? , 삭제여부 확인, 마감인건 빼고 가져오기
@@ -466,8 +463,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .createdAt(LocalDateTime.ofInstant(recruit.getCreatedAt(), ZoneId.systemDefault()))  // Instant -> LocalDateTime
                 .build();
 
-
-        // Group, Template, Organization 등의 다른 정보를 추가로 설정해야 할 경우
         ReadRecruitResponseDto.Group groupDto = new ReadRecruitResponseDto.Group(
                 recruit.getTemplate().getGroup().getId(),
                 recruit.getTemplate().getGroup().getGroupName()
@@ -499,6 +494,44 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .organization(orgDto)
                 .build();
     }
+
+    @Override
+    public ReadApplicationsResponseDto readApplications(Integer recruitId) {
+        List<Application> applications = applicationRepository.findByRecruitIdWithUser(recruitId);
+
+        List<ReadApplicationsResponseDto.ApplicationDetail> applicationDetails = applications.stream()
+                .map(application -> ReadApplicationsResponseDto.ApplicationDetail.builder()
+                        .user(ReadApplicationsResponseDto.User.builder()
+                                .userId(application.getVolunteer().getUser().getId())
+                                .email(application.getVolunteer().getUser().getEmail())
+                                .name(application.getVolunteer().getUser().getName())
+                                .profileImage(application.getVolunteer().getUser().getProfileImage())
+                                .build())
+                        .volunteer(ReadApplicationsResponseDto.Volunteer.builder()
+                                .volunteerId(application.getVolunteer().getId())
+                                .recommendedCount(application.getVolunteer().getRecommendedCount())
+                                // 총 봉사 시간은  int형으로 해야겠다.
+                                .totalVolunteerHours(
+                                        application.getVolunteer().getUser().getTotalVolunteerHours() != null
+                                                ? application.getVolunteer().getUser().getTotalVolunteerHours().intValue()
+                                                : 0
+                                )
+                                .build())
+                        .application(ReadApplicationsResponseDto.Application.builder()
+                                .applicationId(application.getId())
+                                .recruitId(application.getRecruit().getId())
+                                .status(application.getStatus())
+                                .createdAt(LocalDateTime.ofInstant(application.getCreatedAt(), ZoneId.systemDefault()))
+                                .build())
+                        .build())
+                .collect(Collectors.toList());
+
+        return ReadApplicationsResponseDto.builder()
+                .recruitId(recruitId)
+                .applications(applicationDetails)
+                .build();
+    }
+
 
 
 }

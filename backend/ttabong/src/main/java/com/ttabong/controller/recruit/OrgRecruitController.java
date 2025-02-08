@@ -155,13 +155,13 @@ public class OrgRecruitController {
         return ResponseEntity.ok().body(response);
     }
 
-    //15
+    //15. 공고, 봉사자 관리 _ 개별공고랑 관련된 지원자 조회
     @GetMapping("/recruits/{recruitId}/applications")
-    public ResponseEntity<ReadApplicationsResponseDto> readApplications(@PathVariable int recruitId) {
+    public ResponseEntity<ReadApplicationsResponseDto> readApplications(@PathVariable(name = "recruitId") Integer recruitId) {
 
-        ReadApplicationsResponseDto responseDto = new ReadApplicationsResponseDto();
+        ReadApplicationsResponseDto response = orgRecruitService.readApplications(recruitId);
 
-        return ResponseEntity.ok().body(responseDto);
+        return ResponseEntity.ok().body(response);
     }
 
     //16 b
@@ -174,12 +174,12 @@ public class OrgRecruitController {
         application.setStatus(updateApplicationDto.getAccept() ? "ACCEPTED" : "REJECTED");
         application.setCreatedAt(java.time.LocalDateTime.now());
 
-        UpdateApplicationsResponseDto responseDto = UpdateApplicationsResponseDto.builder()
+        UpdateApplicationsResponseDto response = UpdateApplicationsResponseDto.builder()
                 .message("신청 상태 변경 완료")
                 .application(application)
                 .build();
 
-        return ResponseEntity.ok().body(responseDto);
+        return ResponseEntity.ok().body(response);
     }
 
     //17 b
