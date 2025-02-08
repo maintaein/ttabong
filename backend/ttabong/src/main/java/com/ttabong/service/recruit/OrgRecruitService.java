@@ -31,4 +31,6 @@ public interface OrgRecruitService {
     CreateGroupResponseDto createGroup(CreateGroupRequestDto createGroupDto);
 
     CreateRecruitResponseDto createRecruit(CreateRecruitRequestDto createRecruitDto);
+
+    ReadRecruitResponseDto readRecruit(int recruitId);
 }

@@ -146,13 +146,13 @@ public class OrgRecruitController {
         return ResponseEntity.ok().body(response);
     }
 
-    //14
+    //14. 공고_상세조회
     @GetMapping("/recruits/{recruitId}")
-    public ResponseEntity<ReadRecruitResponseDto> readRecruit(@PathVariable int recruitId) {
+    public ResponseEntity<ReadRecruitResponseDto> readRecruit(@PathVariable(name = "recruitId") int recruitId) {
 
-        ReadRecruitResponseDto responseDto = new ReadRecruitResponseDto();
+        ReadRecruitResponseDto response = orgRecruitService.readRecruit(recruitId);
 
-        return ResponseEntity.ok().body(responseDto);
+        return ResponseEntity.ok().body(response);
     }
 
     //15

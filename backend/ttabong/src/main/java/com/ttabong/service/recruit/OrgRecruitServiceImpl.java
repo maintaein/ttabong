@@ -20,8 +20,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.sql.Date;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -429,5 +431,74 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .recruitId(recruit.getId())
                 .build();
     }
+
+    @Override
+    public ReadRecruitResponseDto readRecruit(int recruitId) {
+        // Recruit 엔티티 조회
+        Recruit recruit = recruitRepository.findById(recruitId)
+                .orElseThrow(() -> new RuntimeException("해당 공고가 없습니다"));
+
+        // Instant를 LocalDateTime으로 변환 (UTC -> 시스템 기본 시간대)
+        LocalDateTime deadlineLocalDateTime = recruit.getDeadline() != null
+                ? LocalDateTime.ofInstant(recruit.getDeadline(), ZoneId.systemDefault())
+                : null;
+
+        // Date를 LocalDate로 변환 (Date -> LocalDate)
+        LocalDate activityLocalDate = recruit.getActivityDate() != null
+                ? recruit.getActivityDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+                : null;
+
+        LocalDateTime createdAtLocalDateTime = recruit.getTemplate().getCreatedAt() != null
+                ? LocalDateTime.ofInstant(recruit.getTemplate().getCreatedAt(), ZoneId.systemDefault())
+                : null;
+
+        // recruit부분 값 설정하기
+        ReadRecruitResponseDto.Recruit recruitDto = ReadRecruitResponseDto.Recruit.builder()
+                .recruitId(recruit.getId())
+                .deadline(deadlineLocalDateTime)  // 변환된 LocalDateTime 사용
+                .activityDate(activityLocalDate)  // 변환된 LocalDate 사용
+                .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.ZERO)  // BigDecimal 유지
+                .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.ZERO)        // BigDecimal 유지
+                .maxVolunteer(recruit.getMaxVolunteer())
+                .participateVolCount(recruit.getParticipateVolCount())
+                .status(recruit.getStatus())
+                .updatedAt(LocalDateTime.ofInstant(recruit.getUpdatedAt(), ZoneId.systemDefault()))  // Instant -> LocalDateTime
+                .createdAt(LocalDateTime.ofInstant(recruit.getCreatedAt(), ZoneId.systemDefault()))  // Instant -> LocalDateTime
+                .build();
+
+
+        // Group, Template, Organization 등의 다른 정보를 추가로 설정해야 할 경우
+        ReadRecruitResponseDto.Group groupDto = new ReadRecruitResponseDto.Group(
+                recruit.getTemplate().getGroup().getId(),
+                recruit.getTemplate().getGroup().getGroupName()
+        );
+
+        ReadRecruitResponseDto.Template templateDto = ReadRecruitResponseDto.Template.builder()
+                .templateId(recruit.getTemplate().getId())
+                .categoryId(recruit.getTemplate().getCategory().getId())
+                .title(recruit.getTemplate().getTitle())
+                .activityLocation(recruit.getTemplate().getActivityLocation())
+                .status(recruit.getTemplate().getStatus())
+                .imageId(recruit.getTemplate().getImageId())
+                .contactName(recruit.getTemplate().getContactName())
+                .contactPhone(recruit.getTemplate().getContactPhone())
+                .description(recruit.getTemplate().getDescription())
+                .createdAt(createdAtLocalDateTime)  // 변환된 LocalDateTime 사용
+                .build();
+
+
+        ReadRecruitResponseDto.Organization orgDto = new ReadRecruitResponseDto.Organization(
+                recruit.getTemplate().getOrg().getId(),
+                recruit.getTemplate().getOrg().getOrgName()
+        );
+
+        return ReadRecruitResponseDto.builder()
+                .group(groupDto)
+                .template(templateDto)
+                .recruit(recruitDto)
+                .organization(orgDto)
+                .build();
+    }
+
 
 }
