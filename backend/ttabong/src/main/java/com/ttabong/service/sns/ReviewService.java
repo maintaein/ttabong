@@ -6,5 +6,6 @@ import com.ttabong.dto.sns.response.ReviewDeleteResponseDto;
 
 public interface ReviewService {
     ReviewCreateResponseDto createReview(ReviewCreateRequestDto reviewCreateRequestDto);
+
     ReviewDeleteResponseDto deleteReview(Integer reviewId);
 }

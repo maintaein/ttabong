@@ -1,11 +1,6 @@
 package com.ttabong.controller.user;
 
-import com.ttabong.dto.user.EmailCheckResponse;
-import com.ttabong.dto.user.LoginRequest;
-import com.ttabong.dto.user.LoginResponse;
-import com.ttabong.dto.user.OrganizationRegisterRequest;
-import com.ttabong.dto.user.VolunteerRegisterRequest;
-import com.ttabong.entity.user.User;
+import com.ttabong.dto.user.*;
 import com.ttabong.jwt.JwtProvider;
 import com.ttabong.service.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +20,7 @@ public class UserController {
         this.userService = userService;
         this.jwtProvider = jwtProvider;
     }
+
     // 로그인 엔드포인트
     @PostMapping("/user/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
@@ -78,18 +74,18 @@ public class UserController {
         EmailCheckResponse response;
 
         //계정찾기 시, 이렇게 이메일 체크 후 (+인증 후) 비번 변경 가능.
-        if("find".equalsIgnoreCase(type)) {
+        if ("find".equalsIgnoreCase(type)) {
             message = exists ? "해당 이메일이 존재합니다." : "해당 이메일을 찾으 수 없습니다.";
             response = new EmailCheckResponse(exists, message);
 
-            if(exists){
+            if (exists) {
                 return ResponseEntity.ok(response);
             }
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
 
         //이메일 중복확인 시.
-        else if("register".equalsIgnoreCase(type)) {
+        else if ("register".equalsIgnoreCase(type)) {
             message = exists ? "이미 사용 중인 이메일입니다." : "사용 가능한 이메일입니다.";
             response = new EmailCheckResponse(exists, message);
             return ResponseEntity.ok(response);

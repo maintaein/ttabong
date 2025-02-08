@@ -5,8 +5,8 @@ import com.ttabong.entity.sns.ReviewImage;
 import com.ttabong.entity.user.User;
 import com.ttabong.test.dto.CreatePostRequestDto;
 import com.ttabong.test.dto.CreatePostResponseDto;
-import com.ttabong.util.ImageUtil;
 import com.ttabong.util.CacheUtil;
+import com.ttabong.util.ImageUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -30,9 +30,9 @@ public class TestService {
         Integer tempId = Long.valueOf(cacheUtil.generatePostId().intValue()).intValue();
         //2.presinged url을 tempid+ 이미지 순서로 순차 발행 (10개 발급하면됨)
         List<String> presignedUrls = new ArrayList<String>();
-        for(int i =1; i <=10; i++){
-            String objectPath = tempId+"_"+i+".webp";
-            String presignedUrl =imageUtil.getPresignedUploadUrl(objectPath);
+        for (int i = 1; i <= 10; i++) {
+            String objectPath = tempId + "_" + i + ".webp";
+            String presignedUrl = imageUtil.getPresignedUploadUrl(objectPath);
             presignedUrls.add(presignedUrl);
             //presignedur <-key objectpath <-value로 저장
             cacheUtil.mapTempPresignedUrlwithObjectPath(presignedUrl, objectPath);
@@ -44,7 +44,7 @@ public class TestService {
                 .images(presignedUrls)
                 .build();
 
-        return  responseDto;
+        return responseDto;
     }
 
     //작동하는지 확인은 못해봄... 그러나 이런느낌으로 구현 부탁함
@@ -64,7 +64,7 @@ public class TestService {
 
         Review reviewResult = testRepository.save(review);
         requestDto.getImages().forEach(e -> {
-                     imgTestRepository.save(ReviewImage.builder()
+                    imgTestRepository.save(ReviewImage.builder()
                             .reviewId(reviewResult.getId())
                             .imageUrl(cacheUtil.findObjectPath(e))
                             .build());
@@ -74,6 +74,6 @@ public class TestService {
 
     //imgId + _ + Img넘버 하면 이미지가 찾아짐
     public String getImgUrl(String imgId) throws Exception {
-        return imageUtil.getPresignedDownloadUrl(imgId+"_"+1+".webp");
+        return imageUtil.getPresignedDownloadUrl(imgId + "_" + 1 + ".webp");
     }
 }

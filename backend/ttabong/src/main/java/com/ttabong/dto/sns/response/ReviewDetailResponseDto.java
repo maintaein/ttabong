@@ -1,9 +1,10 @@
 package com.ttabong.dto.sns.response;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;

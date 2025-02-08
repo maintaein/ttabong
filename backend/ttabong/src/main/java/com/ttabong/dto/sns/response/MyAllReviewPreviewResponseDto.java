@@ -4,12 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
 /*
-* 1. 후기 _ 자신이 쓴 후기 (미리보기) (모두 조회)
-* */
+ * 1. 후기 _ 자신이 쓴 후기 (미리보기) (모두 조회)
+ * */
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor

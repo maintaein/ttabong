@@ -1,4 +1,5 @@
 package com.ttabong.dto.user;
+
 import lombok.*;
 
 import java.time.LocalDateTime;

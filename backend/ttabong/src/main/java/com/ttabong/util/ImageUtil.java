@@ -26,7 +26,7 @@ public class ImageUtil {
     String bucketName;
 
     public String getPresignedUploadUrl(String objectName) throws Exception {
-         String presignedUrl = minioClient.getPresignedObjectUrl(
+        String presignedUrl = minioClient.getPresignedObjectUrl(
                 GetPresignedObjectUrlArgs.builder()
                         .bucket(bucketName)
                         .object(objectName)
@@ -80,7 +80,7 @@ public class ImageUtil {
         );
     }
 
-    public void validateTest(){
+    public void validateTest() {
     }
 }
 

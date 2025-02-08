@@ -18,7 +18,8 @@ public class JwtProvider {
 
     /**
      * JWT 생성 메서드
-     * @param userId JWT에 포함할 유저 ID
+     *
+     * @param userId   JWT에 포함할 유저 ID
      * @param userType JWT에 포함할 유저 타입(예: "VOLUNTEER" or "ORGANIZATION")
      * @return 생성된 토큰 문자열
      */
@@ -43,6 +44,7 @@ public class JwtProvider {
 
     /**
      * JWT를 복호화(파싱)하여 Claims(토큰에 담긴 정보)를 꺼내는 메서드
+     *
      * @param token 클라이언트가 보낸 토큰 문자열
      * @return 토큰 안에 들어있는 Claims
      */

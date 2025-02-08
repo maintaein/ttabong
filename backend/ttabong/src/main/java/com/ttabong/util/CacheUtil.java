@@ -12,14 +12,15 @@ public class CacheUtil {
     private final RedisTemplate<String, String> redisTemplate;
     private final String TEMP_CACHE = "temp:path";
 
-    public Long generatePostId(){
+    public Long generatePostId() {
         return redisKeyTemplate.opsForValue().increment("tempId");
     }
-    public void mapTempPresignedUrlwithObjectPath(String tempPreSignedUrl, String objectPath){
-        redisTemplate.opsForHash().put(TEMP_CACHE, tempPreSignedUrl,objectPath);
+
+    public void mapTempPresignedUrlwithObjectPath(String tempPreSignedUrl, String objectPath) {
+        redisTemplate.opsForHash().put(TEMP_CACHE, tempPreSignedUrl, objectPath);
     }
 
-    public String findObjectPath(String preSignedUrl){
+    public String findObjectPath(String preSignedUrl) {
         return (String) redisTemplate.opsForHash().get(TEMP_CACHE, preSignedUrl);
     }
 }
