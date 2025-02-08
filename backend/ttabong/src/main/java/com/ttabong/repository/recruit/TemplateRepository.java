@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.Modifying;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface TemplateRepository extends JpaRepository<Template, Integer> {
@@ -30,4 +31,6 @@ public interface TemplateRepository extends JpaRepository<Template, Integer> {
     void deleteTemplates(@Param("deleteTemplateIds") List<Integer> deleteTemplateIds);
 
 
+    @Query("SELECT t FROM Template t WHERE t.isDeleted = false AND t.group.id = :groupId")
+    List<Template> findTemplatesByGroupId(@Param("groupId") Integer groupId);
 }

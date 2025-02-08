@@ -14,6 +14,8 @@ import com.ttabong.repository.recruit.TemplateRepository;
 import com.ttabong.repository.user.OrganizationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -272,6 +274,53 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .message("삭제 성공")
                 .groupId(groupId)
                 .orgId(orgId)
+                .build();
+    }
+
+    @Override
+    public ReadTemplatesResponseDto readTemplates(int cursor, int limit) {
+
+        // Pageable 생성: cursor가 페이지 번호(0부터 시작), limit가 한 페이지에 보여줄 데이터 수
+        Pageable pageable = PageRequest.of(cursor, limit);
+
+        // 그룹 조회 (페이지네이션 적용)
+        List<TemplateGroup> groups = templateGroupRepository.findGroups(pageable);
+
+        // 그룹별 템플릿 조회 및 dto 변환
+        List<ReadTemplatesResponseDto.GroupDto> groupDtos = groups.stream()
+                .map(group -> {
+                    // 그룹 dto 생성
+                    ReadTemplatesResponseDto.GroupDto groupDto = ReadTemplatesResponseDto.GroupDto.builder()
+                            .groupId(group.getId())
+                            .groupName(group.getGroupName())
+                            .templates(
+                                    // 그룹에 속한 템플릿 목록 조회
+                                    templateRepository.findTemplatesByGroupId(group.getId()).stream()
+                                            .map(template -> ReadTemplatesResponseDto.TemplateDto.builder()
+                                                    .templateId(template.getId())
+                                                    .orgId(template.getOrg().getId())
+                                                    .categoryId(template.getCategory() != null ? template.getCategory().getId() : null)
+                                                    .title(template.getTitle())
+                                                    .activityLocation(template.getActivityLocation())
+                                                    .status(template.getStatus())
+                                                    .imageId(template.getImageId())
+                                                    .contactName(template.getContactName())
+                                                    .contactPhone(template.getContactPhone())
+                                                    .description(template.getDescription())
+                                                    .createdAt(template.getCreatedAt() != null
+                                                            ? template.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime()
+                                                            : null)
+                                                    .build()
+                                            ).collect(Collectors.toList())
+                            )
+                            .build();
+
+                    return groupDto;
+                })
+                .collect(Collectors.toList());
+
+        return ReadTemplatesResponseDto.builder()
+                .groups(groupDtos)
                 .build();
     }
 

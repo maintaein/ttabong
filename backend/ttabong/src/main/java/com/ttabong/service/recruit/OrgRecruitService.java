@@ -23,4 +23,6 @@ public interface OrgRecruitService {
     DeleteTemplatesResponseDto deleteTemplates(DeleteTemplatesRequestDto deleteTemplatesDto);
 
     DeleteGroupResponseDto deleteGroup(DeleteGroupDto deleteGroupDto);
+
+    ReadTemplatesResponseDto readTemplates(int cursor, int limit);
 }
