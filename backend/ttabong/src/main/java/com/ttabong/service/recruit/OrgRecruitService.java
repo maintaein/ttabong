@@ -29,4 +29,6 @@ public interface OrgRecruitService {
     CreateTemplateResponseDto createTemplate(CreateTemplateRequestDto createTemplateDto);
 
     CreateGroupResponseDto createGroup(CreateGroupRequestDto createGroupDto);
+
+    CreateRecruitResponseDto createRecruit(CreateRecruitRequestDto createRecruitDto);
 }

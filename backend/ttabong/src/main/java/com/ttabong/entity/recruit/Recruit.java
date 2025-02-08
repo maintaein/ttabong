@@ -48,6 +48,7 @@ public class Recruit {
     @Column(name = "activity_end", nullable = false, precision = 7, scale = 2)
     private BigDecimal activityEnd;
 
+
     @ColumnDefault("0")
     @Column(name = "max_volunteer")
     private Integer maxVolunteer;
@@ -81,13 +82,4 @@ public class Recruit {
     @OneToMany(mappedBy = "recruit")
     private Set<VolunteerReaction> volunteerReactions = new LinkedHashSet<>();
 
-    // 공고 삭제시 사용할 메서드
-    public void delete() {
-        this.isDeleted = true;
-    }
-
-    //공고 마감할 때 사용할 메서드
-    public void close() {
-        this.status = "RECRUITMENT_CLOSED";
-    }
 }

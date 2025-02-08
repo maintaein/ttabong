@@ -10,8 +10,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class UpdateApplicationsRequestDto {
-    Integer recruitId;
-    Integer volunteerId;
-    Integer applicationId;
-    Boolean accept;
+    private Integer recruitId;
+    private Integer volunteerId;
+    private Integer applicationId;
+    private Boolean accept;
 }

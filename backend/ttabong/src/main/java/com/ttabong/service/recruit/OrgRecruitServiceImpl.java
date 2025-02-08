@@ -395,4 +395,39 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build();
     }
 
+    @Override
+    public CreateRecruitResponseDto createRecruit(CreateRecruitRequestDto createRecruitDto) {
+
+        // 마감일이 LocalDateTime인데 이를 Instant로 바꾸기
+        Instant deadlineInstant = createRecruitDto.getDeadline() != null
+                ? createRecruitDto.getDeadline().atZone(ZoneId.systemDefault()).toInstant()
+                : null;
+
+        // 템플릿 id로 템플릿 엔티티 찾기
+        Template template = templateRepository.findById(createRecruitDto.getTemplateId())
+                .orElseThrow(() -> new IllegalArgumentException("해당 템플릿 없습니다"));
+
+        // Recruit 엔티티 생성
+        Recruit recruit = Recruit.builder()
+                .template(template)
+                .deadline(deadlineInstant)
+                .activityDate(createRecruitDto.getActivityDate())
+                .activityStart(createRecruitDto.getActivityStart())
+                .activityEnd(createRecruitDto.getActivityEnd())
+                .maxVolunteer(createRecruitDto.getMaxVolunteer())
+                .status("RECRUITING")  // 기본값으로 'RECRUITING' 넣기
+                .isDeleted(false)
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
+                .build();
+
+        // 공고 저장
+        recruit = recruitRepository.save(recruit);
+
+        return CreateRecruitResponseDto.builder()
+                .message("공고 생성 완료")
+                .recruitId(recruit.getId())
+                .build();
+    }
+
 }

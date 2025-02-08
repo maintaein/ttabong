@@ -137,16 +137,13 @@ public class OrgRecruitController {
         return ResponseEntity.ok().body(response);
     }
 
-    //13 b
+    //13. 공고 _ 공고 생성
     @PostMapping("/recruits")
     public ResponseEntity<CreateRecruitResponseDto> createRecruit(@RequestBody CreateRecruitRequestDto createRecruitDto) {
 
-        CreateRecruitResponseDto responseDto = CreateRecruitResponseDto.builder()
-                .message("공고 생성 완료")
-                .recruitId(1) // 임시값, 실제 생성된 recruitId를 반환해야 함
-                .build();
+        CreateRecruitResponseDto response  = orgRecruitService.createRecruit(createRecruitDto);
 
-        return ResponseEntity.ok().body(responseDto);
+        return ResponseEntity.ok().body(response);
     }
 
     //14
