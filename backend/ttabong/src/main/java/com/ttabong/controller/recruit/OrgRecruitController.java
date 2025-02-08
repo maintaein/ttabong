@@ -100,18 +100,15 @@ public class OrgRecruitController {
         return ResponseEntity.ok().body(response);
     }
 
-    //9 b
+    //9. 공고 _ 그룹 삭제 /api/org/groups/delete
     @PatchMapping("/groups/delete")
     public ResponseEntity<DeleteGroupResponseDto> deleteGroup(@RequestBody DeleteGroupDto deleteGroupDto) {
 
-        DeleteGroupResponseDto responseDto = DeleteGroupResponseDto.builder()
-                .message("삭제 성공")
-                .groupId(deleteGroupDto.getGroupId())
-                .orgId(deleteGroupDto.getOrgId())
-                .build();
+        DeleteGroupResponseDto responseDto = orgRecruitService.deleteGroup(deleteGroupDto);
 
         return ResponseEntity.ok().body(responseDto);
     }
+
 
     //10
     @GetMapping("templates")

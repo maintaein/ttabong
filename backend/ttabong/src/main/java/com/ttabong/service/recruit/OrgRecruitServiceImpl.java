@@ -258,4 +258,21 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build();
     }
 
+    @Override
+    public DeleteGroupResponseDto deleteGroup(DeleteGroupDto deleteGroupDto) {
+        // 삭제할 그룹 ID와 기관 ID를 받아서 그룹을 삭제하는 로직 구현
+        Integer groupId = deleteGroupDto.getGroupId();
+        Integer orgId = deleteGroupDto.getOrgId();
+
+        // 해당 그룹을 논리 삭제 (is_deleted = true로 업데이트)
+        templateGroupRepository.deleteGroupByIdAndOrg(groupId, orgId);
+
+        // 응답 DTO 반환
+        return DeleteGroupResponseDto.builder()
+                .message("삭제 성공")
+                .groupId(groupId)
+                .orgId(orgId)
+                .build();
+    }
+
 }

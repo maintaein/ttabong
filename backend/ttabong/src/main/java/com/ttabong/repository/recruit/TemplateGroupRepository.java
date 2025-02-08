@@ -18,5 +18,8 @@ public interface TemplateGroupRepository extends JpaRepository<TemplateGroup, In
                      @Param("groupName") String groupName);
 
 
+    @Modifying
+    @Query("UPDATE TemplateGroup tg SET tg.isDeleted = true WHERE tg.id = :groupId AND tg.org.id = :orgId")
+    void deleteGroupByIdAndOrg(@Param("groupId") Integer groupId, @Param("orgId") Integer orgId);
 
 }
