@@ -25,21 +25,16 @@ public class ImageUtil {
     @Value("${minio.bucket-name}")
     String bucketName;
 
-    /**
-     * ✅ Presigned URL을 생성하여 클라이언트가 직접 업로드할 수 있도록 함
-     *
-     * @param objectName 저장할 파일명
-     * @return presigned URL (PUT 방식)
-     */
     public String getPresignedUploadUrl(String objectName) throws Exception {
-        return minioClient.getPresignedObjectUrl(
+         String presignedUrl = minioClient.getPresignedObjectUrl(
                 GetPresignedObjectUrlArgs.builder()
                         .bucket(bucketName)
                         .object(objectName)
                         .method(Method.PUT)
-                        .expiry(60, TimeUnit.MINUTES) // 10분 동안 유효
+                        .expiry(60, TimeUnit.MINUTES)
                         .build()
         );
+        return presignedUrl;
     }
 
     /**
