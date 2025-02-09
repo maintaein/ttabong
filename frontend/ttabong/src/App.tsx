@@ -9,6 +9,7 @@ import ReviewWrite from '@/pages/ChooseRecruit/ReviewWrite';
 import ChooseRecruit from '@/pages/ChooseRecruit';
 import MainPage from './pages/MainPage';
 import RecruitInfo from './pages/MainPage/RecruitInfo';
+import RecruitFind from './pages/RecruitFind';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <MainLayout>
             <PageLayout>
               <Routes>
+                <Route path="/recruit-find" element={<RecruitFind/>}/>
                 <Route path="/RecruitInfo" element={<RecruitInfo/>}/>
                 <Route path="/main-page" element={<MainPage/>}/>
                 <Route path="/review-find" element={<ReviewFind />} />

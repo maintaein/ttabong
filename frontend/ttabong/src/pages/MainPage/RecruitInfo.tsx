@@ -1,9 +1,7 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
 import { FaMapMarkerAlt, FaPhone, FaClock, FaUsers, FaGlobe } from "react-icons/fa";
 
 const RecruitInfo: React.FC = () => {
-  const navigate = useNavigate();
 
   // 임의의 봉사 공고 데이터
   const post = {
