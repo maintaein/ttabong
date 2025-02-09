@@ -7,26 +7,39 @@ import ReviewDetail from '@/pages/ReviewFind/ReviewDetail';
 import ReviewDetailList from '@/pages/ReviewFind/ReviewDetailList';
 import ReviewWrite from '@/pages/ChooseRecruit/ReviewWrite';
 import ChooseRecruit from '@/pages/ChooseRecruit';
+import Login from '@/pages/Login';
+import MyPage from '@/pages/MyPage';
+import { Toaster } from 'sonner';
+import SignUp from '@/pages/SignUp';
+import OrgSignUp from '@/pages/OrgSignUp';
+
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-      <div className="min-h-screen bg-zinc-100 dark:bg-zinc-900">
-        <div className="mx-auto max-w-[600px] min-w-[320px] h-screen bg-background">
-          <MainLayout>
-            <PageLayout>
-              <Routes>
-                <Route path="/review-find" element={<ReviewFind />} />
-                <Route path="/review-find/:reviewId" element={<ReviewDetail />} />
-                <Route path="/review-find/:reviewId/reviews" element={<ReviewDetailList />} />
-                <Route path="/review-write" element={<ReviewWrite />} />
-                <Route path="/choose-recruit" element={<ChooseRecruit />} />
-              </Routes>
-            </PageLayout>
-          </MainLayout>
+    <>
+      <Toaster position="top-center" richColors />
+      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+        <div className="min-h-screen bg-zinc-100 dark:bg-zinc-900">
+          <div className="mx-auto max-w-[600px] min-w-[320px] h-screen bg-background">
+            <MainLayout>
+              <PageLayout>
+                <Routes>
+                  <Route path="/review-find" element={<ReviewFind />} />
+                  <Route path="/review-find/:reviewId" element={<ReviewDetail />} />
+                  <Route path="/review-find/:reviewId/reviews" element={<ReviewDetailList />} />
+                  <Route path="/review-write" element={<ReviewWrite />} />
+                  <Route path="/choose-recruit" element={<ChooseRecruit />} />
+                  <Route path="/my-page" element={<MyPage />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<SignUp />} />
+                  <Route path="/org-signup" element={<OrgSignUp />} />
+                </Routes>
+              </PageLayout>
+            </MainLayout>
+          </div>
         </div>
-      </div>
-    </ThemeProvider>
+      </ThemeProvider>
+    </>
   );
 }
 

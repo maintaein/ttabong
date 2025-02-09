@@ -272,5 +272,11 @@ export const handlers = [
       reviewId: Math.random(),
       ...reviewData
     }, { status: 201 });
+  }),
+
+  // 로그인 API
+  http.post('/api/user/login', async () => {
+    // 실제 API로 패스스루
+    return HttpResponse.error()
   })
 ]; 
