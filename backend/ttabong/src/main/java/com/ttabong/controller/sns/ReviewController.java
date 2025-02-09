@@ -1,14 +1,8 @@
 package com.ttabong.controller.sns;
 
-import com.ttabong.dto.sns.request.ReviewCreateRequestDto;
-import com.ttabong.dto.sns.response.ReviewCreateResponseDto;
-import com.ttabong.dto.sns.response.ReviewDeleteResponseDto;
 import com.ttabong.service.sns.ReviewService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,24 +12,24 @@ public class ReviewController {
     private final ReviewService reviewService;
 
     @GetMapping("mine")
-    public ResponseEntity<?> readMyReviews(){
+    public ResponseEntity<?> readMyReviews() {
 
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("{reviewId}")
-    public ResponseEntity<?> readReviewDetail(){
+    public ResponseEntity<?> readReviewDetail() {
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("recruits/{recruitId}")
-    public ResponseEntity<?> readRelatedReviews(@PathVariable String recruitId){
+    public ResponseEntity<?> readRelatedReviews(@PathVariable String recruitId) {
 
         return ResponseEntity.ok().build();
     }
 
     @GetMapping()
-    public ResponseEntity<?> readAllReviews(@RequestParam Integer cursor, @RequestParam Integer limit){
+    public ResponseEntity<?> readAllReviews(@RequestParam Integer cursor, @RequestParam Integer limit) {
 
         return ResponseEntity.ok().build();
     }

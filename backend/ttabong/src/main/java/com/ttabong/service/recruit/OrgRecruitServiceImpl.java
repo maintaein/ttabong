@@ -359,7 +359,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
             templateImageRepository.saveAll(templateImages);
         }
-        
+
         return CreateTemplateResponseDto.builder()
                 .message("템플릿 생성 성공")
                 .templateId(savedTemplate.getId())

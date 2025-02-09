@@ -42,7 +42,7 @@ public class UserController {
 
             return ResponseEntity.ok(loginResponse);
         } catch (RuntimeException e) {
-            System.out.println("problem"+e.getMessage());
+            System.out.println("problem" + e.getMessage());
             // 로그인 실패 시 401 Unauthorized 반환
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("이메일 또는 비밀번호가 일치하지 않습니다.");

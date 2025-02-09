@@ -9,11 +9,11 @@ import lombok.Setter;
 @Data
 public class AuthDto {
     private Integer userId;
-    private String role;
+    private String userType;
 
     public AuthDto(Integer userId, String role) {
         this.userId = userId;
-        this.role = role;
+        this.userType = role;
     }
 
 }

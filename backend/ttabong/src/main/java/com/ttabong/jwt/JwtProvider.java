@@ -25,14 +25,15 @@ public class JwtProvider {
      */
     public String createToken(Long userId, String userType) {
         // 토큰에 담을 정보(Claims)를 구성
-        Claims claims = Jwts.claims().setSubject(String.valueOf(userId));
+        Claims claims = Jwts.claims();
         // subject: 주로 토큰의 대표값(여기서는 userId라고 보면 됨)
+        claims.setSubject(userId.toString()); // ✅ sub에 userId 저장
         claims.put("userType", userType); // 토큰에 유저 타입도 같이 넣어둠
 
         // 현재 시간, 만료 시간 설정
         Date now = new Date();
         Date expiration = new Date(now.getTime() + validityInMillis);
-
+        System.out.println(claims.toString());
         // 토큰을 생성하고 서명함
         return Jwts.builder()
                 .setClaims(claims)           // 위에서 정의한 내용(유저 ID, 타입 등) 넣기
@@ -42,19 +43,6 @@ public class JwtProvider {
                 .compact();
     }
 
-    /**
-     * JWT를 복호화(파싱)하여 Claims(토큰에 담긴 정보)를 꺼내는 메서드
-     *
-     * @param token 클라이언트가 보낸 토큰 문자열
-     * @return 토큰 안에 들어있는 Claims
-     */
-
-
-
-
-    /**
-     * ✅ 토큰 유효성 검사
-     */
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
@@ -67,16 +55,11 @@ public class JwtProvider {
         return false; // 유효하지 않은 토큰
     }
 
-    /**
-     * ✅ JWT에서 Claims 객체 추출
-     */
     public Claims getClaims(String token) {
         return Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token).getBody();
     }
 
-    /**
-     * ✅ JWT를 DTO로 변환
-     */
+
     public AuthDto toAuthDto(String token) {
         Claims claims = getClaims(token);
         return new AuthDto(claims.get("userId", Integer.class), claims.get("userType", String.class));

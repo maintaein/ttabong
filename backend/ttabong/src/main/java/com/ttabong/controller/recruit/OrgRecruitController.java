@@ -138,7 +138,7 @@ public class OrgRecruitController {
     @PostMapping("/recruits")
     public ResponseEntity<CreateRecruitResponseDto> createRecruit(@RequestBody CreateRecruitRequestDto createRecruitDto) {
 
-        CreateRecruitResponseDto response  = orgRecruitService.createRecruit(createRecruitDto);
+        CreateRecruitResponseDto response = orgRecruitService.createRecruit(createRecruitDto);
 
         return ResponseEntity.ok().body(response);
     }

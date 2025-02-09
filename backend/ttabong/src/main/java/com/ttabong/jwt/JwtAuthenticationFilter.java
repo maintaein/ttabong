@@ -1,12 +1,11 @@
 package com.ttabong.jwt;
 
+import com.ttabong.dto.user.AuthDto;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -21,7 +20,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtProvider jwtProvider;
 
-    JwtAuthenticationFilter(JwtProvider jwtProvider){
+    JwtAuthenticationFilter(JwtProvider jwtProvider) {
         this.jwtProvider = jwtProvider;
     }
 
@@ -32,10 +31,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (token != null && jwtProvider.validateToken(token)) {
             Claims claims = jwtProvider.getClaims(token);
-            String userId = claims.getSubject();
+            System.out.println(claims.toString());
+            Integer userId = Integer.valueOf(claims.getSubject());
+            String userType = claims.get("userType", String.class);
+            AuthDto authDto = new AuthDto(userId, userType);
 
             UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(userId, null, Collections.emptyList());
+                    new UsernamePasswordAuthenticationToken(authDto, null, Collections.emptyList());
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
