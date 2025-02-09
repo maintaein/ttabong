@@ -51,7 +51,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .content(requestDto.getContent())
                 .isPublic(requestDto.getIsPublic())
                 .isDeleted(false)
-                .thumbnailImg(null)
+//                .thumbnailImg(null)
                 .imgCount(requestDto.getImageCount())
                 .createdAt(Instant.now())
                 .build();

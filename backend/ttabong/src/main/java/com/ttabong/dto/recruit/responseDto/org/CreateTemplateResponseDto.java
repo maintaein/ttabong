@@ -15,4 +15,5 @@ public class CreateTemplateResponseDto {
     private String message;
     private Integer templateId;
     private List<String> images;
+    private String imageUrl;
 }

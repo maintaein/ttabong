@@ -5,8 +5,10 @@ import com.ttabong.dto.recruit.responseDto.org.*;
 import com.ttabong.dto.recruit.responseDto.org.ReadAvailableRecruitsResponseDto.TemplateDetail;
 import com.ttabong.dto.recruit.responseDto.org.ReadMyRecruitsResponseDto.RecruitDetail;
 import com.ttabong.entity.recruit.*;
+import com.ttabong.entity.sns.ReviewImage;
 import com.ttabong.entity.user.Organization;
 import com.ttabong.repository.recruit.*;
+import com.ttabong.repository.sns.ReviewImageRepository;
 import com.ttabong.repository.user.OrganizationRepository;
 import com.ttabong.repository.user.VolunteerRepository;
 import com.ttabong.util.CacheUtil;
@@ -39,9 +41,10 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     private final TemplateGroupRepository templateGroupRepository;
     private final OrganizationRepository organizationRepository;
     private final CategoryRepository categoryRepository;
-    private final TemplateImageRepository templateImageRepository;
+//    private final TemplateImageRepository templateImageRepository;
     private final ApplicationRepository applicationRepository;
     private final VolunteerRepository volunteerRepository;
+    private final ReviewImageRepository reviewImageRepository;
     private final CacheUtil cacheUtil;
     private final ImageUtil minioUtil;
 
@@ -92,7 +95,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                             .title(template.getTitle())
                             .activityLocation(template.getActivityLocation())
                             .status(template.getStatus())
-                            .imageId(template.getImage() != null ? template.getImage().getImageUrl() : null)
+                            .imageUrl(getFirstImageUrl(template))
                             .contactName(template.getContactName())
                             .contactPhone(template.getContactPhone())
                             .description(template.getDescription())
@@ -108,7 +111,12 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         return ReadAvailableRecruitsResponseDto.builder()
                 .templates(templateDetails)
                 .build();
+    }
 
+    private String getFirstImageUrl(Template template) {
+        return reviewImageRepository.findFirstByTemplateOrderByIdAsc(template)
+                .map(ReviewImage::getImageUrl)
+                .orElse(null);
     }
 
     // TODO: 마지막 공고까지 다 로드했다면? & db에서 정보 누락된게 있다면?, 삭제여부 확인
@@ -306,7 +314,11 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                                                     .title(template.getTitle())
                                                     .activityLocation(template.getActivityLocation())
                                                     .status(template.getStatus())
-                                                    .imageId(template.getImage() != null ? template.getImage().getImageUrl() : null)
+                                                    .imageId(
+                                                            reviewImageRepository.findFirstByTemplateOrderByIdAsc(template)
+                                                                    .map(ReviewImage::getImageUrl)
+                                                                    .orElse(null)
+                                                    )
                                                     .contactName(template.getContactName())
                                                     .contactPhone(template.getContactPhone())
                                                     .description(template.getDescription())
@@ -356,7 +368,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build());
 
         // 미니오에서 Presigned URL로 업로드된 이미지 저장
-        List<TemplateImage> templateImages = new ArrayList<>();
+        List<ReviewImage> reviewImages = new ArrayList<>();
 
         if (createTemplateDto.getImages() != null && !createTemplateDto.getImages().isEmpty()) {
             int imageCount = (createTemplateDto.getImageCount() == null)
@@ -371,27 +383,33 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                     throw new IllegalArgumentException("유효하지 않은 이미지 URL입니다: " + presignedUrl);
                 }
 
-                templateImages.add(TemplateImage.builder()
+                reviewImages.add(ReviewImage.builder()
+                        .review(null)
                         .template(savedTemplate)
                         .imageUrl(objectPath)
                         .createdAt(Instant.now())
+                        .isThumbnail(false)
                         .build());
             }
-            List<TemplateImage> savedImages = templateImageRepository.saveAll(templateImages);
-            TemplateImage firstImage = savedImages.isEmpty() ? null : savedImages.get(0);
 
-            // 템플릿의 대표 이미지 설정
-            if (firstImage != null) {
-                templateRepository.updateTemplateImage(savedTemplate.getId(), firstImage.getId());
-            }
+            reviewImageRepository.saveAll(reviewImages);
         }
+
+
+        reviewImageRepository.resetThumbnailImages(savedTemplate.getId());
+        Optional<ReviewImage> firstImage = reviewImageRepository.findFirstByTemplateOrderByIdAsc(savedTemplate);
+
+        firstImage.ifPresent(image -> reviewImageRepository.setThumbnailImage(image.getId()));
 
         return CreateTemplateResponseDto.builder()
                 .message("템플릿 생성 성공")
                 .templateId(savedTemplate.getId())
-                .images(templateImages.stream().map(TemplateImage::getImageUrl).collect(Collectors.toList()))
+                .imageUrl(firstImage.map(ReviewImage::getImageUrl).orElse(null))
+                .images(reviewImages.stream().map(ReviewImage::getImageUrl).collect(Collectors.toList()))
                 .build();
     }
+
+
 
     // redis에다가 Presigned URL 미리 발급받기
     @Override
@@ -510,13 +528,17 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 ? LocalDateTime.ofInstant(recruit.getTemplate().getCreatedAt(), ZoneId.systemDefault())
                 : LocalDateTime.now();
 
+        String templateImageUrl = reviewImageRepository.findFirstByTemplateOrderByIdAsc(recruit.getTemplate())
+                .map(ReviewImage::getImageUrl)
+                .orElse(null);
+
         ReadRecruitResponseDto.Template templateDto = ReadRecruitResponseDto.Template.builder()
                 .templateId(recruit.getTemplate().getId())
                 .categoryId(recruit.getTemplate().getCategory() != null ? recruit.getTemplate().getCategory().getId() : null)
                 .title(recruit.getTemplate().getTitle())
                 .activityLocation(recruit.getTemplate().getActivityLocation())
                 .status(recruit.getTemplate().getStatus())
-                .imageId(recruit.getTemplate().getImage() != null ? recruit.getTemplate().getImage().getImageUrl() : null)
+                .imageId(templateImageUrl)
                 .contactName(recruit.getTemplate().getContactName())
                 .contactPhone(recruit.getTemplate().getContactPhone())
                 .description(recruit.getTemplate().getDescription())
