@@ -17,6 +17,9 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
 
     List<Recruit> findByTemplateId(Integer templateId);
 
+    @Query("SELECT r.template.id FROM Recruit r WHERE r.id = :recruitId")
+    Integer findTemplateIdByRecruitId(Integer recruitId);
+
     @Query("SELECT r FROM Recruit r WHERE (:cursor IS NULL OR r.id < :cursor) ORDER BY r.id DESC LIMIT :limit")
     List<Recruit> findAvailableRecruits(@Param("cursor") Integer cursor, @Param("limit") Integer limit);
 

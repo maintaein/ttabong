@@ -28,7 +28,8 @@ public class Review {
     @JoinColumn(name = "parent_review_id", foreignKey = @ForeignKey(name = "fk_parent_review_id"))
     private Review parentReview;
 
-    @Column(name = "group_id")
+    @Column(name = "group_id", nullable = false)
+    @ColumnDefault("1")
     private Integer groupId;
 
     @ManyToOne(fetch = FetchType.LAZY)

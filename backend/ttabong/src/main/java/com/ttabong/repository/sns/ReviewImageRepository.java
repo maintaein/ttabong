@@ -1,11 +1,7 @@
 package com.ttabong.repository.sns;
 
-import com.ttabong.entity.recruit.Template;
 import com.ttabong.entity.sns.ReviewImage;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -14,16 +10,18 @@ import java.util.Optional;
 @Repository
 public interface ReviewImageRepository extends JpaRepository<ReviewImage, Integer> {
 
-    Optional<ReviewImage> findFirstByTemplateOrderByIdAsc(Template template);
+        // 🔹 특정 템플릿 또는 리뷰의 이미지 가져오기
+        List<ReviewImage> findByTemplateId(Integer templateId);
+        List<ReviewImage> findByReviewId(Integer reviewId);
 
-    List<ReviewImage> findByTemplateId(Integer templateId);
+        // 🔹 특정 템플릿 또는 리뷰의 대표 이미지 찾기 (최초 등록된 이미지)
+        Optional<ReviewImage> findFirstByTemplateIdOrderByIdAsc(Integer templateId);
+        Optional<ReviewImage> findFirstByReviewIdOrderByIdAsc(Integer reviewId);
 
-    @Modifying
-    @Query("UPDATE ReviewImage ri SET ri.isThumbnail = true WHERE ri.id = :imageId")
-    void setThumbnailImage(@Param("imageId") Integer imageId);
+        // 🔹 특정 템플릿 또는 리뷰의 모든 대표 이미지 `isThumbnail = false`로 초기화
+        List<ReviewImage> findByTemplateIdAndIsThumbnailTrue(Integer templateId);
+        List<ReviewImage> findByReviewIdAndIsThumbnailTrue(Integer reviewId);
 
-    @Modifying
-    @Query("UPDATE ReviewImage ri SET ri.isThumbnail = false WHERE ri.template.id = :templateId")
-    void resetThumbnailImages(@Param("templateId") Integer templateId);
-
+        // 🔹 특정 이미지 ID의 `isThumbnail`을 `true`로 변경
+        Optional<ReviewImage> findById(Integer imageId);
 }

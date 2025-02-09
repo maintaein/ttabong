@@ -11,7 +11,6 @@ import com.ttabong.entity.user.Organization;
 import com.ttabong.repository.recruit.*;
 import com.ttabong.repository.user.OrganizationRepository;
 import com.ttabong.repository.user.VolunteerRepository;
-import com.ttabong.util.service.CacheService;
 import com.ttabong.util.service.ImageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +39,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     private final TemplateGroupRepository templateGroupRepository;
     private final OrganizationRepository organizationRepository;
     private final CategoryRepository categoryRepository;
-    private final CacheService cacheService;
     private final ApplicationRepository applicationRepository;
     private final VolunteerRepository volunteerRepository;
     private final ImageService imageService;
@@ -85,7 +83,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                             .build())
                     .collect(Collectors.toList());
 
-            List<String> imageUrls = imageService.getTemplateImageUrls(template.getId());
+            List<String> imageUrls = imageService.getImageUrls(template.getId(), true);
             String thumbnailImageUrl = imageUrls.isEmpty() ? null : imageUrls.get(0);
 
             return ReadAvailableRecruitsResponseDto.TemplateDetail.builder()
@@ -299,7 +297,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                                 templateRepository.findTemplatesByGroupId(group.getId()).stream()
                                         .map(template -> {
                                             // 모든 이미지 프리사인드url 가져오기 (널값 제외)
-                                            List<String> imageUrls = imageService.getTemplateImageUrls(template.getId());
+                                            List<String> imageUrls = imageService.getImageUrls(template.getId(), true);
 
                                             return ReadTemplatesResponseDto.TemplateDto.builder()
                                                     .templateId(template.getId())
@@ -351,34 +349,20 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .createdAt(Instant.now())
                 .build());
 
-        imageService.initializeReviewImagesForTemplate(savedTemplate);
+        imageService.initializeReviewImages(savedTemplate.getId(), true);
 
         if (createTemplateDto.getImages() != null && !createTemplateDto.getImages().isEmpty()) {
             imageService.updateReviewImages(savedTemplate.getId(), createTemplateDto.getImages());
         }
 
-        imageService.updateThumbnailImage(savedTemplate.getId());
+        imageService.updateThumbnailImage(savedTemplate.getId(), true);
 
         return CreateTemplateResponseDto.builder()
                 .message("템플릿 생성 성공")
                 .templateId(savedTemplate.getId())
-                .imageUrl(imageService.getTemplateImageUrls(savedTemplate.getId()).stream().findFirst().orElse(null)) // 대표 이미지 URL
-                .images(imageService.getTemplateImageUrls(savedTemplate.getId())) // 전체 이미지 URL 리스트
+                .imageUrl(imageService.getImageUrls(savedTemplate.getId(), true).stream().findFirst().orElse(null)) // 대표 이미지 URL
+                .images(imageService.getImageUrls(savedTemplate.getId(), true)) // 전체 이미지 URL 리스트
                 .build();
-    }
-
-
-    // redis에다가 Presigned URL 미리 발급받기
-    @Override
-    public CreateTemplateResponseDto startPostCache() {
-
-        List<String> presignedUrls = cacheService.generatePresignedUrlsForTemplate();
-
-        return CreateTemplateResponseDto.builder()
-                .message("Presigned URL 생성 완료")
-                .images(presignedUrls)
-                .build();
-
     }
 
     @Override
@@ -477,7 +461,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 ? LocalDateTime.ofInstant(recruit.getTemplate().getCreatedAt(), ZoneId.systemDefault())
                 : LocalDateTime.now();
 
-        List<String> imageUrls = imageService.getTemplateImageUrls(recruit.getTemplate().getId());
+        List<String> imageUrls = imageService.getImageUrls(recruit.getTemplate().getId(), true);
 
         ReadRecruitResponseDto.Template templateDto = ReadRecruitResponseDto.Template.builder()
                 .templateId(recruit.getTemplate().getId())
