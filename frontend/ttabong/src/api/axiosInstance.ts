@@ -1,6 +1,5 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import config from '@/config';
-import { toast } from 'sonner';
 
 export interface ApiResponse<T = any> {
   data: T;
