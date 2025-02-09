@@ -5,6 +5,6 @@ import org.slf4j.LoggerFactory;
 
 public interface LoggerConfig {
     default Logger logger() {
-        return LoggerFactory.getLogger(this.getClass());
+        return LoggerFactory.getLogger(this.getClass().getSuperclass());
     }
 }

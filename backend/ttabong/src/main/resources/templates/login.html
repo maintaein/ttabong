@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html>
 <head>
     <meta charset="UTF-8">
     <title>로그인</title>
@@ -8,23 +8,23 @@
 <h1>로그인</h1>
 <form id="loginForm">
     <label for="email">이메일:</label>
-    <input type="email" id="email" name="email" required /><br><br>
+    <input id="email" name="email" required type="email"/><br><br>
 
     <label for="password">비밀번호:</label>
-    <input type="password" id="password" name="password" required /><br><br>
+    <input id="password" name="password" required type="password"/><br><br>
 
     <button type="submit">로그인</button>
 </form>
 <div id="result" style="margin-top:20px; color:blue;"></div>
 
 <script>
-    document.getElementById("loginForm").addEventListener("submit", function(event) {
+    document.getElementById("loginForm").addEventListener("submit", function (event) {
         event.preventDefault();
 
         const email = document.getElementById("email").value;
         const password = document.getElementById("password").value;
 
-        const payload = { email: email, password: password };
+        const payload = {email: email, password: password};
         console.log(payload);
         fetch("/user/login", {
             method: "POST",
