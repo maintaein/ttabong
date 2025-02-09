@@ -25,4 +25,6 @@ public interface OrgRecruitService {
     UpdateApplicationsResponseDto updateStatuses(UpdateApplicationsRequestDto updateApplicationDto);
     List<EvaluateApplicationsResponseDto> evaluateApplicants(Integer recruitId, List<EvaluateApplicationsRequestDto> evaluateApplicationDtoList);
 
+    // 이미지 업로드에 사용하기 위한거
+    CreateTemplateResponseDto startPostCache();
 }

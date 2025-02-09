@@ -43,13 +43,13 @@ CREATE TABLE User (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='전체 유저 정보 테이블';
 
 -- 봉사자 추가 정보 테이블
-DROP TABLE IF EXISTS Volunteer; 
+DROP TABLE IF EXISTS Volunteer;
 CREATE TABLE Volunteer(
    volunteer_id   INT AUTO_INCREMENT NOT NULL COMMENT '봉사자 아이디_자동증가값 받는 최소성 고유키',
     user_id        INT NOT NULL COMMENT 'User(user_id) 참조',
     preferred_time   VARCHAR(100) COMMENT '봉사 선호 시간',-- 시간을 어떻게 받아서 추천해줄지 고민 중에 있음.!!
     interest_theme   VARCHAR(100) COMMENT '관심 봉사 테마', -- 이것을 받아서 추천해줘야 하는데, 크롤링으로 테마를 어떻게 가져오느냐에 따라 다를 듯!
-    duration_time    VARCHAR(100) COMMENT '봉사 선호 소요시간', 
+    duration_time    VARCHAR(100) COMMENT '봉사 선호 소요시간',
     region           VARCHAR(30)  COMMENT '지역', -- 30바이트필요
     birth_date         DATE         COMMENT '생년월일',
     gender             CHAR(1)      COMMENT '성별(M/F)',
@@ -65,7 +65,7 @@ CREATE TABLE Volunteer(
 -- 봉사기관 기본 정보 테이블
 DROP TABLE IF EXISTS Organization;
 CREATE TABLE Organization (
-    org_id               INT AUTO_INCREMENT PRIMARY KEY COMMENT '기관 ID_ 지금은 쓸 일이 없지만 테이블별로 관리할 기본키가 있어야 하기 때문에 생성함!', 
+    org_id               INT AUTO_INCREMENT PRIMARY KEY COMMENT '기관 ID_ 지금은 쓸 일이 없지만 테이블별로 관리할 기본키가 있어야 하기 때문에 생성함!',
     user_id              INT NOT NULL COMMENT 'User(user_id) 참조',
     business_reg_number  VARCHAR(30)  NOT NULL COMMENT '사업자등록번호',
     org_name             VARCHAR(100) NOT NULL COMMENT '회사/점포명',
@@ -100,7 +100,7 @@ CREATE TABLE IF NOT EXISTS Template_group (
         ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
-DROP TABLE IF EXISTS Template;
+-- 1. Template 테이블 먼저 생성
 CREATE TABLE IF NOT EXISTS Template (
     template_id INT AUTO_INCREMENT PRIMARY KEY COMMENT '개별 템플릿 id',
     group_id INT NOT NULL COMMENT '그룹id',
@@ -109,24 +109,24 @@ CREATE TABLE IF NOT EXISTS Template (
     title VARCHAR(255) COMMENT '공고 제목(봉사 제목)',
     activity_location VARCHAR(255) NOT NULL COMMENT '봉사 활동 장소(재택 또는 도로명주소)',
     status ENUM('ALL', 'YOUTH', 'ADULT') NOT NULL DEFAULT 'ALL' COMMENT '봉사자 유형',
-    image_id VARCHAR(500) COMMENT '이미지 경로',
+    image_id INT COMMENT '이미지 경로',
     contact_name VARCHAR(50) COMMENT '담당자명',
     contact_phone VARCHAR(20) COMMENT '담당자 연락처',
     description VARCHAR(500) COMMENT '봉사활동 상세 내용',
-    is_deleted     BOOLEAN DEFAULT FALSE COMMENT '삭제 여부',
-	created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '템플릿 생성 일시',
+    is_deleted BOOLEAN DEFAULT FALSE COMMENT '삭제 여부',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '템플릿 생성 일시',
     CONSTRAINT fk_template_group
-        FOREIGN KEY (group_id) REFERENCES Template_group(group_id)
-        ON UPDATE CASCADE ON DELETE CASCADE,
-	CONSTRAINT fk_template_org
-        FOREIGN KEY (org_id) REFERENCES Organization(org_id)
-        ON UPDATE CASCADE ON DELETE CASCADE,
-	CONSTRAINT fk_template_category
-        FOREIGN KEY (category_id) REFERENCES Category(category_id)
-        ON UPDATE CASCADE ON DELETE SET NULL
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+    FOREIGN KEY (group_id) REFERENCES Template_group(group_id)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT fk_template_org
+    FOREIGN KEY (org_id) REFERENCES Organization(org_id)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT fk_template_category
+    FOREIGN KEY (category_id) REFERENCES Category(category_id)
+    ON UPDATE CASCADE ON DELETE SET NULL
+    ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- template 이미지 (테스트용)
+-- 🔹 2. Template_image 테이블 생성 (이제 Template을 참조 가능)
 CREATE TABLE IF NOT EXISTS Template_image (
     template_image_id INT AUTO_INCREMENT PRIMARY KEY COMMENT '이미지 아이디',
     template_id INT NOT NULL COMMENT '템플릿 ID',
@@ -136,14 +136,20 @@ CREATE TABLE IF NOT EXISTS Template_image (
     ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- 3. Template 테이블에 image_id (Template_image FK) 추가
+ALTER TABLE Template
+    ADD CONSTRAINT fk_template_image
+        FOREIGN KEY (image_id) REFERENCES Template_image(template_image_id)
+            ON DELETE SET NULL;
+
 DROP TABLE IF EXISTS Recruit;
 CREATE TABLE IF NOT EXISTS Recruit (
     recruit_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '봉사공고 ID',
     template_id INT NOT NULL COMMENT '개별 템플릿 id',
     deadline DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '공고 마감일 (디폴트는 오늘 날짜)',
     activity_date DATETIME NOT NULL COMMENT '봉사활동 날짜',
-    activity_start DECIMAL(7,2) DEFAULT 0.00 NOT NULL COMMENT '활동 시작하는는 시간(=봉사해야하는 시간)', 
-    activity_end DECIMAL(7,2) DEFAULT 0.00 NOT NULL COMMENT '활동 끝나는 시간(=봉사해야하는 시간)', 
+    activity_start DECIMAL(7,2) DEFAULT 0.00 NOT NULL COMMENT '활동 시작하는는 시간(=봉사해야하는 시간)',
+    activity_end DECIMAL(7,2) DEFAULT 0.00 NOT NULL COMMENT '활동 끝나는 시간(=봉사해야하는 시간)',
     max_volunteer INT DEFAULT 0 COMMENT '모집할 봉사자 수',
     participate_vol_count INT DEFAULT 0 COMMENT '참여한 봉사자 수', -- 봉사가 끝난 후, 몇 명이 참여했는지
     status ENUM('RECRUITING', 'RECRUITMENT_CLOSED', 'ACTIVITY_COMPLETED')
@@ -193,7 +199,7 @@ CREATE TABLE IF NOT EXISTS Review_image (
 -- 후기 테이블(쓰레드를 열어줌)
 DROP TABLE IF EXISTS Review;
 CREATE TABLE Review (
-    review_id      INT AUTO_INCREMENT PRIMARY KEY COMMENT '후기 ID', 
+    review_id      INT AUTO_INCREMENT PRIMARY KEY COMMENT '후기 ID',
     parent_review_id INT NULL DEFAULT NULL COMMENT '자기참조 (FK)',
     group_id INT NULL DEFAULT NULL COMMENT '비슷한 것을 거르기 위해 생성',
     recruit_id INT NULL DEFAULT NULL COMMENT '어느 공고에 대한 글인가? (FK)',
@@ -250,7 +256,7 @@ CREATE TABLE Volunteer_reaction (
     is_like      BOOLEAN NOT NULL COMMENT '리액션종류가 좋아요인가? TRUE(1) : 좋아요, FALSE(0) : 싫어요',
     is_deleted     BOOLEAN DEFAULT FALSE COMMENT '삭제 여부',
     created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '좋아요 or 싫어요 반응 누른 일시',
-    
+
     CONSTRAINT fk_reaction_volunteer
         FOREIGN KEY (volunteer_id) REFERENCES Volunteer(volunteer_id)
         ON UPDATE CASCADE ON DELETE CASCADE,

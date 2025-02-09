@@ -2,10 +2,11 @@ package com.ttabong.repository.recruit;
 
 import com.ttabong.entity.recruit.Template;
 import com.ttabong.entity.user.Organization;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -34,5 +35,10 @@ public interface TemplateRepository extends JpaRepository<Template, Integer> {
 
     @Query("SELECT t FROM Template t WHERE t.isDeleted = false AND t.group.id = :groupId")
     List<Template> findTemplatesByGroupId(@Param("groupId") Integer groupId);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Template t SET t.image.id = :imageId WHERE t.id = :templateId")
+    void updateTemplateImage(@Param("templateId") Integer templateId, @Param("imageId") Integer imageId);
 
 }

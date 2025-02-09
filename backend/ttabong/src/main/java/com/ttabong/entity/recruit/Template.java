@@ -13,6 +13,7 @@ import java.util.Set;
 
 @Entity
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // 외부에서 new User() 막기
 @AllArgsConstructor(access = AccessLevel.PRIVATE) // Builder에서만 생성 가능
 @Builder
@@ -47,8 +48,9 @@ public class Template {
     @Column(name = "status", nullable = false, columnDefinition = "ENUM('ALL', 'ACTIVE', 'INACTIVE') DEFAULT 'ALL'")
     private String status;
 
-    @Column(name = "image_id", length = 500)
-    private String imageId;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "image_id", referencedColumnName = "template_image_id", foreignKey = @ForeignKey(name = "fk_template_image"))
+    private TemplateImage image;
 
     @Column(name = "contact_name", length = 50)
     private String contactName;

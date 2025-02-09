@@ -9,6 +9,8 @@ import com.ttabong.entity.user.Organization;
 import com.ttabong.repository.recruit.*;
 import com.ttabong.repository.user.OrganizationRepository;
 import com.ttabong.repository.user.VolunteerRepository;
+import com.ttabong.util.CacheUtil;
+import com.ttabong.util.ImageUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -20,6 +22,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -39,6 +42,8 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     private final TemplateImageRepository templateImageRepository;
     private final ApplicationRepository applicationRepository;
     private final VolunteerRepository volunteerRepository;
+    private final CacheUtil cacheUtil;
+    private final ImageUtil minioUtil;
 
     // TODO: 마지막 공고까지 다 로드했다면? & db에서 정보 누락된게 있다면? , 삭제여부 확인, 마감인건 빼고 가져오기
     @Override
@@ -87,7 +92,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                             .title(template.getTitle())
                             .activityLocation(template.getActivityLocation())
                             .status(template.getStatus())
-                            .imageId(template.getImageId())
+                            .imageId(template.getImage() != null ? template.getImage().getImageUrl() : null)
                             .contactName(template.getContactName())
                             .contactPhone(template.getContactPhone())
                             .description(template.getDescription())
@@ -301,7 +306,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                                                     .title(template.getTitle())
                                                     .activityLocation(template.getActivityLocation())
                                                     .status(template.getStatus())
-                                                    .imageId(template.getImageId())
+                                                    .imageId(template.getImage() != null ? template.getImage().getImageUrl() : null)
                                                     .contactName(template.getContactName())
                                                     .contactPhone(template.getContactPhone())
                                                     .description(template.getDescription())
@@ -328,7 +333,12 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     @Override
     public CreateTemplateResponseDto createTemplate(CreateTemplateRequestDto createTemplateDto) {
 
-        Template template = Template.builder()
+        if (createTemplateDto.getImageCount() != null && createTemplateDto.getImageCount() > 10) {
+            throw new IllegalArgumentException("최대 개수를 초과했습니다. 최대 " + 10 + "개까지 업로드할 수 있습니다.");
+        }
+
+        // 템플릿 먼저 저장
+        Template savedTemplate = templateRepository.save(Template.builder()
                 .group(templateGroupRepository.findById(createTemplateDto.getGroupId())
                         .orElseThrow(() -> new IllegalArgumentException("해당 그룹 없음")))
                 .org(organizationRepository.findById(createTemplateDto.getOrgId())
@@ -343,28 +353,66 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .description(createTemplateDto.getDescription())
                 .isDeleted(false)
                 .createdAt(Instant.now())
-                .build();
+                .build());
 
-        Template savedTemplate = templateRepository.save(template);
+        // 미니오에서 Presigned URL로 업로드된 이미지 저장
+        List<TemplateImage> templateImages = new ArrayList<>();
 
-        // 이미지 처리: 받은 이미지 리스트에서 각 이미지를 TemplateImage 테이블에 저장
         if (createTemplateDto.getImages() != null && !createTemplateDto.getImages().isEmpty()) {
-            List<TemplateImage> templateImages = createTemplateDto.getImages().stream()
-                    .map(imageUrl -> TemplateImage.builder()
-                            .template(savedTemplate)
-                            .imageUrl(imageUrl)
-                            .createdAt(Instant.now())
-                            .build())
-                    .collect(Collectors.toList());
+            int imageCount = (createTemplateDto.getImageCount() == null)
+                    ? createTemplateDto.getImages().size()
+                    : Math.min(createTemplateDto.getImageCount(), createTemplateDto.getImages().size());
 
-            templateImageRepository.saveAll(templateImages);
+            for (int i = 0; i < imageCount; i++) {
+                String presignedUrl = createTemplateDto.getImages().get(i);
+                String objectPath = cacheUtil.findObjectPath(presignedUrl);
+
+                if (objectPath == null) {
+                    throw new IllegalArgumentException("유효하지 않은 이미지 URL입니다: " + presignedUrl);
+                }
+
+                templateImages.add(TemplateImage.builder()
+                        .template(savedTemplate)
+                        .imageUrl(objectPath)
+                        .createdAt(Instant.now())
+                        .build());
+            }
+            List<TemplateImage> savedImages = templateImageRepository.saveAll(templateImages);
+            TemplateImage firstImage = savedImages.isEmpty() ? null : savedImages.get(0);
+
+            // 템플릿의 대표 이미지 설정
+            if (firstImage != null) {
+                templateRepository.updateTemplateImage(savedTemplate.getId(), firstImage.getId());
+            }
         }
-        
+
         return CreateTemplateResponseDto.builder()
                 .message("템플릿 생성 성공")
                 .templateId(savedTemplate.getId())
+                .images(templateImages.stream().map(TemplateImage::getImageUrl).collect(Collectors.toList()))
                 .build();
+    }
 
+    // redis에다가 Presigned URL 미리 발급받기
+    @Override
+    public CreateTemplateResponseDto startPostCache() {
+        Integer tempId = cacheUtil.generatePostId().intValue();
+
+        List<String> presignedUrls = new ArrayList<>();
+        for (int i = 1; i <= 10; i++) {
+            String objectPath = tempId + "_" + i + ".webp";
+            String presignedUrl = minioUtil.getPresignedUploadUrl(objectPath);
+
+            presignedUrls.add(presignedUrl);
+
+            // Redis에 "Presigned URL ↔ Object Path" 저장
+            cacheUtil.mapTempPresignedUrlwithObjectPath(presignedUrl, objectPath);
+        }
+
+        return CreateTemplateResponseDto.builder()
+                .templateId(tempId)
+                .images(presignedUrls)
+                .build();
     }
 
     @Override
@@ -468,7 +516,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .title(recruit.getTemplate().getTitle())
                 .activityLocation(recruit.getTemplate().getActivityLocation())
                 .status(recruit.getTemplate().getStatus())
-                .imageId(recruit.getTemplate().getImageId())
+                .imageId(recruit.getTemplate().getImage() != null ? recruit.getTemplate().getImage().getImageUrl() : null)
                 .contactName(recruit.getTemplate().getContactName())
                 .contactPhone(recruit.getTemplate().getContactPhone())
                 .description(recruit.getTemplate().getDescription())

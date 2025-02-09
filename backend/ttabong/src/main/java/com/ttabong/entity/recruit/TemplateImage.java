@@ -7,6 +7,7 @@ import java.time.Instant;
 
 @Entity
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // 외부에서 new User() 막기
 @AllArgsConstructor(access = AccessLevel.PRIVATE) // Builder에서만 생성 가능
 @Builder
@@ -19,7 +20,7 @@ public class TemplateImage {
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "template_id", nullable = false)
+    @JoinColumn(name = "template_id", nullable = false, foreignKey = @ForeignKey(name = "fk_template_id"))
     private Template template;
 
     @Column(name = "image_url", nullable = false, length = 500)
