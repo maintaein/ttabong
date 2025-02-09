@@ -9,6 +9,7 @@ import java.time.Instant;
 
 @Entity
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder(toBuilder = true)
@@ -28,7 +29,7 @@ public class ReviewImage {
     @JoinColumn(name = "review_id", foreignKey = @ForeignKey(name = "fk_review_image_review"))
     private Review review;
 
-    @Column(name = "image_url", nullable = false, length = 500)
+    @Column(name = "image_url", length = 500)
     private String imageUrl;
 
     @ColumnDefault("false")

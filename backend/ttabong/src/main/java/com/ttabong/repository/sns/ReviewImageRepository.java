@@ -8,12 +8,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface ReviewImageRepository extends JpaRepository<ReviewImage, Integer> {
 
     Optional<ReviewImage> findFirstByTemplateOrderByIdAsc(Template template);
+
+    List<ReviewImage> findByTemplateId(Integer templateId);
 
     @Modifying
     @Query("UPDATE ReviewImage ri SET ri.isThumbnail = true WHERE ri.id = :imageId")

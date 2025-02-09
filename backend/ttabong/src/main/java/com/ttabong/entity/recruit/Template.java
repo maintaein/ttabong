@@ -68,9 +68,11 @@ public class Template {
     @OneToMany(mappedBy = "template")
     private Set<Recruit> recruits = new LinkedHashSet<>();
 
-    // 🔹 ReviewImage 테이블에서 대표 이미지 가져오기
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "template_id", referencedColumnName = "template_id", insertable = false, updatable = false)
     private ReviewImage thumbnailImage;
 
+    public Template(Integer id) {
+        this.id = id;
+    }
 }

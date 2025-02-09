@@ -118,14 +118,6 @@ public class OrgRecruitController {
     }
 
     //11 공고 _ 템플릿 생성
-//    @PostMapping("/templates")
-//    public ResponseEntity<CreateTemplateResponseDto> createTemplate(@RequestBody CreateTemplateRequestDto createTemplateDto) {
-//
-//        CreateTemplateResponseDto response = orgRecruitService.createTemplate(createTemplateDto);
-//
-//        return ResponseEntity.ok().body(response);
-//    }
-
     @PostMapping(value = "/templates", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CreateTemplateResponseDto> createTemplate(@RequestBody CreateTemplateRequestDto createTemplateDto) {
         CreateTemplateResponseDto response = orgRecruitService.createTemplate(createTemplateDto);

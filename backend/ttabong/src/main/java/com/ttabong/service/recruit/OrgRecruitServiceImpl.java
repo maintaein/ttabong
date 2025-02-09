@@ -2,17 +2,17 @@ package com.ttabong.service.recruit;
 
 import com.ttabong.dto.recruit.requestDto.org.*;
 import com.ttabong.dto.recruit.responseDto.org.*;
-import com.ttabong.dto.recruit.responseDto.org.ReadAvailableRecruitsResponseDto.TemplateDetail;
 import com.ttabong.dto.recruit.responseDto.org.ReadMyRecruitsResponseDto.RecruitDetail;
-import com.ttabong.entity.recruit.*;
-import com.ttabong.entity.sns.ReviewImage;
+import com.ttabong.entity.recruit.Application;
+import com.ttabong.entity.recruit.Recruit;
+import com.ttabong.entity.recruit.Template;
+import com.ttabong.entity.recruit.TemplateGroup;
 import com.ttabong.entity.user.Organization;
 import com.ttabong.repository.recruit.*;
-import com.ttabong.repository.sns.ReviewImageRepository;
 import com.ttabong.repository.user.OrganizationRepository;
 import com.ttabong.repository.user.VolunteerRepository;
-import com.ttabong.util.CacheUtil;
-import com.ttabong.util.ImageUtil;
+import com.ttabong.util.service.CacheService;
+import com.ttabong.util.service.ImageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -24,7 +24,6 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -41,12 +40,10 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     private final TemplateGroupRepository templateGroupRepository;
     private final OrganizationRepository organizationRepository;
     private final CategoryRepository categoryRepository;
-//    private final TemplateImageRepository templateImageRepository;
+    private final CacheService cacheService;
     private final ApplicationRepository applicationRepository;
     private final VolunteerRepository volunteerRepository;
-    private final ReviewImageRepository reviewImageRepository;
-    private final CacheUtil cacheUtil;
-    private final ImageUtil minioUtil;
+    private final ImageService imageService;
 
     // TODO: 마지막 공고까지 다 로드했다면? & db에서 정보 누락된게 있다면? , 삭제여부 확인, 마감인건 빼고 가져오기
     @Override
@@ -55,7 +52,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         List<Template> templates = templateRepository.findAvailableTemplates(cursor, limit);
 
-        List<TemplateDetail> templateDetails = templates.stream().map(template -> {
+        List<ReadAvailableRecruitsResponseDto.TemplateDetail> templateDetails = templates.stream().map(template -> {
             TemplateGroup templateGroup = template.getGroup();
             ReadAvailableRecruitsResponseDto.Group group = Optional.ofNullable(templateGroup)
                     .map(g -> ReadAvailableRecruitsResponseDto.Group.builder()
@@ -88,14 +85,17 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                             .build())
                     .collect(Collectors.toList());
 
-            return TemplateDetail.builder()
+            List<String> imageUrls = imageService.getTemplateImageUrls(template.getId());
+            String thumbnailImageUrl = imageUrls.isEmpty() ? null : imageUrls.get(0);
+
+            return ReadAvailableRecruitsResponseDto.TemplateDetail.builder()
                     .template(ReadAvailableRecruitsResponseDto.Template.builder()
                             .templateId(template.getId())
                             .categoryId(template.getCategory() != null ? template.getCategory().getId() : null)
                             .title(template.getTitle())
                             .activityLocation(template.getActivityLocation())
                             .status(template.getStatus())
-                            .imageUrl(getFirstImageUrl(template))
+                            .imageUrl(thumbnailImageUrl)
                             .contactName(template.getContactName())
                             .contactPhone(template.getContactPhone())
                             .description(template.getDescription())
@@ -111,12 +111,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         return ReadAvailableRecruitsResponseDto.builder()
                 .templates(templateDetails)
                 .build();
-    }
-
-    private String getFirstImageUrl(Template template) {
-        return reviewImageRepository.findFirstByTemplateOrderByIdAsc(template)
-                .map(ReviewImage::getImageUrl)
-                .orElse(null);
     }
 
     // TODO: 마지막 공고까지 다 로드했다면? & db에서 정보 누락된게 있다면?, 삭제여부 확인
@@ -291,54 +285,45 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ReadTemplatesResponseDto readTemplates(Integer cursor, Integer limit) {
 
-        // Pageable 생성: cursor가 페이지 번호(0부터 시작), limit가 한 페이지에 보여줄 데이터 수
         Pageable pageable = PageRequest.of(cursor, limit);
-
         List<TemplateGroup> groups = templateGroupRepository.findGroups(pageable);
 
         List<ReadTemplatesResponseDto.GroupDto> groupDtos = groups.stream()
-                .map(group -> {
-                    // 그룹 dto 생성
-                    ReadTemplatesResponseDto.GroupDto groupDto = ReadTemplatesResponseDto.GroupDto.builder()
-                            .groupId(group.getId())
-                            .groupName(group.getGroupName())
-                            .templates(
-                                    // 그룹에 속한 템플릿 목록 조회
-                                    templateRepository.findTemplatesByGroupId(group.getId()).stream()
-                                            .map(template -> ReadTemplatesResponseDto.TemplateDto.builder()
+                .map(group -> ReadTemplatesResponseDto.GroupDto.builder()
+                        .groupId(group.getId())
+                        .groupName(group.getGroupName())
+                        .templates(
+                                templateRepository.findTemplatesByGroupId(group.getId()).stream()
+                                        .map(template -> {
+                                            // 모든 이미지 프리사인드url 가져오기 (널값 제외)
+                                            List<String> imageUrls = imageService.getTemplateImageUrls(template.getId());
+
+                                            return ReadTemplatesResponseDto.TemplateDto.builder()
                                                     .templateId(template.getId())
                                                     .orgId(template.getOrg().getId())
                                                     .categoryId(template.getCategory() != null ? template.getCategory().getId() : null)
                                                     .title(template.getTitle())
                                                     .activityLocation(template.getActivityLocation())
                                                     .status(template.getStatus())
-                                                    .imageId(
-                                                            reviewImageRepository.findFirstByTemplateOrderByIdAsc(template)
-                                                                    .map(ReviewImage::getImageUrl)
-                                                                    .orElse(null)
-                                                    )
+                                                    .images(imageUrls)
                                                     .contactName(template.getContactName())
                                                     .contactPhone(template.getContactPhone())
                                                     .description(template.getDescription())
                                                     .createdAt(template.getCreatedAt() != null
                                                             ? LocalDateTime.ofInstant(template.getCreatedAt(), ZoneId.systemDefault())
                                                             : LocalDateTime.now())
-                                                    .build()
-                                            ).collect(Collectors.toList())
-                            )
-                            .build();
-
-                    return groupDto;
-
-                })
-                .collect(Collectors.toList());
+                                                    .build();
+                                        }).collect(Collectors.toList())
+                        )
+                        .build()
+                ).collect(Collectors.toList());
 
         return ReadTemplatesResponseDto.builder()
                 .groups(groupDtos)
                 .build();
-
     }
 
     // TODO: 이미지 저장하기 (지금은 임시로 Template_image 테이블 하나 더 만들어서 사용중)
@@ -349,7 +334,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
             throw new IllegalArgumentException("최대 개수를 초과했습니다. 최대 " + 10 + "개까지 업로드할 수 있습니다.");
         }
 
-        // 템플릿 먼저 저장
         Template savedTemplate = templateRepository.save(Template.builder()
                 .group(templateGroupRepository.findById(createTemplateDto.getGroupId())
                         .orElseThrow(() -> new IllegalArgumentException("해당 그룹 없음")))
@@ -367,70 +351,34 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .createdAt(Instant.now())
                 .build());
 
-        // 미니오에서 Presigned URL로 업로드된 이미지 저장
-        List<ReviewImage> reviewImages = new ArrayList<>();
+        imageService.initializeReviewImagesForTemplate(savedTemplate);
 
         if (createTemplateDto.getImages() != null && !createTemplateDto.getImages().isEmpty()) {
-            int imageCount = (createTemplateDto.getImageCount() == null)
-                    ? createTemplateDto.getImages().size()
-                    : Math.min(createTemplateDto.getImageCount(), createTemplateDto.getImages().size());
-
-            for (int i = 0; i < imageCount; i++) {
-                String presignedUrl = createTemplateDto.getImages().get(i);
-                String objectPath = cacheUtil.findObjectPath(presignedUrl);
-
-                if (objectPath == null) {
-                    throw new IllegalArgumentException("유효하지 않은 이미지 URL입니다: " + presignedUrl);
-                }
-
-                reviewImages.add(ReviewImage.builder()
-                        .review(null)
-                        .template(savedTemplate)
-                        .imageUrl(objectPath)
-                        .createdAt(Instant.now())
-                        .isThumbnail(false)
-                        .build());
-            }
-
-            reviewImageRepository.saveAll(reviewImages);
+            imageService.updateReviewImages(savedTemplate.getId(), createTemplateDto.getImages());
         }
 
-
-        reviewImageRepository.resetThumbnailImages(savedTemplate.getId());
-        Optional<ReviewImage> firstImage = reviewImageRepository.findFirstByTemplateOrderByIdAsc(savedTemplate);
-
-        firstImage.ifPresent(image -> reviewImageRepository.setThumbnailImage(image.getId()));
+        imageService.updateThumbnailImage(savedTemplate.getId());
 
         return CreateTemplateResponseDto.builder()
                 .message("템플릿 생성 성공")
                 .templateId(savedTemplate.getId())
-                .imageUrl(firstImage.map(ReviewImage::getImageUrl).orElse(null))
-                .images(reviewImages.stream().map(ReviewImage::getImageUrl).collect(Collectors.toList()))
+                .imageUrl(imageService.getTemplateImageUrls(savedTemplate.getId()).stream().findFirst().orElse(null)) // 대표 이미지 URL
+                .images(imageService.getTemplateImageUrls(savedTemplate.getId())) // 전체 이미지 URL 리스트
                 .build();
     }
-
 
 
     // redis에다가 Presigned URL 미리 발급받기
     @Override
     public CreateTemplateResponseDto startPostCache() {
-        Integer tempId = cacheUtil.generatePostId().intValue();
 
-        List<String> presignedUrls = new ArrayList<>();
-        for (int i = 1; i <= 10; i++) {
-            String objectPath = tempId + "_" + i + ".webp";
-            String presignedUrl = minioUtil.getPresignedUploadUrl(objectPath);
-
-            presignedUrls.add(presignedUrl);
-
-            // Redis에 "Presigned URL ↔ Object Path" 저장
-            cacheUtil.mapTempPresignedUrlwithObjectPath(presignedUrl, objectPath);
-        }
+        List<String> presignedUrls = cacheService.generatePresignedUrlsForTemplate();
 
         return CreateTemplateResponseDto.builder()
-                .templateId(tempId)
+                .message("Presigned URL 생성 완료")
                 .images(presignedUrls)
                 .build();
+
     }
 
     @Override
@@ -487,6 +435,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ReadRecruitResponseDto readRecruit(Integer recruitId) {
 
         Recruit recruit = recruitRepository.findById(recruitId)
@@ -528,9 +477,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 ? LocalDateTime.ofInstant(recruit.getTemplate().getCreatedAt(), ZoneId.systemDefault())
                 : LocalDateTime.now();
 
-        String templateImageUrl = reviewImageRepository.findFirstByTemplateOrderByIdAsc(recruit.getTemplate())
-                .map(ReviewImage::getImageUrl)
-                .orElse(null);
+        List<String> imageUrls = imageService.getTemplateImageUrls(recruit.getTemplate().getId());
 
         ReadRecruitResponseDto.Template templateDto = ReadRecruitResponseDto.Template.builder()
                 .templateId(recruit.getTemplate().getId())
@@ -538,7 +485,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .title(recruit.getTemplate().getTitle())
                 .activityLocation(recruit.getTemplate().getActivityLocation())
                 .status(recruit.getTemplate().getStatus())
-                .imageId(templateImageUrl)
+                .images(imageUrls)
                 .contactName(recruit.getTemplate().getContactName())
                 .contactPhone(recruit.getTemplate().getContactPhone())
                 .description(recruit.getTemplate().getDescription())
@@ -556,8 +503,8 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .recruit(recruitDto)
                 .organization(orgDto)
                 .build();
-
     }
+
 
     @Override
     public ReadApplicationsResponseDto readApplications(Integer recruitId) {
