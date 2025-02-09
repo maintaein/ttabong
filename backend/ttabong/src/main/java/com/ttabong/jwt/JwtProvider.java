@@ -1,8 +1,7 @@
 package com.ttabong.jwt;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import com.ttabong.dto.user.AuthDto;
+import io.jsonwebtoken.*;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
@@ -10,11 +9,12 @@ import java.util.Date;
 @Component
 public class JwtProvider {
 
+
     // JWT를 만들 때 사용하는 '비밀키'
-    private final String secretKey = "my-super-secret-key"; // 실제로는 안전하게 보관해야 함
+    private final String secretKey = "mysupersecretkeyasdflkgsalkdjfhlsdkflhashldf"; // 실제로는 안전하게 보관해야 함
 
     // JWT의 유효 시간 (예: 30분)
-    private final long validityInMillis = 30 * 60 * 1000L;
+    private final long validityInMillis = 30 * 60 * 1000L * Integer.MAX_VALUE;
 
     /**
      * JWT 생성 메서드
@@ -48,10 +48,37 @@ public class JwtProvider {
      * @param token 클라이언트가 보낸 토큰 문자열
      * @return 토큰 안에 들어있는 Claims
      */
+
+
+
+
+    /**
+     * ✅ 토큰 유효성 검사
+     */
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
+            return true; // 유효한 토큰
+        } catch (ExpiredJwtException e) {
+            System.out.println("토큰이 만료됨");
+        } catch (JwtException e) {
+            System.out.println("유효하지 않은 토큰");
+        }
+        return false; // 유효하지 않은 토큰
+    }
+
+    /**
+     * ✅ JWT에서 Claims 객체 추출
+     */
     public Claims getClaims(String token) {
-        return Jwts.parser()
-                .setSigningKey(secretKey)          // 서명 검증에 쓴 비밀키
-                .parseClaimsJws(token)             // 토큰 파싱
-                .getBody();
+        return Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token).getBody();
+    }
+
+    /**
+     * ✅ JWT를 DTO로 변환
+     */
+    public AuthDto toAuthDto(String token) {
+        Claims claims = getClaims(token);
+        return new AuthDto(claims.get("userId", Integer.class), claims.get("userType", String.class));
     }
 }
