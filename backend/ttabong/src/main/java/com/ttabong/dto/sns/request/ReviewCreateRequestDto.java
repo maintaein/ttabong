@@ -18,25 +18,26 @@ import java.util.List;
 @Builder
 public class ReviewCreateRequestDto {
     @NotNull
-    private Integer recruitId;  // 공고 ID
+    private Integer recruitId;
 
     @NotNull
-    private Integer orgId;  // 기관 ID
+    private Integer orgId;
 
     @NotNull
-    private Integer writerId;  // 작성자 ID
+    private Integer writerId;
 
     @NotBlank
-    private String title;  // 후기 제목
+    private String title;
 
     @NotBlank
-    private String content;  // 후기 내용
+    private String content;
 
     @NotNull
-    private Boolean isPublic;  // 공개 여부
+    private Boolean isPublic;
 
-    private List<String> images;  // 이미지 URL 리스트
+    private List<String> uploadedImages;
 
-    @NotNull
-    private Integer imageCount;  // 이미지 개수
+    public int getImageCount() {
+        return (uploadedImages != null) ? uploadedImages.size() : 0;
+    }
 }

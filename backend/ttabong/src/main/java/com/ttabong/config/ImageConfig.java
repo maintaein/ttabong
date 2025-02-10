@@ -11,12 +11,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class ImageConfig implements LoggerConfig {
     MinioClient minioClient;
-    @Value("${minio.url}")
-    private String minioUrl;
-    @Value("${minio.access-key}")
-    private String accessKey;
-    @Value("${minio.secret-key}")
-    private String secretKey;
+
     @Value("${minio.bucket-name}")
     private String bucketName;
 

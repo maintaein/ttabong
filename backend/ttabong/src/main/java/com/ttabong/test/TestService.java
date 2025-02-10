@@ -1,7 +1,6 @@
 package com.ttabong.test;
 
 import com.ttabong.entity.sns.Review;
-import com.ttabong.entity.sns.ReviewImage;
 import com.ttabong.entity.user.User;
 import com.ttabong.test.dto.CreatePostRequestDto;
 import com.ttabong.test.dto.CreatePostResponseDto;
@@ -51,9 +50,9 @@ public class TestService {
         Review review = Review.builder().id(null).parentReview(null).groupId(null).recruit(null).writer(User.builder().id(requestDto.getWriterId()).build()).title(requestDto.getContent()).content(requestDto.getContent()).createdAt(Instant.now()).imgCount(requestDto.getImages().size()).build();
 
         Review reviewResult = testRepository.save(review);
-        requestDto.getImages().forEach(e -> {
-            imgTestRepository.save(ReviewImage.builder().reviewId(reviewResult.getId()).imageUrl(cacheUtil.findObjectPath(e)).build());
-        });
+//        requestDto.getImages().forEach(e -> {
+//            imgTestRepository.save(ReviewImage.builder().reviewId(reviewResult.getId()).imageUrl(cacheUtil.findObjectPath(e)).build());
+//        });
     }
 
     //imgId + _ + Img넘버 하면 이미지가 찾아짐

@@ -2,13 +2,16 @@ package com.ttabong.service.recruit;
 
 import com.ttabong.dto.recruit.requestDto.org.*;
 import com.ttabong.dto.recruit.responseDto.org.*;
-import com.ttabong.dto.recruit.responseDto.org.ReadAvailableRecruitsResponseDto.TemplateDetail;
 import com.ttabong.dto.recruit.responseDto.org.ReadMyRecruitsResponseDto.RecruitDetail;
-import com.ttabong.entity.recruit.*;
+import com.ttabong.entity.recruit.Application;
+import com.ttabong.entity.recruit.Recruit;
+import com.ttabong.entity.recruit.Template;
+import com.ttabong.entity.recruit.TemplateGroup;
 import com.ttabong.entity.user.Organization;
 import com.ttabong.repository.recruit.*;
 import com.ttabong.repository.user.OrganizationRepository;
 import com.ttabong.repository.user.VolunteerRepository;
+import com.ttabong.util.service.ImageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -36,9 +39,9 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     private final TemplateGroupRepository templateGroupRepository;
     private final OrganizationRepository organizationRepository;
     private final CategoryRepository categoryRepository;
-    private final TemplateImageRepository templateImageRepository;
     private final ApplicationRepository applicationRepository;
     private final VolunteerRepository volunteerRepository;
+    private final ImageService imageService;
 
     // TODO: 마지막 공고까지 다 로드했다면? & db에서 정보 누락된게 있다면? , 삭제여부 확인, 마감인건 빼고 가져오기
     @Override
@@ -47,7 +50,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         List<Template> templates = templateRepository.findAvailableTemplates(cursor, limit);
 
-        List<TemplateDetail> templateDetails = templates.stream().map(template -> {
+        List<ReadAvailableRecruitsResponseDto.TemplateDetail> templateDetails = templates.stream().map(template -> {
             TemplateGroup templateGroup = template.getGroup();
             ReadAvailableRecruitsResponseDto.Group group = Optional.ofNullable(templateGroup)
                     .map(g -> ReadAvailableRecruitsResponseDto.Group.builder()
@@ -80,14 +83,17 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                             .build())
                     .collect(Collectors.toList());
 
-            return TemplateDetail.builder()
+            List<String> imageUrls = imageService.getImageUrls(template.getId(), true);
+            String thumbnailImageUrl = imageUrls.isEmpty() ? null : imageUrls.get(0);
+
+            return ReadAvailableRecruitsResponseDto.TemplateDetail.builder()
                     .template(ReadAvailableRecruitsResponseDto.Template.builder()
                             .templateId(template.getId())
                             .categoryId(template.getCategory() != null ? template.getCategory().getId() : null)
                             .title(template.getTitle())
                             .activityLocation(template.getActivityLocation())
                             .status(template.getStatus())
-                            .imageId(template.getImageId())
+                            .imageUrl(thumbnailImageUrl)
                             .contactName(template.getContactName())
                             .contactPhone(template.getContactPhone())
                             .description(template.getDescription())
@@ -103,7 +109,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         return ReadAvailableRecruitsResponseDto.builder()
                 .templates(templateDetails)
                 .build();
-
     }
 
     // TODO: 마지막 공고까지 다 로드했다면? & db에서 정보 누락된게 있다면?, 삭제여부 확인
@@ -278,57 +283,56 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ReadTemplatesResponseDto readTemplates(Integer cursor, Integer limit) {
 
-        // Pageable 생성: cursor가 페이지 번호(0부터 시작), limit가 한 페이지에 보여줄 데이터 수
         Pageable pageable = PageRequest.of(cursor, limit);
-
         List<TemplateGroup> groups = templateGroupRepository.findGroups(pageable);
 
         List<ReadTemplatesResponseDto.GroupDto> groupDtos = groups.stream()
-                .map(group -> {
-                    // 그룹 dto 생성
-                    ReadTemplatesResponseDto.GroupDto groupDto = ReadTemplatesResponseDto.GroupDto.builder()
-                            .groupId(group.getId())
-                            .groupName(group.getGroupName())
-                            .templates(
-                                    // 그룹에 속한 템플릿 목록 조회
-                                    templateRepository.findTemplatesByGroupId(group.getId()).stream()
-                                            .map(template -> ReadTemplatesResponseDto.TemplateDto.builder()
+                .map(group -> ReadTemplatesResponseDto.GroupDto.builder()
+                        .groupId(group.getId())
+                        .groupName(group.getGroupName())
+                        .templates(
+                                templateRepository.findTemplatesByGroupId(group.getId()).stream()
+                                        .map(template -> {
+                                            // 모든 이미지 프리사인드url 가져오기 (널값 제외)
+                                            List<String> imageUrls = imageService.getImageUrls(template.getId(), true);
+
+                                            return ReadTemplatesResponseDto.TemplateDto.builder()
                                                     .templateId(template.getId())
                                                     .orgId(template.getOrg().getId())
                                                     .categoryId(template.getCategory() != null ? template.getCategory().getId() : null)
                                                     .title(template.getTitle())
                                                     .activityLocation(template.getActivityLocation())
                                                     .status(template.getStatus())
-                                                    .imageId(template.getImageId())
+                                                    .images(imageUrls)
                                                     .contactName(template.getContactName())
                                                     .contactPhone(template.getContactPhone())
                                                     .description(template.getDescription())
                                                     .createdAt(template.getCreatedAt() != null
                                                             ? LocalDateTime.ofInstant(template.getCreatedAt(), ZoneId.systemDefault())
                                                             : LocalDateTime.now())
-                                                    .build()
-                                            ).collect(Collectors.toList())
-                            )
-                            .build();
-
-                    return groupDto;
-
-                })
-                .collect(Collectors.toList());
+                                                    .build();
+                                        }).collect(Collectors.toList())
+                        )
+                        .build()
+                ).collect(Collectors.toList());
 
         return ReadTemplatesResponseDto.builder()
                 .groups(groupDtos)
                 .build();
-
     }
 
     // TODO: 이미지 저장하기 (지금은 임시로 Template_image 테이블 하나 더 만들어서 사용중)
     @Override
     public CreateTemplateResponseDto createTemplate(CreateTemplateRequestDto createTemplateDto) {
 
-        Template template = Template.builder()
+        if (createTemplateDto.getImageCount() != null && createTemplateDto.getImageCount() > 10) {
+            throw new IllegalArgumentException("최대 개수를 초과했습니다. 최대 " + 10 + "개까지 업로드할 수 있습니다.");
+        }
+
+        Template savedTemplate = templateRepository.save(Template.builder()
                 .group(templateGroupRepository.findById(createTemplateDto.getGroupId())
                         .orElseThrow(() -> new IllegalArgumentException("해당 그룹 없음")))
                 .org(organizationRepository.findById(createTemplateDto.getOrgId())
@@ -343,28 +347,22 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .description(createTemplateDto.getDescription())
                 .isDeleted(false)
                 .createdAt(Instant.now())
-                .build();
+                .build());
 
-        Template savedTemplate = templateRepository.save(template);
+        imageService.initializeReviewImages(savedTemplate.getId(), true);
 
-        // 이미지 처리: 받은 이미지 리스트에서 각 이미지를 TemplateImage 테이블에 저장
         if (createTemplateDto.getImages() != null && !createTemplateDto.getImages().isEmpty()) {
-            List<TemplateImage> templateImages = createTemplateDto.getImages().stream()
-                    .map(imageUrl -> TemplateImage.builder()
-                            .template(savedTemplate)
-                            .imageUrl(imageUrl)
-                            .createdAt(Instant.now())
-                            .build())
-                    .collect(Collectors.toList());
-
-            templateImageRepository.saveAll(templateImages);
+            imageService.updateReviewImages(savedTemplate.getId(), createTemplateDto.getImages());
         }
-        
+
+        imageService.updateThumbnailImage(savedTemplate.getId(), true);
+
         return CreateTemplateResponseDto.builder()
                 .message("템플릿 생성 성공")
                 .templateId(savedTemplate.getId())
+                .imageUrl(imageService.getImageUrls(savedTemplate.getId(), true).stream().findFirst().orElse(null)) // 대표 이미지 URL
+                .images(imageService.getImageUrls(savedTemplate.getId(), true)) // 전체 이미지 URL 리스트
                 .build();
-
     }
 
     @Override
@@ -421,6 +419,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ReadRecruitResponseDto readRecruit(Integer recruitId) {
 
         Recruit recruit = recruitRepository.findById(recruitId)
@@ -462,13 +461,15 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 ? LocalDateTime.ofInstant(recruit.getTemplate().getCreatedAt(), ZoneId.systemDefault())
                 : LocalDateTime.now();
 
+        List<String> imageUrls = imageService.getImageUrls(recruit.getTemplate().getId(), true);
+
         ReadRecruitResponseDto.Template templateDto = ReadRecruitResponseDto.Template.builder()
                 .templateId(recruit.getTemplate().getId())
                 .categoryId(recruit.getTemplate().getCategory() != null ? recruit.getTemplate().getCategory().getId() : null)
                 .title(recruit.getTemplate().getTitle())
                 .activityLocation(recruit.getTemplate().getActivityLocation())
                 .status(recruit.getTemplate().getStatus())
-                .imageId(recruit.getTemplate().getImageId())
+                .images(imageUrls)
                 .contactName(recruit.getTemplate().getContactName())
                 .contactPhone(recruit.getTemplate().getContactPhone())
                 .description(recruit.getTemplate().getDescription())
@@ -486,8 +487,8 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .recruit(recruitDto)
                 .organization(orgDto)
                 .build();
-
     }
+
 
     @Override
     public ReadApplicationsResponseDto readApplications(Integer recruitId) {

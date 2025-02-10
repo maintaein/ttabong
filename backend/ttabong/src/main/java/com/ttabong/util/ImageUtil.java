@@ -16,25 +16,22 @@ public class ImageUtil {
 
     private final MinioClient minioClient;
 
-    @Value("${minio.url}")
-    String minioUrl;
-    @Value("${minio.access-key}")
-    String accessKey;
-    @Value("${minio.secret-key}")
-    String secretKey;
     @Value("${minio.bucket-name}")
     String bucketName;
 
-    public String getPresignedUploadUrl(String objectName) throws Exception {
-        String presignedUrl = minioClient.getPresignedObjectUrl(
-                GetPresignedObjectUrlArgs.builder()
-                        .bucket(bucketName)
-                        .object(objectName)
-                        .method(Method.PUT)
-                        .expiry(60, TimeUnit.MINUTES)
-                        .build()
-        );
-        return presignedUrl;
+    public String getPresignedUploadUrl(String objectName) {
+        try {
+            return minioClient.getPresignedObjectUrl(
+                    GetPresignedObjectUrlArgs.builder()
+                            .bucket(bucketName)
+                            .object(objectName)
+                            .method(Method.PUT)
+                            .expiry(60, TimeUnit.MINUTES)
+                            .build()
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("MinIO Presigned Upload URL 생성 실패", e);
+        }
     }
 
     public String getPresignedDownloadUrl(String objectName) throws Exception {

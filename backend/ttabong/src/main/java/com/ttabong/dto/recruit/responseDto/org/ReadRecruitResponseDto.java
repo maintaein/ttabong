@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 
 @Getter
 @NoArgsConstructor
@@ -38,7 +39,7 @@ public class ReadRecruitResponseDto {
         private String title;
         private String activityLocation;
         private String status;
-        private String imageId;
+        private List<String> images;
         private String contactName;
         private String contactPhone;
         private String description;
