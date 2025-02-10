@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Optional;
 
 @Service
@@ -41,6 +43,8 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("User not found");
         }
         User user = userOpt.get();
+        System.out.println(user.getPassword());
+        System.out.println(loginRequest.getPassword());
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid password");
         }
@@ -60,7 +64,9 @@ public class UserServiceImpl implements UserService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .phone(request.getPhone())
                 .profileImage(request.getProfileImage())
+                .createdAt(Instant.now())
                 .isDeleted(false)
+                .totalVolunteerHours(BigDecimal.valueOf(0))
                 .build();
         user = userRepository.save(user);
 

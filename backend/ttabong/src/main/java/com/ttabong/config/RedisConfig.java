@@ -16,7 +16,6 @@ public class RedisConfig {
     @Value("${spring.data.redis.port}")
     private int port;
 
-
     @Bean
     LettuceConnectionFactory lettuceConnectionFactory() {
         return new LettuceConnectionFactory(new RedisStandaloneConfiguration(host, port));
@@ -27,10 +26,8 @@ public class RedisConfig {
         RedisTemplate<String, String> template = new RedisTemplate<>();
         template.setConnectionFactory(lettuceConnectionFactory());
 
-        // 새로운 Jackson2JsonRedisSerializer 사용 방식
         Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(Object.class);
 
-        // Key & Value Serializer 설정
         template.setKeySerializer(new StringRedisSerializer());
         template.setValueSerializer(serializer);
         template.setHashKeySerializer(new StringRedisSerializer());
