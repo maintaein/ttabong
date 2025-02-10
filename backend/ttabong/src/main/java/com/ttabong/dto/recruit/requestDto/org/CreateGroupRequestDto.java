@@ -10,5 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class CreateGroupRequestDto {
+    private Integer orgId;
     private String groupName;
 }

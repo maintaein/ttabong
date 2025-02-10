@@ -1,10 +1,10 @@
 package com.ttabong.dto.sns.request;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /*
  * 9. 댓글 _ 작성

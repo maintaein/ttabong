@@ -4,15 +4,19 @@ import com.ttabong.dto.user.LoginRequest;
 import com.ttabong.dto.user.UserLoginProjection;
 import com.ttabong.dto.user.VolunteerRegisterRequest;
 import com.ttabong.dto.user.OrganizationRegisterRequest;
+import com.ttabong.dto.user.VolunteerRegisterRequest;
+import com.ttabong.entity.user.Organization;
 import com.ttabong.entity.user.User;
 import com.ttabong.entity.user.Volunteer;
-import com.ttabong.entity.user.Organization;
+import com.ttabong.repository.user.OrganizationRepository;
 import com.ttabong.repository.user.UserRepository;
 import com.ttabong.repository.user.VolunteerRepository;
-import com.ttabong.repository.user.OrganizationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Optional;
 
 @Service
@@ -61,7 +65,9 @@ public class UserServiceImpl implements UserService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .phone(request.getPhone())
                 .profileImage(request.getProfileImage())
+                .createdAt(Instant.now())
                 .isDeleted(false)
+                .totalVolunteerHours(BigDecimal.valueOf(0))
                 .build();
         user = userRepository.save(user);
 

@@ -1,6 +1,5 @@
 package com.ttabong.dto.recruit.requestDto.org;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class CreateGroupResponseDto {
-    String message;
-    Integer groupId;
+    private String message;
+    private Integer groupId;
 }

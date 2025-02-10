@@ -46,6 +46,7 @@ public class Recruit {
     @Column(name = "activity_end", nullable = false, precision = 7, scale = 2)
     private BigDecimal activityEnd;
 
+
     @ColumnDefault("0")
     @Column(name = "max_volunteer")
     private Integer maxVolunteer;
@@ -78,4 +79,5 @@ public class Recruit {
 
     @OneToMany(mappedBy = "recruit")
     private Set<VolunteerReaction> volunteerReactions = new LinkedHashSet<>();
+
 }

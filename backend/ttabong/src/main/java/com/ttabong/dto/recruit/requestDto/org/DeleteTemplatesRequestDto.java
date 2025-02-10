@@ -12,5 +12,5 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class DeleteTemplatesRequestDto {
-    List<Integer> deleteTemplateIds;
+    private List<Integer> deletedTemplates;
 }

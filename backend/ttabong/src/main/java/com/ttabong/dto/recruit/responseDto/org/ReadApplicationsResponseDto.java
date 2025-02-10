@@ -1,6 +1,9 @@
 package com.ttabong.dto.recruit.responseDto.org;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,7 +17,9 @@ public class ReadApplicationsResponseDto {
     private List<ApplicationDetail> applications;
 
     @Getter
-    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
     public static class ApplicationDetail {
         private User user;
         private Volunteer volunteer;
@@ -22,8 +27,9 @@ public class ReadApplicationsResponseDto {
     }
 
     @Getter
-    @Setter
     @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
     public static class User {
         private Integer userId;
         private String email;
@@ -32,8 +38,9 @@ public class ReadApplicationsResponseDto {
     }
 
     @Getter
-    @Setter
     @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
     public static class Volunteer {
         private Integer volunteerId;
         private Integer recommendedCount;
@@ -41,8 +48,9 @@ public class ReadApplicationsResponseDto {
     }
 
     @Getter
-    @Setter
     @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
     public static class Application {
         private Integer applicationId;
         private Integer recruitId;

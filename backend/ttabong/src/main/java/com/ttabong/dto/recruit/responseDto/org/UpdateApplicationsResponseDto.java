@@ -15,6 +15,8 @@ public class UpdateApplicationsResponseDto {
     @Getter
     @Setter
     @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
     public static class Application {
         private Integer applicationId;
         private Integer recruitId;

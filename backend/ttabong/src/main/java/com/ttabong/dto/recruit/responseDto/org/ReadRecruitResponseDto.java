@@ -1,9 +1,14 @@
 package com.ttabong.dto.recruit.responseDto.org;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.List;
 
 @Getter
 @NoArgsConstructor
@@ -16,23 +21,25 @@ public class ReadRecruitResponseDto {
     private Organization organization;
 
     @Getter
-    @Setter
     @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
     public static class Group {
         private Integer groupId;
         private String groupName;
     }
 
     @Getter
-    @Setter
     @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
     public static class Template {
         private Integer templateId;
         private Integer categoryId;
         private String title;
         private String activityLocation;
         private String status;
-        private String imageId;
+        private List<String> images;
         private String contactName;
         private String contactPhone;
         private String description;
@@ -40,14 +47,15 @@ public class ReadRecruitResponseDto {
     }
 
     @Getter
-    @Setter
     @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
     public static class Recruit {
         private Integer recruitId;
         private LocalDateTime deadline;
-        private LocalDate activityDate;
-        private Integer activityStart; // 1000, 1400 같은 4자리 숫자로 표현
-        private Integer activityEnd;
+        private Date activityDate;
+        private BigDecimal activityStart;
+        private BigDecimal activityEnd;
         private Integer maxVolunteer;
         private Integer participateVolCount;
         private String status;
@@ -56,8 +64,9 @@ public class ReadRecruitResponseDto {
     }
 
     @Getter
-    @Setter
     @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
     public static class Organization {
         private Integer orgId;
         private String name;
