@@ -22,7 +22,7 @@ public class ReviewController {
     private final CacheService cacheService;
 
     // minio Presigned URL 발급 API
-    @GetMapping
+    @GetMapping("/write")
     public ResponseEntity<CreateTemplateResponseDto> generatePresignedUrls() throws Exception {
         List<String> presignedUrls = cacheService.generatePresignedUrlsForTemplate();
 
@@ -33,17 +33,6 @@ public class ReviewController {
 
         return ResponseEntity.ok().body(response);
     }
-
-//    @GetMapping("mine")
-//    public ResponseEntity<?> readMyReviews() {
-//
-//        return ResponseEntity.ok().build();
-//    }
-
-//    @GetMapping("{reviewId}")
-//    public ResponseEntity<?> readReviewDetail() {
-//        return ResponseEntity.ok().build();
-//    }
 
     /* 후기 생성 */
     @PostMapping
@@ -82,6 +71,18 @@ public class ReviewController {
             @PathVariable(name = "reviewId") Integer reviewId,
             @RequestBody ReviewVisibilitySettingRequestDto requestDto) {
         ReviewVisibilitySettingResponseDto response = reviewService.updateVisibility(reviewId, requestDto);
+        return ResponseEntity.ok(response);
+    }
+
+    // 4. 후기 _ 전체 조회 (봉사자+기관) (미리보기)_피드부분
+    // /api/reviews?cursor={reviewId}&limit={limit}
+    @GetMapping
+    public ResponseEntity<List<AllReviewPreviewResponseDto>> readAllReviews(
+            @RequestParam(required = false, name = "reviewId") Integer cursor,
+            @RequestParam(defaultValue = "10", name = "limit") Integer limit) {
+
+        List<AllReviewPreviewResponseDto> response = reviewService.readAllReviews(cursor, limit);
+
         return ResponseEntity.ok(response);
     }
 

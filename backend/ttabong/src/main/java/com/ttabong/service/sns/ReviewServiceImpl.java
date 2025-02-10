@@ -22,6 +22,7 @@ import io.minio.MinioClient;
 import io.minio.RemoveObjectArgs;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -279,8 +280,33 @@ public class ReviewServiceImpl implements ReviewService {
         );
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public List<AllReviewPreviewResponseDto> readAllReviews(Integer cursor, Integer limit) {
+        List<Review> reviews = reviewRepository.findAllReviews(cursor, PageRequest.of(0, limit));
 
-
+        return reviews.stream()
+                .map(review -> AllReviewPreviewResponseDto.builder()
+                        .reviewId(review.getId())
+                        .recruitId(review.getRecruit() != null ? review.getRecruit().getId() : null)
+                        .title(review.getTitle())
+                        .content(review.getContent())
+                        .isDeleted(review.getIsDeleted())
+                        .updatedAt(review.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime()) // Instant → LocalDateTime 변환
+                        .createdAt(review.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime()) // Instant → LocalDateTime 변환
+                        .writerId(review.getWriter() != null ? review.getWriter().getId() : null)
+                        .writerName(review.getWriter() != null ? review.getWriter().getName() : null)
+                        .groupId(review.getGroupId())
+                        .groupName("봉사 그룹") // 그룹 이름이 없어서 임시 값
+                        .orgId(review.getOrg().getId())
+                        .orgName(review.getOrg().getOrgName())
+                        .images(review.getReviewComments().stream()
+                                .flatMap(c -> c.getReview().getReviewComments().stream()
+                                        .map(comment -> comment.getWriter().getProfileImage()))
+                                .collect(Collectors.toList())) // 이미지 리스트 생성
+                        .build())
+                .collect(Collectors.toList()); // 리스트로 반환
+    }
 
 
 }
