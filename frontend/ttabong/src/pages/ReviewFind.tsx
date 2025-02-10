@@ -6,7 +6,7 @@ import { Search } from 'lucide-react';
 import { ReviewGalleryGrid } from '@/pages/ReviewFind/components/ReviewGalleryGrid';
 import { PageLayout } from '@/layout/PageLayout';
 
-export default function ReviewFind() {
+const ReviewFind: React.FC = () => {
   const navigate = useNavigate();
   const { reviews, isLoading, error, hasMore, fetchReviews } = useReviewStore();
   const observer = useRef<IntersectionObserver>();
@@ -71,4 +71,6 @@ export default function ReviewFind() {
       </div>
     </PageLayout>
   );
-}
+};
+
+export default ReviewFind;

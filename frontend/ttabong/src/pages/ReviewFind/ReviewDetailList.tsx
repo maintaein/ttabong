@@ -1,9 +1,10 @@
+import React from 'react';
 import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useReviewStore } from '@/stores/reviewStore';
 import { ReviewGalleryGrid } from './components/ReviewGalleryGrid';
 
-export default function ReviewDetailList() {
+const ReviewDetailList: React.FC = () => {
   const { reviewId } = useParams();
   const navigate = useNavigate();
   const { recruitReviews, isLoading, error, fetchRecruitReviews } = useReviewStore();
@@ -29,4 +30,6 @@ export default function ReviewDetailList() {
       />
     </div>
   );
-}
+};
+
+export default ReviewDetailList;
