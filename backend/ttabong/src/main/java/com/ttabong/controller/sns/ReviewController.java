@@ -10,6 +10,7 @@ import com.ttabong.dto.sns.response.ReviewEditStartResponseDto;
 import com.ttabong.service.sns.ReviewService;
 import com.ttabong.util.service.CacheService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
