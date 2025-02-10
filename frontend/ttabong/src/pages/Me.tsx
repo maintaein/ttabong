@@ -13,11 +13,12 @@ interface Organization {
   avatarUrl?: string;
 }
 
-const Me = () => {
+const Me: React.FC = () => {
   const navigate = useNavigate();
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error] = useState<string | null>(null);
+
 
   useEffect(() => {
     // 데이터 가져오기 (임시 더미 데이터) - 로딩 시간을 500ms로 단축

@@ -7,11 +7,21 @@ import Step2RecruitmentConditions from "@/pages/Me/TemplateComponents/Step2Recru
 import Step3VolunteerLocation from "@/pages/Me/TemplateComponents/Step3VolunteerLocation";
 import Step4ContactInfo from "@/pages/Me/TemplateComponents/Step4ContactInfo";
 import { motion, AnimatePresence } from "framer-motion";
-import { Group, Template, TemplateFormData } from '@/types/template';
+import { TemplateFormData } from '@/types/template';
 import { toast } from "sonner";
 import { Toaster } from "react-hot-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useScroll } from '@/contexts/ScrollContext';
+import { useTemplateStore } from '@/stores/templateStore';
+import { templateApi } from '@/api/templateApi';
+import { recruitApi } from '@/api/recruitApi';
+import { transformTemplateData } from '@/types/template';
+
+const formatTime = (time: number) => {
+  const hours = Math.floor(time);
+  const minutes = Math.round((time - hours) * 60);
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+};
 
 const steps = [
   "공고 내용 입력(1/2)",
@@ -21,13 +31,17 @@ const steps = [
   "담당자 정보 입력"
 ];
 
-const TemplateAndGroupWrite = () => {
+const TemplateAndGroupWrite: React.FC = () => {
   const [step, setStep] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const templateId = location.state?.templateId;
+  const isRecruitEdit = location.state?.isRecruitEdit;
+  const recruitId = location.state?.recruitId;
+  const recruitData = location.state?.recruitData;
   const { scrollToTop } = useScroll();
+  const { createTemplate: createTemplateApi } = useTemplateStore();
 
   // 🔹 모든 step의 데이터를 하나의 state로 관리
   const [templateData, setTemplateData] = useState<TemplateFormData>({
@@ -62,100 +76,169 @@ const TemplateAndGroupWrite = () => {
   useEffect(() => {
     if (isCompleted) {
       setTimeout(() => {
-        navigate("/template-and-group", {
-          state: { newTemplate: true }
-        });
+        navigate("/choose-recruit");
       }, 2000);
     }
   }, [isCompleted, navigate]);
 
   // 초기 데이터 로드
   useEffect(() => {
-    if (templateId) {
-      const storedTemplates = localStorage.getItem("volunteerTemplates");
-      if (storedTemplates) {
-        const templates = JSON.parse(storedTemplates);
-        const existingTemplate = templates.find((t:Template) => t.template_id === templateId);
-        
-        if (existingTemplate) {
+    if (isRecruitEdit && recruitData) {
+      const loadTemplateAndRecruit = async () => {
+        try {
+          const template = await templateApi.getTemplate(templateId);
+          // 날짜 문자열을 UTC 기준으로 변환
+          const deadline = new Date(recruitData.deadline);
+          const activityDate = new Date(recruitData.activityDate);
+          
+          // 시간대 오프셋 조정 수정
+          deadline.setMinutes(deadline.getMinutes() - deadline.getTimezoneOffset());
+          activityDate.setMinutes(activityDate.getMinutes() - activityDate.getTimezoneOffset());
+
           setTemplateData({
-            ...templateData, // 현재 날짜/시간 유지
-            groupId: existingTemplate.group_id,
-            title: existingTemplate.title,
-            description: existingTemplate.description,
-            images: existingTemplate.images || [],
-            volunteerTypes: existingTemplate.category_sub.split(", "),
-            volunteerCount: existingTemplate.volunteerCount || 10,
-            locationType: existingTemplate.activity_location === "재택" ? "재택" : "주소",
-            address: existingTemplate.activity_location !== "재택" 
-              ? existingTemplate.activity_location.split(" ").slice(0, -1).join(" ")
+            ...templateData,
+            groupId: template.groupId,
+            title: template.title || "",
+            description: template.description || "",
+            images: template.images || [],
+            volunteerTypes: Array.isArray(template.volunteerTypes) 
+              ? template.volunteerTypes 
+              : template.volunteerTypes?.split(", ") || [],
+            locationType: template.activityLocation === "재택" ? "재택" : "주소",
+            address: template.activityLocation !== "재택" 
+              ? template.activityLocation.split(" ").slice(0, -1).join(" ")
               : "",
-            detailAddress: existingTemplate.activity_location !== "재택"
-              ? existingTemplate.activity_location.split(" ").slice(-1)[0]
+            detailAddress: template.activityLocation !== "재택"
+              ? template.activityLocation.split(" ").slice(-1)[0]
               : "",
-            contactName: existingTemplate.contact_name,
+            contactName: template.contactName || "",
             contactPhone: {
-              areaCode: existingTemplate.contact_phone.split("-")[0],
-              middle: existingTemplate.contact_phone.split("-")[1],
-              last: existingTemplate.contact_phone.split("-")[2]
+              areaCode: template.contactPhone?.split("-")[0] || "010",
+              middle: template.contactPhone?.split("-")[1] || "",
+              last: template.contactPhone?.split("-")[2] || ""
             },
-            template_id: Date.now(), // 새로운 ID 생성
-            volunteerField: existingTemplate.volunteer_field?.split(", ") || []
+            volunteerField: Array.isArray(template.volunteerField)
+              ? template.volunteerField
+              : template.volunteerField?.split(", ") || [],
+            // 공고의 날짜/시간 데이터로 설정
+            startDate: new Date(), // 오늘 날짜로 설정 (모집 시작일)
+            endDate: deadline,
+            volunteerDate: activityDate,
+            startTime: formatTime(recruitData.activityStart),
+            endTime: formatTime(recruitData.activityEnd),
+            volunteerCount: recruitData.maxVolunteer
+          });
+        } catch (error) {
+          console.error('데이터 로드 실패:', error);
+          toast.error('데이터를 불러오는데 실패했습니다.');
+        }
+      };
+      loadTemplateAndRecruit();
+    } else if (templateId) {
+      const loadTemplate = async () => {
+        try {
+          const template = await templateApi.getTemplate(templateId);
+          setTemplateData({
+            ...templateData,
+            groupId: template.groupId,
+            title: template.title || "",
+            description: template.description || "",
+            images: template.images || [],
+            volunteerTypes: Array.isArray(template.volunteerTypes) 
+              ? template.volunteerTypes 
+              : template.volunteerTypes?.split(", ") || [],
+            volunteerCount: template.volunteerCount || 10,
+            locationType: template.activityLocation === "재택" ? "재택" : "주소",
+            address: template.activityLocation !== "재택" 
+              ? template.activityLocation.split(" ").slice(0, -1).join(" ")
+              : "",
+            detailAddress: template.activityLocation !== "재택"
+              ? template.activityLocation.split(" ").slice(-1)[0]
+              : "",
+            contactName: template.contactName || "",
+            contactPhone: {
+              areaCode: template.contactPhone?.split("-")[0] || "010",
+              middle: template.contactPhone?.split("-")[1] || "",
+              last: template.contactPhone?.split("-")[2] || ""
+            },
+            volunteerField: Array.isArray(template.volunteerField)
+              ? template.volunteerField
+              : template.volunteerField?.split(", ") || [],
+            startDate: template.startDate ? new Date(template.startDate) : null,
+            endDate: template.endDate ? new Date(template.endDate) : null,
+            volunteerDate: template.volunteerDate ? new Date(template.volunteerDate) : null,
+            startTime: template.startTime || "",
+            endTime: template.endTime || ""
+          });
+        } catch (error) {
+          console.error('템플릿 로드 실패:', error);
+          toast.error('템플릿을 불러오는데 실패했습니다.');
+        }
+      };
+      loadTemplate();
+    }
+  }, [templateId, isRecruitEdit, recruitData]);
+
+  const timeToNumber = (time: string) => {
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours + (minutes / 60);
+  };
+
+  // 템플릿 생성 및 저장 함수
+  const createTemplate = async () => {
+    try {
+      if (isRecruitEdit) {
+        // 공고만 수정하는 경우
+        await recruitApi.updateRecruit(recruitId, {
+          deadline: templateData.endDate?.toISOString(),
+          activityDate: templateData.volunteerDate?.toISOString().split('T')[0],
+          activityStart: timeToNumber(templateData.startTime),
+          activityEnd: timeToNumber(templateData.endTime),
+          maxVolunteer: templateData.volunteerCount,
+          images: templateData.images,
+          imageCount: templateData.images.length
+        });
+        toast.success('공고가 수정되었습니다.');
+      } else {
+        let newTemplateId;
+        if (templateId) {
+          // 템플릿 수정
+          const apiData = transformTemplateData(templateData);
+          await templateApi.updateTemplate(templateId, apiData);
+          newTemplateId = templateId;
+          toast.success('공고가 생성되었습니다.');
+        } else {
+          // 새 템플릿 생성
+          const response = await createTemplateApi(templateData);
+          newTemplateId = response.templateId;
+          toast.success('템플릿과 공고가 생성되었습니다.');
+        }
+
+        // 공고 자동 생성
+        const today = new Date();
+        const activityDate = templateData.volunteerDate;
+        
+        if (activityDate && templateData.startTime && templateData.endTime) {
+          await recruitApi.createRecruit({
+            templateId: newTemplateId,
+            deadline: templateData.endDate?.toISOString() || today.toISOString(),
+            activityDate: activityDate.toISOString().split('T')[0],
+            activityStart: timeToNumber(templateData.startTime),
+            activityEnd: timeToNumber(templateData.endTime),
+            maxVolunteer: templateData.volunteerCount
           });
         }
       }
+
+      setIsCompleted(true);
+      setTimeout(() => {
+        navigate('/choose-recruit');
+      }, 2000);
+
+    } catch (error) {
+      console.error('실패:', error);
+      toast.error(isRecruitEdit ? '공고 수정에 실패했습니다.' : '템플릿 생성에 실패했습니다.');
     }
-  }, [templateId]);
-
-  // 템플릿 생성 및 저장 함수
-  const createTemplate = () => {
-    const storedTemplates = localStorage.getItem("volunteerTemplates") || "[]";
-    const templates = JSON.parse(storedTemplates);
-    
-    const newTemplate = {
-      template_id: templateData.template_id,
-      group_id: templateData.groupId,
-      title: templateData.title,
-      activity_location: templateData.locationType === "재택" 
-        ? "재택" 
-        : `${templateData.address} ${templateData.detailAddress}`,
-      category_main: templates.find((g:Group) => g.group_id === templateData.groupId)?.name || "",
-      category_sub: templateData.volunteerTypes.join(", "),
-      status: "all",
-      images: templateData.images,
-      contact_name: templateData.contactName,
-      contact_phone: `${templateData.contactPhone.areaCode}-${templateData.contactPhone.middle}-${templateData.contactPhone.last}`,
-      description: templateData.description,
-      created_at: templateData.created_at,
-      startDate: templateData.startDate?.toISOString().split('T')[0] || "",
-      endDate: templateData.endDate?.toISOString().split('T')[0] || "",
-      volunteerDate: templateData.volunteerDate?.toISOString().split('T')[0] || "",
-      startTime: templateData.startTime,
-      endTime: templateData.endTime,
-      volunteer_field: templateData.volunteerField.join(", "),
-      volunteerCount: templateData.volunteerCount
-    };
-
-    if (templateId) {
-      // 수정 모드: 기존 템플릿 업데이트
-      const updatedTemplates = templates.map((t:Template) => 
-        t.template_id === templateId ? newTemplate : t
-      );
-      localStorage.setItem("volunteerTemplates", JSON.stringify(updatedTemplates));
-    } else {
-      // 새로운 템플릿 추가
-      templates.push(newTemplate);
-      localStorage.setItem("volunteerTemplates", JSON.stringify(templates));
-    }
-
-    setIsCompleted(true);
-    
-    // 2초 후 목록 페이지로 이동
-    setTimeout(() => {
-      navigate("/template-and-group", {
-        state: { newTemplate: true }
-      });
-    }, 2000);
   };
 
   const validateStep0 = () => {

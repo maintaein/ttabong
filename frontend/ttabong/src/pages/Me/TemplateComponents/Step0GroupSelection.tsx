@@ -1,57 +1,40 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import DatePicker from "react-datepicker";
 import { ko } from "date-fns/locale";
 import "react-datepicker/dist/react-datepicker.css";
 import { StepProps } from '@/types/template';
 import { CalendarIcon } from "lucide-react";
-
-// 초기 그룹 데이터를 TemplateAndGroup과 공유
-const INITIAL_GROUPS = [
-  { group_id: 1, name: "봉사 그룹 1", templates: [] },
-  { group_id: 2, name: "봉사 그룹 2", templates: [] }
-];
+import { useTemplateStore } from '@/stores/templateStore';
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Step0GroupSelection: React.FC<StepProps> = ({ templateData, setTemplateData }) => {
-  const [groups, setGroups] = useState<{ group_id: number; name: string }[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
+  const { groups, fetchTemplates, createGroup } = useTemplateStore();
 
-  // 로컬 스토리지에서 그룹 데이터 로드
   useEffect(() => {
-    const storedGroups = localStorage.getItem("volunteerGroups");
-    if (storedGroups) {
-      setGroups(JSON.parse(storedGroups));
-    } else {
-      // 초기 데이터 설정
-      localStorage.setItem("volunteerGroups", JSON.stringify(INITIAL_GROUPS));
-      setGroups(INITIAL_GROUPS);
-    }
+    fetchTemplates();
   }, []);
 
-  // 그룹 추가 함수
-  const addNewGroup = () => {
+  const handleCreateGroup = async () => {
     if (newGroupName.trim()) {
-      const newGroup = { 
-        group_id: Date.now(), 
-        name: newGroupName,
-        templates: []
-      };
-      const updatedGroups = [...groups, newGroup];
-
-      setGroups(updatedGroups);
-      localStorage.setItem("volunteerGroups", JSON.stringify(updatedGroups));
-      
-      // 새로 추가된 그룹 자동 선택
+      const newGroup = await createGroup(newGroupName.trim());
+      // 새로 생성된 그룹 자동 선택
       setTemplateData(prev => ({
         ...prev,
-        groupId: newGroup.group_id
+        groupId: newGroup.groupId
       }));
-      
       setNewGroupName("");
-      setIsDialogOpen(false);
+      setShowDialog(false);
     }
   };
 
@@ -81,34 +64,44 @@ const Step0GroupSelection: React.FC<StepProps> = ({ templateData, setTemplateDat
   today.setHours(0, 0, 0, 0); // 시간을 00:00:00으로 설정
 
   return (
-    <div>
-      <h2 className="text-lg font-semibold mb-4">공고 그룹 선택</h2>
-
-      <Select
-        onValueChange={(value) =>
-          setTemplateData((prev) => ({ ...prev, groupId: Number(value) }))
-        }
-        value={templateData.groupId?.toString() || ""}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder="공고 그룹 선택" />
-        </SelectTrigger>
-        <SelectContent>
-          {groups.map((group) => (
-            <SelectItem key={group.group_id} value={group.group_id.toString()}>
-              {group.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+    <div className="space-y-6">
+      <div>
+        <Label className="text-base">공고 그룹 선택</Label>
+        <Select
+          value={templateData.groupId?.toString()}
+          onValueChange={(value) => 
+            setTemplateData({ ...templateData, groupId: parseInt(value) })
+          }
+        >
+          <SelectTrigger className="mt-3">
+            <SelectValue placeholder="공고 그룹을 선택하세요" />
+          </SelectTrigger>
+          <SelectContent>
+            {groups && groups.length > 0 ? (
+              groups.map((group) => (
+                <SelectItem
+                  key={group.groupId}
+                  value={group.groupId.toString()}
+                >
+                  {group.groupName}
+                </SelectItem>
+              ))
+            ) : (
+              <div className="text-sm text-gray-500">
+                아직 그룹이 없습니다. 그룹을 추가해주세요.
+              </div>
+            )}
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* 🔹 그룹 추가 버튼 */}
-      <Button className="mt-2" onClick={() => setIsDialogOpen(true)}>
+      <Button className="mt-2" onClick={() => setShowDialog(true)}>
         그룹 추가
       </Button>
 
       {/* 🔹 그룹 추가 다이얼로그 */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>새 그룹 추가</DialogTitle>
@@ -121,7 +114,7 @@ const Step0GroupSelection: React.FC<StepProps> = ({ templateData, setTemplateDat
             onChange={(e) => setNewGroupName(e.target.value)}
           />
           <DialogFooter>
-            <Button onClick={addNewGroup}>추가</Button>
+            <Button onClick={handleCreateGroup}>추가</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

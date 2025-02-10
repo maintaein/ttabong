@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
-export const TopBar = () => {
+export const TopBar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showBackDialog, setShowBackDialog] = useState(false);

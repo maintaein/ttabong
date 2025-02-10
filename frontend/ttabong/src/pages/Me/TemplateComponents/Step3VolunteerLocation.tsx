@@ -33,7 +33,6 @@ const Step3VolunteerLocation: React.FC<Step3Props> = ({ templateData, setTemplat
       }
     }).open();
 
-
   };
 
   return (

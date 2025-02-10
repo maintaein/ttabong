@@ -64,3 +64,62 @@ export interface DaumPostcodeData {
   zonecode: string;
 }
 
+// API 응답 타입
+export interface APITemplate {
+  templateId: number;
+  orgId: number;
+  categoryId: number;
+  title: string;
+  activityLocation: string;
+  status: string;
+  imageId: string;
+  contactName: string;
+  contactPhone: string;
+  description: string;
+  createdAt: string;
+}
+
+export interface APIGroup {
+  groupId: number;
+  groupName: string;
+  templates: APITemplate[];
+}
+
+// API 요청 타입
+export interface CreateTemplateRequest {
+  groupId: number;
+  orgId: number;
+  categoryId: number;
+  title: string;
+  activityLocation: string;
+  status: string;
+  images: string[];
+  imageCount: number;
+  contactName: string;
+  contactPhone: string;
+  description: string;
+  volunteerField: string[];
+  volunteerTypes: string[];
+  volunteerCount: number;
+}
+
+// 데이터 변환 유틸리티 함수
+export const transformTemplateData = (localData: TemplateFormData): CreateTemplateRequest => {
+  return {
+    groupId: localData.groupId || 0,
+    orgId: 5,
+    categoryId: 3,
+    title: localData.title,
+    activityLocation: `${localData.address} ${localData.detailAddress}`.trim(),
+    status: "ALL",
+    images: localData.images,
+    imageCount: localData.images.length,
+    contactName: localData.contactName,
+    contactPhone: `${localData.contactPhone.areaCode}-${localData.contactPhone.middle}-${localData.contactPhone.last}`,
+    description: localData.description,
+    volunteerField: localData.volunteerField,
+    volunteerTypes: localData.volunteerTypes,
+    volunteerCount: localData.volunteerCount,
+  };
+};
+

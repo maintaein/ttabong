@@ -8,8 +8,12 @@ import TemplateAndGroup from "@/pages/Me/TemplateAndGroup";
 import TemplateAndGroupWrite from "@/pages/Me/TemplateAndGroupWrite";
 import { Toaster } from "sonner";
 import ChooseRecruit from "@/pages/ChooseRecruit";
+import ReviewFind from "@/pages/ReviewFind";
+import ReviewDetail from "@/pages/ReviewFind/ReviewDetail";
+import ReviewDetailList from "@/pages/ReviewFind/ReviewDetailList";
+import RecruitDetail from "@/pages/ChooseRecruit/org/RecruitDetail";
 
-function App() {
+const App: React.FC = () => {
   return (
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <Toaster />
@@ -23,6 +27,10 @@ function App() {
                 <Route path="/template-and-group" element={<TemplateAndGroup />} />
                 <Route path="/template-and-group-write" element={<TemplateAndGroupWrite />} />
                 <Route path="/choose-recruit" element={<ChooseRecruit />} />
+                <Route path="/review-find" element={<ReviewFind />} />
+                <Route path="/review-find/:reviewId" element={<ReviewDetail />} />
+                <Route path="/review-find/:reviewId/reviews" element={<ReviewDetailList />} />
+                <Route path="/recruits/:recruitId" element={<RecruitDetail />} />
               </Routes>
             </PageLayout>
           </MainLayout>
@@ -30,6 +38,6 @@ function App() {
       </div>
     </ThemeProvider>
   );
-}
+};
 
 export default App;
