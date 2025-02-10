@@ -115,44 +115,4 @@ public class ReviewController {
         List<RecruitReviewResponseDto> response = reviewService.recruitReview(recruitId);
         return ResponseEntity.ok(response);
     }
-
-
-
-
-//    @GetMapping("recruits/{recruitId}")
-//    public ResponseEntity<?> readRelatedReviews(@PathVariable String recruitId) {
-//
-//        return ResponseEntity.ok().build();
-//    }
-
-//    @GetMapping()
-//    public ResponseEntity<?> readAllReviews(@RequestParam Integer cursor, @RequestParam Integer limit) {
-//
-//        return ResponseEntity.ok().build();
-//    }
-
-//    @PostMapping("")
-//    public ResponseEntity<?> startCreateReview() {
-//        return ResponseEntity.ok().build();
-//    }
-//
-//    @PutMapping("")
-//    public ResponseEntity<?> endCreateReview() {
-//        return ResponseEntity.ok().build();
-//    }
-
-
-
 }
-/*
-후기 _ 자신이 쓴 후기 (미리보기) (모두 조회)	GET	/api/reviews/mine
-후기 _ 후기 상세 조회 (개별 조회)	GET	/api/reviews/{리뷰id}
-후기 _ 공고 관련 봉사자의 후기 조회	GET	/api/reviews/recruits/{recruitId}
-후기 _ 전체 조회 (봉사자+기관) (미리보기)_피드부분	GET	/api/reviews?cursor={reviewId}&limit={limit}
-후기 _ 공개 여부 설정	PATCH	/api/reviews/{reviewId}/visibility
-후기 _ 삭제	PATCH	/api/reviews/{리뷰id}/delete
-후기_작성시작	POST	/api/reviews
-후기_작성완료	PUT	/api/reviews
-후기_수정시작	POST	/api/reviews/{reviewId}
-후기_수정완료	PATCH	/api/reviews/{reviewId}
- */

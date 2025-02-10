@@ -39,4 +39,8 @@ public class ReviewComment {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
+    @ColumnDefault("CURRENT_TIMESTAMP")
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
+
 }
