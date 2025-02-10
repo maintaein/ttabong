@@ -1,4 +1,3 @@
-import { OrgRecruit } from '@/types/recruitType';
 import { http, HttpResponse } from 'msw';
 
 // 리뷰 목록 데이터

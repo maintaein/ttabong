@@ -8,11 +8,7 @@ interface ReviewGalleryGridProps {
 
 export function ReviewGalleryGrid({ reviews, onReviewClick }: ReviewGalleryGridProps) {
   if (!reviews.length) {
-    return (
-      <div className="flex flex-col items-center justify-center py-8">
-        <p className="text-muted-foreground">아직 작성된 리뷰가 없습니다</p>
-      </div>
-    );
+    return <ContentLoading text="리뷰가 없습니다" />;
   }
 
   return (
