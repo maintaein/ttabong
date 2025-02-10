@@ -41,18 +41,21 @@ export const RecruitCard: React.FC<RecruitCardProps> = ({ recruit, onDelete }) =
   };
 
   const handleEditClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // 카드 클릭 이벤트 전파 방지
+    e.stopPropagation();
     navigate('/template-and-group-write', {
       state: { 
         isRecruitEdit: true,
         recruitId: recruit.recruit.recruitId,
         templateId: recruit.template.templateId,
+        template: recruit.template,
         recruitData: {
           deadline: recruit.recruit.deadline,
           activityDate: recruit.recruit.activityDate,
           activityStart: recruit.recruit.activityStart,
           activityEnd: recruit.recruit.activityEnd,
-          maxVolunteer: recruit.recruit.maxVolunteer
+          maxVolunteer: recruit.recruit.maxVolunteer,
+          groupId: recruit.group.groupId,
+          status: recruit.recruit.status
         }
       }
     });

@@ -12,6 +12,9 @@ import ReviewFind from "@/pages/ReviewFind";
 import ReviewDetail from "@/pages/ReviewFind/ReviewDetail";
 import ReviewDetailList from "@/pages/ReviewFind/ReviewDetailList";
 import RecruitDetail from "@/pages/ChooseRecruit/org/RecruitDetail";
+import RecruitFind from './pages/RecruitFind';
+import RecruitInfo from './pages/MainPage/RecruitInfo';
+import MainPage from './pages/MainPage';
 
 const App: React.FC = () => {
   return (
@@ -23,6 +26,9 @@ const App: React.FC = () => {
             <PageLayout>
               <Routes>
                 <Route path="/" element={<Me />} />
+                <Route path="/recruit-find" element={<RecruitFind/>}/>
+                <Route path="/RecruitInfo" element={<RecruitInfo/>}/>
+                <Route path="/main-page" element={<MainPage/>}/>
                 <Route path="/my-page" element={<Me />} />
                 <Route path="/template-and-group" element={<TemplateAndGroup />} />
                 <Route path="/template-and-group-write" element={<TemplateAndGroupWrite />} />

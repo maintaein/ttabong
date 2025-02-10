@@ -224,7 +224,6 @@ const RecruitDetail: React.FC = () => {
             </div>
           </div>
         </Card>
-
         {/* 상세 정보 */}
         <Card className="p-6">
           <h2 className="text-xl font-semibold mb-4">봉사 상세 정보</h2>

@@ -87,11 +87,12 @@ const TemplateAndGroupWrite: React.FC = () => {
       const loadTemplateAndRecruit = async () => {
         try {
           const template = await templateApi.getTemplate(templateId);
+          
           // 날짜 문자열을 UTC 기준으로 변환
           const deadline = new Date(recruitData.deadline);
           const activityDate = new Date(recruitData.activityDate);
           
-          // 시간대 오프셋 조정 수정
+          // 시간대 오프셋 조정
           deadline.setMinutes(deadline.getMinutes() - deadline.getTimezoneOffset());
           activityDate.setMinutes(activityDate.getMinutes() - activityDate.getTimezoneOffset());
 
@@ -103,7 +104,7 @@ const TemplateAndGroupWrite: React.FC = () => {
             images: template.images || [],
             volunteerTypes: Array.isArray(template.volunteerTypes) 
               ? template.volunteerTypes 
-              : template.volunteerTypes?.split(", ") || [],
+              : (template.volunteerTypes?.split(", ") || []),
             locationType: template.activityLocation === "재택" ? "재택" : "주소",
             address: template.activityLocation !== "재택" 
               ? template.activityLocation.split(" ").slice(0, -1).join(" ")
@@ -112,16 +113,22 @@ const TemplateAndGroupWrite: React.FC = () => {
               ? template.activityLocation.split(" ").slice(-1)[0]
               : "",
             contactName: template.contactName || "",
-            contactPhone: {
-              areaCode: template.contactPhone?.split("-")[0] || "010",
-              middle: template.contactPhone?.split("-")[1] || "",
-              last: template.contactPhone?.split("-")[2] || ""
-            },
+            // contactPhone 처리 개선
+            contactPhone: template.contactPhone 
+              ? {
+                  areaCode: template.contactPhone.split("-")[0] || "010",
+                  middle: template.contactPhone.split("-")[1] || "",
+                  last: template.contactPhone.split("-")[2] || ""
+                }
+              : {
+                  areaCode: "010",
+                  middle: "",
+                  last: ""
+                },
             volunteerField: Array.isArray(template.volunteerField)
               ? template.volunteerField
-              : template.volunteerField?.split(", ") || [],
-            // 공고의 날짜/시간 데이터로 설정
-            startDate: new Date(), // 오늘 날짜로 설정 (모집 시작일)
+              : (template.volunteerField?.split(", ") || []),
+            startDate: new Date(),
             endDate: deadline,
             volunteerDate: activityDate,
             startTime: formatTime(recruitData.activityStart),
