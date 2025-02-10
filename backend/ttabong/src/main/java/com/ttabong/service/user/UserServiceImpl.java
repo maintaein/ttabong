@@ -97,7 +97,9 @@ public class UserServiceImpl implements UserService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .phone(request.getPhone())
                 .profileImage(request.getProfileImage())
+                .createdAt(Instant.now())
                 .isDeleted(false)
+                .totalVolunteerHours(BigDecimal.valueOf(0))
                 .build();
         user = userRepository.save(user);
 

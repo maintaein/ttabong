@@ -2,7 +2,6 @@ package com.ttabong.jwt;
 
 import com.ttabong.config.JwtProperties;
 import com.ttabong.dto.user.AuthDto;
-import com.ttabong.config.JwtProperties;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
