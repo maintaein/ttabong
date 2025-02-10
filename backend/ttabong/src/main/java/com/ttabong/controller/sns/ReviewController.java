@@ -23,18 +23,6 @@ public class ReviewController {
     private final ReviewService reviewService;
     private final CacheService cacheService;
 
-//    //For BBB
-//    @PostMapping("{reviewId}")
-//    public ResponseEntity<?> startUpdateReview() {
-//        return ResponseEntity.ok().build();
-//    }
-//
-//    //For BBB
-//    @PatchMapping("{reviewId}")
-//    public ResponseEntity<?> endUpdateReview() {
-//        return ResponseEntity.ok().build();
-//    }
-
     // minio Presigned URL 발급 API
     @GetMapping
     public ResponseEntity<CreateTemplateResponseDto> generatePresignedUrls() throws Exception {
@@ -73,6 +61,7 @@ public class ReviewController {
         return ResponseEntity.ok(response);
     }
 
+    // 후기 수정
     @PatchMapping("/{reviewId}/edit")
     public ResponseEntity<ReviewEditResponseDto> updateReview(
             @PathVariable Integer reviewId,

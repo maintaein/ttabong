@@ -116,23 +116,6 @@ public class ReviewServiceImpl implements ReviewService {
                 .build();
     }
 
-
-    /* 삭제 */
-    @Transactional
-    @Override
-    public ReviewDeleteResponseDto deleteReview(Integer reviewId) {
-        Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 후기를 찾을 수 없습니다. id: " + reviewId));
-
-        Review updatedReview = review.toBuilder()
-                .isDeleted(true)
-                .build();
-
-        reviewRepository.save(updatedReview);
-
-        return new ReviewDeleteResponseDto("삭제 성공하였습니다.", updatedReview.getId(), updatedReview.getTitle(), updatedReview.getContent());
-    }
-
     @Override
     @Transactional
     public ReviewEditStartResponseDto startReviewEdit(Integer reviewId) {
@@ -257,5 +240,25 @@ public class ReviewServiceImpl implements ReviewService {
                 .imageCount(newSize)
                 .build();
     }
+
+    /* 삭제 */
+    @Transactional
+    @Override
+    public ReviewDeleteResponseDto deleteReview(Integer reviewId) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 후기를 찾을 수 없습니다. id: " + reviewId));
+
+        Review updatedReview = review.toBuilder()
+                .isDeleted(true)
+                .build();
+
+        reviewRepository.save(updatedReview);
+
+        return new ReviewDeleteResponseDto("삭제 성공하였습니다.", updatedReview.getId(), updatedReview.getTitle(), updatedReview.getContent());
+    }
+
+
+
+
 
 }
