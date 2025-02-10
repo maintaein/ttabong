@@ -1,8 +1,14 @@
+-- UTF-8 인코딩 강제 적용
+SET NAMES utf8mb4;
+SET character_set_client = utf8mb4;
+SET character_set_connection = utf8mb4;
+SET character_set_results = utf8mb4;
+
 -- 봉사활동 매칭 플랫폼 데이터베이스 설계
 -- 에러 방지를 위해 모든 DB & table 생성 앞에 if exists를 붙임.
 -- 기존 데이터베이스 삭제 및 생성
 DROP DATABASE IF EXISTS volunteer_service;
-CREATE DATABASE IF NOT EXISTS volunteer_service;
+CREATE DATABASE IF NOT EXISTS volunteer_service DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
 USE volunteer_service;
 
 -- 전체 유저 테이블 생성
