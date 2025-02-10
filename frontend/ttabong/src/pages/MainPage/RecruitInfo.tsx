@@ -1,5 +1,5 @@
 import React from "react";
-import { FaMapMarkerAlt, FaPhone, FaClock, FaUsers, FaGlobe } from "react-icons/fa";
+import { MapPin, Phone, Clock, Users, Globe } from "lucide-react";
 
 const RecruitInfo: React.FC = () => {
 
@@ -36,7 +36,7 @@ const RecruitInfo: React.FC = () => {
           <h1 className="text-xl font-bold">{post.title}</h1>
           <p className="text-gray-600">{post.subtitle}</p>
           <div className="flex items-center text-gray-500 mt-1">
-            <FaMapMarkerAlt size={16} color="rgb(239 68 68)" />
+            <MapPin className="w-4 h-4 text-red-500 mr-1" />
             <span>{post.location} • {post.distance}</span>
           </div>
         </div>
@@ -77,24 +77,24 @@ const RecruitInfo: React.FC = () => {
 
         {/* 연락처 정보 */}
         <div className="mt-6 space-y-2">
-          <div className="flex items-center text-gray-700">
-            <FaPhone size={16} color="rgb(107 114 128)" />
+          <div className="flex items-center text-gray-700 gap-2">
+            <Phone className="w-4 h-4 text-gray-500" />
             <span>담당자: {post.contact}</span>
           </div>
-          <div className="flex items-center text-gray-700">
-            <FaPhone size={16} color="rgb(107 114 128)" />
+          <div className="flex items-center text-gray-700 gap-2">
+            <Phone className="w-4 h-4 text-gray-500" />
             <span>기관: {post.institution}</span>
           </div>
-          <div className="flex items-center text-gray-700">
-            <FaClock size={16} color="rgb(107 114 128)" />
+          <div className="flex items-center text-gray-700 gap-2">
+            <Clock className="w-4 h-4 text-gray-500" />
             <span>모집 마감까지 {post.deadline}</span>
           </div>
-          <div className="flex items-center text-gray-700">
-            <FaUsers size={16} color="rgb(107 114 128)" />
+          <div className="flex items-center text-gray-700 gap-2">
+            <Users className="w-4 h-4 text-gray-500" />
             <span>현재까지 {post.applicants}</span>
           </div>
-          <div className="flex items-center text-gray-700">
-            <FaGlobe size={16} color="rgb(107 114 128)" />
+          <div className="flex items-center text-gray-700 gap-2">
+            <Globe className="w-4 h-4 text-gray-500" />
             <a href={post.website} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
               공식 홈페이지
             </a>
