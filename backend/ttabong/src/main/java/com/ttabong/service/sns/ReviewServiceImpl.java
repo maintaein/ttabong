@@ -327,25 +327,38 @@ public class ReviewServiceImpl implements ReviewService {
         List<Review> reviews = reviewRepository.findMyReviews(authDto.getUserId(), PageRequest.of(0, 10));
 
         System.out.println(authDto.getUserId());
+
         return reviews.stream()
                 .map(review -> MyAllReviewPreviewResponseDto.builder()
-                        .reviewId(review.getId())
-                        .recruitId(review.getRecruit() != null ? review.getRecruit().getId() : null)
-                        .title(review.getTitle())
-                        .content(review.getContent())
-                        .isDeleted(review.getIsDeleted())
-                        .updatedAt(review.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
-                        .createdAt(review.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
-                        .writerId(authDto.getUserId()) // Security에서 가져온 사용자 ID 사용
-                        .writerName(authDto.getUserType()) // 예시: userType을 활용해 표시 가능
-                        .groupId(review.getRecruit() != null && review.getRecruit().getTemplate() != null &&
-                                review.getRecruit().getTemplate().getGroup() != null ?
-                                review.getRecruit().getTemplate().getGroup().getId() : null)
-                        .groupName(review.getRecruit() != null && review.getRecruit().getTemplate() != null &&
-                                review.getRecruit().getTemplate().getGroup() != null ?
-                                review.getRecruit().getTemplate().getGroup().getGroupName() : "N/A")
-                        .orgId(review.getOrg().getId())
-                        .orgName(review.getOrg().getOrgName())
+                        .review(MyAllReviewPreviewResponseDto.ReviewDto.builder()
+                                .reviewId(review.getId())
+                                .recruitId(review.getRecruit() != null ? review.getRecruit().getId() : null)
+                                .title(review.getTitle())
+                                .content(review.getContent())
+                                .isDeleted(review.getIsDeleted())
+                                .updatedAt(review.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                                .createdAt(review.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                                .build()
+                        )
+                        .writer(MyAllReviewPreviewResponseDto.WriterDto.builder()
+                                .writerId(authDto.getUserId()) // Security에서 가져온 사용자 ID 사용
+                                .name(authDto.getUserType()) // 예시: userType을 활용해 표시 가능
+                                .build()
+                        )
+                        .group(MyAllReviewPreviewResponseDto.GroupDto.builder()
+                                .groupId(review.getRecruit() != null && review.getRecruit().getTemplate() != null &&
+                                        review.getRecruit().getTemplate().getGroup() != null ?
+                                        review.getRecruit().getTemplate().getGroup().getId() : null)
+                                .groupName(review.getRecruit() != null && review.getRecruit().getTemplate() != null &&
+                                        review.getRecruit().getTemplate().getGroup() != null ?
+                                        review.getRecruit().getTemplate().getGroup().getGroupName() : "N/A")
+                                .build()
+                        )
+                        .organization(MyAllReviewPreviewResponseDto.OrganizationDto.builder()
+                                .orgId(review.getOrg().getId())
+                                .orgName(review.getOrg().getOrgName())
+                                .build()
+                        )
                         .images(review.getReviewComments().stream()
                                 .flatMap(c -> c.getReview().getReviewComments().stream()
                                         .map(comment -> comment.getWriter().getProfileImage()))
