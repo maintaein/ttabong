@@ -21,7 +21,7 @@ import Login from '@/pages/Login';
 import SignUp from '@/pages/SignUp';
 import OrgSignUp from '@/pages/OrgSignUp';
 
-function App() {
+const App: React.FC = () => {
   return (
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <Toaster position="top-center" richColors />
@@ -53,6 +53,6 @@ function App() {
       </div>
     </ThemeProvider>
   );
-}
+};
 
 export default App;
