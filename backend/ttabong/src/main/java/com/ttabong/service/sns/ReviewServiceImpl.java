@@ -287,25 +287,36 @@ public class ReviewServiceImpl implements ReviewService {
 
         return reviews.stream()
                 .map(review -> AllReviewPreviewResponseDto.builder()
-                        .reviewId(review.getId())
-                        .recruitId(review.getRecruit() != null ? review.getRecruit().getId() : null)
-                        .title(review.getTitle())
-                        .content(review.getContent())
-                        .isDeleted(review.getIsDeleted())
-                        .updatedAt(review.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime()) // Instant → LocalDateTime 변환
-                        .createdAt(review.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime()) // Instant → LocalDateTime 변환
-                        .writerId(review.getWriter() != null ? review.getWriter().getId() : null)
-                        .writerName(review.getWriter() != null ? review.getWriter().getName() : null)
-                        .groupId(review.getGroupId())
-                        .groupName("봉사 그룹") // 그룹 이름이 없어서 임시 값
-                        .orgId(review.getOrg().getId())
-                        .orgName(review.getOrg().getOrgName())
+                        .review(AllReviewPreviewResponseDto.ReviewDto.builder()
+                                .reviewId(review.getId())
+                                .recruitId(review.getRecruit() != null ? review.getRecruit().getId() : null)
+                                .title(review.getTitle())
+                                .content(review.getContent())
+                                .isDeleted(review.getIsDeleted())
+                                .updatedAt(review.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime()) // Instant → LocalDateTime 변환
+                                .createdAt(review.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime()) // Instant → LocalDateTime 변환
+                                .build())
+                        .writer(review.getWriter() != null ? AllReviewPreviewResponseDto.WriterDto.builder()
+                                .writerId(review.getWriter().getId())
+                                .name(review.getWriter().getName())
+                                .build() : null)
+                        .group(review.getRecruit() != null && review.getRecruit().getTemplate() != null &&
+                                review.getRecruit().getTemplate().getGroup() != null ?
+                                AllReviewPreviewResponseDto.GroupDto.builder()
+                                        .groupId(review.getRecruit().getTemplate().getGroup().getId())
+                                        .groupName(review.getRecruit().getTemplate().getGroup().getGroupName())
+                                        .build()
+                                : null)
+                        .organization(AllReviewPreviewResponseDto.OrganizationDto.builder()
+                                .orgId(review.getOrg().getId())
+                                .orgName(review.getOrg().getOrgName())
+                                .build())
                         .images(review.getReviewComments().stream()
                                 .flatMap(c -> c.getReview().getReviewComments().stream()
                                         .map(comment -> comment.getWriter().getProfileImage()))
                                 .collect(Collectors.toList())) // 이미지 리스트 생성
                         .build())
-                .collect(Collectors.toList()); // 리스트로 반환
+                .collect(Collectors.toList());
     }
 
 

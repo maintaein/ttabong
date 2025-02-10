@@ -17,9 +17,10 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
         LEFT JOIN FETCH r.writer w
         LEFT JOIN FETCH r.org o
         LEFT JOIN FETCH r.recruit rec
+        LEFT JOIN FETCH rec.template t
+        LEFT JOIN FETCH t.group g
         WHERE (:cursor IS NULL OR r.id < :cursor)
         AND r.isDeleted = false
-        AND r.isPublic = true
         ORDER BY r.id DESC
     """)
     List<Review> findAllReviews(@Param("cursor") Integer cursor, Pageable pageable);
