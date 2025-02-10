@@ -4,6 +4,7 @@ import com.ttabong.dto.sns.request.ReviewCreateRequestDto;
 import com.ttabong.dto.sns.request.ReviewEditRequestDto;
 import com.ttabong.dto.sns.request.ReviewVisibilitySettingRequestDto;
 import com.ttabong.dto.sns.response.*;
+import com.ttabong.dto.user.AuthDto;
 import com.ttabong.entity.recruit.Recruit;
 import com.ttabong.entity.recruit.Template;
 import com.ttabong.entity.sns.Review;
@@ -315,6 +316,39 @@ public class ReviewServiceImpl implements ReviewService {
                                 .flatMap(c -> c.getReview().getReviewComments().stream()
                                         .map(comment -> comment.getWriter().getProfileImage()))
                                 .collect(Collectors.toList())) // 이미지 리스트 생성
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<MyAllReviewPreviewResponseDto> readMyAllReviews(AuthDto authDto) {
+        List<Review> reviews = reviewRepository.findMyReviews(authDto.getUserId(), PageRequest.of(0, 10));
+
+//        System.out.println(authDto.getUserId());
+        return reviews.stream()
+                .map(review -> MyAllReviewPreviewResponseDto.builder()
+                        .reviewId(review.getId())
+                        .recruitId(review.getRecruit() != null ? review.getRecruit().getId() : null)
+                        .title(review.getTitle())
+                        .content(review.getContent())
+                        .isDeleted(review.getIsDeleted())
+                        .updatedAt(review.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                        .createdAt(review.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                        .writerId(authDto.getUserId()) // Security에서 가져온 사용자 ID 사용
+                        .writerName(authDto.getUserType()) // 예시: userType을 활용해 표시 가능
+                        .groupId(review.getRecruit() != null && review.getRecruit().getTemplate() != null &&
+                                review.getRecruit().getTemplate().getGroup() != null ?
+                                review.getRecruit().getTemplate().getGroup().getId() : null)
+                        .groupName(review.getRecruit() != null && review.getRecruit().getTemplate() != null &&
+                                review.getRecruit().getTemplate().getGroup() != null ?
+                                review.getRecruit().getTemplate().getGroup().getGroupName() : "N/A")
+                        .orgId(review.getOrg().getId())
+                        .orgName(review.getOrg().getOrgName())
+                        .images(review.getReviewComments().stream()
+                                .flatMap(c -> c.getReview().getReviewComments().stream()
+                                        .map(comment -> comment.getWriter().getProfileImage()))
+                                .collect(Collectors.toList()))
                         .build())
                 .collect(Collectors.toList());
     }

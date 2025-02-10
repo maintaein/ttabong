@@ -5,11 +5,13 @@ import com.ttabong.dto.sns.request.ReviewCreateRequestDto;
 import com.ttabong.dto.sns.request.ReviewEditRequestDto;
 import com.ttabong.dto.sns.request.ReviewVisibilitySettingRequestDto;
 import com.ttabong.dto.sns.response.*;
+import com.ttabong.dto.user.AuthDto;
 import com.ttabong.service.sns.ReviewService;
 import com.ttabong.util.service.CacheService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -85,6 +87,18 @@ public class ReviewController {
 
         return ResponseEntity.ok(response);
     }
+
+    // 1. 내가 쓴 후기 조회
+    @GetMapping("/mine")
+    public ResponseEntity<List<MyAllReviewPreviewResponseDto>> readMyAllReviews(
+            @AuthenticationPrincipal AuthDto userPrincipal) { // 현재 로그인한 사용자 정보 가져오기
+
+        List<MyAllReviewPreviewResponseDto> response = reviewService.readMyAllReviews(userPrincipal);
+
+        return ResponseEntity.ok(response);
+    }
+
+
 
 //    @GetMapping("recruits/{recruitId}")
 //    public ResponseEntity<?> readRelatedReviews(@PathVariable String recruitId) {

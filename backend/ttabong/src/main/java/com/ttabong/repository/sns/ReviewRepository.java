@@ -25,4 +25,17 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
     """)
     List<Review> findAllReviews(@Param("cursor") Integer cursor, Pageable pageable);
 
+    @Query("""
+        SELECT r FROM Review r
+        LEFT JOIN FETCH r.writer w
+        LEFT JOIN FETCH r.org o
+        LEFT JOIN FETCH r.recruit rec
+        LEFT JOIN FETCH rec.template t
+        LEFT JOIN FETCH t.group g
+        WHERE w.id = :writerId
+        AND r.isDeleted = false
+        ORDER BY r.id DESC
+    """)
+    List<Review> findMyReviews(@Param("writerId") Integer writerId, Pageable pageable);
+
 }
