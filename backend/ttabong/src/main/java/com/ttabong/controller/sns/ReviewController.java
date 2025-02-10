@@ -8,8 +8,8 @@ import com.ttabong.dto.sns.response.*;
 import com.ttabong.dto.user.AuthDto;
 import com.ttabong.service.sns.ReviewService;
 import com.ttabong.util.service.CacheService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -38,9 +38,12 @@ public class ReviewController {
 
     /* 후기 생성 */
     @PostMapping
-    public ResponseEntity<ReviewCreateResponseDto> createReview(@RequestBody ReviewCreateRequestDto requestDto) {
-        ReviewCreateResponseDto response = reviewService.createReview(requestDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    public ResponseEntity<ReviewCreateResponseDto> createReview(
+            @AuthenticationPrincipal AuthDto authDto,  // 현재 로그인한 사용자 정보 가져오기
+            @RequestBody @Valid ReviewCreateRequestDto requestDto) {
+
+        ReviewCreateResponseDto response = reviewService.createReview(authDto, requestDto);
+        return ResponseEntity.ok(response);
     }
 
     //후기수정(presigneed )요청

@@ -51,11 +51,11 @@ public class ReviewServiceImpl implements ReviewService {
     // TODO: parent-review-id 설정하는거 해야함.
     @Transactional
     @Override
-    public ReviewCreateResponseDto createReview(ReviewCreateRequestDto requestDto) {
+    public ReviewCreateResponseDto createReview(AuthDto authDto, ReviewCreateRequestDto requestDto) {
         final Organization organization = organizationRepository.findById(requestDto.getOrgId())
                 .orElseThrow(() -> new RuntimeException("Organization not found"));
 
-        final User writer = userRepository.findById(requestDto.getWriterId())
+        final User writer = userRepository.findById(authDto.getUserId())
                 .orElseThrow(() -> new RuntimeException("Writer not found"));
 
         final Recruit recruit = recruitRepository.findById(requestDto.getRecruitId())
@@ -82,7 +82,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .build();
         reviewRepository.save(review);
 
-        // 1: 미리 10개의 이미지 슬롯 생성 (초기화)
+        // 미리 10개의 이미지 슬롯 생성 (초기화)
         List<ReviewImage> imageSlots = IntStream.range(0, 10)
                 .mapToObj(i -> ReviewImage.builder()
                         .review(review)
@@ -95,7 +95,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .collect(Collectors.toList());
         reviewImageRepository.saveAll(imageSlots); // 미리 저장
 
-        // 2.Presigned URL을 기반으로 실제 객체명(objectPath) 업데이트
+        // presigned URL을 기반으로 실제 객체명(objectPath) 업데이트
         final List<String> uploadedImages = requestDto.getUploadedImages();
         IntStream.range(0, uploadedImages.size()).forEach(i -> {
             final String objectPath = cacheUtil.findObjectPath(uploadedImages.get(i));

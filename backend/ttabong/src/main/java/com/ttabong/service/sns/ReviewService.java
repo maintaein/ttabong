@@ -9,7 +9,7 @@ import com.ttabong.dto.user.AuthDto;
 import java.util.List;
 
 public interface ReviewService {
-    ReviewCreateResponseDto createReview(ReviewCreateRequestDto reviewCreateRequestDto);
+    ReviewCreateResponseDto createReview(AuthDto authDto, ReviewCreateRequestDto requestDto);
     ReviewDeleteResponseDto deleteReview(Integer reviewId);
     ReviewEditStartResponseDto startReviewEdit(Integer reviewId);
     ReviewEditResponseDto updateReview(Integer reviewId, ReviewEditRequestDto requestDto);
