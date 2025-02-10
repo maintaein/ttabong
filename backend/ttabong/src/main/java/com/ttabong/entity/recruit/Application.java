@@ -36,7 +36,7 @@ public class Application {
     @Column(name = "evaluation_done")
     private Boolean evaluationDone;
 
-    @ColumnDefault("0")
+    @ColumnDefault("false")
     @Column(name = "is_deleted")
     private Boolean isDeleted;
 

@@ -1,28 +1,32 @@
 package com.ttabong.jwt;
 
+import com.ttabong.config.JwtProperties;
 import com.ttabong.dto.user.AuthDto;
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.SecretKey;
+import java.util.Base64;
 import java.util.Date;
 
 @Component
 public class JwtProvider {
 
 
-    // JWT를 만들 때 사용하는 '비밀키'
-    private final String secretKey = "mysupersecretkeyasdflkgsalkdjfhlsdkflhashldf"; // 실제로는 안전하게 보관해야 함
+    private final SecretKey secretKey;
+    private final long expiration;
 
-    // JWT의 유효 시간 (예: 30분)
-    private final long validityInMillis = 30 * 60 * 1000L * Integer.MAX_VALUE;
+    public JwtProvider(JwtProperties jwtProperties) {
+        if (jwtProperties.getSecret() == null || jwtProperties.getSecret().isEmpty()) {
+            throw new IllegalArgumentException("not defined a secret key");
+        }
 
-    /**
-     * JWT 생성 메서드
-     *
-     * @param userId   JWT에 포함할 유저 ID
-     * @param userType JWT에 포함할 유저 타입(예: "VOLUNTEER" or "ORGANIZATION")
-     * @return 생성된 토큰 문자열
-     */
+        byte[] keyBytes = Base64.getDecoder().decode(jwtProperties.getSecret());
+        this.secretKey = Keys.hmacShaKeyFor(keyBytes);
+        this.expiration = jwtProperties.getExpiration();
+    }
+
     public String createToken(Long userId, String userType) {
         // 토큰에 담을 정보(Claims)를 구성
         Claims claims = Jwts.claims();
@@ -30,30 +34,35 @@ public class JwtProvider {
         claims.setSubject(userId.toString()); // ✅ sub에 userId 저장
         claims.put("userType", userType); // 토큰에 유저 타입도 같이 넣어둠
 
-        // 현재 시간, 만료 시간 설정
         Date now = new Date();
-        Date expiration = new Date(now.getTime() + validityInMillis);
-        System.out.println(claims.toString());
-        // 토큰을 생성하고 서명함
-        return Jwts.builder()
-                .setClaims(claims)           // 위에서 정의한 내용(유저 ID, 타입 등) 넣기
-                .setIssuedAt(now)            // 토큰 발행 시각
-                .setExpiration(expiration)   // 토큰 만료 시각
-                .signWith(SignatureAlgorithm.HS256, secretKey) // 어떤 알고리즘으로 서명할지 + 비밀키
+        Date expiration = new Date(now.getTime() + this.expiration);
+
+        String token = Jwts.builder()
+                .setClaims(claims)
+                .setIssuedAt(now)
+                .setExpiration(expiration)
+                .signWith(secretKey, SignatureAlgorithm.HS256)
                 .compact();
+
+        System.out.println("success created JWT access token~~  ");
+        return token;
     }
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
-            return true; // 유효한 토큰
+            Jwts.parserBuilder()
+                    .setSigningKey(secretKey)
+                    .build()
+                    .parseClaimsJws(token);
+            return true;
         } catch (ExpiredJwtException e) {
-            System.out.println("토큰이 만료됨");
-        } catch (JwtException e) {
-            System.out.println("유효하지 않은 토큰");
+            System.out.println("만료된 토큰입니다.");
+        } catch (JwtException | IllegalArgumentException e) {
+            System.out.println("유효하지 않은 토큰입니다.");
         }
-        return false; // 유효하지 않은 토큰
+        return false;
     }
+
 
     public Claims getClaims(String token) {
         return Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token).getBody();
