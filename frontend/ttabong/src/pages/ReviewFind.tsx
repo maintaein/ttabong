@@ -1,3 +1,4 @@
+import React from 'react';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useReviewStore } from '@/stores/reviewStore';
@@ -7,7 +8,7 @@ import { ReviewGalleryGrid } from '@/pages/ReviewFind/components/ReviewGalleryGr
 import { PageLayout } from '@/layout/PageLayout';
 import { PageLoading } from '@/components/Loading';
 
-export default function ReviewFind() {
+const ReviewFind: React.FC = () => {
   const navigate = useNavigate();
   const { reviews, isLoading, error, fetchReviews } = useReviewStore();
 
@@ -40,4 +41,6 @@ export default function ReviewFind() {
       </div>
     </PageLayout>
   );
-}
+};
+
+export default ReviewFind;

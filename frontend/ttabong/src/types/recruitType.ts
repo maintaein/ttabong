@@ -15,6 +15,8 @@ interface Template {
   isDeleted: boolean;
   createdAt: string;
   group: Group;
+  images?: string[];
+  volunteerField?: string[];
 }
 
 export interface Recruit {
@@ -55,4 +57,37 @@ export interface UpdateRecruitRequest {
   activityTime?: string;
   maxVolunteer?: number;
   status?: 'RECRUITING' | 'CLOSED';
+}
+
+export interface OrgRecruit {
+  group: {
+    groupId: number;
+    groupName: string;
+  };
+  template: {
+    templateId: number;
+    title: string;
+    description: string;
+    activityLocation: string;
+    volunteerTypes: string[];
+    contactName: string;
+    contactPhone: string;
+    images?: string[];
+    volunteerField?: string[];
+  };
+  recruit: {
+    recruitId: number;
+    status: '모집중' | '모집마감' | '활동완료';
+    maxVolunteer: number;
+    participateVolCount: number;
+    activityDate: string;
+    activityStart: number;
+    activityEnd: number;
+    deadline: string;
+    createdAt: string;
+  };
+}
+
+export interface OrgRecruitsResponse {
+  recruits: OrgRecruit[];
 } 
