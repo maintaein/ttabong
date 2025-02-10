@@ -37,7 +37,7 @@ public class ReadAvailableRecruitsResponseDto {
         private String title;
         private String activityLocation;
         private String status;
-        private String imageId;
+        private String imageUrl;
         private String contactName;
         private String contactPhone;
         private String description;

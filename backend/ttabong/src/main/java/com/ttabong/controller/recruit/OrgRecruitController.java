@@ -3,8 +3,10 @@ package com.ttabong.controller.recruit;
 import com.ttabong.dto.recruit.requestDto.org.*;
 import com.ttabong.dto.recruit.responseDto.org.*;
 import com.ttabong.service.recruit.OrgRecruitService;
+import com.ttabong.util.service.CacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +18,7 @@ import java.util.List;
 @Slf4j
 public class OrgRecruitController {
     private final OrgRecruitService orgRecruitService;
+    private final CacheService cacheService;
 
     //1. 메인페이지
     @GetMapping("/templates/available")
@@ -117,10 +120,21 @@ public class OrgRecruitController {
     }
 
     //11 공고 _ 템플릿 생성
-    @PostMapping("/templates")
+    @PostMapping(value = "/templates", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CreateTemplateResponseDto> createTemplate(@RequestBody CreateTemplateRequestDto createTemplateDto) {
-
         CreateTemplateResponseDto response = orgRecruitService.createTemplate(createTemplateDto);
+        return ResponseEntity.ok().body(response);
+    }
+
+    //11-1 minio Presigned URL 발급 API
+    @GetMapping("/templates/presigned")
+    public ResponseEntity<CreateTemplateResponseDto> generatePresignedUrls() throws Exception {
+        List<String> presignedUrls = cacheService.generatePresignedUrlsForTemplate();
+
+        CreateTemplateResponseDto response =  CreateTemplateResponseDto.builder()
+                .message("Presigned URL 생성 완료")
+                .images(presignedUrls)
+                .build();
 
         return ResponseEntity.ok().body(response);
     }
