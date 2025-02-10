@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { ReviewGalleryGrid } from '@/pages/ReviewFind/components/ReviewGalleryGrid';
 import { PageLayout } from '@/layout/PageLayout';
+import { PageLoading } from '@/components/Loading';
 
 export default function ReviewFind() {
   const navigate = useNavigate();
@@ -18,8 +19,8 @@ export default function ReviewFind() {
     navigate(`/review-find/${reviewId}`);
   };
 
-  if (isLoading) return <div className="flex justify-center items-center h-[50vh]">로딩 중...</div>;
-  if (error) return <div className="flex justify-center items-center h-[50vh] text-destructive">{error}</div>;
+  if (isLoading) return <PageLoading />;
+  if (error) return <div className="flex justify-center items-center h-[calc(100vh-112px)] text-destructive">{error}</div>;
 
   return (
     <PageLayout>

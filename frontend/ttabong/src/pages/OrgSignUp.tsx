@@ -29,7 +29,8 @@ const orgSignUpSchema = z.object({
     .max(50, '이메일은 50자 이하여야 합니다'),
   name: z.string()
     .min(2, '이름은 2자 이상이어야 합니다')
-    .max(50, '이름은 50자 이하여야 합니다'),
+    .max(50, '이름은 50자 이하여야 합니다')
+    .regex(/^[가-힣a-zA-Z\s]+$/, '이름에는 한글과 영문만 입력 가능합니다'),
   password: z.string()
     .min(8, '비밀번호는 8자 이상이어야 합니다')
     .max(20, '비밀번호는 20자 이하여야 합니다'),
@@ -39,10 +40,12 @@ const orgSignUpSchema = z.object({
     .regex(/^\d{3}-\d{2}-\d{5}$/, '올바른 사업자등록번호 형식이 아닙니다 (예: 123-45-67890)'),
   orgName: z.string()
     .min(2, '기관명은 2자 이상이어야 합니다')
-    .max(100, '기관명은 100자 이하여야 합니다'),
+    .max(100, '기관명은 100자 이하여야 합니다')
+    .regex(/^(?!\d+$)[가-힣a-zA-Z0-9\s]+$/, '기관명에는 한글, 영문, 숫자를 포함할 수 있으나 숫자로만 이루어질 수 없습니다'),
   representativeName: z.string()
     .min(2, '대표자명은 2자 이상이어야 합니다')
-    .max(50, '대표자명은 50자 이하여야 합니다'),
+    .max(50, '대표자명은 50자 이하여야 합니다')
+    .regex(/^[가-힣a-zA-Z\s]+$/, '대표자명에는 한글과 영문만 입력 가능합니다'),
   orgAddress: z.string()
     .min(5, '주소는 5자 이상이어야 합니다')
     .max(200, '주소는 200자 이하여야 합니다'),
@@ -74,6 +77,12 @@ export default function OrgSignUp() {
       navigate('/login', { state: { userType: 'organization' } });
     } catch (error) {
       // 에러는 store에서 처리됨
+    }
+  };
+
+  const preventNumbers = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (/^\d$/.test(e.key) && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault();
     }
   };
 
@@ -123,6 +132,7 @@ export default function OrgSignUp() {
                       placeholder="담당자 이름을 입력하세요" 
                       {...field} 
                       maxLength={50}
+                      onKeyPress={preventNumbers}
                     />
                   </FormControl>
                   <FormMessage />

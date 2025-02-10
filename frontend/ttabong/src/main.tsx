@@ -9,7 +9,10 @@ async function enableMocking() {
   if (process.env.NODE_ENV === 'development') {
     const { worker } = await import('./mocks/browser');
     return worker.start({
-      onUnhandledRequest: 'bypass',
+      onUnhandledRequest: 'warn',
+      serviceWorker: {
+        url: '/mockServiceWorker.js',
+      },
     });
   }
 }

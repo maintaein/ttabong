@@ -27,7 +27,8 @@ const signUpSchema = z.object({
     .max(50, '이메일은 50자 이하여야 합니다'),
   name: z.string()
     .min(2, '이름은 2자 이상이어야 합니다')
-    .max(50, '이름은 50자 이하여야 합니다'),
+    .max(50, '이름은 50자 이하여야 합니다')
+    .regex(/^[가-힣a-zA-Z\s]+$/, '이름에는 한글과 영문만 입력 가능합니다'),
   password: z.string()
     .min(8, '비밀번호는 8자 이상이어야 합니다')
     .max(20, '비밀번호는 20자 이하여야 합니다'),
@@ -92,6 +93,12 @@ export default function SignUp() {
     }
   };
 
+  const preventNumbers = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (/^\d$/.test(e.key) && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault();
+    }
+  };
+
   return (
     <div className="container max-w-md mx-auto px-4 py-8">
       <div className="space-y-6">
@@ -138,6 +145,7 @@ export default function SignUp() {
                       placeholder="이름을 입력하세요" 
                       {...field} 
                       maxLength={50}
+                      onKeyPress={preventNumbers}
                     />
                   </FormControl>
                   <FormMessage />
