@@ -2,6 +2,7 @@ package com.ttabong.controller.sns;
 
 import com.ttabong.dto.sns.request.CommentCreateAndUpdateRequestDto;
 import com.ttabong.dto.sns.response.CommentCreateAndUpdateResponseDto;
+import com.ttabong.dto.sns.response.CommentDeleteResponseDto;
 import com.ttabong.dto.user.AuthDto;
 import com.ttabong.service.sns.CommentService;
 import jakarta.validation.Valid;
@@ -39,7 +40,15 @@ public class CommentController {
         return ResponseEntity.ok(response);
     }
 
+    //삭제
+    @PatchMapping("/{commentId}/delete")
+    public ResponseEntity<CommentDeleteResponseDto> deleteComment(
+            @AuthenticationPrincipal AuthDto authDto,
+            @PathVariable(name = "commentId") Integer commentId) {
 
+        CommentDeleteResponseDto response = commentService.deleteComment(authDto, commentId);
+        return ResponseEntity.ok(response);
+    }
 
 }
 

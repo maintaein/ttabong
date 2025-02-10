@@ -2,6 +2,7 @@ package com.ttabong.service.sns;
 
 import com.ttabong.dto.sns.request.CommentCreateAndUpdateRequestDto;
 import com.ttabong.dto.sns.response.CommentCreateAndUpdateResponseDto;
+import com.ttabong.dto.sns.response.CommentDeleteResponseDto;
 import com.ttabong.dto.user.AuthDto;
 import com.ttabong.entity.sns.Review;
 import com.ttabong.entity.sns.ReviewComment;
@@ -86,6 +87,26 @@ public class CommentServiceImpl implements CommentService{
                 .updatedAt(existingComment.getUpdatedAt().atZone(java.time.ZoneId.of("Asia/Seoul")).toLocalDateTime())
                 .build();
     }
+
+    @Transactional
+    @Override
+    public CommentDeleteResponseDto deleteComment(AuthDto authDto, Integer commentId) {
+
+        ReviewComment existingComment = reviewCommentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("댓글 없음"));
+        
+        if (!existingComment.getWriter().getId().equals(authDto.getUserId())) {
+            throw new RuntimeException("댓글 삭제 권한 없습니다");
+        }
+        
+        existingComment.markDeleted();
+
+        return CommentDeleteResponseDto.builder()
+                .message("댓글 삭제 성공")
+                .commentId(existingComment.getId())
+                .build();
+    }
+
 
 
 }
