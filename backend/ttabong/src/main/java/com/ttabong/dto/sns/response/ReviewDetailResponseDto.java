@@ -9,9 +9,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/*
- * 2. 후기 _ 후기 상세 조회 (개별 조회)
- * */
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -27,41 +24,87 @@ public class ReviewDetailResponseDto {
     private List<String> images;
 
     // 공고 정보
-    private Integer recruitId;
-    private LocalDate activityDate;
-    private Double activityStart;
-    private Double activityEnd;
-    private String status;
+    private RecruitDto recruit;
 
     // 카테고리 정보
-    private Integer categoryId;
-    private String categoryName;
+    private CategoryDto category;
 
     // 작성자 정보
-    private Integer writerId;
-    private String writerName;
-    private String writerEmail;
-    private String writerProfileImage;
+    private WriterDto writer;
 
-    // 템플릿 정보
-    private Integer templateId;
-    private String templateTitle;
-    private String activityLocation;
-    private String templateStatus;
-
-    // 그룹 정보 (템플릿 내부)
-    private Integer groupId;
-    private String groupName;
+    // 템플릿 정보 (그룹 포함)
+    private TemplateDto template;
 
     // 기관 정보
-    private Integer orgId;
-    private String orgName;
+    private OrganizationDto organization;
 
     // 부모 후기 ID (nullable)
     private Integer parentReviewId;
 
     // 댓글 정보
     private List<CommentDto> comments;
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class RecruitDto {
+        private Integer recruitId;
+        private LocalDate activityDate;
+        private Double activityStart;
+        private Double activityEnd;
+        private String status;
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class CategoryDto {
+        private Integer categoryId;
+        private String name;
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class WriterDto {
+        private Integer writerId;
+        private String writerName;
+        private String writerEmail;
+        private String writerProfileImage;
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class TemplateDto {
+        private Integer templateId;
+        private String title;
+        private String activityLocation;
+        private String status;
+        private GroupDto group;
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class GroupDto {
+        private Integer groupId;
+        private String groupName;
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class OrganizationDto {
+        private Integer orgId;
+        private String orgName;
+    }
 
     @Getter
     @NoArgsConstructor

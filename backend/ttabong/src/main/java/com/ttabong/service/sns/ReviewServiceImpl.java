@@ -5,8 +5,10 @@ import com.ttabong.dto.sns.request.ReviewEditRequestDto;
 import com.ttabong.dto.sns.request.ReviewVisibilitySettingRequestDto;
 import com.ttabong.dto.sns.response.*;
 import com.ttabong.dto.user.AuthDto;
+import com.ttabong.entity.recruit.Category;
 import com.ttabong.entity.recruit.Recruit;
 import com.ttabong.entity.recruit.Template;
+import com.ttabong.entity.recruit.TemplateGroup;
 import com.ttabong.entity.sns.Review;
 import com.ttabong.entity.sns.ReviewImage;
 import com.ttabong.entity.user.Organization;
@@ -366,6 +368,91 @@ public class ReviewServiceImpl implements ReviewService {
                         .build())
                 .collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    @Override
+    public ReviewDetailResponseDto detailReview(Integer reviewId) {
+        // 리뷰 조회 (없으면 예외 발생)
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new RuntimeException("해당 후기를 찾을 수 없습니다. reviewId: " + reviewId));
+
+        // 작성자 정보 조회
+        User writer = review.getWriter();
+
+        // 공고 정보 (Recruit)
+        Recruit recruit = review.getRecruit();
+
+        // 템플릿 정보
+        Template template = (recruit != null) ? recruit.getTemplate() : null;
+        TemplateGroup group = (template != null) ? template.getGroup() : null;
+
+        // 카테고리 정보
+        Category category = (template != null) ? template.getCategory() : null;
+
+        // 기관 정보
+        Organization organization = review.getOrg();
+
+        // 이미지 리스트
+        List<String> imageUrls = review.getReviewComments().stream()
+                .flatMap(comment -> comment.getReview().getReviewComments().stream()
+                        .map(c -> c.getWriter().getProfileImage()))
+                .collect(Collectors.toList());
+
+        // 댓글 리스트
+        List<ReviewDetailResponseDto.CommentDto> comments = review.getReviewComments().stream()
+                .map(comment -> ReviewDetailResponseDto.CommentDto.builder()
+                        .commentId(comment.getId())
+                        .writerId(comment.getWriter().getId())
+                        .writerName(comment.getWriter().getName())
+                        .content(comment.getContent())
+                        .createdAt(comment.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                        .build())
+                .collect(Collectors.toList());
+
+        return ReviewDetailResponseDto.builder()
+                .reviewId(review.getId())
+                .title(review.getTitle())
+                .content(review.getContent())
+                .isPublic(review.getIsPublic())
+                .attended(true) // 참석 여부 확인 로직 추가 가능
+                .createdAt(review.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                .images(imageUrls)
+                .recruit(recruit != null ? ReviewDetailResponseDto.RecruitDto.builder()
+                        .recruitId(recruit.getId())
+                        .activityDate(recruit.getActivityDate().toInstant().atZone(ZoneId.of("Asia/Seoul")).toLocalDate())
+                        .activityStart(recruit.getActivityStart().doubleValue())
+                        .activityEnd(recruit.getActivityEnd().doubleValue())
+                        .status(recruit.getStatus())
+                        .build() : null)
+                .category(category != null ? ReviewDetailResponseDto.CategoryDto.builder()
+                        .categoryId(category.getId())
+                        .name(category.getName())
+                        .build() : null)
+                .writer(ReviewDetailResponseDto.WriterDto.builder()
+                        .writerId(writer.getId())
+                        .writerName(writer.getName())
+                        .writerEmail(writer.getEmail())
+                        .writerProfileImage(writer.getProfileImage())
+                        .build())
+                .template(template != null ? ReviewDetailResponseDto.TemplateDto.builder()
+                        .templateId(template.getId())
+                        .title(template.getTitle())
+                        .activityLocation(template.getActivityLocation())
+                        .status(template.getStatus())
+                        .group(group != null ? ReviewDetailResponseDto.GroupDto.builder()
+                                .groupId(group.getId())
+                                .groupName(group.getGroupName())
+                                .build() : null)
+                        .build() : null)
+                .organization(organization != null ? ReviewDetailResponseDto.OrganizationDto.builder()
+                        .orgId(organization.getId())
+                        .orgName(organization.getOrgName())
+                        .build() : null)
+                .parentReviewId(review.getParentReview() != null ? review.getParentReview().getId() : null)
+                .comments(comments)
+                .build();
+    }
+
 
 
 }

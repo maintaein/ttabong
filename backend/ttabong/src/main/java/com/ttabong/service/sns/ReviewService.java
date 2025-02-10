@@ -16,4 +16,6 @@ public interface ReviewService {
     ReviewVisibilitySettingResponseDto updateVisibility(Integer reviewId, ReviewVisibilitySettingRequestDto requestDto);
     List<AllReviewPreviewResponseDto> readAllReviews(Integer reviewId, Integer limit);
     List<MyAllReviewPreviewResponseDto> readMyAllReviews(AuthDto authDto);
+
+    ReviewDetailResponseDto detailReview(Integer reviewId);
 }

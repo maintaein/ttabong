@@ -101,6 +101,14 @@ public class ReviewController {
         return ResponseEntity.ok(response);
     }
 
+    // 2. 해당 후기 상세 조회
+    @GetMapping("/{reviewId}")
+    public ResponseEntity<ReviewDetailResponseDto> detailReview(
+            @PathVariable(name = "reviewId") Integer reviewId) {
+        ReviewDetailResponseDto response = reviewService.detailReview(reviewId);
+        return ResponseEntity.ok(response);
+    }
+
 
 
 //    @GetMapping("recruits/{recruitId}")
