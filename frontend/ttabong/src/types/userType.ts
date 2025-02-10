@@ -93,3 +93,20 @@ export interface UpdateOrganizationRequest {
 export interface UserWithOrganization extends UserResponse {
   organization: Organization;
 }
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+  userType: 'volunteer' | 'organization';
+}
+
+export interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
+  userType: 'volunteer' | 'organization';
+  message: string;
+}
+
+export interface VolunteerRegisterRequest extends CreateUserRequest, Partial<CreateVolunteerRequest> {}
+
+export interface OrganizationRegisterRequest extends CreateUserRequest, CreateOrganizationRequest {}

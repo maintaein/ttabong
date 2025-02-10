@@ -1,4 +1,3 @@
-import { OrgRecruit } from '@/types/recruitType';
 import { http, HttpResponse } from 'msw';
 
 // 리뷰 목록 데이터
@@ -135,74 +134,39 @@ function generateRecruitReviews(recruitId: number) {
   }));
 }
 
-interface ReviewSubmission {
-  title: string;
-  content: string;
-  recruitId: number;
-  images?: string[];
-}
+const BASE_URL = 'http://localhost:8080';
 
-interface MockTemplate {
-  templateId: number;
-  groupId: number;
-  createdAt: string;
-  title?: string;
-  description?: string;
-  images?: string[];
-  volunteerTypes?: string[];
-  volunteerCount?: number;
-  activityLocation?: string;
-  contactName?: string;
-  contactPhone?: string;
-  startDate?: string;
-  endDate?: string;
-  volunteerDate?: string;
-  startTime?: string;
-  endTime?: string;
-  volunteerField?: string[];
-  locationType?: string;
-}
-
-// 임시 데이터 저장소
-let mockGroups = [
-  {
-    groupId: 1,
-    groupName: "봉사 그룹1",
-    templates: [] as MockTemplate[]
-  },
-  {
-    groupId: 2,
-    groupName: "봉사 그룹2",
-    templates: [] as MockTemplate[]
-  }
-];
-
-const mockRecruits: OrgRecruit[] = [];
+const corsHeaders = {
+  'Content-Type': 'application/json',
+  'Access-Control-Allow-Credentials': 'true',
+  'Access-Control-Allow-Origin': 'http://localhost:5173', // 프론트엔드 도메인
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
 
 export const handlers = [
+  // CORS Preflight 처리
+  http.options(`${BASE_URL}/*`, () => {
+    return new HttpResponse(null, { headers: corsHeaders });
+  }),
+
   // 리뷰 목록 조회
-  http.get('/api/reviews', () => {
+  http.get(`${BASE_URL}/api/reviews`, () => {
     return new HttpResponse(JSON.stringify(reviews), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
+      headers: corsHeaders,
     });
   }),
 
   // 리뷰 상세 조회
-  http.get('/api/reviews/:id', ({ params }) => {
+  http.get(`${BASE_URL}/api/reviews/:id`, ({ params }) => {
     const { id } = params;
     return new HttpResponse(JSON.stringify(generateReviewDetail(Number(id))), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
+      headers: corsHeaders,
     });
   }),
 
   // 댓글 작성
-  http.post('/api/reviews/:id/comments', async ({ request }) => {
+  http.post(`${BASE_URL}/api/reviews/:id/comments`, async ({ request }) => {
     const { content } = await request.json() as { content: string };
     return new HttpResponse(JSON.stringify({
       commentId: Math.floor(Math.random() * 1000),
@@ -212,32 +176,18 @@ export const handlers = [
       createdAt: new Date().toISOString()
     }), {
       status: 201,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
+      headers: corsHeaders,
     });
   }),
 
   // 봉사활동별 리뷰 목록 조회
-  http.get('/api/recruits/:recruitId/reviews', ({ params }) => {
+  http.get(`${BASE_URL}/api/recruits/:recruitId/reviews`, ({ params }) => {
     const { recruitId } = params;
-    return HttpResponse.json(generateRecruitReviews(Number(recruitId)));
-  }),
-
-  // CORS Preflight 처리
-  http.options('*', () => {
-    return new HttpResponse(null, {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      },
-    });
+    return HttpResponse.json(generateRecruitReviews(Number(recruitId)), { headers: corsHeaders });
   }),
 
   // 내 봉사활동 목록 조회
-  http.get('/api/applications/mine', () => {
+  http.get(`${BASE_URL}/api/applications/mine`, () => {
     return HttpResponse.json([
       {
         applicationId: 55,
@@ -307,347 +257,79 @@ export const handlers = [
           createdAt: "2024-02-10T16:45:00"
         }
       }
-    ]);
+    ], { headers: corsHeaders });
   }),
 
   // 리뷰 작성 API
-  http.post('/api/reviews', async ({ request }) => {
-    const reviewData = await request.json() as ReviewSubmission;
+  http.post(`${BASE_URL}/api/reviews`, async ({ request }) => {
+    const reviewData = await request.json() as Record<string, any>;
     return HttpResponse.json({
       reviewId: Math.random(),
       ...reviewData
-    }, { status: 201 });
+    }, { status: 201, headers: corsHeaders });
   }),
 
-  // 그룹 목록 조회
-  http.get('/api/org/templates', () => {
-    return HttpResponse.json({
-      groups: mockGroups
-    });
-  }),
-
-  // 그룹 생성
-  http.post('/api/org/groups', async ({ request }) => {
-    const { groupName } = await request.json() as { groupName: string };
-    const newGroup = {
-      groupId: Date.now(),
-      groupName,
-      templates: []
-    };
-    mockGroups.push(newGroup);
-    
-    return HttpResponse.json({
-      message: "그룹 생성 성공",
-      groupId: newGroup.groupId
-    }, { status: 201 });
-  }),
-
-  // 그룹 삭제
-  http.patch('/api/org/groups/delete', async ({ request }) => {
-    const { groupId } = await request.json() as { groupId: number; orgId: number };
-    mockGroups = mockGroups.filter(group => group.groupId !== groupId);
-    
-    return HttpResponse.json({
-      message: "삭제 성공",
-      groupId
-    });
-  }),
-
-  // 템플릿 생성
-  http.post('/api/org/templates', async ({ request }) => {
-    const templateData = await request.json() as MockTemplate;
-    const targetGroup = mockGroups.find(g => g.groupId === templateData.groupId);
-    
-    if (targetGroup) {
-      const newTemplate = {
-        templateId: Date.now(),
-        groupId: templateData.groupId,
-        title: templateData.title,
-        description: templateData.description,
-        images: templateData.images || [],
-        volunteerTypes: templateData.volunteerTypes || [],
-        volunteerCount: templateData.volunteerCount || 10,
-        activityLocation: templateData.locationType,
-        contactName: templateData.contactName,
-        contactPhone: templateData.contactPhone,
-        volunteerField: templateData.volunteerField || [],
-        startDate: templateData.startDate,
-        endDate: templateData.endDate,
-        volunteerDate: templateData.volunteerDate,
-        startTime: templateData.startTime,
-        endTime: templateData.endTime,
-        createdAt: new Date().toISOString()
-      };
-      
-      targetGroup.templates.push(newTemplate);
-      
-      return HttpResponse.json({
-        message: "템플릿 생성 성공",
-        templateId: newTemplate.templateId
-      }, { status: 201 });
-    }
-    
-    return HttpResponse.json({
-      message: "그룹을 찾을 수 없습니다."
-    }, { status: 404 });
-  }),
-
-  // 템플릿 수정
-  http.patch('/api/org/templates/:templateId', async ({ params, request }) => {
-    const templateId = Number(params.templateId);
-    const templateData = await request.json() as MockTemplate;
-    
-    for (const group of mockGroups) {
-      const template = group.templates.find(t => t.templateId === templateId);
-      if (template) {
-        Object.assign(template, {
-          groupId: templateData.groupId,
-          title: templateData.title,
-          description: templateData.description,
-          images: templateData.images || [],
-          volunteerTypes: templateData.volunteerTypes || [],
-          volunteerCount: templateData.volunteerCount || 10,
-          activityLocation: templateData.locationType,
-          contactName: templateData.contactName,
-          contactPhone: templateData.contactPhone,
-          volunteerField: templateData.volunteerField || [],
-          startDate: templateData.startDate,
-          endDate: templateData.endDate,
-          volunteerDate: templateData.volunteerDate,
-          startTime: templateData.startTime,
-          endTime: templateData.endTime
-        });
-        return HttpResponse.json({
-          message: "템플릿 수정 성공",
-          templateId
-        });
-      }
-    }
-    
-    return HttpResponse.json({
-      message: "템플릿을 찾을 수 없습니다."
-    }, { status: 404 });
-  }),
-
-  // 템플릿 상세 조회
-  http.get('/api/org/templates/:templateId', ({ params }) => {
-    const templateId = Number(params.templateId);
-    for (const group of mockGroups) {
-      const template = group.templates.find(t => t.templateId === templateId);
-      if (template) {
-        return HttpResponse.json(template);
-      }
-    }
-    return HttpResponse.json({ message: "템플릿을 찾을 수 없습니다." }, { status: 404 });
-  }),
-
-  // 템플릿 삭제
-  http.delete('/api/org/templates/:templateId', async ({ params }) => {
-    const templateId = Number(params.templateId);
-    
-    for (const group of mockGroups) {
-      const templateIndex = group.templates.findIndex(t => t.templateId === templateId);
-      if (templateIndex !== -1) {
-        group.templates.splice(templateIndex, 1);
-        return HttpResponse.json({
-          message: "템플릿 삭제 성공",
-          templateId
-        });
-      }
-    }
-    
-    return HttpResponse.json({
-      message: "템플릿을 찾을 수 없습니다."
-    }, { status: 404 });
-  }),
-
-  // 공고 생성
-  http.post('/api/org/recruits', async ({ request }) => {
-    const data = await request.json() as {
-      templateId: number;
-      deadline: string;
-      activityDate: string;
-      activityStart: number;
-      activityEnd: number;
-      maxVolunteer: number;
-    };
-    console.log('Creating recruit with template:', findTemplateById(data.templateId));
-    console.log('Creating recruit with group:', findGroupByTemplateId(data.templateId));
-    
-    const template = findTemplateById(data.templateId);
-    const group = findGroupByTemplateId(data.templateId);
-    
-    if (!template || !group) {
-      return HttpResponse.json(
-        { message: "템플릿 또는 그룹을 찾을 수 없습니다." },
-        { status: 404 }
-      );
-    }
-    
-    // 새 공고 생성
-    const newRecruit: OrgRecruit = {
-      group: {
-        groupId: group.groupId,
-        groupName: group.groupName
-      },
-      template: {
-        templateId: data.templateId,
-        title: template.title || '',
-        description: template.description || '',
-        activityLocation: template.activityLocation || '',
-        volunteerTypes: template.volunteerTypes || [],
-        contactName: template.contactName || '',
-        contactPhone: template.contactPhone || '',
-        images: template.images || [],
-        volunteerField: template.volunteerField || []
-      },
-      recruit: {
-        recruitId: Date.now(),
-        status: '모집중',
-        maxVolunteer: data.maxVolunteer,
-        participateVolCount: 0,
-        activityDate: data.activityDate,
-        activityStart: data.activityStart,
-        activityEnd: data.activityEnd,
-        deadline: data.deadline,
-        createdAt: new Date().toISOString()
-      }
+  // 로그인 API
+  http.post(`${BASE_URL}/api/user/login`, async ({ request }) => {
+    const { email, password, userType } = await request.json() as {
+      email: string;
+      password: string;
+      userType: 'volunteer' | 'organization';
     };
 
-    console.log('New recruit created:', newRecruit);
-    mockRecruits.push(newRecruit);
-    console.log('Current mockRecruits:', mockRecruits);
-    
-    return new HttpResponse(
-      JSON.stringify({
-        message: "공고 생성 완료",
-        recruitId: newRecruit.recruit.recruitId
-      }), 
-      {
-        status: 201,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      }
-    );
-  }),
-
-  // 기관 공고 목록 조회
-  http.get('/api/org/recruits', () => {
-    return HttpResponse.json({
-      recruits: mockRecruits // mockRecruits 배열 필요
-    });
-  }),
-
-  // 공고 삭제
-  http.patch('/api/org/recruits/delete', async ({ request }) => {
-    const { deletedRecruits } = await request.json() as { deletedRecruits: number };
-    
-    const index = mockRecruits.findIndex(
-      recruit => recruit.recruit.recruitId === deletedRecruits
-    );
-    
-    if (index !== -1) {
-      mockRecruits.splice(index, 1);
-      return HttpResponse.json({
-        message: "삭제 성공",
-        deletedRecruits
-      });
+    // 간단한 검증
+    if (!email || !password) {
+      return HttpResponse.json({ 
+        message: '이메일과 비밀번호를 입력해주세요.' 
+      }, { status: 400, headers: corsHeaders });
     }
-    
-    return HttpResponse.json({ message: "공고를 찾을 수 없습니다." }, { status: 404 });
-  }),
-
-  // 공고 수정
-  http.patch('/org/recruits/:recruitId', async ({ params, request }) => {
-    const recruitId = Number(params.recruitId);
-    const data = await request.json() as {
-      deadline?: string;
-      activityDate?: string;
-      activityStart?: number;
-      activityEnd?: number;
-      maxVolunteer?: number;
-      images?: string[];
-      imageCount?: number;
-    };
-    
-    const recruitIndex = mockRecruits.findIndex(
-      recruit => recruit.recruit.recruitId === recruitId
-    );
-    
-    if (recruitIndex === -1) {
-      return HttpResponse.json(
-        { message: "공고를 찾을 수 없습니다." }, 
-        { status: 404 }
-      );
-    }
-
-    // 기존 공고 데이터 업데이트
-    const updatedRecruit = mockRecruits[recruitIndex];
-    Object.assign(updatedRecruit.recruit, {
-      deadline: data.deadline || updatedRecruit.recruit.deadline,
-      activityDate: data.activityDate || updatedRecruit.recruit.activityDate,
-      activityStart: data.activityStart ?? updatedRecruit.recruit.activityStart,
-      activityEnd: data.activityEnd ?? updatedRecruit.recruit.activityEnd,
-      maxVolunteer: data.maxVolunteer ?? updatedRecruit.recruit.maxVolunteer
-    });
-
-    mockRecruits[recruitIndex] = updatedRecruit;
 
     return HttpResponse.json({
-      message: "수정 성공",
-      recruitId
+      accessToken: 'mock_access_token',
+      refreshToken: 'mock_refresh_token',
+      userType,
+      message: '로그인에 성공했습니다.'
+    }, { 
+      status: 200,
+      headers: corsHeaders
     });
   }),
 
-  // 공고 상세 조회
-  http.get('/org/recruits/:recruitId', ({ params }) => {
-    const recruitId = Number(params.recruitId);
-    console.log('Searching for recruitId:', recruitId);
-    console.log('Available recruits:', mockRecruits);
-    console.log('mockRecruits type:', typeof mockRecruits);
-    console.log('mockRecruits length:', mockRecruits.length);
-    const recruit = mockRecruits.find(r => r.recruit.recruitId === recruitId);
+  // 봉사자 회원가입 API
+  http.post(`${BASE_URL}/api/volunteer/register`, async ({ request }) => {
+    const data = await request.json() as { email: string };
     
-    console.log('Found recruit:', recruit);
-    if (recruit) {
-      console.log('Recruit structure:', {
-        hasGroup: !!recruit.group,
-        hasTemplate: !!recruit.template,
-        hasRecruit: !!recruit.recruit,
-      });
-    }
-    
-    if (!recruit) {
-      return HttpResponse.json(
-        { message: "공고를 찾을 수 없습니다." }, 
-        { status: 404 }
-      );
+    if (!data.email) {
+      return HttpResponse.json({ 
+        message: '필수 정보가 누락되었습니다.' 
+      }, { status: 400, headers: corsHeaders });
     }
 
-    return new HttpResponse(JSON.stringify(recruit), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
+    return HttpResponse.json({
+      message: '회원가입이 완료되었습니다.',
+      data: { email: data.email }
+    }, { 
+      status: 201,
+      headers: corsHeaders
     });
   }),
-];
 
-function findGroupByTemplateId(templateId: number) {
-  for (const group of mockGroups) {
-    if (group.templates.some(t => t.templateId === templateId)) {
-      return group;
+  // 기관 회원가입 API
+  http.post(`${BASE_URL}/api/org/register`, async ({ request }) => {
+    const data = await request.json() as { email: string; orgName: string };
+    
+    if (!data.email || !data.orgName) {
+      return HttpResponse.json({ 
+        message: '필수 정보가 누락되었습니다.' 
+      }, { status: 400, headers: corsHeaders });
     }
-  }
-  return null;
-}
 
-function findTemplateById(templateId: number) {
-  for (const group of mockGroups) {
-    const template = group.templates.find(t => t.templateId === templateId);
-    if (template) return template;
-  }
-  return null;
-} 
+    return HttpResponse.json({
+      message: '기관 회원가입이 완료되었습니다.',
+      data: { email: data.email, orgName: data.orgName }
+    }, { 
+      status: 201,
+      headers: corsHeaders
+    });
+  })
+]; 
