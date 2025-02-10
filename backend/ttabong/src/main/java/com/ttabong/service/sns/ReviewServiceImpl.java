@@ -453,6 +453,43 @@ public class ReviewServiceImpl implements ReviewService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public List<RecruitReviewResponseDto> recruitReview(Integer recruitId) {
+        List<Review> reviews = reviewRepository.findByRecruitId(recruitId);
+
+        return reviews.stream()
+                .map(review -> RecruitReviewResponseDto.builder()
+                        .review(RecruitReviewResponseDto.ReviewDto.builder()
+                                .reviewId(review.getId())
+                                .recruitId(review.getRecruit().getId())
+                                .title(review.getTitle())
+                                .content(review.getContent())
+                                .isDeleted(review.getIsDeleted())
+                                .updatedAt(review.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                                .createdAt(review.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                                .build())
+                        .writer(RecruitReviewResponseDto.WriterDto.builder()
+                                .writerId(review.getWriter().getId())
+                                .name(review.getWriter().getName())
+                                .build())
+                        .group(review.getRecruit().getTemplate() != null && review.getRecruit().getTemplate().getGroup() != null ?
+                                RecruitReviewResponseDto.GroupDto.builder()
+                                        .groupId(review.getRecruit().getTemplate().getGroup().getId())
+                                        .groupName(review.getRecruit().getTemplate().getGroup().getGroupName())
+                                        .build()
+                                : null)
+                        .organization(RecruitReviewResponseDto.OrganizationDto.builder()
+                                .orgId(review.getOrg().getId())
+                                .orgName(review.getOrg().getOrgName())
+                                .build())
+                        .images(review.getReviewComments().stream()
+                                .flatMap(c -> c.getReview().getReviewComments().stream()
+                                        .map(comment -> comment.getWriter().getProfileImage()))
+                                .collect(Collectors.toList()))
+                        .build())
+                .collect(Collectors.toList());
+    }
 
 
 }

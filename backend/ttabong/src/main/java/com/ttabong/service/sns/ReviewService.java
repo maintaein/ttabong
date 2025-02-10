@@ -18,4 +18,6 @@ public interface ReviewService {
     List<MyAllReviewPreviewResponseDto> readMyAllReviews(AuthDto authDto);
 
     ReviewDetailResponseDto detailReview(Integer reviewId);
+
+    List<RecruitReviewResponseDto> recruitReview(Integer recruitId);
 }

@@ -109,6 +109,14 @@ public class ReviewController {
         return ResponseEntity.ok(response);
     }
 
+    // 3. 공고 관련 후기들 조회
+    @GetMapping("/recruits/{recruitId}")
+    public ResponseEntity<List<RecruitReviewResponseDto>> recruitReview(@PathVariable Integer recruitId) {
+        List<RecruitReviewResponseDto> response = reviewService.recruitReview(recruitId);
+        return ResponseEntity.ok(response);
+    }
+
+
 
 
 //    @GetMapping("recruits/{recruitId}")
