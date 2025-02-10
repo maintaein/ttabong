@@ -79,6 +79,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .imgCount(requestDto.getImageCount())
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
+                .isDeleted(false)
                 .build();
         reviewRepository.save(review);
 
@@ -325,7 +326,7 @@ public class ReviewServiceImpl implements ReviewService {
     public List<MyAllReviewPreviewResponseDto> readMyAllReviews(AuthDto authDto) {
         List<Review> reviews = reviewRepository.findMyReviews(authDto.getUserId(), PageRequest.of(0, 10));
 
-//        System.out.println(authDto.getUserId());
+        System.out.println(authDto.getUserId());
         return reviews.stream()
                 .map(review -> MyAllReviewPreviewResponseDto.builder()
                         .reviewId(review.getId())

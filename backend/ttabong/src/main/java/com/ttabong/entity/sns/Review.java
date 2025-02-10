@@ -51,7 +51,7 @@ public class Review {
     private String content;
 
     @ColumnDefault("false")
-    @Column(name = "is_deleted")
+    @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted;
 
     @ColumnDefault("true")
@@ -74,4 +74,11 @@ public class Review {
 
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL)
     private Set<ReviewComment> reviewComments = new LinkedHashSet<>();
+
+    @PrePersist
+    public void prePersist() {
+        if (isDeleted == null) {
+            isDeleted = false;
+        }
+    }
 }
