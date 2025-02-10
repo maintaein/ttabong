@@ -2,10 +2,8 @@ package com.ttabong.service.sns;
 
 import com.ttabong.dto.sns.request.ReviewCreateRequestDto;
 import com.ttabong.dto.sns.request.ReviewEditRequestDto;
-import com.ttabong.dto.sns.response.ReviewCreateResponseDto;
-import com.ttabong.dto.sns.response.ReviewDeleteResponseDto;
-import com.ttabong.dto.sns.response.ReviewEditResponseDto;
-import com.ttabong.dto.sns.response.ReviewEditStartResponseDto;
+import com.ttabong.dto.sns.request.ReviewVisibilitySettingRequestDto;
+import com.ttabong.dto.sns.response.*;
 import com.ttabong.entity.recruit.Recruit;
 import com.ttabong.entity.recruit.Template;
 import com.ttabong.entity.sns.Review;
@@ -28,6 +26,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -255,6 +255,28 @@ public class ReviewServiceImpl implements ReviewService {
         reviewRepository.save(updatedReview);
 
         return new ReviewDeleteResponseDto("삭제 성공하였습니다.", updatedReview.getId(), updatedReview.getTitle(), updatedReview.getContent());
+    }
+
+    @Override
+    public ReviewVisibilitySettingResponseDto updateVisibility(Integer reviewId, ReviewVisibilitySettingRequestDto requestDto) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 후기를 찾을 수 없습니다. id: " + reviewId));
+
+        Review updatedReviewVisibility = review.toBuilder()
+                .isPublic(!review.getIsPublic())
+                .updatedAt(Instant.now())
+                .build();
+
+        reviewRepository.save(updatedReviewVisibility);
+
+        LocalDateTime updateTime = updatedReviewVisibility.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime();
+
+        return new ReviewVisibilitySettingResponseDto(
+                "공개 여부를 수정했습니다",
+                reviewId,
+                updatedReviewVisibility.getIsPublic(),
+                updateTime
+        );
     }
 
 

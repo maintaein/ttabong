@@ -3,10 +3,8 @@ package com.ttabong.controller.sns;
 import com.ttabong.dto.recruit.responseDto.org.CreateTemplateResponseDto;
 import com.ttabong.dto.sns.request.ReviewCreateRequestDto;
 import com.ttabong.dto.sns.request.ReviewEditRequestDto;
-import com.ttabong.dto.sns.response.ReviewCreateResponseDto;
-import com.ttabong.dto.sns.response.ReviewDeleteResponseDto;
-import com.ttabong.dto.sns.response.ReviewEditResponseDto;
-import com.ttabong.dto.sns.response.ReviewEditStartResponseDto;
+import com.ttabong.dto.sns.request.ReviewVisibilitySettingRequestDto;
+import com.ttabong.dto.sns.response.*;
 import com.ttabong.service.sns.ReviewService;
 import com.ttabong.util.service.CacheService;
 import lombok.RequiredArgsConstructor;
@@ -36,16 +34,16 @@ public class ReviewController {
         return ResponseEntity.ok().body(response);
     }
 
-    @GetMapping("mine")
-    public ResponseEntity<?> readMyReviews() {
+//    @GetMapping("mine")
+//    public ResponseEntity<?> readMyReviews() {
+//
+//        return ResponseEntity.ok().build();
+//    }
 
-        return ResponseEntity.ok().build();
-    }
-
-    @GetMapping("{reviewId}")
-    public ResponseEntity<?> readReviewDetail() {
-        return ResponseEntity.ok().build();
-    }
+//    @GetMapping("{reviewId}")
+//    public ResponseEntity<?> readReviewDetail() {
+//        return ResponseEntity.ok().build();
+//    }
 
     /* 후기 생성 */
     @PostMapping
@@ -56,7 +54,7 @@ public class ReviewController {
 
     //후기수정(presigneed )요청
     @GetMapping("/{reviewId}/edit")
-    public ResponseEntity<ReviewEditStartResponseDto> startReviewEdit(@PathVariable Integer reviewId) {
+    public ResponseEntity<ReviewEditStartResponseDto> startReviewEdit(@PathVariable(name = "reviewId") Integer reviewId) {
         ReviewEditStartResponseDto response = reviewService.startReviewEdit(reviewId);
         return ResponseEntity.ok(response);
     }
@@ -64,7 +62,7 @@ public class ReviewController {
     // 후기 수정
     @PatchMapping("/{reviewId}/edit")
     public ResponseEntity<ReviewEditResponseDto> updateReview(
-            @PathVariable Integer reviewId,
+            @PathVariable(name = "reviewId") Integer reviewId,
             @RequestBody ReviewEditRequestDto requestDto) {
 
         ReviewEditResponseDto response = reviewService.updateReview(reviewId, requestDto);
@@ -73,27 +71,31 @@ public class ReviewController {
 
     /* 후기 삭제 */
     @PatchMapping("/{reviewId}/delete")
-    public ResponseEntity<ReviewDeleteResponseDto> deleteReview(@PathVariable Integer reviewId) {
+    public ResponseEntity<ReviewDeleteResponseDto> deleteReview(@PathVariable(name = "reviewId") Integer reviewId) {
         ReviewDeleteResponseDto response = reviewService.deleteReview(reviewId);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("recruits/{recruitId}")
-    public ResponseEntity<?> readRelatedReviews(@PathVariable String recruitId) {
-
-        return ResponseEntity.ok().build();
+    // 5. 후기 공개 여부 설정
+    @PatchMapping("/{reviewId}/visibility")
+    public ResponseEntity<ReviewVisibilitySettingResponseDto> updateVisibility(
+            @PathVariable(name = "reviewId") Integer reviewId,
+            @RequestBody ReviewVisibilitySettingRequestDto requestDto) {
+        ReviewVisibilitySettingResponseDto response = reviewService.updateVisibility(reviewId, requestDto);
+        return ResponseEntity.ok(response);
     }
+
+//    @GetMapping("recruits/{recruitId}")
+//    public ResponseEntity<?> readRelatedReviews(@PathVariable String recruitId) {
+//
+//        return ResponseEntity.ok().build();
+//    }
 
 //    @GetMapping()
 //    public ResponseEntity<?> readAllReviews(@RequestParam Integer cursor, @RequestParam Integer limit) {
 //
 //        return ResponseEntity.ok().build();
 //    }
-
-    @PatchMapping("{reviewId}/visibility")
-    public ResponseEntity<?> updateReviewVisiblity() {
-        return ResponseEntity.ok().build();
-    }
 
 //    @PostMapping("")
 //    public ResponseEntity<?> startCreateReview() {
