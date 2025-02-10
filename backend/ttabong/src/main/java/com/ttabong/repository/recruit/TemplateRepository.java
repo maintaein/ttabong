@@ -35,12 +35,4 @@ public interface TemplateRepository extends JpaRepository<Template, Integer> {
     @Query("SELECT t FROM Template t WHERE t.isDeleted = false AND t.group.id = :groupId")
     List<Template> findTemplatesByGroupId(@Param("groupId") Integer groupId);
 
-    @Query("SELECT r.template.id FROM Recruit r WHERE r.id = :recruitId")
-    Integer findTemplateIdByRecruitId(@Param("recruitId") Integer recruitId);
-
-//    @Modifying
-//    @Transactional
-//    @Query("UPDATE Template t SET t.image.id = :imageId WHERE t.id = :templateId")
-//    void updateTemplateImage(@Param("templateId") Integer templateId, @Param("imageId") Integer imageId);
-
 }

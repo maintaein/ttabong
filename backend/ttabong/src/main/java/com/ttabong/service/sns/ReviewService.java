@@ -9,6 +9,7 @@ import com.ttabong.dto.user.AuthDto;
 import java.util.List;
 
 public interface ReviewService {
+
     ReviewCreateResponseDto createReview(AuthDto authDto, ReviewCreateRequestDto requestDto);
     ReviewDeleteResponseDto deleteReview(Integer reviewId);
     ReviewEditStartResponseDto startReviewEdit(Integer reviewId);
@@ -16,8 +17,7 @@ public interface ReviewService {
     ReviewVisibilitySettingResponseDto updateVisibility(Integer reviewId, ReviewVisibilitySettingRequestDto requestDto);
     List<AllReviewPreviewResponseDto> readAllReviews(Integer reviewId, Integer limit);
     List<MyAllReviewPreviewResponseDto> readMyAllReviews(AuthDto authDto);
-
     ReviewDetailResponseDto detailReview(Integer reviewId);
-
     List<RecruitReviewResponseDto> recruitReview(Integer recruitId);
+
 }

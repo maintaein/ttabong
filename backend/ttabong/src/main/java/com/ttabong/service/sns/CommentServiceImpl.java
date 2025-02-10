@@ -19,6 +19,7 @@ import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class CommentServiceImpl implements CommentService{
 
     private final CommentRepository commentRepository;
@@ -26,20 +27,16 @@ public class CommentServiceImpl implements CommentService{
     private final ReviewCommentRepository reviewCommentRepository;
     private final UserRepository userRepository;
 
-    @Transactional
     @Override
     public CommentCreateAndUpdateResponseDto createComment(AuthDto authDto,
                                                            Integer reviewId,
                                                            CommentCreateAndUpdateRequestDto requestDto) {
-        // 1. 리뷰 존재 여부 확인
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new RuntimeException("해당 후기를 찾을 수 없습니다. id: " + reviewId));
 
-        // 2. 현재 로그인한 사용자 정보 조회
         User writer = userRepository.findById(authDto.getUserId())
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다. id: " + authDto.getUserId()));
 
-        // 3. 댓글 엔티티 생성 및 저장
         ReviewComment comment = ReviewComment.builder()
                 .review(review)
                 .writer(writer)
@@ -63,9 +60,9 @@ public class CommentServiceImpl implements CommentService{
                 .build();
     }
 
-    @Transactional
     @Override
     public CommentCreateAndUpdateResponseDto updateComment(AuthDto authDto, Integer commentId, CommentCreateAndUpdateRequestDto requestDto) {
+
         ReviewComment existingComment = reviewCommentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("댓글 없음"));
 
@@ -88,7 +85,6 @@ public class CommentServiceImpl implements CommentService{
                 .build();
     }
 
-    @Transactional
     @Override
     public CommentDeleteResponseDto deleteComment(AuthDto authDto, Integer commentId) {
 
@@ -106,7 +102,5 @@ public class CommentServiceImpl implements CommentService{
                 .commentId(existingComment.getId())
                 .build();
     }
-
-
 
 }

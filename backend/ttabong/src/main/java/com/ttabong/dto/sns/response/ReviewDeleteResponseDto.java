@@ -5,9 +5,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-/*
- * 6. 후기 _ 삭제
- * */
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor

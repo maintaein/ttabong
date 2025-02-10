@@ -23,25 +23,12 @@ public class ReviewDetailResponseDto {
     private LocalDateTime createdAt;
     private List<String> images;
 
-    // 공고 정보
     private RecruitDto recruit;
-
-    // 카테고리 정보
     private CategoryDto category;
-
-    // 작성자 정보
     private WriterDto writer;
-
-    // 템플릿 정보 (그룹 포함)
     private TemplateDto template;
-
-    // 기관 정보
     private OrganizationDto organization;
-
-    // 부모 후기 ID (nullable)
     private Integer parentReviewId;
-
-    // 댓글 정보
     private List<CommentDto> comments;
 
     @Getter

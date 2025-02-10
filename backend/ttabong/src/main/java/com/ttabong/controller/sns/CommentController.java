@@ -18,7 +18,7 @@ public class CommentController {
 
     private final CommentService commentService;
 
-    // 9. 댓글 작성
+    //11. 댓글 작성
     @PostMapping("/{reviewId}")
     public ResponseEntity<CommentCreateAndUpdateResponseDto> createComment(
             @AuthenticationPrincipal AuthDto authDto,
@@ -26,10 +26,11 @@ public class CommentController {
             @RequestBody @Valid CommentCreateAndUpdateRequestDto requestDto) {
 
         CommentCreateAndUpdateResponseDto response = commentService.createComment(authDto, reviewId, requestDto);
+
         return ResponseEntity.ok(response);
     }
 
-    // 수정
+    // 12. 댓글 수정
     @PatchMapping("/{commentId}")
     public ResponseEntity<CommentCreateAndUpdateResponseDto> updateComment(
             @AuthenticationPrincipal AuthDto authDto,
@@ -37,16 +38,18 @@ public class CommentController {
             @RequestBody @Valid CommentCreateAndUpdateRequestDto requestDto) {
 
         CommentCreateAndUpdateResponseDto response = commentService.updateComment(authDto, commentId, requestDto);
+
         return ResponseEntity.ok(response);
     }
 
-    //삭제
+    // 13. 댓글 삭제
     @PatchMapping("/{commentId}/delete")
     public ResponseEntity<CommentDeleteResponseDto> deleteComment(
             @AuthenticationPrincipal AuthDto authDto,
             @PathVariable(name = "commentId") Integer commentId) {
 
         CommentDeleteResponseDto response = commentService.deleteComment(authDto, commentId);
+
         return ResponseEntity.ok(response);
     }
 

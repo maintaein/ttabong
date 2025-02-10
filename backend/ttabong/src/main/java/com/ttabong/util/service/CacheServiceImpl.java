@@ -32,8 +32,4 @@ public class CacheServiceImpl implements CacheService {
 
     }
 
-//    public String getObjectPathFromPresignedUrl(String presignedUrl) {
-//        return cacheUtil.findObjectPath(presignedUrl);
-//    }
-
 }

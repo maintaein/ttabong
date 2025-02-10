@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class ReviewServiceImpl implements ReviewService {
     private final ReviewRepository reviewRepository;
@@ -51,23 +52,20 @@ public class ReviewServiceImpl implements ReviewService {
     private final MinioClient minioClient;
 
     // TODO: parent-review-id 설정하는거 해야함.
-    @Transactional
     @Override
     public ReviewCreateResponseDto createReview(AuthDto authDto, ReviewCreateRequestDto requestDto) {
         final Organization organization = organizationRepository.findById(requestDto.getOrgId())
-                .orElseThrow(() -> new RuntimeException("Organization not found"));
+                .orElseThrow(() -> new RuntimeException("기관 없음"));
 
         final User writer = userRepository.findById(authDto.getUserId())
-                .orElseThrow(() -> new RuntimeException("Writer not found"));
+                .orElseThrow(() -> new RuntimeException("작성자 없음"));
 
         final Recruit recruit = recruitRepository.findById(requestDto.getRecruitId())
-                .orElseThrow(() -> new RuntimeException("Recruit not found"));
+                .orElseThrow(() -> new RuntimeException("해당 공고 없음"));
 
-        // recruit_id로 template_id 조회
         final Template template = templateRepository.findById(recruit.getTemplate().getId())
-                .orElseThrow(() -> new RuntimeException("Template not found"));
+                .orElseThrow(() -> new RuntimeException("해당 템플릿 없음"));
 
-        // template_id로 group_id 조회
         final Integer groupId = template.getGroup().getId();
 
         final Review review = Review.builder()
@@ -122,7 +120,6 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    @Transactional
     public ReviewEditStartResponseDto startReviewEdit(Integer reviewId) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 리뷰가 없습니다"));
@@ -164,7 +161,6 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    @Transactional
     public ReviewEditResponseDto updateReview(Integer reviewId, ReviewEditRequestDto requestDto) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new RuntimeException("Review not found"));
@@ -246,8 +242,6 @@ public class ReviewServiceImpl implements ReviewService {
                 .build();
     }
 
-    /* 삭제 */
-    @Transactional
     @Override
     public ReviewDeleteResponseDto deleteReview(Integer reviewId) {
         Review review = reviewRepository.findById(reviewId)
@@ -284,8 +278,8 @@ public class ReviewServiceImpl implements ReviewService {
         );
     }
 
-    @Transactional(readOnly = true)
     @Override
+    @Transactional(readOnly = true)
     public List<AllReviewPreviewResponseDto> readAllReviews(Integer cursor, Integer limit) {
         List<Review> reviews = reviewRepository.findAllReviews(cursor, PageRequest.of(0, limit));
 
@@ -323,8 +317,8 @@ public class ReviewServiceImpl implements ReviewService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
     @Override
+    @Transactional(readOnly = true)
     public List<MyAllReviewPreviewResponseDto> readMyAllReviews(AuthDto authDto) {
         List<Review> reviews = reviewRepository.findMyReviews(authDto.getUserId(), PageRequest.of(0, 10));
 
@@ -369,36 +363,29 @@ public class ReviewServiceImpl implements ReviewService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
     @Override
+    @Transactional(readOnly = true)
     public ReviewDetailResponseDto detailReview(Integer reviewId) {
-        // 리뷰 조회 (없으면 예외 발생)
+
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new RuntimeException("해당 후기를 찾을 수 없습니다. reviewId: " + reviewId));
 
-        // 작성자 정보 조회
         User writer = review.getWriter();
 
-        // 공고 정보 (Recruit)
         Recruit recruit = review.getRecruit();
 
-        // 템플릿 정보
         Template template = (recruit != null) ? recruit.getTemplate() : null;
         TemplateGroup group = (template != null) ? template.getGroup() : null;
 
-        // 카테고리 정보
         Category category = (template != null) ? template.getCategory() : null;
 
-        // 기관 정보
         Organization organization = review.getOrg();
 
-        // 이미지 리스트
         List<String> imageUrls = review.getReviewComments().stream()
                 .flatMap(comment -> comment.getReview().getReviewComments().stream()
                         .map(c -> c.getWriter().getProfileImage()))
                 .collect(Collectors.toList());
 
-        // 댓글 리스트
         List<ReviewDetailResponseDto.CommentDto> comments = review.getReviewComments().stream()
                 .map(comment -> ReviewDetailResponseDto.CommentDto.builder()
                         .commentId(comment.getId())
@@ -453,8 +440,8 @@ public class ReviewServiceImpl implements ReviewService {
                 .build();
     }
 
-    @Transactional(readOnly = true)
     @Override
+    @Transactional(readOnly = true)
     public List<RecruitReviewResponseDto> recruitReview(Integer recruitId) {
         List<Review> reviews = reviewRepository.findByRecruitId(recruitId);
 
@@ -490,6 +477,5 @@ public class ReviewServiceImpl implements ReviewService {
                         .build())
                 .collect(Collectors.toList());
     }
-
 
 }

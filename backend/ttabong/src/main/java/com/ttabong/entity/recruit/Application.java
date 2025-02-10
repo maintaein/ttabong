@@ -9,8 +9,8 @@ import java.time.Instant;
 
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED) // 외부에서 new User() 막기
-@AllArgsConstructor(access = AccessLevel.PRIVATE) // Builder에서만 생성 가능
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Table(name = "Application")
 public class Application {
