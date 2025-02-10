@@ -7,6 +7,7 @@ import com.ttabong.entity.sns.Review;
 import com.ttabong.entity.sns.ReviewComment;
 import com.ttabong.entity.user.User;
 import com.ttabong.repository.sns.CommentRepository;
+import com.ttabong.repository.sns.ReviewCommentRepository;
 import com.ttabong.repository.sns.ReviewRepository;
 import com.ttabong.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ public class CommentServiceImpl implements CommentService{
 
     private final CommentRepository commentRepository;
     private final ReviewRepository reviewRepository;
+    private final ReviewCommentRepository reviewCommentRepository;
     private final UserRepository userRepository;
 
     @Transactional
@@ -59,4 +61,31 @@ public class CommentServiceImpl implements CommentService{
                 .updatedAt(comment.getUpdatedAt().atZone(java.time.ZoneId.of("Asia/Seoul")).toLocalDateTime())
                 .build();
     }
+
+    @Transactional
+    @Override
+    public CommentCreateAndUpdateResponseDto updateComment(AuthDto authDto, Integer commentId, CommentCreateAndUpdateRequestDto requestDto) {
+        ReviewComment existingComment = reviewCommentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("댓글 없음"));
+
+        if (!existingComment.getWriter().getId().equals(authDto.getUserId())) {
+            throw new RuntimeException("댓글 수정 권한 없음");
+        }
+
+        existingComment.updateContent(requestDto.getContent());
+
+        return CommentCreateAndUpdateResponseDto.builder()
+                .commentId(existingComment.getId())
+                .reviewId(existingComment.getReview().getId())
+                .writer(CommentCreateAndUpdateResponseDto.WriterDto.builder()
+                        .writerId(existingComment.getWriter().getId())
+                        .writerName(existingComment.getWriter().getName())
+                        .writerProfileImage(existingComment.getWriter().getProfileImage())
+                        .build())
+                .content(existingComment.getContent())
+                .updatedAt(existingComment.getUpdatedAt().atZone(java.time.ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                .build();
+    }
+
+
 }

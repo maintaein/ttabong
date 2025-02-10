@@ -43,4 +43,14 @@ public class ReviewComment {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    public void updateContent(String newContent) {
+        this.content = newContent;
+        this.updatedAt = Instant.now();
+    }
+
+    public void markDeleted() {
+        this.isDeleted = true;
+        this.updatedAt = Instant.now();
+    }
+
 }

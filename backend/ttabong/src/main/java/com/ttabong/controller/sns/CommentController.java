@@ -28,7 +28,16 @@ public class CommentController {
         return ResponseEntity.ok(response);
     }
 
-    //
+    // 수정
+    @PatchMapping("/{commentId}")
+    public ResponseEntity<CommentCreateAndUpdateResponseDto> updateComment(
+            @AuthenticationPrincipal AuthDto authDto,
+            @PathVariable Integer commentId,
+            @RequestBody @Valid CommentCreateAndUpdateRequestDto requestDto) {
+
+        CommentCreateAndUpdateResponseDto response = commentService.updateComment(authDto, commentId, requestDto);
+        return ResponseEntity.ok(response);
+    }
 
 
 
