@@ -4,6 +4,7 @@ import com.ttabong.dto.recruit.responseDto.vol.GroupDto;
 import com.ttabong.dto.recruit.responseDto.vol.ReadRecruitDetailResponseDto;
 import com.ttabong.dto.recruit.responseDto.vol.ReadVolRecruitsListResponseDto;
 import com.ttabong.dto.recruit.responseDto.vol.ReadVolRecruitsResponseDto;
+import com.ttabong.dto.user.AuthDto;
 import com.ttabong.dto.user.OrganizationDto;
 import com.ttabong.entity.recruit.Application;
 import com.ttabong.entity.recruit.Recruit;
@@ -14,6 +15,7 @@ import com.ttabong.repository.recruit.RecruitRepository;
 import com.ttabong.repository.recruit.TemplateRepository;
 import com.ttabong.repository.user.VolunteerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -42,6 +44,14 @@ public class VolRecruitServiceImpl implements VolRecruitService {
 
     @Override
     public ReadVolRecruitsListResponseDto getTemplates(Integer cursor, Integer limit) {
+        AuthDto authDto = (AuthDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        int userId = authDto.getUserId();
+        String userType = authDto.getUserType();
+
+//        System.out.println("요청한 사용자 ID: " + userId);
+//        System.out.println("사용자 타입: " + userType);
+
         List<Template> templates = (cursor == null) ?
                 templateRepository.findTopNTemplates(limit) :
                 templateRepository.findTemplatesAfterCursor(cursor, limit);
