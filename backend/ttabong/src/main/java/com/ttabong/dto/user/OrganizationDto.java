@@ -17,7 +17,6 @@ public class OrganizationDto {
     private String orgName;
     private String representativeName;
     private String orgAddress;
-    private LocalDateTime createdAt;
 
     public static OrganizationDto from(Organization organization) {
         if (organization == null) {
