@@ -2,8 +2,10 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import config from '@/config';
 
 export interface ApiResponse<T = any> {
-  data: T;
+  status: number;
   message: string;
+  access_token?: string;
+  data?: T;
 }
 
 export interface ApiError {
@@ -16,31 +18,39 @@ interface ErrorResponse {
   message: string;
 }
 
-const axiosInstance = axios.create({
-  baseURL: `${config.baseURL}${config.apiPrefix}`,
+export const axiosInstance = axios.create({
+  baseURL: config.baseURL + config.apiPrefix,
   timeout: config.timeout,
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
   },
-  withCredentials: true 
 });
 
 // 요청 인터셉터
 axiosInstance.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => config,
+  (config: InternalAxiosRequestConfig) => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
   (error: AxiosError) => Promise.reject(error)
 );
 
 // 응답 인터셉터
 axiosInstance.interceptors.response.use(
   (response) => response,
-  async (error: AxiosError<ErrorResponse | string>) => {
+  async (error: AxiosError<ErrorResponse>) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('access_token');
+      window.location.href = '/login?message=로그인이 필요합니다.';
+      return Promise.reject(new Error('로그인이 필요합니다.'));
+    }
+
     const apiError: ApiError = {
       status: error.response?.status || 500,
-      message: typeof error.response?.data === 'string' 
-        ? error.response.data 
-        : error.response?.data?.message || '서버 오류가 발생했습니다.',
+      message: error.response?.data?.message || '서버 오류가 발생했습니다.',
       type: getErrorType(error)
     };
     throw apiError;
@@ -53,6 +63,5 @@ function getErrorType(error: AxiosError): ApiError['type'] {
   if (error.response.status === 401 || error.response.status === 403) return 'AUTH';
   return 'SERVER';
 }
-
 
 export default axiosInstance; 

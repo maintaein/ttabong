@@ -26,19 +26,19 @@ interface RecruitReview {
   images: string[];
 }
 
+interface ReviewResponse {
+  reviews: Review[];
+  hasMore: boolean;
+}
+
 export const reviewApi = {
-  getReviews: async (): Promise<Review[]> => {
-    const response = await axiosInstance.get('/reviews');
+  getReviews: async (cursor: number, limit: number): Promise<ReviewResponse> => {
+    const response = await axiosInstance.get(`/reviews?cursor=${cursor}&limit=${limit}`);
     return response.data;
   },
   
   getReviewDetail: async (id: number): Promise<ReviewDetail> => {
     const response = await axiosInstance.get(`/reviews/${id}`);
-    return response.data;
-  },
-  
-  addComment: async (reviewId: number, content: string): Promise<Comment> => {
-    const response = await axiosInstance.post(`/reviews/${reviewId}/comments`, { content });
     return response.data;
   },
   
@@ -54,5 +54,23 @@ export const reviewApi = {
   
   deleteReview: async (reviewId: number): Promise<void> => {
     await axiosInstance.patch(`/reviews/${reviewId}/delete`);
+  },
+  
+  toggleReviewPublic: async (reviewId: number, isPublic: boolean): Promise<void> => {
+    await axiosInstance.patch(`/reviews/${reviewId}/toggle-public`, { isPublic });
+  },
+
+  addComment: async (reviewId: number, content: string): Promise<Comment> => {
+    const response = await axiosInstance.post(`/reviews/${reviewId}/comments`, { content });
+    return response.data;
+  },
+  
+  updateComment: async (commentId: number, content: string): Promise<Comment> => {
+    const response = await axiosInstance.patch(`/comments/${commentId}`, { content });
+    return response.data;
+  },
+  
+  deleteComment: async (commentId: number): Promise<void> => {
+    await axiosInstance.patch(`/comments/${commentId}/delete`);
   },
 }; 

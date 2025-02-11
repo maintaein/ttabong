@@ -7,12 +7,16 @@ interface ReviewStore {
   reviewDetail: ReviewDetail | null;
   isLoading: boolean;
   error: string | null;
-  fetchReviews: () => Promise<void>;
+  hasMore: boolean;
+  fetchReviews: (cursor: number) => Promise<void>;
   fetchReviewDetail: (id: number) => Promise<void>;
   addComment: (reviewId: number, content: string) => Promise<void>;
   recruitReviews: Review[];
   fetchRecruitReviews: (recruitId: number) => Promise<void>;
   deleteReview: (reviewId: number) => Promise<void>;
+  toggleReviewPublic: (reviewId: number, isPublic: boolean) => Promise<void>;
+  updateComment: (commentId: number, content: string) => Promise<void>;
+  deleteComment: (commentId: number) => Promise<void>;
 }
 
 export const useReviewStore = create<ReviewStore>((set) => ({
@@ -20,20 +24,31 @@ export const useReviewStore = create<ReviewStore>((set) => ({
   reviewDetail: null,
   isLoading: false,
   error: null,
+  hasMore: true,
   recruitReviews: [],
   
-  fetchReviews: async () => {
-    set({ isLoading: true });
+  fetchReviews: async (cursor: number) => {
+    const LIMIT = 9;
+    
+    set(state => ({
+      isLoading: true,
+      error: null,
+      reviews: cursor === 0 ? [] : state.reviews
+    }));
+
     try {
-      const reviews = await reviewApi.getReviews();
-      set({ reviews, error: null });
+      const response = await reviewApi.getReviews(cursor, LIMIT);
+      set(state => ({
+        reviews: [...state.reviews, ...response.reviews],
+        hasMore: response.reviews.length === LIMIT,
+        error: null
+      }));
     } catch (error) {
       console.error('리뷰 불러오기 실패:', error);
       set({ error: '리뷰를 불러오는데 실패했습니다.' });
     } finally {
       set({ isLoading: false });
     }
-
   },
 
   fetchReviewDetail: async (id: number) => {
@@ -88,6 +103,55 @@ export const useReviewStore = create<ReviewStore>((set) => ({
       }));
     } catch (error) {
       console.error('리뷰 삭제 실패:', error);
+      throw error;
+    }
+  },
+
+  
+  toggleReviewPublic: async (reviewId: number, isPublic: boolean) => {
+    try {
+      await reviewApi.toggleReviewPublic(reviewId, !isPublic);
+      set((state) => ({
+        reviewDetail: state.reviewDetail 
+          ? { ...state.reviewDetail, isPublic: !isPublic }
+          : null
+      }));
+    } catch (error) {
+      set({ error: '후기 공개 상태 변경에 실패했습니다.' });
+      throw error;
+    }
+  },
+
+  updateComment: async (commentId: number, content: string) => {
+    try {
+      const updatedComment = await reviewApi.updateComment(commentId, content);
+      set((state) => ({
+        reviewDetail: state.reviewDetail ? {
+          ...state.reviewDetail,
+          comments: state.reviewDetail.comments.map(comment =>
+            comment.commentId === commentId ? updatedComment : comment
+          )
+        } : null
+      }));
+    } catch (error) {
+      set({ error: '댓글 수정에 실패했습니다.' });
+      throw error;
+    }
+  },
+
+  deleteComment: async (commentId: number) => {
+    try {
+      await reviewApi.deleteComment(commentId);
+      set((state) => ({
+        reviewDetail: state.reviewDetail ? {
+          ...state.reviewDetail,
+          comments: state.reviewDetail.comments.filter(
+            comment => comment.commentId !== commentId
+          )
+        } : null
+      }));
+    } catch (error) {
+      set({ error: '댓글 삭제에 실패했습니다.' });
       throw error;
     }
   },

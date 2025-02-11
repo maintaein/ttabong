@@ -5,19 +5,6 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import "./styles/GlobalStyle.css";
 
-async function enableMocking() {
-  if (process.env.NODE_ENV === 'development') {
-    const { worker } = await import('./mocks/browser');
-    return worker.start({
-      onUnhandledRequest: 'warn',
-      serviceWorker: {
-        url: '/mockServiceWorker.js',
-      },
-    });
-  }
-}
-
-enableMocking().then(() => {
   createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
       <BrowserRouter>
@@ -25,4 +12,4 @@ enableMocking().then(() => {
       </BrowserRouter>
     </React.StrictMode>,
   );
-});
+

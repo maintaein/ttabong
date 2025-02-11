@@ -1,6 +1,5 @@
-import React from 'react';
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ReviewWriteHeader } from './components/ReviewWriteHeader';
 import { ReviewWriteImages } from './components/ReviewWriteImages';
@@ -9,21 +8,22 @@ import { useReviewWriteStore } from '@/stores/reviewWriteStore';
 
 export default function ReviewWrite() {
   const navigate = useNavigate();
-  const { recruitId, orgId, resetReviewInfo } = useReviewWriteStore();
+  const [searchParams] = useSearchParams();
+  const { resetReviewInfo } = useReviewWriteStore();
   const [images, setImages] = useState<string[]>([]);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isPublic, setIsPublic] = useState(true);
 
   useEffect(() => {
-    const currentRecruitId = Number(sessionStorage.getItem('reviewWrite.recruitId'));
-    const currentOrgId = Number(sessionStorage.getItem('reviewWrite.orgId'));
+    const recruitId = searchParams.get('recruitId');
+    const orgId = searchParams.get('orgId');
     
-    if (!currentRecruitId || !currentOrgId) {
+    if (!recruitId || !orgId) {
       navigate('/choose-recruit');
       return;
     }
-  }, [navigate]);
+  }, [searchParams, navigate]);
 
   useEffect(() => {
     return () => resetReviewInfo();
@@ -45,24 +45,35 @@ export default function ReviewWrite() {
   };
 
   const handleSubmit = async () => {
+    const recruitId = searchParams.get('recruitId');
+    const orgId = searchParams.get('orgId');
+
     if (!recruitId || !orgId) {
-      console.error('Required information is missing');
+      navigate('/choose-recruit');
       return;
     }
 
     const reviewData = {
-      recruitId,
-      orgId,
-      writerId: 10, // TODO: 실제 사용자 ID로 대체
+      recruitId: Number(recruitId),
+      orgId: Number(orgId),
+      writerId: 10,
       title,
       content,
       isPublic,
-      thumbnailImg: images[0], // TODO: 실제 이미지 업로드 로직 추가
+      thumbnailImg: images[0],
       imgCount: images.length
     };
 
-    // TODO: API 연동
-    console.log(reviewData);
+    try {
+      // TODO: API 연동
+      console.log(reviewData);
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('404')) {
+        navigate('/choose-recruit');
+        return;
+      }
+      // 다른 에러 처리
+    }
   };
 
   return (
@@ -77,6 +88,7 @@ export default function ReviewWrite() {
           orgId: 1,
           orgName: "서울 환경 봉사단"
         }}
+        isPublic={isPublic}
       />
       
       <ReviewWriteImages

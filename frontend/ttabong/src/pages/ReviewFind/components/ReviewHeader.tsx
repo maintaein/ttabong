@@ -1,35 +1,34 @@
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import type { ReviewDetail } from '@/types/reviewType';
+import { Badge } from "@/components/ui/badge";
 
 interface ReviewHeaderProps {
-  writer: ReviewDetail['writer'];
-  organization: ReviewDetail['organization'];
+  writer: {
+    writerId: number;
+    writerName: string;
+    writerProfileImage: string;
+  };
+  organization: {
+    orgId: number;
+    orgName: string;
+  };
+  isPublic: boolean;
 }
 
-export function ReviewHeader({ writer, organization }: ReviewHeaderProps) {
+export function ReviewHeader({ writer, organization, isPublic }: ReviewHeaderProps) {
   return (
-    <div className="flex items-center justify-between p-4 border-b">
-      <div className="flex items-center gap-3">
-        <Avatar>
-          <AvatarImage src={writer.writerProfileImage} alt={writer.writerName} />
-          <AvatarFallback>{writer.writerName[0]}</AvatarFallback>
-        </Avatar>
-        <div>
-          <div className="flex items-center gap-2">
-            <h3 className="font-medium">{writer.writerName}</h3>
-            <Avatar className="w-4 h-4">
-              <AvatarImage src="/user-icon.png" alt="User" />
-              <AvatarFallback>U</AvatarFallback>
-            </Avatar>
-          </div>
-          <div className="flex items-center gap-2">
-            <p className="text-sm text-muted-foreground">{organization.orgName}</p>
-            <Avatar className="w-4 h-4">
-              <AvatarImage src="/org-icon.png" alt="Organization" />
-              <AvatarFallback>O</AvatarFallback>
-            </Avatar>
-          </div>
+    <div className="flex items-center gap-3">
+      <Avatar className="w-10 h-10">
+        <AvatarImage src={writer.writerProfileImage} alt={writer.writerName} />
+        <AvatarFallback>{writer.writerName[0]}</AvatarFallback>
+      </Avatar>
+      <div className="flex-1">
+        <div className="flex items-center gap-2">
+          <h3 className="font-medium">{writer.writerName}</h3>
+          <Badge variant={isPublic ? "default" : "secondary"} className="text-xs">
+            {isPublic ? "공개" : "비공개"}
+          </Badge>
         </div>
+        <p className="text-sm text-muted-foreground">{organization.orgName}</p>
       </div>
     </div>
   );

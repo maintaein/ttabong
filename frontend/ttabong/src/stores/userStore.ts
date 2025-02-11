@@ -13,7 +13,7 @@ interface JwtPayload {
 }
 
 interface UserState {
-  accessToken: string | null;
+  access_token: string | null;
   userType: 'volunteer' | 'organization' | null;
   isLoading: boolean;
   error: string | null;
@@ -27,7 +27,7 @@ interface UserState {
 export const useUserStore = create<UserState>()(
   persist(
     (set) => ({
-      accessToken: null,
+      access_token: null,
       userType: null,
       isLoading: false,
       error: null,
@@ -36,9 +36,9 @@ export const useUserStore = create<UserState>()(
         set({ isLoading: true, error: null });
         try {
           const response = await userApi.login({ email, password, userType });
-          const decoded = jwtDecode<JwtPayload>(response.data.accessToken);
+          const decoded = jwtDecode<JwtPayload>(response.access_token);
           set({
-            accessToken: response.data.accessToken,
+            access_token: response.access_token,
             userType: decoded.userType as 'volunteer' | 'organization',
           });
           return response.message;
@@ -55,7 +55,7 @@ export const useUserStore = create<UserState>()(
         try {
           await userApi.logout();
           set({
-            accessToken: null,
+            access_token: null,
             userType: null,
             error: null
           });

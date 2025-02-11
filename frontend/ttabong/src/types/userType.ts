@@ -101,10 +101,9 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  accessToken: string;
-  refreshToken: string;
-  userType: 'volunteer' | 'organization';
+  status: number;
   message: string;
+  access_token: string;
 }
 
 export interface VolunteerRegisterRequest extends CreateUserRequest, Partial<CreateVolunteerRequest> {}

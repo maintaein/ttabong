@@ -8,7 +8,7 @@ import {
 } from '@/types/userType';
 
 export const userApi = {
-  login: async (data: LoginRequest): Promise<ApiResponse<LoginResponse>> => {
+  login: async (data: LoginRequest): Promise<LoginResponse> => {
     const response = await axiosInstance.post('/user/login', data);
     return response.data;
   },
