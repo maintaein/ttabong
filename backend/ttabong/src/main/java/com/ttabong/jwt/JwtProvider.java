@@ -13,7 +13,6 @@ import java.util.Date;
 @Component
 public class JwtProvider {
 
-
     private final SecretKey secretKey;
     private final long expiration;
 
@@ -28,24 +27,19 @@ public class JwtProvider {
     }
 
     public String createToken(Long userId, String userType) {
-        // 토큰에 담을 정보(Claims)를 구성
         Claims claims = Jwts.claims();
-        // subject: 주로 토큰의 대표값(여기서는 userId라고 보면 됨)
-        claims.setSubject(userId.toString()); // ✅ sub에 userId 저장
-        claims.put("userType", userType); // 토큰에 유저 타입도 같이 넣어둠
+        claims.setSubject(userId.toString());
+        claims.put("userType", userType); // 유저 타입 추가
 
         Date now = new Date();
         Date expiration = new Date(now.getTime() + this.expiration);
 
-        String token = Jwts.builder()
+        return Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(now)
                 .setExpiration(expiration)
                 .signWith(secretKey, SignatureAlgorithm.HS256)
                 .compact();
-
-        System.out.println("success created JWT access token~~  ");
-        return token;
     }
 
     public boolean validateToken(String token) {
@@ -63,14 +57,19 @@ public class JwtProvider {
         return false;
     }
 
-
     public Claims getClaims(String token) {
         return Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token).getBody();
     }
 
-
     public AuthDto toAuthDto(String token) {
         Claims claims = getClaims(token);
         return new AuthDto(claims.get("userId", Integer.class), claims.get("userType", String.class));
+    }
+
+    // ✅ userType이 "volunteer"인지 검증하는 메서드 추가
+    public boolean isVolunteer(String token) {
+        Claims claims = getClaims(token);
+        String userType = claims.get("userType", String.class);
+        return "volunteer".equals(userType);
     }
 }
