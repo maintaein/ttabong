@@ -33,7 +33,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // 허용할 Origin 설정
-//        configuration.setAllowedOrigins(List.of("http://localhost:3000", "https://www.ttabong.store"));
+        configuration.setAllowedOrigins(List.of("http://localhost:8080", "https://www.ttabong.store", "http://www.ttabong.store", "https://ttabong.store", "http://ttabong.store", "http://localhost:5173", "http://localhost:5174"));
 
         // 허용할 HTTP 메서드 설정
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
