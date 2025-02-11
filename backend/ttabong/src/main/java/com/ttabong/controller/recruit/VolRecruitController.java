@@ -39,31 +39,25 @@ public class VolRecruitController {
 
     // 모집 공고 리스트 조회
     @GetMapping("/templates")
-    public ResponseEntity<List<ReadVolRecruitsResponseDto>> listRecruits(
+    public ResponseEntity<ReadVolRecruitsListResponseDto> listRecruits(
             @RequestParam(required = false) Integer cursor,
             @RequestParam Integer limit) {
-        AuthDto authDto = (AuthDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        int userId = authDto.getUserId();
-        String userType = authDto.getUserType();
-
-        System.out.println("요청한 사용자 ID: " + userId);
-        System.out.println("사용자 타입: " + userType);
-        List<ReadVolRecruitsResponseDto> responseDtoList = volRecruitService.getTemplates(cursor, limit);
-
-        return ResponseEntity.ok().body(responseDtoList);
+        ReadVolRecruitsListResponseDto responseDto = volRecruitService.getTemplates(cursor, limit);
+        return ResponseEntity.ok().body(responseDto);
     }
-
-
 
 
     // 특정 모집 공고 상세 조회
     @GetMapping("/templates/{templateId}")
     public ResponseEntity<ReadRecruitDetailResponseDto> recruitsDetail(@PathVariable Integer templateId) {
-        Optional<Template> template = volRecruitService.getTemplateById(templateId);
-        return template.map(t -> ResponseEntity.ok(ReadRecruitDetailResponseDto.from(t)))
-                .orElse(ResponseEntity.notFound().build());
+        return volRecruitService.getTemplateById(templateId)
+                .map(ResponseEntity::ok) // ✅ 성공 시 DTO를 감싼 ResponseEntity 반환
+                .orElse(ResponseEntity.notFound().build()); // ✅ 존재하지 않으면 404 반환
     }
+
+
+
 
     // 모집 공고 신청
     @PostMapping("/applications")

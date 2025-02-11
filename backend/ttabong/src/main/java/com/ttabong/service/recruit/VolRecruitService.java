@@ -1,6 +1,8 @@
 package com.ttabong.service.recruit;
 
+import com.ttabong.dto.recruit.responseDto.vol.ReadRecruitDetailResponseDto;
 import com.ttabong.dto.recruit.responseDto.vol.ReadRecruitsResponseDto;
+import com.ttabong.dto.recruit.responseDto.vol.ReadVolRecruitsListResponseDto;
 import com.ttabong.dto.recruit.responseDto.vol.ReadVolRecruitsResponseDto;
 import com.ttabong.entity.recruit.Application;
 import com.ttabong.entity.recruit.Recruit;
@@ -12,9 +14,9 @@ import java.util.Optional;
 
 public interface VolRecruitService {
 
-    List<ReadVolRecruitsResponseDto> getTemplates(Integer cursor, Integer limit);
+    ReadVolRecruitsListResponseDto getTemplates(Integer cursor, Integer limit);
 
-    Optional<Template> getTemplateById(Integer templateId);
+    Optional<ReadRecruitDetailResponseDto> getTemplateById(Integer templateId);
 
     Application applyRecruit(int userId, int recruitId);
 }

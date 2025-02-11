@@ -1,7 +1,5 @@
 package com.ttabong.dto.recruit.responseDto.vol;
 
-import com.ttabong.dto.recruit.responseDto.vol.GroupDto;
-import com.ttabong.dto.user.OrganizationDto;
 import com.ttabong.entity.recruit.Template;
 import lombok.*;
 
@@ -23,8 +21,6 @@ public class ReadVolRecruitsResponseDto {
     private String contactPhone;
     private String description;
     private Instant createdAt;
-    private GroupDto group;
-    private OrganizationDto organization;
 
     public static ReadVolRecruitsResponseDto from(Template template) {
         return ReadVolRecruitsResponseDto.builder()
@@ -38,8 +34,6 @@ public class ReadVolRecruitsResponseDto {
                 .contactPhone(template.getContactPhone())
                 .description(template.getDescription())
                 .createdAt(template.getCreatedAt())
-                .group(GroupDto.from(template.getGroup()))
-                .organization(OrganizationDto.from(template.getOrg())) // ✅ 수정된 부분
                 .build();
     }
 }
