@@ -1,13 +1,19 @@
-import { ReactNode } from 'react';
+import React, { ReactNode } from 'react';
+import { motion } from "framer-motion";
 
 interface PageLayoutProps {
   children: ReactNode;
 }
 
-export const PageLayout = ({ children }: PageLayoutProps) => {
+export const PageLayout: React.FC<PageLayoutProps> = ({ children }) => {
   return (
-    <div className="min-h-[calc(100%-56px)]">
+    <motion.div
+      className="min-h-[calc(100%-56px)]"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
       {children}
-    </div>
+    </motion.div>
   );
 }; 

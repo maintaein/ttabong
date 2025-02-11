@@ -1,3 +1,4 @@
+import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { 
   Home,
@@ -44,7 +45,7 @@ const NavBar = () => {
       <div className="flex justify-around h-full py-2">
         <NavItem to="/main-page" icon={Home} />
         <NavItem to="/recruit-find" icon={Search} />
-        <NavItem to="/feed-add" icon={PlusCircle} />
+        <NavItem to="/choose-recruit" icon={PlusCircle} />
         <NavItem to="/review-find" icon={Eye} />
         <NavItem to="/my-page" icon={User} />
       </div>
