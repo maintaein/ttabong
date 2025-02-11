@@ -37,7 +37,7 @@ public class UserController {
             Long userId = userService.login(loginRequest);
 
             String accessToken = jwtProvider.createToken(userId, loginRequest.getUserType());
-
+            System.out.println(accessToken);
             return ResponseEntity.ok(new LoginResponse(200, "로그인 성공", accessToken));
 
         } catch (RuntimeException e) {
