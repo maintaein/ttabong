@@ -1,6 +1,5 @@
 package com.ttabong.dto.recruit.requestDto.org;
 
-import com.ttabong.dto.GlobalBaseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,7 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UpdateTemplateRequestDto implements GlobalBaseDto {
+public class UpdateTemplateRequestDto {
     private Integer templateId;
     private Integer groupId;
     private Integer orgId;

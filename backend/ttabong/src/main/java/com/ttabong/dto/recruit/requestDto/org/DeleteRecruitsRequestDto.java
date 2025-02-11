@@ -1,6 +1,5 @@
 package com.ttabong.dto.recruit.requestDto.org;
 
-import com.ttabong.dto.GlobalBaseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,6 +11,6 @@ import java.util.ArrayList;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class DeleteRecruitsRequestDto implements GlobalBaseDto {
+public class DeleteRecruitsRequestDto {
     private ArrayList<Integer> deletedRecruits;
 }

@@ -1,5 +1,6 @@
 package com.ttabong.dto.recruit.responseDto.org;
 
+import com.ttabong.dto.GlobalBaseDto;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -10,7 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ReadTemplatesResponseDto {
+public class ReadTemplatesResponseDto implements GlobalBaseDto {
     private List<GroupDto> groups;
 
     @Getter

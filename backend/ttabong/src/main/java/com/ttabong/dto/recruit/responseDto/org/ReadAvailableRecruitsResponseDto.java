@@ -1,5 +1,6 @@
 package com.ttabong.dto.recruit.responseDto.org;
 
+import com.ttabong.dto.GlobalBaseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,7 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ReadAvailableRecruitsResponseDto {
+public class ReadAvailableRecruitsResponseDto implements GlobalBaseDto {
     private List<TemplateDetail> templates;
 
     @Getter

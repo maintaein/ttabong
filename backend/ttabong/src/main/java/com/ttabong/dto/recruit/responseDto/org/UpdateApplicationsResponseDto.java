@@ -1,5 +1,6 @@
 package com.ttabong.dto.recruit.responseDto.org;
 
+import com.ttabong.dto.GlobalBaseDto;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -8,7 +9,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UpdateApplicationsResponseDto {
+public class UpdateApplicationsResponseDto implements GlobalBaseDto {
     private String message;
     private Application application;
 

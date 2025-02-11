@@ -1,5 +1,6 @@
 package com.ttabong.dto.recruit.responseDto.org;
 
+import com.ttabong.dto.GlobalBaseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ReadApplicationsResponseDto {
+public class ReadApplicationsResponseDto implements GlobalBaseDto {
     private Integer recruitId;
     private List<ApplicationDetail> applications;
 
