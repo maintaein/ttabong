@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { FaSearch, FaBell} from "react-icons/fa";
+import { Search, Bell } from "lucide-react";
+
 
 const savedPosts = [
   {
@@ -47,8 +48,9 @@ const RecruitFind: React.FC = () => {
           <h1 className="text-2xl font-bold flex items-center">
             <span className="mr-2">TTABONG</span> 🤟
           </h1>
-          <FaBell size={20} color="rgb(75 85 99)" />
+          <Bell size={20} className="text-gray-500" />
         </div>
+
 
         {/* 검색창 */}
         <div className="mt-3 relative">
@@ -58,7 +60,7 @@ const RecruitFind: React.FC = () => {
             className="w-full p-2 pl-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
           <div className="absolute left-3 top-3">
-            <FaSearch size={16} color="rgb(107 114 128)" />
+            <Search size={16} className="text-gray-500" />
           </div>
         </div>
 
