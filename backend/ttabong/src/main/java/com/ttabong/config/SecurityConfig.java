@@ -35,7 +35,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/user/check-email", "/user/login",
                                 "/org/register", "/volunteer/register").permitAll()  // 로그인 & 회원가입만 허용
-                        .anyRequest().authenticated()  // 나머지는 인증 필요
+//                        .anyRequest().authenticated()  // 나머지는 인증 필요
+                                .anyRequest().permitAll()
                 )
                 // ✅ HTTP Basic 인증 제거 (JWT 기반이므로 필요 없음)
                 .httpBasic(httpBasic -> httpBasic.disable())

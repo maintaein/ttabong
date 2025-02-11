@@ -9,9 +9,6 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-/*
- * 7. 후기 _ 생성
- * */
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,22 +16,16 @@ import java.util.List;
 public class ReviewCreateRequestDto {
     @NotNull
     private Integer recruitId;
-
     @NotNull
     private Integer orgId;
-
     @NotNull
     private Integer writerId;
-
     @NotBlank
     private String title;
-
     @NotBlank
     private String content;
-
     @NotNull
     private Boolean isPublic;
-
     private List<String> uploadedImages;
 
     public int getImageCount() {
