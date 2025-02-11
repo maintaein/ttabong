@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class UpdateGroupRequestDto {
-    Integer groupId;
-    Integer orgId;
-    String groupName;
+    private Integer groupId;
+    private Integer orgId;
+    private String groupName;
 }

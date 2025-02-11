@@ -1,13 +1,12 @@
 package com.ttabong.dto.sns.response;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-/*
- * 7. 후기 _ 생성
- * */
+import java.util.List;
+
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -16,4 +15,5 @@ public class ReviewCreateResponseDto {
     private String message;
     private Integer reviewId;
     private Integer writerId;
+    private List<String> uploadedImages;
 }

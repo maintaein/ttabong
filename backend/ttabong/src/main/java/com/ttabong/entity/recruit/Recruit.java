@@ -15,8 +15,8 @@ import java.util.Set;
 
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED) // 외부에서 new User() 막기
-@AllArgsConstructor(access = AccessLevel.PRIVATE) // Builder에서만 생성 가능
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Table(name = "Recruit")
 public class Recruit {
@@ -45,6 +45,7 @@ public class Recruit {
     @ColumnDefault("0.00")
     @Column(name = "activity_end", nullable = false, precision = 7, scale = 2)
     private BigDecimal activityEnd;
+
 
     @ColumnDefault("0")
     @Column(name = "max_volunteer")
@@ -78,4 +79,5 @@ public class Recruit {
 
     @OneToMany(mappedBy = "recruit")
     private Set<VolunteerReaction> volunteerReactions = new LinkedHashSet<>();
+
 }

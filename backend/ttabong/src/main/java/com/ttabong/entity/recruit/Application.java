@@ -9,8 +9,8 @@ import java.time.Instant;
 
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED) // 외부에서 new User() 막기
-@AllArgsConstructor(access = AccessLevel.PRIVATE) // Builder에서만 생성 가능
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Table(name = "Application")
 public class Application {
@@ -36,7 +36,7 @@ public class Application {
     @Column(name = "evaluation_done")
     private Boolean evaluationDone;
 
-    @ColumnDefault("0")
+    @ColumnDefault("false")
     @Column(name = "is_deleted")
     private Boolean isDeleted;
 

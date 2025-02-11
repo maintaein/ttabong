@@ -2,300 +2,196 @@ package com.ttabong.controller.recruit;
 
 import com.ttabong.dto.recruit.requestDto.org.*;
 import com.ttabong.dto.recruit.responseDto.org.*;
+import com.ttabong.service.recruit.OrgRecruitService;
+import com.ttabong.util.service.CacheService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("org")
+@RequestMapping("/org")
+@RequiredArgsConstructor
+@Slf4j
 public class OrgRecruitController {
+    private final OrgRecruitService orgRecruitService;
+    private final CacheService cacheService;
 
-    //1
+    //1. 메인페이지
     @GetMapping("/templates/available")
-    public ResponseEntity<ReadAvailableRecruitsResponseDto> readAvailableRecruits(@RequestParam Integer cursor, @RequestParam Integer limit) {
-        ReadAvailableRecruitsResponseDto.Template template = ReadAvailableRecruitsResponseDto.Template.builder()
-                .templateId(1)
-                .categoryId(3)
-                .title("환경 정화 봉사")
-                .activityLocation("서울특별시 종로구")
-                .status("ALL")
-                .imageId("https://example.com/template_image.jpg")
-                .contactName("김봉사")
-                .contactPhone("010-1234-5678")
-                .description("서울 시내 공원에서 환경 정화 활동을 진행합니다.")
-                .createdAt(LocalDateTime.now())
-                .build();
+    public ResponseEntity<ReadAvailableRecruitsResponseDto> readAvailableRecruits(
+            @RequestParam(required = false, name = "templateId") Integer cursor,
+            @RequestParam(defaultValue = "10", name = "limit") Integer limit) {
 
-        ReadAvailableRecruitsResponseDto.Group group = ReadAvailableRecruitsResponseDto.Group.builder()
-                .groupId(10)
-                .groupName("환경 보호 단체")
-                .build();
+        ReadAvailableRecruitsResponseDto response = orgRecruitService.readAvailableRecruits(cursor, limit);
 
-        ReadAvailableRecruitsResponseDto.Recruit recruit = ReadAvailableRecruitsResponseDto.Recruit.builder()
-                .recruitId(100)
-                .deadline(LocalDateTime.now().plusDays(10))
-                .activityDate(LocalDateTime.now().toLocalDate())
-                .activityStart(1000)
-                .activityEnd(1400)
-                .maxVolunteer(20)
-                .participateVolCount(5)
-                .status("모집중")
-                .updatedAt(LocalDateTime.now())
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        ReadAvailableRecruitsResponseDto.TemplateDetail templateDetail = ReadAvailableRecruitsResponseDto.TemplateDetail.builder()
-                .template(template)
-                .group(group)
-                .recruits(Collections.singletonList(recruit))
-                .build();
-
-        ReadAvailableRecruitsResponseDto responseDto = ReadAvailableRecruitsResponseDto.builder()
-                .templates(Collections.singletonList(templateDetail))
-                .build();
-
-        return ResponseEntity.ok().body(responseDto);
+        return ResponseEntity.ok().body(response);
     }
 
-
-    //2
+    //2. 공고 _ 공고 전체 조회(그룹+템플릿+공고)
     @GetMapping("/recruits")
-    public ResponseEntity<ReadMyRecruitsResponseDto> readRecruits(@RequestParam(required = true) int cursor, @RequestParam(defaultValue = "10") int limit) {
-        ReadMyRecruitsResponseDto.Group group = ReadMyRecruitsResponseDto.Group.builder()
-                .groupId(1)
-                .groupName("청소년 봉사").build();
+    public ResponseEntity<ReadMyRecruitsResponseDto> readRecruits(
+            @RequestParam(required = false, name = "recruitId") Integer cursor,
+            @RequestParam(defaultValue = "10", name = "limit") Integer limit) {
 
-        ReadMyRecruitsResponseDto.Template template = ReadMyRecruitsResponseDto.Template.builder()
-                .templateId(10)
-                .title("환경 정화 봉사").build();
+        ReadMyRecruitsResponseDto response = orgRecruitService.readMyRecruits(cursor, limit);
 
-        ReadMyRecruitsResponseDto.Recruit recruit = ReadMyRecruitsResponseDto.Recruit.builder()
-                .recruitId(100)
-                .status("모집중")
-                .maxVolunteer(20)
-                .participateVolCount(10)
-                .activityDate(LocalDate.now())
-                .activityStart(10.00)
-                .activityEnd(14.00)
-                .deadline(LocalDateTime.now().plusDays(10))
-                .createdAt(LocalDateTime.now()).build();
-
-        ReadMyRecruitsResponseDto.RecruitDetail recruitDetail = ReadMyRecruitsResponseDto.RecruitDetail.builder()
-                .group(group)
-                .template(template)
-                .recruit(recruit).build();
-
-        ReadMyRecruitsResponseDto responseDto = ReadMyRecruitsResponseDto.builder()
-                .recruits(Collections.singletonList(recruitDetail)).build();
-
-        return ResponseEntity.ok().body(responseDto);
+        return ResponseEntity.ok(response);
     }
 
-    //3 b
-    @PatchMapping("recruits/delete")
+    //3. 공고 _ 공고 삭제 (여러개 선택 후 한 번에 삭제)
+    @PatchMapping("/recruits/delete")
     public ResponseEntity<DeleteRecruitsResponseDto> deleteRecruits(@RequestBody DeleteRecruitsRequestDto deleteRecruitDto) {
-        List<Integer> deletedRecruits = deleteRecruitDto.getDeletedRecruits();
 
-        DeleteRecruitsResponseDto responseDto = DeleteRecruitsResponseDto.builder()
-                .message("삭제 성공")
-                .deletedRecruits(deletedRecruits)
-                .build();
+        DeleteRecruitsResponseDto response = orgRecruitService.deleteRecruits(deleteRecruitDto);
 
-        return ResponseEntity.ok().body(responseDto);
+        return ResponseEntity.ok(response);
     }
 
-    //4 b
-    @PatchMapping("recruits/{recruitId}")
-    public ResponseEntity<UpdateRecruitsResponseDto> updateRecruit(@PathVariable int recruitId, @RequestBody UpdateRecruitsRequestDto updateRecruitDto) {
-        UpdateRecruitsResponseDto responseDto = UpdateRecruitsResponseDto.builder()
-                .message("수정 성공")
-                .recruitId(recruitId)
-                .build();
+    //4. 공고 _ 공고 수정
+    @PatchMapping("/recruits/{recruitId}")
+    public ResponseEntity<UpdateRecruitsResponseDto> updateRecruit(
+            @PathVariable(name = "recruitId") Integer recruitId,
+            @RequestBody UpdateRecruitsRequestDto requestDto) {
 
-        return ResponseEntity.ok().body(responseDto);
+        UpdateRecruitsResponseDto response = orgRecruitService.updateRecruit(recruitId, requestDto);
+
+        return ResponseEntity.ok(response);
     }
 
-    //5 b
+    //5 공고 _ 공고 마감
     @PatchMapping("recruits/close")
     public ResponseEntity<CloseRecruitResponseDto> closeRecruit(@RequestBody CloseRecruitRequestDto closeRecruitDto) {
-        CloseRecruitResponseDto responseDto = CloseRecruitResponseDto.builder()
-                .message("마감 완료")
-                .recruitId(closeRecruitDto.getRecruitId())
-                .build();
 
-        return ResponseEntity.ok().body(responseDto);
+        CloseRecruitResponseDto response = orgRecruitService.closeRecruit(closeRecruitDto);
+
+        return ResponseEntity.ok().body(response);
     }
 
-    //7 6
+    // 6.공고 _ 그룹명 수정
     @PatchMapping("/groups")
     public ResponseEntity<UpdateGroupResponseDto> updateGroup(@RequestBody UpdateGroupRequestDto updateGroupDto) {
 
-        UpdateGroupResponseDto responseDto = UpdateGroupResponseDto.builder()
-                .message("수정 성공")
-                .groupId(updateGroupDto.getGroupId())
-                .orgId(updateGroupDto.getOrgId())
-                .build();
+        UpdateGroupResponseDto response = orgRecruitService.updateGroup(updateGroupDto);
 
-        return ResponseEntity.ok().body(responseDto);
+        return ResponseEntity.ok().body(response);
     }
 
-    //7 b
+    //7 공고 _ 템플릿 수정
     @PatchMapping("templates")
     public ResponseEntity<UpdateTemplateResponse> updateTemplate(@RequestBody UpdateTemplateRequestDto updateTemplateDto) {
-        UpdateTemplateResponse responseDto = UpdateTemplateResponse.builder()
-                .message("수정 성공")
-                .templateId(updateTemplateDto.getTemplateId())
-                .orgId(updateTemplateDto.getOrgId())
-                .build();
 
-        return ResponseEntity.ok().body(responseDto);
+        UpdateTemplateResponse response = orgRecruitService.updateTemplate(updateTemplateDto);
+
+        return ResponseEntity.ok().body(response);
     }
 
-    //8 b
+    //8. 공고 _ 템플릿 삭제 (여러개 선택 후 한 번에 삭제)
     @PatchMapping("/templates/delete")
     public ResponseEntity<DeleteTemplatesResponseDto> deleteTemplates(@RequestBody DeleteTemplatesRequestDto deleteTemplatesDto) {
 
-        List<Integer> deletedTemplates = deleteTemplatesDto.getDeleteTemplateIds();
+        DeleteTemplatesResponseDto response = orgRecruitService.deleteTemplates(deleteTemplatesDto);
 
-        DeleteTemplatesResponseDto responseDto = DeleteTemplatesResponseDto.builder()
-                .message("삭제 성공")
-                .deletedTemplates(deletedTemplates)
-                .build();
-
-        return ResponseEntity.ok().body(responseDto);
+        return ResponseEntity.ok().body(response);
     }
 
-    //9 b
+    //9. 공고 _ 그룹 삭제
     @PatchMapping("/groups/delete")
     public ResponseEntity<DeleteGroupResponseDto> deleteGroup(@RequestBody DeleteGroupDto deleteGroupDto) {
 
-        DeleteGroupResponseDto responseDto = DeleteGroupResponseDto.builder()
-                .message("삭제 성공")
-                .groupId(deleteGroupDto.getGroupId())
-                .orgId(deleteGroupDto.getOrgId())
-                .build();
+        DeleteGroupResponseDto response = orgRecruitService.deleteGroup(deleteGroupDto);
 
-        return ResponseEntity.ok().body(responseDto);
+        return ResponseEntity.ok().body(response);
     }
 
-    //10
+
+    //10 공고 _ 그룹+템플릿 조회
     @GetMapping("templates")
-    public ResponseEntity<ReadTemplatesResponseDto> readTemplates(@RequestParam(defaultValue = "0") int cursor, @RequestParam(defaultValue = "10") int limit) {
-        // ✅ 부모 객체 먼저 생성
-        ReadTemplatesResponseDto responseDto = new ReadTemplatesResponseDto();
+    public ResponseEntity<ReadTemplatesResponseDto> readTemplates(
+            @RequestParam(defaultValue = "0") int cursor,
+            @RequestParam(defaultValue = "10") int limit) {
 
-        // ✅ 부모 객체를 통해 내부 클래스 인스턴스 생성
-        ReadTemplatesResponseDto.GroupDto groupDto = responseDto.new GroupDto();
-        groupDto.setGroupId(1);
-        groupDto.setGroupName("청소년 봉사");
+        ReadTemplatesResponseDto responseDto = orgRecruitService.readTemplates(cursor, limit);
 
-        ReadTemplatesResponseDto.TemplateDto templateDto = responseDto.new TemplateDto();
-        templateDto.setTemplateId(10);
-        templateDto.setOrgId(5);
-        templateDto.setCategoryId(3);
-        templateDto.setTitle("환경 정화 봉사");
-        templateDto.setActivityLocation("서울특별시 종로구");
-        templateDto.setStatus("ALL");
-        templateDto.setImageId("https://example.com/image.jpg");
-        templateDto.setContactName("김봉사");
-        templateDto.setContactPhone("010-1234-5678");
-        templateDto.setDescription("환경 보호 봉사활동");
-        templateDto.setCreatedAt(LocalDateTime.now());
-
-        // ✅ 리스트에 추가
-        groupDto.setTemplates(List.of(templateDto));
-        responseDto.setGroups(List.of(groupDto));
         return ResponseEntity.ok().body(responseDto);
     }
 
-    //11 b
-    @PostMapping("/templates")
+    //11 공고 _ 템플릿 생성
+    @PostMapping(value = "/templates", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CreateTemplateResponseDto> createTemplate(@RequestBody CreateTemplateRequestDto createTemplateDto) {
+        CreateTemplateResponseDto response = orgRecruitService.createTemplate(createTemplateDto);
+        return ResponseEntity.ok().body(response);
+    }
 
-        CreateTemplateResponseDto responseDto = CreateTemplateResponseDto.builder()
-                .message("템플릿 생성 성공")
-                .templateId(1) // 임시값, 실제 생성된 templateId를 반환해야 함
+    //11-1 minio Presigned URL 발급 API
+    @GetMapping("/templates/presigned")
+    public ResponseEntity<CreateTemplateResponseDto> generatePresignedUrls() throws Exception {
+        List<String> presignedUrls = cacheService.generatePresignedUrlsForTemplate();
+
+        CreateTemplateResponseDto response =  CreateTemplateResponseDto.builder()
+                .message("Presigned URL 생성 완료")
+                .images(presignedUrls)
                 .build();
 
-        return ResponseEntity.ok().body(responseDto);
+        return ResponseEntity.ok().body(response);
     }
 
-    //12 b
+    //12. 공고 _ 그룹 생성
     @PostMapping("/groups")
     public ResponseEntity<CreateGroupResponseDto> createGroup(@RequestBody CreateGroupRequestDto createGroupDto) {
 
-        CreateGroupResponseDto responseDto = CreateGroupResponseDto.builder()
-                .message("그룹 생성 성공")
-                .groupId(1) // 임시값, 실제 생성된 groupId를 반환해야 함
-                .build();
+        CreateGroupResponseDto response = orgRecruitService.createGroup(createGroupDto);
 
-        return ResponseEntity.ok().body(responseDto);
+        return ResponseEntity.ok().body(response);
     }
 
-    //13 b
+    //13. 공고 _ 공고 생성
     @PostMapping("/recruits")
     public ResponseEntity<CreateRecruitResponseDto> createRecruit(@RequestBody CreateRecruitRequestDto createRecruitDto) {
 
-        CreateRecruitResponseDto responseDto = CreateRecruitResponseDto.builder()
-                .message("공고 생성 완료")
-                .recruitId(1) // 임시값, 실제 생성된 recruitId를 반환해야 함
-                .build();
+        CreateRecruitResponseDto response = orgRecruitService.createRecruit(createRecruitDto);
 
-        return ResponseEntity.ok().body(responseDto);
+        return ResponseEntity.ok().body(response);
     }
 
-    //14
+    //14. 공고_상세조회
     @GetMapping("/recruits/{recruitId}")
-    public ResponseEntity<ReadRecruitResponseDto> readRecruit(@PathVariable int recruitId) {
+    public ResponseEntity<ReadRecruitResponseDto> readRecruit(@PathVariable(name = "recruitId") Integer recruitId) {
 
-        ReadRecruitResponseDto responseDto = new ReadRecruitResponseDto();
+        ReadRecruitResponseDto response = orgRecruitService.readRecruit(recruitId);
 
-        return ResponseEntity.ok().body(responseDto);
+        return ResponseEntity.ok().body(response);
     }
 
-    //15
+    //15. 공고, 봉사자 관리 _ 개별공고랑 관련된 지원자 조회
     @GetMapping("/recruits/{recruitId}/applications")
-    public ResponseEntity<ReadApplicationsResponseDto> readApplications(@PathVariable int recruitId) {
+    public ResponseEntity<ReadApplicationsResponseDto> readApplications(@PathVariable(name = "recruitId") Integer recruitId) {
 
-        ReadApplicationsResponseDto responseDto = new ReadApplicationsResponseDto();
+        ReadApplicationsResponseDto response = orgRecruitService.readApplications(recruitId);
 
-        return ResponseEntity.ok().body(responseDto);
+        return ResponseEntity.ok().body(response);
     }
 
-    //16 b
+    //16. 봉사자 관리 _ 봉사자 수락/거절
     @PatchMapping("/applications/status")
     public ResponseEntity<UpdateApplicationsResponseDto> updateStatuses(@RequestBody UpdateApplicationsRequestDto updateApplicationDto) {
 
-        UpdateApplicationsResponseDto.Application application = new UpdateApplicationsResponseDto.Application();
-        application.setApplicationId(updateApplicationDto.getApplicationId());
-        application.setRecruitId(updateApplicationDto.getRecruitId());
-        application.setStatus(updateApplicationDto.getAccept() ? "ACCEPTED" : "REJECTED");
-        application.setCreatedAt(java.time.LocalDateTime.now());
+        UpdateApplicationsResponseDto response = orgRecruitService.updateStatuses(updateApplicationDto);
 
-        UpdateApplicationsResponseDto responseDto = UpdateApplicationsResponseDto.builder()
-                .message("신청 상태 변경 완료")
-                .application(application)
-                .build();
-
-        return ResponseEntity.ok().body(responseDto);
+        return ResponseEntity.ok().body(response);
     }
 
-    //17 b
+    //17. 봉사자 관리 _ 봉사자 평가
     @PatchMapping("/recruits/{recruitId}/applications/evaluate")
-    public ResponseEntity<List<EvaluateApplicationsResponseDto>> evaluateApplicants(@PathVariable int recruitId, @RequestBody List<EvaluateApplicationsRequestDto> evaluateApplicationDtoList) {
+    public ResponseEntity<List<EvaluateApplicationsResponseDto>> evaluateApplicants(
+            @PathVariable(name = "recruitId") Integer recruitId,
+            @RequestBody List<EvaluateApplicationsRequestDto> evaluateApplicationDtoList) {
 
-        List<EvaluateApplicationsResponseDto> responseList = evaluateApplicationDtoList.stream()
-                .map(dto -> EvaluateApplicationsResponseDto.builder()
-                        .volunteerId(dto.getVolunteerId())
-                        .recommendationStatus(dto.getRecommendationStatus())
-                        .build())
-                .collect(Collectors.toList());
+        List<EvaluateApplicationsResponseDto> response = orgRecruitService.evaluateApplicants(recruitId, evaluateApplicationDtoList);
 
-        return ResponseEntity.ok().body(responseList);
+        return ResponseEntity.ok().body(response);
     }
 }

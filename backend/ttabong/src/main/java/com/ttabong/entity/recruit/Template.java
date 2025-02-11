@@ -1,5 +1,6 @@
 package com.ttabong.entity.recruit;
 
+import com.ttabong.entity.sns.ReviewImage;
 import com.ttabong.entity.user.Organization;
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,8 +14,9 @@ import java.util.Set;
 
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED) // 외부에서 new User() 막기
-@AllArgsConstructor(access = AccessLevel.PRIVATE) // Builder에서만 생성 가능
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Table(name = "Template")
 public class Template {
@@ -34,21 +36,17 @@ public class Template {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @OnDelete(action = OnDeleteAction.SET_NULL)
-    @JoinColumn(name = "Category_id")
+    @JoinColumn(name = "category_id")
     private Category category;
 
-    @Column(name = "title")
+    @Column(name = "title", length = 255)
     private String title;
 
-    @Column(name = "activity_location", nullable = false)
+    @Column(name = "activity_location", nullable = false, length = 255)
     private String activityLocation;
 
-    @Lob
-    @Column(name = "status", nullable = false, columnDefinition = "ENUM('ALL', 'ACTIVE', 'INACTIVE') DEFAULT 'ALL'")
+    @Column(name = "status", nullable = false, columnDefinition = "ENUM('ALL', 'YOUTH', 'ADULT') DEFAULT 'ALL'")
     private String status;
-
-    @Column(name = "image_id", length = 500)
-    private String imageId;
 
     @Column(name = "contact_name", length = 50)
     private String contactName;
@@ -70,4 +68,11 @@ public class Template {
     @OneToMany(mappedBy = "template")
     private Set<Recruit> recruits = new LinkedHashSet<>();
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "template_id", referencedColumnName = "template_id", insertable = false, updatable = false)
+    private ReviewImage thumbnailImage;
+
+    public Template(Integer id) {
+        this.id = id;
+    }
 }
