@@ -1,6 +1,10 @@
 package com.ttabong.service.recruit;
 
+import com.ttabong.dto.recruit.responseDto.vol.GroupDto;
+import com.ttabong.dto.recruit.responseDto.vol.ReadRecruitDetailResponseDto;
+import com.ttabong.dto.recruit.responseDto.vol.ReadVolRecruitsListResponseDto;
 import com.ttabong.dto.recruit.responseDto.vol.ReadVolRecruitsResponseDto;
+import com.ttabong.dto.user.OrganizationDto;
 import com.ttabong.entity.recruit.Application;
 import com.ttabong.entity.recruit.Recruit;
 import com.ttabong.entity.recruit.Template;
@@ -37,20 +41,28 @@ public class VolRecruitServiceImpl implements VolRecruitService {
     }
 
     @Override
-    public List<ReadVolRecruitsResponseDto> getTemplates(Integer cursor, Integer limit) {
-        List<Template> templates = (cursor == null)
-                ? templateRepository.findTopNTemplates(limit)
-                : templateRepository.findTemplatesAfterCursor(cursor, limit);
+    public ReadVolRecruitsListResponseDto getTemplates(Integer cursor, Integer limit) {
+        List<Template> templates = (cursor == null) ?
+                templateRepository.findTopNTemplates(limit) :
+                templateRepository.findTemplatesAfterCursor(cursor, limit);
 
-        return templates.stream()
-                .map(ReadVolRecruitsResponseDto::from)
-                .collect(Collectors.toList());
+        List<ReadVolRecruitsListResponseDto.TemplateWrapper> templateDetails = templates.stream()
+                .map(template -> new ReadVolRecruitsListResponseDto.TemplateWrapper(
+                        ReadVolRecruitsResponseDto.from(template),
+                        GroupDto.from(template.getGroup()),
+                        template.getOrg() != null ? OrganizationDto.from(template.getOrg()) : null
+                ))
+                .collect(Collectors.toList()); // ✅ Collectors.toList() 사용
+
+        return new ReadVolRecruitsListResponseDto(templateDetails);
     }
 
     @Override
-    public Optional<Template> getTemplateById(Integer templateId) {
-        return templateRepository.findById(templateId);
+    public Optional<ReadRecruitDetailResponseDto> getTemplateById(Integer templateId) {
+        return templateRepository.findById(templateId)
+                .map(ReadRecruitDetailResponseDto::from);
     }
+
 
     @Override
     public Application applyRecruit(int userId, int recruitId) {
