@@ -5,29 +5,6 @@ DROP DATABASE IF EXISTS volunteer_service;
 CREATE DATABASE IF NOT EXISTS volunteer_service;
 USE volunteer_service;
 
-/* 
-테이블 생성을 먼저 할 것인데, 외래키 참조 순서에 따라 에러 없이 생성하기 위해 순서를 정했음!
-외래키 참조 순서는 일단 다음과 같이 하였음:
-
-테이블 생성 순서:
-1. User
-2. Volunteer
-3. Organization
-4. Template_group
-5. Template
-6. Recruit
-7. Application
-8. OrganizationReview
-9. OrganizationReviewImage
-10. VolunteerReview
-11. ReviewImage
-12. ReviewComment
-13. VolunteerReaction
-14. main_category
-15. sub_category
-*/
-
-
 -- 전체 유저 테이블 생성
 DROP TABLE IF EXISTS User;
 CREATE TABLE User (
@@ -43,7 +20,7 @@ CREATE TABLE User (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='전체 유저 정보 테이블';
 
 -- 봉사자 추가 정보 테이블
-DROP TABLE IF EXISTS Volunteer; 
+DROP TABLE IF EXISTS Volunteer;
 CREATE TABLE Volunteer(
    volunteer_id   INT AUTO_INCREMENT NOT NULL COMMENT '봉사자 아이디_자동증가값 받는 최소성 고유키',
     user_id        INT NOT NULL COMMENT 'User(user_id) 참조',
@@ -99,7 +76,7 @@ CREATE TABLE IF NOT EXISTS Template_group (
         ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- 🔹 1. Template 테이블 먼저 생성
+-- 1. Template 테이블 먼저 생성
 CREATE TABLE IF NOT EXISTS Template (
     template_id INT AUTO_INCREMENT PRIMARY KEY COMMENT '개별 템플릿 id',
     group_id INT NOT NULL COMMENT '그룹id',
@@ -125,22 +102,6 @@ CREATE TABLE IF NOT EXISTS Template (
         ON UPDATE CASCADE ON DELETE SET NULL
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- 🔹 2. Template_image 테이블 생성 (이제 Template을 참조 가능)
--- CREATE TABLE IF NOT EXISTS Template_image (
---     template_image_id INT AUTO_INCREMENT PRIMARY KEY COMMENT '이미지 아이디',
---     template_id INT NOT NULL COMMENT '템플릿 ID',
---     image_url VARCHAR(500) NOT NULL COMMENT '이미지 URL',
---     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '이미지 생성 일시',
---     CONSTRAINT fk_template_id FOREIGN KEY (template_id) REFERENCES Template(template_id) 
---         ON DELETE CASCADE
--- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 🔹 3. Template 테이블에 image_id (Template_image FK) 추가
--- ALTER TABLE Template
--- ADD CONSTRAINT fk_template_image
--- FOREIGN KEY (image_id) REFERENCES Template_image(template_image_id)
--- ON DELETE SET NULL;
-
 DROP TABLE IF EXISTS Recruit;
 CREATE TABLE IF NOT EXISTS Recruit (
     recruit_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '봉사공고 ID',
@@ -153,23 +114,22 @@ CREATE TABLE IF NOT EXISTS Recruit (
     max_volunteer INT DEFAULT 0 COMMENT '모집할 봉사자 수',
     participate_vol_count INT DEFAULT 0 COMMENT '참여한 봉사자 수', -- 봉사가 끝난 후, 몇 명이 참여했는지
     status ENUM('RECRUITING', 'RECRUITMENT_CLOSED', 'ACTIVITY_COMPLETED')
-          NOT NULL DEFAULT 'RECRUITING' COMMENT '공고 모집 상태',
-	is_deleted     BOOLEAN DEFAULT FALSE COMMENT '삭제 여부',
+    NOT NULL DEFAULT 'RECRUITING' COMMENT '공고 모집 상태',
+    is_deleted     BOOLEAN DEFAULT FALSE COMMENT '삭제 여부',
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '수정 시각', -- 새로 추가한 컬럼
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '공고 등록 일시',
     CONSTRAINT fk_recruit_template_id
-        FOREIGN KEY (template_id) REFERENCES Template (template_id)
-        ON UPDATE CASCADE ON DELETE CASCADE
+    FOREIGN KEY (template_id) REFERENCES Template (template_id)
+    ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
-
 
 -- 봉사공고 신청 테이블 (자동 취소 상태 및 평가 여부 추가)
 DROP TABLE IF EXISTS Application;
 CREATE TABLE Application (
-    application_id     INT AUTO_INCREMENT PRIMARY KEY COMMENT '신청 ID',
-    volunteer_id INT NOT NULL COMMENT '신청한 봉사자', -- 봉사자만 신청할 수 있으니까 user_id가 아닌, volunteer_id로 함!
-    recruit_id   INT NOT NULL COMMENT '신청 대상 공고',
-    status ENUM('PENDING', 'APPROVED', 'REJECTED', 'COMPLETED', 'AUTO_CANCEL', 'NO_SHOW')
+     application_id     INT AUTO_INCREMENT PRIMARY KEY COMMENT '신청 ID',
+     volunteer_id INT NOT NULL COMMENT '신청한 봉사자', -- 봉사자만 신청할 수 있으니까 user_id가 아닌, volunteer_id로 함!
+     recruit_id   INT NOT NULL COMMENT '신청 대상 공고',
+     status ENUM('PENDING', 'APPROVED', 'REJECTED', 'COMPLETED', 'AUTO_CANCEL', 'NO_SHOW')
           NOT NULL DEFAULT 'PENDING' COMMENT '신청 상태', -- 신청하면 생기는 데이터니까 디폴트가 PENDING임
     evaluation_done BOOLEAN DEFAULT FALSE COMMENT '평가 여부',
     is_deleted     BOOLEAN DEFAULT FALSE COMMENT '삭제 여부',
@@ -183,12 +143,10 @@ CREATE TABLE Application (
         ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='봉사공고 신청 상태 관리 테이블';
 
-
-
 -- 후기 테이블(쓰레드를 열어줌)
 DROP TABLE IF EXISTS Review;
 CREATE TABLE Review (
-    review_id      INT AUTO_INCREMENT PRIMARY KEY COMMENT '후기 ID', 
+    review_id      INT AUTO_INCREMENT PRIMARY KEY COMMENT '후기 ID',
     parent_review_id INT NULL DEFAULT NULL COMMENT '자기참조 (FK)',
     group_id INT NULL DEFAULT NULL COMMENT '비슷한 것을 거르기 위해 생성',
     recruit_id INT NULL DEFAULT NULL COMMENT '어느 공고에 대한 글인가? (FK)',
@@ -198,23 +156,22 @@ CREATE TABLE Review (
     content        VARCHAR(500) NOT NULL COMMENT '후기 내용',
     is_deleted     BOOLEAN DEFAULT FALSE COMMENT '삭제 여부',
     is_public 	   BOOLEAN DEFAULT TRUE COMMENT '공개 여부',
-	img_count INT NULL DEFAULT NULL COMMENT '몇 개 이미지를 올렸는가?',
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '수정 시각', 
+    img_count INT NULL DEFAULT NULL COMMENT '몇 개 이미지를 올렸는가?',
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '수정 시각',
     created_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '기록 생성 일시',
     CONSTRAINT fk_parent_review_id
-		FOREIGN KEY (parent_review_id) REFERENCES Review (review_id),
-	CONSTRAINT fk_group_id
-		FOREIGN KEY (group_id) REFERENCES Template_group (group_id),
-	CONSTRAINT fk_review_recruit
+        FOREIGN KEY (parent_review_id) REFERENCES Review (review_id),
+    CONSTRAINT fk_group_id
+        FOREIGN KEY (group_id) REFERENCES Template_group (group_id),
+    CONSTRAINT fk_review_recruit
         FOREIGN KEY (recruit_id) REFERENCES Recruit(recruit_id)
-        ON UPDATE CASCADE ON DELETE CASCADE,
+            ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT fk_review_org
         FOREIGN KEY (org_id) REFERENCES Organization(org_id)
-        ON UPDATE CASCADE ON DELETE CASCADE,
+            ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT fk_writer_id
-		FOREIGN KEY (writer_id) REFERENCES User (user_id)
+        FOREIGN KEY (writer_id) REFERENCES User (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='후기 테이블';
-
 
 -- 이미지 테이블 (리뷰, 템플릿에 사용)
 DROP TABLE IF EXISTS Review_image;
@@ -302,9 +259,6 @@ INSERT INTO Category (name, parent_id) VALUES
 INSERT INTO Category (name, parent_id) VALUES
 ('멘토링', 14), ('학습지도 교육', 14), ('진로적성', 14), ('취업', 14), ('창업', 14), ('기타', 14);
 INSERT INTO Category (name, parent_id) VALUES ('기타', 15);
-
-
--- SELECT * FROM Category;
 
 USE volunteer_service;
 

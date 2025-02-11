@@ -7,10 +7,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-/*
- * 9. 댓글 _ 작성
- * 10. 댓글 _ 수정
- * */
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,12 +14,17 @@ import java.time.LocalDateTime;
 public class CommentCreateAndUpdateResponseDto {
     private Integer commentId;
     private Integer reviewId;
-
-    // 작성자 정보
-    private Integer writerId;
-    private String writerName;
-    private String writerProfileImage;
-
+    private WriterDto writer;
     private String content;
     private LocalDateTime updatedAt;
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class WriterDto {
+        private Integer writerId;
+        private String writerName;
+        private String writerProfileImage;
+    }
 }

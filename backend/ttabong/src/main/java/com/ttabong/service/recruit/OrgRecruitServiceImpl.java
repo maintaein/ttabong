@@ -252,7 +252,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     }
 
     @Override
-    @Transactional
     public DeleteTemplatesResponseDto deleteTemplates(DeleteTemplatesRequestDto deleteTemplatesDto) {
 
         List<Integer> deleteTemplateIds = deleteTemplatesDto.getDeletedTemplates();
@@ -489,8 +488,8 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build();
     }
 
-
     @Override
+    @Transactional(readOnly = true)
     public ReadApplicationsResponseDto readApplications(Integer recruitId) {
 
         List<Application> applications = applicationRepository.findByRecruitIdWithUser(recruitId);
@@ -531,7 +530,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     }
 
     @Override
-    @Transactional
     public UpdateApplicationsResponseDto updateStatuses(UpdateApplicationsRequestDto updateApplicationDto) {
 
         Integer applicationId = updateApplicationDto.getApplicationId();
@@ -555,8 +553,9 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     }
 
     @Override
-    @Transactional
-    public List<EvaluateApplicationsResponseDto> evaluateApplicants(Integer recruitId, List<EvaluateApplicationsRequestDto> evaluateApplicationDtoList) {
+    public List<EvaluateApplicationsResponseDto> evaluateApplicants(
+            Integer recruitId,
+            List<EvaluateApplicationsRequestDto> evaluateApplicationDtoList) {
 
         return evaluateApplicationDtoList.stream().map(dto -> {
             Integer volunteerId = dto.getVolunteerId();

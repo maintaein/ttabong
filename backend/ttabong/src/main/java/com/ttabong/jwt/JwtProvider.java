@@ -1,6 +1,7 @@
 package com.ttabong.jwt;
 
 import com.ttabong.config.JwtProperties;
+import com.ttabong.config.LoggerConfig;
 import com.ttabong.dto.user.AuthDto;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -11,8 +12,7 @@ import java.util.Base64;
 import java.util.Date;
 
 @Component
-public class JwtProvider {
-
+public class JwtProvider implements LoggerConfig {
 
     private final SecretKey secretKey;
     private final long expiration;
@@ -25,6 +25,7 @@ public class JwtProvider {
         byte[] keyBytes = Base64.getDecoder().decode(jwtProperties.getSecret());
         this.secretKey = Keys.hmacShaKeyFor(keyBytes);
         this.expiration = jwtProperties.getExpiration();
+        logger().info("ggkkghfghfkfk=============="+secretKey);
     }
 
     public String createToken(Long userId, String userType) {

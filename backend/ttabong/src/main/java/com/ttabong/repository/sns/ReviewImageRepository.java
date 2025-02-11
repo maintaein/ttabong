@@ -29,7 +29,6 @@ public interface ReviewImageRepository extends JpaRepository<ReviewImage, Intege
         List<ReviewImage> findByReviewIdOrderByIdAsc(Integer reviewId);
 
         // 특정 Review ID에 해당하는 삭제되지 않은 이미지 조회
-        List<ReviewImage> findByReviewIdAndIsDeletedFalseOrderByIdAsc(Integer reviewId);
-
+        // List<ReviewImage> findByReviewIdAndIsDeletedFalseOrderByIdAsc(Integer reviewId);
 
 }

@@ -7,9 +7,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-/*
- * 5. 후기 _ 공개 여부 설정
- * */
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
