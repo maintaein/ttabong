@@ -1,5 +1,6 @@
 package com.ttabong.dto.recruit.requestDto.org;
 
+import com.ttabong.dto.GlobalBaseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,7 +14,7 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CreateRecruitRequestDto {
+public class CreateRecruitRequestDto implements GlobalBaseDto {
     private Integer templateId;
     private LocalDateTime deadline;
     private Date activityDate;
