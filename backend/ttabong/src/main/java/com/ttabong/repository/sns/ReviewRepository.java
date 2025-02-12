@@ -67,18 +67,32 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
 
 
 
+//    @Query("""
+//        SELECT r FROM Review r
+//        LEFT JOIN FETCH r.writer w
+//        LEFT JOIN FETCH r.org o
+//        LEFT JOIN FETCH r.recruit rec
+//        LEFT JOIN FETCH rec.template t
+//        LEFT JOIN FETCH t.group g
+//        WHERE rec.id = :recruitId
+//        AND r.isDeleted = false
+//        ORDER BY r.createdAt DESC
+//    """)
+//    List<Review> findByRecruitId(@Param("recruitId") Integer recruitId);
+
     @Query("""
-        SELECT r FROM Review r
-        LEFT JOIN FETCH r.writer w
-        LEFT JOIN FETCH r.org o
-        LEFT JOIN FETCH r.recruit rec
-        LEFT JOIN FETCH rec.template t
-        LEFT JOIN FETCH t.group g
-        WHERE rec.id = :recruitId
-        AND r.isDeleted = false
-        ORDER BY r.createdAt DESC
-    """)
+    SELECT r FROM Review r
+    LEFT JOIN FETCH r.writer w
+    LEFT JOIN FETCH r.org o
+    LEFT JOIN FETCH r.recruit rec
+    LEFT JOIN FETCH rec.template t
+    LEFT JOIN FETCH t.group g
+    WHERE rec.id = :recruitId
+    AND r.isDeleted = false
+    ORDER BY r.createdAt DESC
+""")
     List<Review> findByRecruitId(@Param("recruitId") Integer recruitId);
+
 
 
 }

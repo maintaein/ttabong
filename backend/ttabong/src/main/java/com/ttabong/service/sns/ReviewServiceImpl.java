@@ -490,10 +490,10 @@ public class ReviewServiceImpl implements ReviewService {
                                 .isDeleted(review.getIsDeleted())
                                 .updatedAt(review.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
                                 .createdAt(review.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+
                                 .build())
                         .writer(RecruitReviewResponseDto.WriterDto.builder()
-//                                .writerId(review.getWriter().getId())
-                                .name(review.getWriter().getName())
+                                .name(review.getWriter() != null ? review.getWriter().getName() : "Unknown")
                                 .build())
                         .group(review.getRecruit().getTemplate() != null && review.getRecruit().getTemplate().getGroup() != null ?
                                 RecruitReviewResponseDto.GroupDto.builder()
@@ -505,12 +505,16 @@ public class ReviewServiceImpl implements ReviewService {
                                 .orgId(review.getOrg().getId())
                                 .orgName(review.getOrg().getOrgName())
                                 .build())
-                        .images(review.getReviewComments().stream()
-                                .flatMap(c -> c.getReview().getReviewComments().stream()
-                                        .map(comment -> comment.getWriter().getProfileImage()))
-                                .collect(Collectors.toList()))
+                        .images(
+                                reviewImageRepository.findThumbnailImageByReviewId(review.getId())
+                                        .orElse(null)
+                        )
+//                        .images(review.getReviewComments().stream()
+//                                .flatMap(c -> c.getReview().getReviewComments().stream()
+//                                        .map(comment -> comment.getWriter() != null ? comment.getWriter().getProfileImage() : null))
+//                                .filter(Objects::nonNull)
+//                                .collect(Collectors.toList()))
                         .build())
                 .collect(Collectors.toList());
     }
-
 }
