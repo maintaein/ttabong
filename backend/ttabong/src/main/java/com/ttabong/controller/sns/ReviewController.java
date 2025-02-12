@@ -122,7 +122,7 @@ public class ReviewController {
     }
 
     // 9. 후기수정 시작 _ (presigneed)요청
-    @GetMapping("/edit")
+    @GetMapping("/{reviewId}/edit")
     public ResponseEntity<ReviewEditStartResponseDto> startReviewEdit(
             @PathVariable(name = "reviewId") Integer reviewId,
             @AuthenticationPrincipal AuthDto authDto) {
