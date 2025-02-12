@@ -29,41 +29,46 @@ public class UserController {
     @PostMapping("/user/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
 
-        try {
-            if (loginRequest.getUserType() == null || loginRequest.getUserType().isEmpty()) {
-                return ResponseEntity.badRequest().body("userType이 필요합니다.");
-            }
 
-            Long userId = userService.login(loginRequest);
+        if (loginRequest.getUserType() == null || loginRequest.getUserType().isEmpty()) {
+            return ResponseEntity.badRequest().body("userType이 필요합니다.");
+        }
+
+
+        String loginResult = userService.login(loginRequest);
+
+        if(loginResult.startsWith("userId")){
+            String userId = loginResult.split(" : ")[1];
 
             String accessToken = jwtProvider.createToken(userId, loginRequest.getUserType());
-            System.out.println(accessToken);
             return ResponseEntity.ok(new LoginResponse(200, "로그인 성공", accessToken));
-
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new LoginResponse(401, "이메일 또는 비밀번호가 일치하지 않습니다.", null));
         }
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new LoginResponse(401, "이메일 또는 비밀번호가 일치하지 않습니다.", null));
     }
 
     @PostMapping("/volunteer/register")
     public ResponseEntity<?> registerVolunteer(@RequestBody VolunteerRegisterRequest request) {
-        try {
-            userService.registerVolunteer(request);
+
+        String registerResult = userService.registerVolunteer(request);
+
+        if(registerResult.isEmpty()){
             return ResponseEntity.status(HttpStatus.CREATED).body(new RegisterResponse(201,"봉사자 회원가입이 완료되었습니다."));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new RegisterResponse(400,e.getMessage()));
         }
+
+        return ResponseEntity.badRequest().body(new RegisterResponse(400,"이미 계정이 존재합니다."));
     }
 
     @PostMapping("/org/register")
     public ResponseEntity<?> registerOrganization(@RequestBody OrganizationRegisterRequest request) {
-        try {
-            userService.registerOrganization(request);
+        String registerResult = userService.registerOrganization(request);
+
+        if(registerResult.isEmpty()){
             return ResponseEntity.status(HttpStatus.CREATED).body(new RegisterResponse(201,"기관 회원가입이 완료되었습니다."));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new RegisterResponse(400,e.getMessage()));
         }
+
+        return ResponseEntity.badRequest().body(new RegisterResponse(400,"이미 계정이 존재합니다."));
     }
 
     @GetMapping("/user/check-email")

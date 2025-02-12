@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -39,24 +38,23 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public long login(LoginRequest loginRequest) {
-        Optional<UserLoginProjection> userOpt = userRepository.findByEmailAndIsDeletedFalse(loginRequest.getEmail());
+    public String login(LoginRequest loginRequest) {
+        UserLoginProjection user = userRepository.findByEmailAndIsDeletedFalse(loginRequest.getEmail());
 
-        if (userOpt.isEmpty()) {
-            throw new RuntimeException("User not found");
+        if (user == null) {
+            return "failed : user not found";
         }
-        UserLoginProjection user = userOpt.get(); // 아이디와 비밀번호만 가져오도록 프로젝션추가
 
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid password");
+            return "failed : invalid password";
         }
-        return user.getId();
+        return "userId : " + user.getId();
     }
 
     @Override
-    public void registerVolunteer(VolunteerRegisterRequest request) {
+    public String registerVolunteer(VolunteerRegisterRequest request) {
         if (userRepository.existsByEmailAndIsDeletedFalse(request.getEmail())) {
-            throw new RuntimeException("이미 계정이 존재합니다.");
+            return "failed : user already exists";
         }
 
         User user = User.builder()
@@ -83,12 +81,14 @@ public class UserServiceImpl implements UserService {
                 .notRecommendedCount(0)
                 .build();
         volunteerRepository.save(volunteer);
+
+        return "";
     }
 
     @Override
-    public void registerOrganization(OrganizationRegisterRequest request) {
+    public String registerOrganization(OrganizationRegisterRequest request) {
         if (userRepository.existsByEmailAndIsDeletedFalse(request.getEmail())) {
-            throw new RuntimeException("이미 계정이 존재합니다.");
+            return "failed : user already exists";
         }
 
         User user = User.builder()
@@ -111,6 +111,8 @@ public class UserServiceImpl implements UserService {
                 .orgAddress(request.getOrgAddress())
                 .build();
         organizationRepository.save(organization);
+
+        return "";
     }
 
     @Override
