@@ -2,18 +2,15 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { jwtDecode } from 'jwt-decode';
 import { userApi } from '@/api/userApi';
-import { ApiError } from '@/api/axiosInstance';
+import type { ApiError } from '@/api/axiosInstance';
+import type { JwtPayload } from '@/types/userType';
 import { 
   VolunteerRegisterRequest, 
   OrganizationRegisterRequest 
 } from '@/types/userType';
 
-interface JwtPayload {
-  userType: 'volunteer' | 'organization';
-}
-
 interface UserState {
-  accessToken: string | null;
+  userId: string | null;
   userType: 'volunteer' | 'organization' | null;
   isLoading: boolean;
   error: string | null;
@@ -27,7 +24,7 @@ interface UserState {
 export const useUserStore = create<UserState>()(
   persist(
     (set) => ({
-      accessToken: null,
+      userId: null,
       userType: null,
       isLoading: false,
       error: null,
@@ -36,10 +33,13 @@ export const useUserStore = create<UserState>()(
         set({ isLoading: true, error: null });
         try {
           const response = await userApi.login({ email, password, userType });
-          const decoded = jwtDecode<JwtPayload>(response.data.accessToken);
+          const decoded = jwtDecode<JwtPayload>(response.access_token);
+          
+          localStorage.setItem('access_token', response.access_token);
           set({
-            accessToken: response.data.accessToken,
-            userType: decoded.userType as 'volunteer' | 'organization',
+            userId: decoded.sub,
+            userType: decoded.userType,
+            error: null
           });
           return response.message;
         } catch (error) {
@@ -55,7 +55,7 @@ export const useUserStore = create<UserState>()(
         try {
           await userApi.logout();
           set({
-            accessToken: null,
+            userId: null,
             userType: null,
             error: null
           });

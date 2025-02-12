@@ -1,6 +1,5 @@
 import axiosInstance from './axiosInstance';
-import { ApiResponse } from './axiosInstance';
-import { 
+import type { 
   LoginRequest, 
   LoginResponse,
   VolunteerRegisterRequest,
@@ -8,24 +7,20 @@ import {
 } from '@/types/userType';
 
 export const userApi = {
-  login: async (data: LoginRequest): Promise<ApiResponse<LoginResponse>> => {
+  login: async (data: LoginRequest): Promise<LoginResponse> => {
     const response = await axiosInstance.post('/user/login', data);
     return response.data;
   },
 
+  registerVolunteer: async (data: VolunteerRegisterRequest): Promise<void> => {
+    await axiosInstance.post('/volunteer/register', data);
+  },
+
   logout: async () => {
-    await axiosInstance.post('/user/logout', {}, {
-      withCredentials: true
-    });
+    localStorage.removeItem('access_token');
   },
 
-  registerVolunteer: async (data: VolunteerRegisterRequest): Promise<ApiResponse<void>> => {
-    const response = await axiosInstance.post('/volunteer/register', data);
-    return response.data;
+  registerOrganization: async (data: OrganizationRegisterRequest): Promise<void> => {
+    await axiosInstance.post('/organization/register', data);
   },
-
-  registerOrganization: async (data: OrganizationRegisterRequest): Promise<ApiResponse<void>> => {
-    const response = await axiosInstance.post('/org/register', data);
-    return response.data;
-  }
 }; 
