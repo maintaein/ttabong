@@ -344,10 +344,13 @@ public class ReviewServiceImpl implements ReviewService {
                                 .orgId(review.getOrg().getId())
                                 .orgName(review.getOrg().getOrgName())
                                 .build())
-                        .images(review.getReviewComments().stream()
-                                .flatMap(c -> c.getReview().getReviewComments().stream()
-                                        .map(comment -> comment.getWriter().getProfileImage()))
-                                .collect(Collectors.toList())) // 이미지 리스트 생성
+//                        .images(review.getReviewComments().stream()
+//                                .flatMap(c -> c.getReview().getReviewComments().stream()
+//                                        .map(comment -> comment.getWriter().getProfileImage()))
+//                                .collect(Collectors.toList())) // 이미지 리스트 생성
+                        .images(
+                                reviewImageRepository.findThumbnailImageByReviewId(review.getId()).orElse(null) // ✅ 썸네일 가져오기
+                        )
                         .build())
                 .collect(Collectors.toList());
     }
@@ -367,6 +370,7 @@ public class ReviewServiceImpl implements ReviewService {
                                 .isDeleted(review.getIsDeleted())
                                 .updatedAt(review.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
                                 .createdAt(review.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+
                                 .build()
                         )
                         .group(MyAllReviewPreviewResponseDto.GroupDto.builder()
@@ -383,19 +387,23 @@ public class ReviewServiceImpl implements ReviewService {
                                 .orgName(review.getOrg() != null ? review.getOrg().getOrgName() : "N/A")
                                 .build()
                         )
-                        .images(Optional.ofNullable(review.getReviewComments())
-                                .orElse(Collections.emptySet()).stream()
-                                .flatMap(c -> Optional.ofNullable(c.getReview())
-                                        .map(Review::getReviewComments)
-                                        .orElse(Collections.emptySet()).stream()
-                                        .map(comment -> Optional.ofNullable(comment.getWriter())
-                                                .map(User::getProfileImage)
-                                                .orElse(null)))
-                                .filter(Objects::nonNull)
-                                .collect(Collectors.toList()))
+//                        .images(Optional.ofNullable(review.getReviewComments())
+//                                .orElse(Collections.emptySet()).stream()
+//                                .flatMap(c -> Optional.ofNullable(c.getReview())
+//                                        .map(Review::getReviewComments)
+//                                        .orElse(Collections.emptySet()).stream()
+//                                        .map(comment -> Optional.ofNullable(comment.getWriter())
+//                                                .map(User::getProfileImage)
+//                                                .orElse(null)))
+//                                .filter(Objects::nonNull)
+//                                .collect(Collectors.toList()))
+                        .images(
+                                reviewImageRepository.findThumbnailImageByReviewId(review.getId()).orElse(null) // ✅ 썸네일 가져오기
+                        )
                         .build())
                 .collect(Collectors.toList());
     }
+
 
 
     @Override
