@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Getter
 @NoArgsConstructor
@@ -14,10 +13,11 @@ import java.util.List;
 @Builder
 public class MyAllReviewPreviewResponseDto {
     private ReviewDto review;
-    private WriterDto writer;
+//    private WriterDto writer;
     private GroupDto group;
     private OrganizationDto organization;
-    private List<String> images;
+//    private List<String> images;
+    private String images;
 
     @Getter
     @NoArgsConstructor
@@ -33,14 +33,14 @@ public class MyAllReviewPreviewResponseDto {
         private LocalDateTime createdAt;
     }
 
-    @Getter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
-    public static class WriterDto {
-        private Integer writerId;
-        private String name;
-    }
+//    @Getter
+//    @NoArgsConstructor
+//    @AllArgsConstructor
+//    @Builder
+//    public static class WriterDto {
+//        private Integer writerId;
+//        private String name;
+//    }
 
     @Getter
     @NoArgsConstructor

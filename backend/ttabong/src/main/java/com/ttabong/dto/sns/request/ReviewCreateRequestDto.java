@@ -18,8 +18,8 @@ public class ReviewCreateRequestDto {
     private Integer recruitId;
     @NotNull
     private Integer orgId;
-    @NotNull
-    private Integer writerId;
+//    @NotNull
+//    private Integer writerId;
     @NotBlank
     private String title;
     @NotBlank
