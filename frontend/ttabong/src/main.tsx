@@ -1,5 +1,5 @@
+import React from "react";
 import "pretendard/dist/web/static/pretendard.css";
-import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App";
@@ -9,17 +9,20 @@ async function enableMocking() {
   if (process.env.NODE_ENV === 'development') {
     const { worker } = await import('./mocks/browser');
     return worker.start({
-      onUnhandledRequest: 'bypass',
+      onUnhandledRequest: 'warn',
+      serviceWorker: {
+        url: '/mockServiceWorker.js',
+      },
     });
   }
 }
 
 enableMocking().then(() => {
   createRoot(document.getElementById("root")!).render(
-    <StrictMode>
+    <React.StrictMode>
       <BrowserRouter>
         <App />
       </BrowserRouter>
-    </StrictMode>,
+    </React.StrictMode>,
   );
 });

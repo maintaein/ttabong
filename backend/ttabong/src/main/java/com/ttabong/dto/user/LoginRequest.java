@@ -1,6 +1,8 @@
 package com.ttabong.dto.user;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
@@ -8,4 +10,5 @@ import lombok.*;
 public class LoginRequest {
     private String email;
     private String password;
+    private String userType;
 }

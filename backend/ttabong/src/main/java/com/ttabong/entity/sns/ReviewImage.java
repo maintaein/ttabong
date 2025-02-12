@@ -1,18 +1,18 @@
 package com.ttabong.entity.sns;
 
+import com.ttabong.entity.recruit.Template;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.Instant;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED) // 외부에서 new User() 막기
-@AllArgsConstructor(access = AccessLevel.PRIVATE) // Builder에서만 생성 가능
-@Builder
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder(toBuilder = true)
 @Table(name = "Review_image")
 public class ReviewImage {
 
@@ -21,24 +21,34 @@ public class ReviewImage {
     @Column(name = "image_id", nullable = false)
     private Integer id;
 
-    @Column(name = "Review_id", nullable = false)
-    private Integer reviewId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "template_id", foreignKey = @ForeignKey(name = "fk_review_image_template"))
+    private Template template;
 
-    @Column(name = "image_url", nullable = false, length = 500)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "review_id", foreignKey = @ForeignKey(name = "fk_review_image_review"))
+    private Review review;
+
+    @Column(name = "image_url", length = 500)
     private String imageUrl;
 
-    @ColumnDefault("0")
-    @Column(name = "is_deleted")
+    @ColumnDefault("false")
+    @Column(name = "is_thumbnail", nullable = false)
+    private Boolean isThumbnail;
+
+    @ColumnDefault("false")
+    @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted;
 
     @ColumnDefault("CURRENT_TIMESTAMP")
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
-    @Column(name = "next_image_id")
-    private Integer nextImageId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "next_image_id", foreignKey = @ForeignKey(name = "fk_next_image_id"))
+    private ReviewImage nextImage;
 
-    @OneToMany(mappedBy = "thumbnailImg")
-    private Set<Review> reviews = new LinkedHashSet<>();
-
+    public void setThumbnail(Boolean isThumbnail) {
+        this.isThumbnail = isThumbnail;
+    }
 }

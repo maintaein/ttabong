@@ -1,4 +1,5 @@
 import type { Review } from '@/types/reviewType';
+import { ContentLoading } from '@/components/Loading';
 
 interface ReviewGalleryGridProps {
   reviews: Review[];
@@ -6,8 +7,12 @@ interface ReviewGalleryGridProps {
 }
 
 export function ReviewGalleryGrid({ reviews, onReviewClick }: ReviewGalleryGridProps) {
+  if (!reviews.length) {
+    return <ContentLoading text="리뷰가 없습니다" />;
+  }
+
   return (
-    <div className="grid grid-cols-3 gap-1">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1">
       {reviews.map((review) => (
         <div
           key={review.review.reviewId}
@@ -25,4 +30,4 @@ export function ReviewGalleryGrid({ reviews, onReviewClick }: ReviewGalleryGridP
       ))}
     </div>
   );
-} 
+}   

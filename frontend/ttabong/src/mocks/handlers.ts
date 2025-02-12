@@ -134,30 +134,39 @@ function generateRecruitReviews(recruitId: number) {
   }));
 }
 
+const BASE_URL = 'http://localhost:8080';
+
+const corsHeaders = {
+  'Content-Type': 'application/json',
+  'Access-Control-Allow-Credentials': 'true',
+  'Access-Control-Allow-Origin': 'http://localhost:5173', // 프론트엔드 도메인
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
 export const handlers = [
+  // CORS Preflight 처리
+  http.options(`${BASE_URL}/*`, () => {
+    return new HttpResponse(null, { headers: corsHeaders });
+  }),
+
   // 리뷰 목록 조회
-  http.get('/api/reviews', () => {
+  http.get(`${BASE_URL}/api/reviews`, () => {
     return new HttpResponse(JSON.stringify(reviews), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
+      headers: corsHeaders,
     });
   }),
 
   // 리뷰 상세 조회
-  http.get('/api/reviews/:id', ({ params }) => {
+  http.get(`${BASE_URL}/api/reviews/:id`, ({ params }) => {
     const { id } = params;
     return new HttpResponse(JSON.stringify(generateReviewDetail(Number(id))), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
+      headers: corsHeaders,
     });
   }),
 
   // 댓글 작성
-  http.post('/api/reviews/:id/comments', async ({ request }) => {
+  http.post(`${BASE_URL}/api/reviews/:id/comments`, async ({ request }) => {
     const { content } = await request.json() as { content: string };
     return new HttpResponse(JSON.stringify({
       commentId: Math.floor(Math.random() * 1000),
@@ -167,32 +176,18 @@ export const handlers = [
       createdAt: new Date().toISOString()
     }), {
       status: 201,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
+      headers: corsHeaders,
     });
   }),
 
   // 봉사활동별 리뷰 목록 조회
-  http.get('/api/recruits/:recruitId/reviews', ({ params }) => {
+  http.get(`${BASE_URL}/api/recruits/:recruitId/reviews`, ({ params }) => {
     const { recruitId } = params;
-    return HttpResponse.json(generateRecruitReviews(Number(recruitId)));
-  }),
-
-  // CORS Preflight 처리
-  http.options('*', () => {
-    return new HttpResponse(null, {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      },
-    });
+    return HttpResponse.json(generateRecruitReviews(Number(recruitId)), { headers: corsHeaders });
   }),
 
   // 내 봉사활동 목록 조회
-  http.get('/api/applications/mine', () => {
+  http.get(`${BASE_URL}/api/applications/mine`, () => {
     return HttpResponse.json([
       {
         applicationId: 55,
@@ -262,15 +257,79 @@ export const handlers = [
           createdAt: "2024-02-10T16:45:00"
         }
       }
-    ]);
+    ], { headers: corsHeaders });
   }),
 
   // 리뷰 작성 API
-  http.post('/api/reviews', async ({ request }) => {
+  http.post(`${BASE_URL}/api/reviews`, async ({ request }) => {
     const reviewData = await request.json() as Record<string, any>;
     return HttpResponse.json({
       reviewId: Math.random(),
       ...reviewData
-    }, { status: 201 });
+    }, { status: 201, headers: corsHeaders });
+  }),
+
+  // 로그인 API
+  http.post(`${BASE_URL}/api/user/login`, async ({ request }) => {
+    const { email, password, userType } = await request.json() as {
+      email: string;
+      password: string;
+      userType: 'volunteer' | 'organization';
+    };
+
+    // 간단한 검증
+    if (!email || !password) {
+      return HttpResponse.json({ 
+        message: '이메일과 비밀번호를 입력해주세요.' 
+      }, { status: 400, headers: corsHeaders });
+    }
+
+    return HttpResponse.json({
+      accessToken: 'mock_access_token',
+      refreshToken: 'mock_refresh_token',
+      userType,
+      message: '로그인에 성공했습니다.'
+    }, { 
+      status: 200,
+      headers: corsHeaders
+    });
+  }),
+
+  // 봉사자 회원가입 API
+  http.post(`${BASE_URL}/api/volunteer/register`, async ({ request }) => {
+    const data = await request.json() as { email: string };
+    
+    if (!data.email) {
+      return HttpResponse.json({ 
+        message: '필수 정보가 누락되었습니다.' 
+      }, { status: 400, headers: corsHeaders });
+    }
+
+    return HttpResponse.json({
+      message: '회원가입이 완료되었습니다.',
+      data: { email: data.email }
+    }, { 
+      status: 201,
+      headers: corsHeaders
+    });
+  }),
+
+  // 기관 회원가입 API
+  http.post(`${BASE_URL}/api/org/register`, async ({ request }) => {
+    const data = await request.json() as { email: string; orgName: string };
+    
+    if (!data.email || !data.orgName) {
+      return HttpResponse.json({ 
+        message: '필수 정보가 누락되었습니다.' 
+      }, { status: 400, headers: corsHeaders });
+    }
+
+    return HttpResponse.json({
+      message: '기관 회원가입이 완료되었습니다.',
+      data: { email: data.email, orgName: data.orgName }
+    }, { 
+      status: 201,
+      headers: corsHeaders
+    });
   })
 ]; 

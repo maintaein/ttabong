@@ -1,41 +1,34 @@
 package com.ttabong.dto.sns.request;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import java.util.List;
 
-/*
- * 7. 후기 _ 생성
- * */
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class ReviewCreateRequestDto {
     @NotNull
-    private Long recruitId;  // 공고 ID
-
+    private Integer recruitId;
     @NotNull
-    private Long orgId;  // 기관 ID
-
-    @NotNull
-    private Long writerId;  // 작성자 ID
-
+    private Integer orgId;
+//    @NotNull
+//    private Integer writerId;
     @NotBlank
-    private String title;  // 후기 제목
-
+    private String title;
     @NotBlank
-    private String content;  // 후기 내용
-
+    private String content;
     @NotNull
-    private Boolean isPublic;  // 공개 여부
+    private Boolean isPublic;
+    private List<String> uploadedImages;
 
-    private List<String> images;  // 이미지 URL 리스트
-
-    @NotNull
-    private Integer imageCount;  // 이미지 개수
+    public int getImageCount() {
+        return (uploadedImages != null) ? uploadedImages.size() : 0;
+    }
 }

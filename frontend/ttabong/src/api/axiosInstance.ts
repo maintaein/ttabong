@@ -1,60 +1,58 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import config from '@/config';
 
+export interface ApiResponse<T = any> {
+  data: T;
+  message: string;
+}
+
+export interface ApiError {
+  status: number;
+  message: string;
+  type: 'VALIDATION' | 'AUTH' | 'SERVER' | 'NETWORK';
+}
+
+interface ErrorResponse {
+  message: string;
+}
+
 const axiosInstance = axios.create({
   baseURL: `${config.baseURL}${config.apiPrefix}`,
   timeout: config.timeout,
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
   },
+  withCredentials: true 
 });
 
 // 요청 인터셉터
 axiosInstance.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
+  (config: InternalAxiosRequestConfig) => config,
   (error: AxiosError) => Promise.reject(error)
 );
 
 // 응답 인터셉터
 axiosInstance.interceptors.response.use(
   (response) => response,
-  async (error: AxiosError<{ message: string }>) => {
-    const originalRequest = error.config;
-
-    if (error.response?.status === 401 && originalRequest) {
-      try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (!refreshToken) throw new Error('리프레시 토큰이 없습니다.');
-
-        const { data } = await axios.post(`${config.baseURL}${config.apiPrefix}/auth/refresh`, {
-          refreshToken,
-        });
-
-        const { accessToken } = data;
-        localStorage.setItem('accessToken', accessToken);
-
-        if (originalRequest.headers) {
-          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-        }
-        return axios(originalRequest);
-      } catch (refreshError) {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
-      }
-    }
-
-    return Promise.reject(
-      new Error(error.response?.data?.message || '서버 오류가 발생했습니다.')
-    );
+  async (error: AxiosError<ErrorResponse | string>) => {
+    const apiError: ApiError = {
+      status: error.response?.status || 500,
+      message: typeof error.response?.data === 'string' 
+        ? error.response.data 
+        : error.response?.data?.message || '서버 오류가 발생했습니다.',
+      type: getErrorType(error)
+    };
+    throw apiError;
   }
 );
+
+function getErrorType(error: AxiosError): ApiError['type'] {
+  if (!error.response) return 'NETWORK';
+  if (error.response.status === 400) return 'VALIDATION';
+  if (error.response.status === 401 || error.response.status === 403) return 'AUTH';
+  return 'SERVER';
+}
+
 
 export default axiosInstance; 

@@ -28,10 +28,12 @@ export const useReviewStore = create<ReviewStore>((set) => ({
       const reviews = await reviewApi.getReviews();
       set({ reviews, error: null });
     } catch (error) {
+      console.error('리뷰 불러오기 실패:', error);
       set({ error: '리뷰를 불러오는데 실패했습니다.' });
     } finally {
       set({ isLoading: false });
     }
+
   },
 
   fetchReviewDetail: async (id: number) => {
@@ -40,10 +42,12 @@ export const useReviewStore = create<ReviewStore>((set) => ({
       const reviewDetail = await reviewApi.getReviewDetail(id);
       set({ reviewDetail, error: null });
     } catch (error) {
+      console.error('리뷰 상세 정보 불러오기 실패:', error);
       set({ error: '리뷰 상세 정보를 불러오는데 실패했습니다.' });
     } finally {
       set({ isLoading: false });
     }
+
   },
 
   addComment: async (reviewId: number, content: string) => {
@@ -56,9 +60,11 @@ export const useReviewStore = create<ReviewStore>((set) => ({
         } : null
       }));
     } catch (error) {
+      console.error('댓글 작성 실패:', error);
       set({ error: '댓글 작성에 실패했습니다.' });
     }
   },
+
 
   fetchRecruitReviews: async (recruitId: number) => {
     set({ isLoading: true });
@@ -66,10 +72,12 @@ export const useReviewStore = create<ReviewStore>((set) => ({
       const response = await reviewApi.getRecruitReviews(recruitId);
       set({ recruitReviews: response, error: null });
     } catch (error) {
+      console.error('리뷰 목록 불러오기 실패:', error);
       set({ error: '리뷰 목록을 불러오는데 실패했습니다.' });
     } finally {
       set({ isLoading: false });
     }
+
   },
 
   deleteReview: async (reviewId: number) => {
