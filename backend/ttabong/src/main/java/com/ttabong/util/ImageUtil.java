@@ -35,15 +35,35 @@ public class ImageUtil {
     }
 
     public String getPresignedDownloadUrl(String objectName) throws Exception {
-        return minioClient.getPresignedObjectUrl(
-                GetPresignedObjectUrlArgs.builder()
-                        .bucket(bucketName)
-                        .object(objectName)
-                        .method(Method.GET)
-                        .expiry(10, TimeUnit.MINUTES) // 10분 동안 유효
-                        .build()
-        );
+        try {
+            return minioClient.getPresignedObjectUrl(
+                    GetPresignedObjectUrlArgs.builder()
+                            .bucket(bucketName)
+                            .object(objectName)
+                            .method(Method.GET)
+                            .expiry(10, TimeUnit.MINUTES) // 10분 동안 유효
+                            .build()
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Presigned URL 생성 실패: " + e.getMessage(), e);
+        }
     }
+
+//    public String generatePresignedUrl(String objectPath) {
+//        try {
+//            return minioClient.getPresignedObjectUrl(
+//                    GetPresignedObjectUrlArgs.builder()
+//                            .method(Method.GET)
+//                            .bucket(bucketName)
+//                            .object(objectPath)
+//                            .expiry(60 * 60)
+//                            .build()
+//            );
+//        } catch (Exception e) {
+//            throw new RuntimeException("Presigned URL 생성 실패: " + e.getMessage(), e);
+//        }
+//    }
+
 
     public String getPresignedDeleteUrl(String objectName) throws Exception {
         return minioClient.getPresignedObjectUrl(

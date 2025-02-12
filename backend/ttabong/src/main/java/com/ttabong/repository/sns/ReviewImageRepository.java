@@ -40,5 +40,12 @@ public interface ReviewImageRepository extends JpaRepository<ReviewImage, Intege
         """)
         Optional<String> findThumbnailImageByReviewId(@Param("reviewId") Integer reviewId);
 
+        @Query("""
+            SELECT ri.imageUrl FROM ReviewImage ri
+            WHERE ri.review.id = :reviewId
+        """)
+        List<String> findAllImagesByReviewId(@Param("reviewId") Integer reviewId);
+
+
 
 }
