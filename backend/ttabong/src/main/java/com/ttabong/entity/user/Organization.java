@@ -5,7 +5,9 @@ import com.ttabong.entity.recruit.TemplateGroup;
 import com.ttabong.entity.sns.Review;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 
+import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -37,10 +39,6 @@ public class Organization {
 
     @Column(name = "org_address", nullable = false, length = 200)
     private String orgAddress;
-
-//    @ColumnDefault("CURRENT_TIMESTAMP")
-//    @Column(name = "created_at", nullable = false, insertable=false, updatable=false)
-//    private Instant createdAt;
 
     @OneToMany(mappedBy = "org")
     private Set<Review> reviews = new LinkedHashSet<>();
