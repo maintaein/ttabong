@@ -22,6 +22,6 @@ export const userApi = {
   },
 
   registerOrganization: async (data: OrganizationRegisterRequest): Promise<void> => {
-    await axiosInstance.post('/organization/register', data);
+    await axiosInstance.post('/org/register', data);
   },
 }; 
