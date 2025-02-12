@@ -9,6 +9,7 @@ import type {
 export const userApi = {
   login: async (data: LoginRequest): Promise<LoginResponse> => {
     const response = await axiosInstance.post('/user/login', data);
+    console.log('API response:', response.data);  // 응답 데이터 로깅
     return response.data;
   },
 

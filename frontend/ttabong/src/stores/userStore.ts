@@ -33,16 +33,26 @@ export const useUserStore = create<UserState>()(
         set({ isLoading: true, error: null });
         try {
           const response = await userApi.login({ email, password, userType });
-          const decoded = jwtDecode<JwtPayload>(response.access_token);
           
-          localStorage.setItem('access_token', response.access_token);
+          // 응답 데이터 로깅
+          console.log('Login response:', response);
+          
+          if (!response.accessToken) {
+            throw new Error('토큰이 없습니다.');
+          }
+
+          const decoded = jwtDecode<JwtPayload>(response.accessToken);
+          localStorage.setItem('access_token', response.accessToken);
+          
           set({
             userId: decoded.sub,
             userType: decoded.userType,
             error: null
           });
+          
           return response.message;
         } catch (error) {
+          console.error('Login error:', error);
           const apiError = error as ApiError;
           set({ error: apiError.message });
           throw apiError;
