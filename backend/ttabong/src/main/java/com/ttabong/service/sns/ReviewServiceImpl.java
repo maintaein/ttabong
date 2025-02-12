@@ -192,7 +192,6 @@ public class ReviewServiceImpl implements ReviewService {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new RuntimeException("Review not found"));
 
-        // 기존 후기 정보 업데이트
         Review updatedReview = review.toBuilder()
                 .title(requestDto.getTitle())
                 .content(requestDto.getContent())
@@ -201,15 +200,14 @@ public class ReviewServiceImpl implements ReviewService {
                 .build();
         reviewRepository.save(updatedReview);
 
-        // 기존 10개의 `ReviewImage` 데이터 가져오기 (순서 보장_id순서대로 하기)
         List<ReviewImage> existingImages = reviewImageRepository.findByReviewIdOrderByIdAsc(reviewId);
 
-        // 기존 이미지가 없을 경우, 10개 슬롯 자동 생성
         if (existingImages.isEmpty()) {
             existingImages = IntStream.rangeClosed(1, 10)
                     .mapToObj(i -> ReviewImage.builder()
                             .review(review)
                             .imageUrl(null)  // 기본값은 null
+                            .isThumbnail(i == 1) // 첫 번째 이미지만 썸네일
                             .isDeleted(false)
                             .createdAt(Instant.now())
                             .build())
@@ -218,23 +216,20 @@ public class ReviewServiceImpl implements ReviewService {
             reviewImageRepository.saveAll(existingImages);
         }
 
-        // 새로운 Presigned URL 리스트 (최대 10개 제한)
         List<String> presignedUrls = requestDto.getPresignedUrl();
-        int newSize = Math.min(presignedUrls.size(), 10);  // 최대 10개까지만 허용
+        int newSize = Math.min(presignedUrls.size(), 10); // 최대 10개까지만 허용
 
-        // 기존 `ReviewImage` 슬롯을 재사용하여 업데이트
         for (int i = 0; i < 10; i++) {
             ReviewImage imageSlot = existingImages.get(i);
 
             if (i < newSize) {  // 새로운 이미지로 업데이트
                 String objectPath = cacheUtil.findObjectPath(presignedUrls.get(i));
                 if (objectPath == null) {
-                    throw new RuntimeException("유효하지 않은 presigned url 입니다");
+                    throw new RuntimeException("유효하지 않은 presigned URL입니다.");
                 }
 
-                // 기존 MinIO 파일 삭제 후 새로운 파일로 교체
                 try {
-                    if (imageSlot.getImageUrl() != null) { // 기존 이미지가 있을 경우 삭제
+                    if (imageSlot.getImageUrl() != null) {
                         minioClient.removeObject(
                                 RemoveObjectArgs.builder()
                                         .bucket("ttabong-bucket")
@@ -243,22 +238,40 @@ public class ReviewServiceImpl implements ReviewService {
                         );
                     }
                 } catch (Exception e) {
-                    throw new RuntimeException("미니오에서 기존 이미지 삭제 실패", e);
+                    throw new RuntimeException("MinIO에서 기존 이미지 삭제 실패", e);
                 }
 
-                // imageUrl 업데이트
                 imageSlot = imageSlot.toBuilder()
                         .imageUrl(objectPath)
+                        .isThumbnail(i == 0) // 첫 번째 이미지만 썸네일 설정
                         .isDeleted(false)
                         .build();
             } else {  // 새로운 이미지가 없는 경우, 기존 슬롯 초기화
                 imageSlot = imageSlot.toBuilder()
-                        .imageUrl(null)  // 기존 이미지 경로 제거
-                        .isDeleted(false)  // 여전히 사용 가능하도록 유지
+                        .imageUrl(null)
+                        .isThumbnail(false)
+                        .isDeleted(false)
                         .build();
             }
             reviewImageRepository.save(imageSlot);
         }
+
+        List<String> objectPaths = reviewImageRepository.findByReviewIdOrderByIdAsc(reviewId)
+                .stream()
+                .map(ReviewImage::getImageUrl)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        List<String> imageUrls = objectPaths.stream()
+                .map(path -> {
+                    try {
+                        return imageUtil.getPresignedDownloadUrl(path);
+                    } catch (Exception e) {
+                        throw new RuntimeException("Presigned URL 생성 중 오류 발생: " + e.getMessage(), e);
+                    }
+                })
+                .collect(Collectors.toList());
+
 
         return ReviewEditResponseDto.builder()
                 .cacheId(requestDto.getCacheId())
@@ -266,6 +279,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .content(updatedReview.getContent())
                 .isPublic(updatedReview.getIsPublic())
                 .imageCount(newSize)
+                .images(imageUrls)
                 .build();
     }
 
