@@ -36,7 +36,7 @@ public class ReviewController {
     // 2. 해당 후기 상세 조회
     @GetMapping("/{reviewId}")
     public ResponseEntity<ReviewDetailResponseDto> detailReview(
-            @PathVariable(name = "reviewId") Integer reviewId) {
+            @PathVariable(name = "reviewId") Integer reviewId) throws Exception {
 
         ReviewDetailResponseDto response = reviewService.detailReview(reviewId);
 

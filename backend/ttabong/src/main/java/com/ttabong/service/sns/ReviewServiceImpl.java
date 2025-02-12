@@ -32,7 +32,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -447,19 +449,31 @@ public class ReviewServiceImpl implements ReviewService {
                 .orElseThrow(() -> new RuntimeException("해당 후기를 찾을 수 없습니다. reviewId: " + reviewId));
 
         User writer = review.getWriter();
-
         Recruit recruit = review.getRecruit();
-
         Template template = (recruit != null) ? recruit.getTemplate() : null;
         TemplateGroup group = (template != null) ? template.getGroup() : null;
-
         Category category = (template != null) ? template.getCategory() : null;
-
         Organization organization = review.getOrg();
 
-        List<String> imageUrls = review.getReviewComments().stream()
-                .flatMap(comment -> comment.getReview().getReviewComments().stream()
-                        .map(c -> c.getWriter().getProfileImage()))
+        // 1. 리뷰의 모든 이미지 Object Path 가져오기
+        List<String> objectPaths = reviewImageRepository.findAllImagesByReviewId(review.getId())
+                .stream()
+                .filter(Objects::nonNull) // null 값 제거
+                .toList();
+
+        // 2. Presigned URL 변환 (Object Path -> Presigned URL)
+        List<String> imageUrls = objectPaths.stream()
+                .map(path -> {
+                    if (path == null || path.isEmpty()) {
+                        return null; // objectPath가 null이면 Presigned URL 생성하지 않음
+                    }
+                    try {
+                        return imageUtil.getPresignedDownloadUrl(path);
+                    } catch (Exception e) {
+                        throw new RuntimeException("Presigned URL 생성 중 오류 발생: " + e.getMessage(), e);
+                    }
+                })
+                .filter(Objects::nonNull) // Presigned URL이 null이면 제거
                 .collect(Collectors.toList());
 
         List<ReviewDetailResponseDto.CommentDto> comments = review.getReviewComments().stream()
@@ -472,48 +486,54 @@ public class ReviewServiceImpl implements ReviewService {
                         .build())
                 .collect(Collectors.toList());
 
-        return ReviewDetailResponseDto.builder()
-                .reviewId(review.getId())
-                .title(review.getTitle())
-                .content(review.getContent())
-                .isPublic(review.getIsPublic())
-                .attended(true) // 참석 여부 확인 로직 추가 가능
-                .createdAt(review.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
-                .images(imageUrls)
-                .recruit(recruit != null ? ReviewDetailResponseDto.RecruitDto.builder()
-                        .recruitId(recruit.getId())
-                        .activityDate(recruit.getActivityDate().toInstant().atZone(ZoneId.of("Asia/Seoul")).toLocalDate())
-                        .activityStart(recruit.getActivityStart().doubleValue())
-                        .activityEnd(recruit.getActivityEnd().doubleValue())
-                        .status(recruit.getStatus())
-                        .build() : null)
-                .category(category != null ? ReviewDetailResponseDto.CategoryDto.builder()
-                        .categoryId(category.getId())
-                        .name(category.getName())
-                        .build() : null)
-                .writer(ReviewDetailResponseDto.WriterDto.builder()
-                        .writerId(writer.getId())
-                        .writerName(writer.getName())
-                        .writerEmail(writer.getEmail())
-                        .writerProfileImage(writer.getProfileImage())
-                        .build())
-                .template(template != null ? ReviewDetailResponseDto.TemplateDto.builder()
-                        .templateId(template.getId())
-                        .title(template.getTitle())
-                        .activityLocation(template.getActivityLocation())
-                        .status(template.getStatus())
-                        .group(group != null ? ReviewDetailResponseDto.GroupDto.builder()
-                                .groupId(group.getId())
-                                .groupName(group.getGroupName())
-                                .build() : null)
-                        .build() : null)
-                .organization(organization != null ? ReviewDetailResponseDto.OrganizationDto.builder()
-                        .orgId(organization.getId())
-                        .orgName(organization.getOrgName())
-                        .build() : null)
-                .parentReviewId(review.getParentReview() != null ? review.getParentReview().getId() : null)
-                .comments(comments)
-                .build();
+        try {
+            return ReviewDetailResponseDto.builder()
+                    .reviewId(review.getId())
+                    .title(review.getTitle())
+                    .content(review.getContent())
+                    .isPublic(review.getIsPublic())
+                    .attended(true) // 참석 여부 확인 로직 추가 가능
+                    .createdAt(review.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                    .images(imageUrls) // 모든 Presigned URL 리스트 반환
+                    .recruit(recruit != null ? ReviewDetailResponseDto.RecruitDto.builder()
+                            .recruitId(recruit.getId())
+                            .activityDate(recruit.getActivityDate().toInstant().atZone(ZoneId.of("Asia/Seoul")).toLocalDate())
+                            .activityStart(recruit.getActivityStart().doubleValue())
+                            .activityEnd(recruit.getActivityEnd().doubleValue())
+                            .status(recruit.getStatus())
+                            .build() : null)
+                    .category(category != null ? ReviewDetailResponseDto.CategoryDto.builder()
+                            .categoryId(category.getId())
+                            .name(category.getName())
+                            .build() : null)
+                    .writer(ReviewDetailResponseDto.WriterDto.builder()
+                            .writerId(writer.getId())
+                            .writerName(writer.getName())
+                            .writerEmail(writer.getEmail())
+                            .writerProfileImage(
+                                    writer.getProfileImage() != null ? imageUtil.getPresignedDownloadUrl(writer.getProfileImage()) : null
+                            ) // 작성자 프로필 이미지도 Presigned URL 변환
+                            .build())
+                    .template(template != null ? ReviewDetailResponseDto.TemplateDto.builder()
+                            .templateId(template.getId())
+                            .title(template.getTitle())
+                            .activityLocation(template.getActivityLocation())
+                            .status(template.getStatus())
+                            .group(group != null ? ReviewDetailResponseDto.GroupDto.builder()
+                                    .groupId(group.getId())
+                                    .groupName(group.getGroupName())
+                                    .build() : null)
+                            .build() : null)
+                    .organization(organization != null ? ReviewDetailResponseDto.OrganizationDto.builder()
+                            .orgId(organization.getId())
+                            .orgName(organization.getOrgName())
+                            .build() : null)
+                    .parentReviewId(review.getParentReview() != null ? review.getParentReview().getId() : null)
+                    .comments(comments)
+                    .build();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
