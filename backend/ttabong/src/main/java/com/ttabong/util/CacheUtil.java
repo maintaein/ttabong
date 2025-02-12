@@ -28,4 +28,12 @@ public class CacheUtil {
         return (String) redisTemplate.opsForHash().get(TEMP_CACHE, preSignedUrl);
     }
 
+//    public String findPresignedUrl(String objectPath) {
+//        if (objectPath == null || objectPath.isEmpty()) {
+//            return null;
+//        }
+//
+//        return ImageUtil.generatePresignedUrl(objectPath);
+//    }
+
 }
