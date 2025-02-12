@@ -18,7 +18,7 @@ Front_Test:
       when: never
     - if: '$CI_COMMIT_BRANCH =~ /^infra/ && "$GITLAB_USER_EMAIL" == "$ADMIN_EMAIL"'
       when: never
-    - when: on_success
+    - when: never
   tags:
     - $GITLAB_USER_EMAIL
   stage: test
@@ -52,7 +52,7 @@ Back_Test:
       when: never
     - if: '$CI_COMMIT_BRANCH =~ /^infra/ && "$GITLAB_USER_EMAIL" == "$ADMIN_EMAIL"'
       when: never
-    - when: on_success
+    - when: never
   tags:
     - $GITLAB_USER_EMAIL
   stage: test
@@ -75,7 +75,7 @@ build_push:
     - if: '$CI_COMMIT_BRANCH =~ /^infra/ && "$GITLAB_USER_EMAIL" == "$ADMIN_EMAIL"'
       when: never
     - if: '$CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "master"'
-      when: on_success  
+      when: never  
 
   tags:
     - $GITLAB_USER_EMAIL
@@ -113,7 +113,7 @@ deploy:
     - if: '$CI_COMMIT_BRANCH =~ /^infra/ && "$GITLAB_USER_EMAIL" == "$ADMIN_EMAIL"'
       when: never
     - if: '$CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "master"'
-      when: on_success  
+      when: never  
   tags:
     - $GITLAB_USER_EMAIL
   stage: deploy
