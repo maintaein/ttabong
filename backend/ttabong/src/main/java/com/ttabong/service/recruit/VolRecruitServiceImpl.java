@@ -62,7 +62,7 @@ public class VolRecruitServiceImpl implements VolRecruitService {
                         GroupDto.from(template.getGroup()),
                         template.getOrg() != null ? OrganizationDto.from(template.getOrg()) : null
                 ))
-                .collect(Collectors.toList()); // ✅ Collectors.toList() 사용
+                .collect(Collectors.toList());
 
         return new ReadVolRecruitsListResponseDto(templateDetails);
     }

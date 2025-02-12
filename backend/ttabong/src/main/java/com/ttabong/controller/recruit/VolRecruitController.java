@@ -42,7 +42,10 @@ public class VolRecruitController {
     public ResponseEntity<ReadVolRecruitsListResponseDto> listRecruits(
             @RequestParam(required = false) Integer cursor,
             @RequestParam Integer limit) {
+        AuthDto authDto = (AuthDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
+        int userId = authDto.getUserId();
+        System.out.println("userId = " + userId);
         ReadVolRecruitsListResponseDto responseDto = volRecruitService.getTemplates(cursor, limit);
         return ResponseEntity.ok().body(responseDto);
     }
@@ -52,8 +55,8 @@ public class VolRecruitController {
     @GetMapping("/templates/{templateId}")
     public ResponseEntity<ReadRecruitDetailResponseDto> recruitsDetail(@PathVariable Integer templateId) {
         return volRecruitService.getTemplateById(templateId)
-                .map(ResponseEntity::ok) // ✅ 성공 시 DTO를 감싼 ResponseEntity 반환
-                .orElse(ResponseEntity.notFound().build()); // ✅ 존재하지 않으면 404 반환
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
 
@@ -65,7 +68,11 @@ public class VolRecruitController {
             HttpServletRequest request,
             @RequestBody ApplyRecruitRequestDto applyRecruitRequest) {
 
-        int userId = extractUserIdFromRequest(request);
+        AuthDto authDto = (AuthDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        int userId = authDto.getUserId();
+
+        System.out.println("userId = " + userId);
 
         Application application = volRecruitService.applyRecruit(userId, applyRecruitRequest.getRecruitId());
 
@@ -78,13 +85,6 @@ public class VolRecruitController {
                 .build();
 
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
-    }
-
-    // JWT에서 userId 추출하는 메서드
-    private int extractUserIdFromRequest(HttpServletRequest request) {
-        String token = request.getHeader("Authorization").replace("Bearer ", "");
-        Claims claims = jwtProvider.getClaims(token);
-        return Integer.parseInt(claims.getSubject());
     }
 
 
