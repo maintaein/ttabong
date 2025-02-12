@@ -64,13 +64,12 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         List<Template> templates = templateRepository.findAvailableTemplates(cursor, limit);
 
         List<ReadAvailableRecruitsResponseDto.TemplateDetail> templateDetails = templates.stream().map(template -> {
-            TemplateGroup templateGroup = template.getGroup();
-            ReadAvailableRecruitsResponseDto.Group group = Optional.ofNullable(templateGroup)
-                    .map(g -> ReadAvailableRecruitsResponseDto.Group.builder()
-                            .groupId(g.getId())
-                            .groupName(g.getGroupName())
-                            .build())
-                    .orElse(null);
+
+            ReadAvailableRecruitsResponseDto.Group groupInfo = template.getGroup() != null ?
+                    new ReadAvailableRecruitsResponseDto.Group(
+                            template.getGroup().getId(),
+                            template.getGroup().getGroupName()
+                    ) : new ReadAvailableRecruitsResponseDto.Group(1, "봉사");
 
             List<Recruit> recruitEntities = recruitRepository.findByTemplateId(template.getId());
             List<ReadAvailableRecruitsResponseDto.Recruit> recruits = recruitEntities.stream()
@@ -114,10 +113,10 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                                     template.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime()
                                     : LocalDateTime.now())
                             .build())
-                    .group(group)
+                    .group(groupInfo)
                     .recruits(recruits)
                     .build();
-        }).collect(Collectors.toList());
+        }).toList();
 
         return ReadAvailableRecruitsResponseDto.builder()
                 .templates(templateDetails)
