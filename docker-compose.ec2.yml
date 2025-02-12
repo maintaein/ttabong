@@ -74,6 +74,8 @@ services:
       - "9001:9001"
     networks:
       - external
+
+      
   nginxc:
     build:
       context: ./frontend/ttabong
