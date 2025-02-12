@@ -38,8 +38,7 @@ public class UserController {
         String loginResult = userService.login(loginRequest);
 
         if(loginResult.startsWith("userId")){
-            String userId = loginResult.split(" : ")[1];
-
+            String userId = loginResult.substring(loginResult.indexOf(":") + 2);
             String accessToken = jwtProvider.createToken(userId, loginRequest.getUserType());
             return ResponseEntity.ok(new LoginResponse(200, "로그인 성공", accessToken));
         }
