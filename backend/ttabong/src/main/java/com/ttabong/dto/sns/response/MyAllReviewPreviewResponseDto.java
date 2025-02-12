@@ -6,37 +6,57 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
-/*
- * 1. 후기 _ 자신이 쓴 후기 (미리보기) (모두 조회)
- * */
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class MyAllReviewPreviewResponseDto {
-    // 후기 정보
-    private Integer reviewId;
-    private Integer recruitId;
-    private String title;
-    private String content;
-    private Boolean isDeleted;
-    private LocalDateTime updatedAt;
-    private LocalDateTime createdAt;
+    private ReviewDto review;
+//    private WriterDto writer;
+    private GroupDto group;
+    private OrganizationDto organization;
+//    private List<String> images;
+    private String images;
 
-    // 작성자 정보
-    private Integer writerId;
-    private String writerName;
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class ReviewDto {
+        private Integer reviewId;
+        private Integer recruitId;
+        private String title;
+        private String content;
+        private Boolean isDeleted;
+        private LocalDateTime updatedAt;
+        private LocalDateTime createdAt;
+    }
 
-    // 그룹 정보
-    private Integer groupId;
-    private String groupName;
+//    @Getter
+//    @NoArgsConstructor
+//    @AllArgsConstructor
+//    @Builder
+//    public static class WriterDto {
+//        private Integer writerId;
+//        private String name;
+//    }
 
-    // 기관 정보
-    private Integer orgId;
-    private String orgName;
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class GroupDto {
+        private Integer groupId;
+        private String groupName;
+    }
 
-    // 이미지 리스트
-    private List<String> images;
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class OrganizationDto {
+        private Integer orgId;
+        private String orgName;
+    }
 }

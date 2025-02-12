@@ -9,8 +9,8 @@ import java.time.Instant;
 
 @Entity
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED) // 외부에서 new User() 막기
-@AllArgsConstructor(access = AccessLevel.PRIVATE) // Builder에서만 생성 가능
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Table(name = "Review_comment")
 public class ReviewComment {
@@ -38,5 +38,19 @@ public class ReviewComment {
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
+
+    @ColumnDefault("CURRENT_TIMESTAMP")
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
+
+    public void updateContent(String newContent) {
+        this.content = newContent;
+        this.updatedAt = Instant.now();
+    }
+
+    public void markDeleted() {
+        this.isDeleted = true;
+        this.updatedAt = Instant.now();
+    }
 
 }
