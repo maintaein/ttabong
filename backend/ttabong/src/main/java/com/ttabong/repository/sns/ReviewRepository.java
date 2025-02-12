@@ -25,6 +25,33 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
     """)
     List<Review> findAllReviews(@Param("cursor") Integer cursor, Pageable pageable);
 
+//    @Query("""
+//        SELECT r FROM Review r
+//        WHERE r.org.id = r.writer.id
+//        AND r.recruit.id = :recruitId
+//        ORDER BY r.createdAt DESC
+//        LIMIT 1
+//""")
+    @Query("""
+        SELECT r FROM Review r
+        WHERE r.org.id = r.writer.id
+        AND r.recruit.id = :recruitId
+        ORDER BY r.createdAt DESC
+    """)
+    List<Review> findByOrgWriterAndRecruit(@Param("recruitId") Integer recruitId);
+
+//    @Query("""
+//    SELECT r FROM Review r
+//    WHERE r.org.id = r.writer.id  -- ✅ writer_id == org_id 조건 추가
+//    AND r.recruit.id = :recruitId  -- ✅ recruit_id가 같은 리뷰 찾기
+//    ORDER BY r.createdAt DESC
+//    LIMIT 1
+//""")
+//    Optional<Review> findTopByOrgWriterAndRecruit(
+//            @Param("recruitId") Integer recruitId
+//    );
+
+
     @Query("""
         SELECT r FROM Review r
         LEFT JOIN FETCH r.org o

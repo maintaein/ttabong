@@ -57,7 +57,6 @@ public class ReviewServiceImpl implements ReviewService {
         if (authDto == null || authDto.getUserId() == null) {
             throw new SecurityException("로그인이 필요합니다.");
         }
-        System.out.println(">>>>>>>>>>>>>>>>>>>>>>"+authDto.getUserId());
 
         final Organization organization = organizationRepository.findById(requestDto.getOrgId())
                 .orElseThrow(() -> new RuntimeException("기관 없음"));
@@ -72,6 +71,18 @@ public class ReviewServiceImpl implements ReviewService {
                 .orElseThrow(() -> new RuntimeException("해당 템플릿 없음"));
 
         final Integer groupId = template.getGroup().getId();
+        // ✅ 기관이 작성한 기존 리뷰 중 recruit_id가 같은 리뷰 가져오기
+        List<Review> parentReviews = reviewRepository.findByOrgWriterAndRecruit(recruit.getId());
+
+// ✅ 가장 최신 리뷰 선택
+        final Review parentReview = parentReviews.isEmpty() ? null : parentReviews.get(0);
+
+//        final Review parentReview = reviewRepository.findTopByOrgAndWriterAndRecruit(
+//                organization.getId(),
+//                writer.getId(),
+//                recruit.getId()
+//        ).orElse(null);
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>"+organization.getId()+ " "+writer.getId()+ " "+recruit.getId());
 
         final Review review = Review.builder()
                 .recruit(recruit)
@@ -84,8 +95,10 @@ public class ReviewServiceImpl implements ReviewService {
                 .imgCount(requestDto.getImageCount())
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
+                .parentReview(parentReview)
                 .isDeleted(false)
                 .build();
+
         reviewRepository.save(review);
 
         // 미리 10개의 이미지 슬롯 생성 (초기화)
@@ -101,7 +114,6 @@ public class ReviewServiceImpl implements ReviewService {
                 .collect(Collectors.toList());
         reviewImageRepository.saveAll(imageSlots); // 미리 저장
 
-        // presigned URL을 기반으로 실제 객체명(objectPath) 업데이트
         final List<String> uploadedImages = requestDto.getUploadedImages();
         IntStream.range(0, uploadedImages.size()).forEach(i -> {
             final String objectPath = cacheUtil.findObjectPath(uploadedImages.get(i));
@@ -118,11 +130,10 @@ public class ReviewServiceImpl implements ReviewService {
 
         return ReviewCreateResponseDto.builder()
                 .message("리뷰가 생성되었습니다.")
-//                .reviewId(review.getId())
-//                .writerId(authDto.getUserId())
                 .uploadedImages(requestDto.getUploadedImages())  // 그대로 반환 (objectPath 아님)
                 .build();
     }
+
 
     @Override
     public ReviewEditStartResponseDto startReviewEdit(Integer reviewId, AuthDto authDto) {
@@ -356,11 +367,6 @@ public class ReviewServiceImpl implements ReviewService {
                                 .isDeleted(review.getIsDeleted())
                                 .updatedAt(review.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
                                 .createdAt(review.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
-                                .build()
-                        )
-                        .writer(MyAllReviewPreviewResponseDto.WriterDto.builder()
-                                .writerId(authDto.getUserId()) // 현재 로그인한 사용자의 ID
-                                .name(authDto.getUserId().toString()) // ID를 문자열로 변환하여 사용
                                 .build()
                         )
                         .group(MyAllReviewPreviewResponseDto.GroupDto.builder()
