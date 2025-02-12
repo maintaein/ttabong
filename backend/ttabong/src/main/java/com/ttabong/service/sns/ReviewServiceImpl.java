@@ -73,7 +73,6 @@ public class ReviewServiceImpl implements ReviewService {
         final Integer groupId = template.getGroup().getId();
 
         List<Review> parentReviews = reviewRepository.findByOrgWriterAndRecruit(recruit.getId());
-
         final Review parentReview = parentReviews.isEmpty() ? null : parentReviews.get(0);
 
         final Review review = Review.builder()
@@ -92,8 +91,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .build();
 
         reviewRepository.save(review);
-
-        // 미리 10개의 이미지 슬롯 생성 (초기화)
+        
         List<ReviewImage> imageSlots = IntStream.range(0, 10)
                 .mapToObj(i -> ReviewImage.builder()
                         .review(review)
@@ -104,9 +102,24 @@ public class ReviewServiceImpl implements ReviewService {
                         .createdAt(Instant.now())
                         .build())
                 .collect(Collectors.toList());
-        reviewImageRepository.saveAll(imageSlots); // 미리 저장
 
-        final List<String> uploadedImages = requestDto.getUploadedImages();
+        reviewImageRepository.saveAll(imageSlots); // 미리 저장
+        
+        // 이미지 업로드하기
+        uploadImagesToMinio(requestDto.getUploadedImages(), imageSlots);
+
+        return ReviewCreateResponseDto.builder()
+                .message("리뷰가 생성되었습니다.")
+                .uploadedImages(requestDto.getUploadedImages())  // 그대로 반환 (objectPath 아님)
+                .build();
+    }
+
+    public void uploadImagesToMinio(List<String> uploadedImages, List<ReviewImage> imageSlots) {
+
+        if (uploadedImages == null || uploadedImages.isEmpty()) {
+            return;
+        }
+
         IntStream.range(0, uploadedImages.size()).forEach(i -> {
             final String objectPath = cacheUtil.findObjectPath(uploadedImages.get(i));
             if (objectPath == null) {
@@ -119,12 +132,8 @@ public class ReviewServiceImpl implements ReviewService {
             imageSlot.setThumbnail(i == 0);
             reviewImageRepository.save(imageSlot);
         });
-
-        return ReviewCreateResponseDto.builder()
-                .message("리뷰가 생성되었습니다.")
-                .uploadedImages(requestDto.getUploadedImages())  // 그대로 반환 (objectPath 아님)
-                .build();
     }
+
 
     @Override
     public ReviewEditStartResponseDto startReviewEdit(Integer reviewId, AuthDto authDto) {
@@ -336,11 +345,50 @@ public class ReviewServiceImpl implements ReviewService {
                                 .orgName(review.getOrg().getOrgName())
                                 .build())
                         .images(
-                                reviewImageRepository.findThumbnailImageByReviewId(review.getId()).orElse(null) // ✅ 썸네일 가져오기
+                                reviewImageRepository.findThumbnailImageByReviewId(review.getId()).orElse(null)
                         )
                         .build())
                 .collect(Collectors.toList());
     }
+
+//    @Override
+//    @Transactional(readOnly = true)
+//    public List<MyAllReviewPreviewResponseDto> readMyAllReviews(AuthDto authDto) {
+//        List<Review> reviews = reviewRepository.findMyReviews(authDto.getUserId(), PageRequest.of(0, 10));
+//
+//        return reviews.stream()
+//                .map(review -> MyAllReviewPreviewResponseDto.builder()
+//                        .review(MyAllReviewPreviewResponseDto.ReviewDto.builder()
+//                                .reviewId(review.getId())
+//                                .recruitId(review.getRecruit() != null ? review.getRecruit().getId() : null)
+//                                .title(review.getTitle())
+//                                .content(review.getContent())
+//                                .isDeleted(review.getIsDeleted())
+//                                .updatedAt(review.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+//                                .createdAt(review.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+//
+//                                .build()
+//                        )
+//                        .group(MyAllReviewPreviewResponseDto.GroupDto.builder()
+//                                .groupId(review.getRecruit() != null && review.getRecruit().getTemplate() != null &&
+//                                        review.getRecruit().getTemplate().getGroup() != null ?
+//                                        review.getRecruit().getTemplate().getGroup().getId() : null)
+//                                .groupName(review.getRecruit() != null && review.getRecruit().getTemplate() != null &&
+//                                        review.getRecruit().getTemplate().getGroup() != null ?
+//                                        review.getRecruit().getTemplate().getGroup().getGroupName() : "N/A")
+//                                .build()
+//                        )
+//                        .organization(MyAllReviewPreviewResponseDto.OrganizationDto.builder()
+//                                .orgId(review.getOrg() != null ? review.getOrg().getId() : null)
+//                                .orgName(review.getOrg() != null ? review.getOrg().getOrgName() : "N/A")
+//                                .build()
+//                        )
+//                        .images(
+//                                reviewImageRepository.findThumbnailImageByReviewId(review.getId()).orElse(null)
+//                        )
+//                        .build())
+//                .collect(Collectors.toList());
+//    }
 
     @Override
     @Transactional(readOnly = true)
@@ -348,36 +396,46 @@ public class ReviewServiceImpl implements ReviewService {
         List<Review> reviews = reviewRepository.findMyReviews(authDto.getUserId(), PageRequest.of(0, 10));
 
         return reviews.stream()
-                .map(review -> MyAllReviewPreviewResponseDto.builder()
-                        .review(MyAllReviewPreviewResponseDto.ReviewDto.builder()
-                                .reviewId(review.getId())
-                                .recruitId(review.getRecruit() != null ? review.getRecruit().getId() : null)
-                                .title(review.getTitle())
-                                .content(review.getContent())
-                                .isDeleted(review.getIsDeleted())
-                                .updatedAt(review.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
-                                .createdAt(review.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                .map(review -> {
+                    // 1. DB에서 저장된 이미지의 Object Path 가져오기
+                    String objectPath = reviewImageRepository.findThumbnailImageByReviewId(review.getId()).orElse(null);
 
-                                .build()
-                        )
-                        .group(MyAllReviewPreviewResponseDto.GroupDto.builder()
-                                .groupId(review.getRecruit() != null && review.getRecruit().getTemplate() != null &&
-                                        review.getRecruit().getTemplate().getGroup() != null ?
-                                        review.getRecruit().getTemplate().getGroup().getId() : null)
-                                .groupName(review.getRecruit() != null && review.getRecruit().getTemplate() != null &&
-                                        review.getRecruit().getTemplate().getGroup() != null ?
-                                        review.getRecruit().getTemplate().getGroup().getGroupName() : "N/A")
-                                .build()
-                        )
-                        .organization(MyAllReviewPreviewResponseDto.OrganizationDto.builder()
-                                .orgId(review.getOrg() != null ? review.getOrg().getId() : null)
-                                .orgName(review.getOrg() != null ? review.getOrg().getOrgName() : "N/A")
-                                .build()
-                        )
-                        .images(
-                                reviewImageRepository.findThumbnailImageByReviewId(review.getId()).orElse(null) // ✅ 썸네일 가져오기
-                        )
-                        .build())
+                    // 2. Presigned URL 변환 (Object Path -> Presigned URL)
+                    String presignedUrl = null;
+                    try {
+                        presignedUrl = (objectPath != null) ? imageUtil.getPresignedDownloadUrl(objectPath) : null;
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+
+                    return MyAllReviewPreviewResponseDto.builder()
+                            .review(MyAllReviewPreviewResponseDto.ReviewDto.builder()
+                                    .reviewId(review.getId())
+                                    .recruitId(review.getRecruit() != null ? review.getRecruit().getId() : null)
+                                    .title(review.getTitle())
+                                    .content(review.getContent())
+                                    .isDeleted(review.getIsDeleted())
+                                    .updatedAt(review.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                                    .createdAt(review.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                                    .build()
+                            )
+                            .group(MyAllReviewPreviewResponseDto.GroupDto.builder()
+                                    .groupId(review.getRecruit() != null && review.getRecruit().getTemplate() != null &&
+                                            review.getRecruit().getTemplate().getGroup() != null ?
+                                            review.getRecruit().getTemplate().getGroup().getId() : null)
+                                    .groupName(review.getRecruit() != null && review.getRecruit().getTemplate() != null &&
+                                            review.getRecruit().getTemplate().getGroup() != null ?
+                                            review.getRecruit().getTemplate().getGroup().getGroupName() : "N/A")
+                                    .build()
+                            )
+                            .organization(MyAllReviewPreviewResponseDto.OrganizationDto.builder()
+                                    .orgId(review.getOrg() != null ? review.getOrg().getId() : null)
+                                    .orgName(review.getOrg() != null ? review.getOrg().getOrgName() : "N/A")
+                                    .build()
+                            )
+                            .images(presignedUrl) // Presigned URL 반환
+                            .build();
+                })
                 .collect(Collectors.toList());
     }
 
