@@ -103,7 +103,7 @@ export interface LoginRequest {
 export interface LoginResponse {
   status: number;
   message: string;
-  access_token: string;
+  accessToken: string;
 }
 
 export interface JwtPayload {
