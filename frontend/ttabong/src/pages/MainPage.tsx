@@ -4,7 +4,7 @@ import TinderCard from "react-tinder-card";
 const volunteerPosts = [
   {
     id: 1,
-    title: "환경 정화 봉사",
+    title: "따봉이 화이팅",
     description: "공원에서 쓰레기를 줍고 자연을 보호하는 활동입니다.",
     location: "서울, 한강공원",
     date: "2025-02-15",
