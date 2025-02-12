@@ -102,7 +102,6 @@ public class ImageServiceImpl implements ImageService{
         });
     }
 
-
     public List<String> getImageUrls(Integer entityId, boolean isTemplate) {
         return (isTemplate ? reviewImageRepository.findByTemplateId(entityId)
                 : reviewImageRepository.findByReviewId(entityId))

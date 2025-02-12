@@ -7,9 +7,6 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-/*
- * 7. 후기 _ 생성
- * */
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor

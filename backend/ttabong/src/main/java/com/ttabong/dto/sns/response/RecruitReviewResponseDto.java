@@ -12,7 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AllReviewPreviewResponseDto {
+public class RecruitReviewResponseDto {
     private ReviewDto review;
     private WriterDto writer;
     private GroupDto group;
