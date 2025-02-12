@@ -32,8 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -54,6 +53,11 @@ public class ReviewServiceImpl implements ReviewService {
     // TODO: parent-review-id 설정하는거 해야함.
     @Override
     public ReviewCreateResponseDto createReview(AuthDto authDto, ReviewCreateRequestDto requestDto) {
+
+        if (authDto == null || authDto.getUserId() == null) {
+            throw new SecurityException("로그인이 필요합니다.");
+        }
+
         final Organization organization = organizationRepository.findById(requestDto.getOrgId())
                 .orElseThrow(() -> new RuntimeException("기관 없음"));
 
@@ -68,6 +72,10 @@ public class ReviewServiceImpl implements ReviewService {
 
         final Integer groupId = template.getGroup().getId();
 
+        List<Review> parentReviews = reviewRepository.findByOrgWriterAndRecruit(recruit.getId());
+
+        final Review parentReview = parentReviews.isEmpty() ? null : parentReviews.get(0);
+
         final Review review = Review.builder()
                 .recruit(recruit)
                 .org(organization)
@@ -79,8 +87,10 @@ public class ReviewServiceImpl implements ReviewService {
                 .imgCount(requestDto.getImageCount())
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
+                .parentReview(parentReview)
                 .isDeleted(false)
                 .build();
+
         reviewRepository.save(review);
 
         // 미리 10개의 이미지 슬롯 생성 (초기화)
@@ -96,7 +106,6 @@ public class ReviewServiceImpl implements ReviewService {
                 .collect(Collectors.toList());
         reviewImageRepository.saveAll(imageSlots); // 미리 저장
 
-        // presigned URL을 기반으로 실제 객체명(objectPath) 업데이트
         final List<String> uploadedImages = requestDto.getUploadedImages();
         IntStream.range(0, uploadedImages.size()).forEach(i -> {
             final String objectPath = cacheUtil.findObjectPath(uploadedImages.get(i));
@@ -112,15 +121,18 @@ public class ReviewServiceImpl implements ReviewService {
         });
 
         return ReviewCreateResponseDto.builder()
-                .message("Review created successfully")
-                .reviewId(review.getId())
-                .writerId(writer.getId())
+                .message("리뷰가 생성되었습니다.")
                 .uploadedImages(requestDto.getUploadedImages())  // 그대로 반환 (objectPath 아님)
                 .build();
     }
 
     @Override
-    public ReviewEditStartResponseDto startReviewEdit(Integer reviewId) {
+    public ReviewEditStartResponseDto startReviewEdit(Integer reviewId, AuthDto authDto) {
+
+        if (authDto == null || authDto.getUserId() == null) {
+            throw new SecurityException("로그인이 필요합니다.");
+        }
+
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 리뷰가 없습니다"));
 
@@ -161,7 +173,11 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public ReviewEditResponseDto updateReview(Integer reviewId, ReviewEditRequestDto requestDto) {
+    public ReviewEditResponseDto updateReview(Integer reviewId, ReviewEditRequestDto requestDto, AuthDto authDto) {
+        if (authDto == null || authDto.getUserId() == null) {
+            throw new SecurityException("로그인이 필요합니다.");
+        }
+
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new RuntimeException("Review not found"));
 
@@ -243,9 +259,13 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public ReviewDeleteResponseDto deleteReview(Integer reviewId) {
+    public ReviewDeleteResponseDto deleteReview(Integer reviewId, AuthDto authDto) {
         Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 후기를 찾을 수 없습니다. id: " + reviewId));
+                .orElseThrow(() -> new RuntimeException("해당 후기를 찾을 수 없습니다. reviewId: " + reviewId));
+
+        if (!review.getWriter().getId().equals(authDto.getUserId())) {
+            throw new SecurityException("본인이 작성한 후기만 삭제할 수 있습니다.");
+        }
 
         Review updatedReview = review.toBuilder()
                 .isDeleted(true)
@@ -257,9 +277,15 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public ReviewVisibilitySettingResponseDto updateVisibility(Integer reviewId, ReviewVisibilitySettingRequestDto requestDto) {
+    public ReviewVisibilitySettingResponseDto updateVisibility(Integer reviewId,
+                                                               ReviewVisibilitySettingRequestDto requestDto,
+                                                               AuthDto authDto) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 후기를 찾을 수 없습니다. id: " + reviewId));
+
+        if (!review.getWriter().getId().equals(authDto.getUserId())) {
+            throw new SecurityException("본인이 작성한 후기만 수정할 수 있습니다.");
+        }
 
         Review updatedReviewVisibility = review.toBuilder()
                 .isPublic(!review.getIsPublic())
@@ -309,10 +335,9 @@ public class ReviewServiceImpl implements ReviewService {
                                 .orgId(review.getOrg().getId())
                                 .orgName(review.getOrg().getOrgName())
                                 .build())
-                        .images(review.getReviewComments().stream()
-                                .flatMap(c -> c.getReview().getReviewComments().stream()
-                                        .map(comment -> comment.getWriter().getProfileImage()))
-                                .collect(Collectors.toList())) // 이미지 리스트 생성
+                        .images(
+                                reviewImageRepository.findThumbnailImageByReviewId(review.getId()).orElse(null) // ✅ 썸네일 가져오기
+                        )
                         .build())
                 .collect(Collectors.toList());
     }
@@ -321,8 +346,6 @@ public class ReviewServiceImpl implements ReviewService {
     @Transactional(readOnly = true)
     public List<MyAllReviewPreviewResponseDto> readMyAllReviews(AuthDto authDto) {
         List<Review> reviews = reviewRepository.findMyReviews(authDto.getUserId(), PageRequest.of(0, 10));
-
-        System.out.println(authDto.getUserId());
 
         return reviews.stream()
                 .map(review -> MyAllReviewPreviewResponseDto.builder()
@@ -334,11 +357,7 @@ public class ReviewServiceImpl implements ReviewService {
                                 .isDeleted(review.getIsDeleted())
                                 .updatedAt(review.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
                                 .createdAt(review.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
-                                .build()
-                        )
-                        .writer(MyAllReviewPreviewResponseDto.WriterDto.builder()
-                                .writerId(authDto.getUserId()) // Security에서 가져온 사용자 ID 사용
-                                .name(authDto.getUserType()) // 예시: userType을 활용해 표시 가능
+
                                 .build()
                         )
                         .group(MyAllReviewPreviewResponseDto.GroupDto.builder()
@@ -351,14 +370,13 @@ public class ReviewServiceImpl implements ReviewService {
                                 .build()
                         )
                         .organization(MyAllReviewPreviewResponseDto.OrganizationDto.builder()
-                                .orgId(review.getOrg().getId())
-                                .orgName(review.getOrg().getOrgName())
+                                .orgId(review.getOrg() != null ? review.getOrg().getId() : null)
+                                .orgName(review.getOrg() != null ? review.getOrg().getOrgName() : "N/A")
                                 .build()
                         )
-                        .images(review.getReviewComments().stream()
-                                .flatMap(c -> c.getReview().getReviewComments().stream()
-                                        .map(comment -> comment.getWriter().getProfileImage()))
-                                .collect(Collectors.toList()))
+                        .images(
+                                reviewImageRepository.findThumbnailImageByReviewId(review.getId()).orElse(null) // ✅ 썸네일 가져오기
+                        )
                         .build())
                 .collect(Collectors.toList());
     }
@@ -455,10 +473,10 @@ public class ReviewServiceImpl implements ReviewService {
                                 .isDeleted(review.getIsDeleted())
                                 .updatedAt(review.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
                                 .createdAt(review.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+
                                 .build())
                         .writer(RecruitReviewResponseDto.WriterDto.builder()
-                                .writerId(review.getWriter().getId())
-                                .name(review.getWriter().getName())
+                                .name(review.getWriter() != null ? review.getWriter().getName() : "Unknown")
                                 .build())
                         .group(review.getRecruit().getTemplate() != null && review.getRecruit().getTemplate().getGroup() != null ?
                                 RecruitReviewResponseDto.GroupDto.builder()
@@ -470,12 +488,11 @@ public class ReviewServiceImpl implements ReviewService {
                                 .orgId(review.getOrg().getId())
                                 .orgName(review.getOrg().getOrgName())
                                 .build())
-                        .images(review.getReviewComments().stream()
-                                .flatMap(c -> c.getReview().getReviewComments().stream()
-                                        .map(comment -> comment.getWriter().getProfileImage()))
-                                .collect(Collectors.toList()))
+                        .images(
+                                reviewImageRepository.findThumbnailImageByReviewId(review.getId())
+                                        .orElse(null)
+                        )
                         .build())
                 .collect(Collectors.toList());
     }
-
 }

@@ -2,6 +2,8 @@ package com.ttabong.repository.sns;
 
 import com.ttabong.entity.sns.ReviewImage;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -30,5 +32,13 @@ public interface ReviewImageRepository extends JpaRepository<ReviewImage, Intege
 
         // 특정 Review ID에 해당하는 삭제되지 않은 이미지 조회
         // List<ReviewImage> findByReviewIdAndIsDeletedFalseOrderByIdAsc(Integer reviewId);
+
+        @Query("""
+            SELECT ri.imageUrl FROM ReviewImage ri
+            WHERE ri.review.id = :reviewId
+                    AND ri.isThumbnail = true
+        """)
+        Optional<String> findThumbnailImageByReviewId(@Param("reviewId") Integer reviewId);
+
 
 }

@@ -75,6 +75,9 @@ public class Review {
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL)
     private Set<ReviewComment> reviewComments = new LinkedHashSet<>();
 
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<ReviewImage> reviewImages = new LinkedHashSet<>();
+
     @PrePersist
     public void prePersist() {
         if (isDeleted == null) {
