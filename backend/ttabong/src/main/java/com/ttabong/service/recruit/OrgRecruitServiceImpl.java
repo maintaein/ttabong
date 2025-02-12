@@ -3,6 +3,7 @@ package com.ttabong.service.recruit;
 import com.ttabong.dto.recruit.requestDto.org.*;
 import com.ttabong.dto.recruit.responseDto.org.*;
 import com.ttabong.dto.recruit.responseDto.org.ReadMyRecruitsResponseDto.RecruitDetail;
+import com.ttabong.dto.user.AuthDto;
 import com.ttabong.entity.recruit.Application;
 import com.ttabong.entity.recruit.Recruit;
 import com.ttabong.entity.recruit.Template;
@@ -43,10 +44,22 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     private final VolunteerRepository volunteerRepository;
     private final ImageService imageService;
 
+    // 토큰 검증 로직
+    public void checkOrgToken(AuthDto authDto) {
+        if (authDto == null || authDto.getUserId() == null) {
+            throw new SecurityException("로그인이 필요합니다.");
+        }
+//        else if (!"organization".equals(authDto.getUserType())) {
+//            throw new SecurityException("기관 계정으로 로그인을 해야 합니다.");
+//        }
+    }
+
     // TODO: 마지막 공고까지 다 로드했다면? & db에서 정보 누락된게 있다면? , 삭제여부 확인, 마감인건 빼고 가져오기
     @Override
     @Transactional(readOnly = true)
-    public ReadAvailableRecruitsResponseDto readAvailableRecruits(Integer cursor, Integer limit) {
+    public ReadAvailableRecruitsResponseDto readAvailableRecruits(Integer cursor, Integer limit, AuthDto authDto) {
+
+        checkOrgToken(authDto);
 
         List<Template> templates = templateRepository.findAvailableTemplates(cursor, limit);
 
@@ -114,7 +127,9 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     // TODO: 마지막 공고까지 다 로드했다면? & db에서 정보 누락된게 있다면?, 삭제여부 확인
     @Override
     @Transactional(readOnly = true)
-    public ReadMyRecruitsResponseDto readMyRecruits(Integer cursor, Integer limit) {
+    public ReadMyRecruitsResponseDto readMyRecruits(Integer cursor, Integer limit, AuthDto authDto) {
+
+        checkOrgToken(authDto);
 
         List<Recruit> recruits = recruitRepository.findAvailableRecruits(cursor, limit);
 
@@ -161,7 +176,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
     // TODO: 이미 삭제된 공고는 어떻게 처리? 삭제 실패시 처리
     @Override
-    public DeleteRecruitsResponseDto deleteRecruits(DeleteRecruitsRequestDto deleteRecruitDto) {
+    public DeleteRecruitsResponseDto deleteRecruits(DeleteRecruitsRequestDto deleteRecruitDto, AuthDto authDto) {
 
         List<Integer> recruitIds = deleteRecruitDto.getDeletedRecruits();
 
@@ -175,7 +190,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     }
 
     @Override
-    public UpdateRecruitsResponseDto updateRecruit(Integer recruitId, UpdateRecruitsRequestDto requestDto) {
+    public UpdateRecruitsResponseDto updateRecruit(Integer recruitId, UpdateRecruitsRequestDto requestDto, AuthDto authDto) {
 
         Instant deadlineInstant = requestDto.getDeadline() != null
                 ? requestDto.getDeadline().atZone(ZoneId.systemDefault()).toInstant()
@@ -203,7 +218,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
     // TODO: db에 있는지 보고, 마감으로 수정하기
     @Override
-    public CloseRecruitResponseDto closeRecruit(CloseRecruitRequestDto closeRecruitDto) {
+    public CloseRecruitResponseDto closeRecruit(CloseRecruitRequestDto closeRecruitDto, AuthDto authDto) {
 
         Integer recruitId = closeRecruitDto.getRecruitId();
 
@@ -217,7 +232,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     }
 
     @Override
-    public UpdateGroupResponseDto updateGroup(UpdateGroupRequestDto updateGroupDto) {
+    public UpdateGroupResponseDto updateGroup(UpdateGroupRequestDto updateGroupDto, AuthDto authDto) {
 
         // TODO: 토큰 인증 할거지만, 일단 기관까지 그냥 체크해주자 +그룹id로 하자
         Organization org = organizationRepository.findById(updateGroupDto.getOrgId())
@@ -234,7 +249,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     }
 
     @Override
-    public UpdateTemplateResponse updateTemplate(UpdateTemplateRequestDto updateTemplateDto) {
+    public UpdateTemplateResponse updateTemplate(UpdateTemplateRequestDto updateTemplateDto, AuthDto authDto) {
 
         Organization org = organizationRepository.findById(updateTemplateDto.getOrgId())
                 .orElseThrow(() -> new IllegalArgumentException("해당 기관 없음"));
@@ -252,7 +267,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     }
 
     @Override
-    public DeleteTemplatesResponseDto deleteTemplates(DeleteTemplatesRequestDto deleteTemplatesDto) {
+    public DeleteTemplatesResponseDto deleteTemplates(DeleteTemplatesRequestDto deleteTemplatesDto, AuthDto authDto) {
 
         List<Integer> deleteTemplateIds = deleteTemplatesDto.getDeletedTemplates();
 
@@ -266,7 +281,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     }
 
     @Override
-    public DeleteGroupResponseDto deleteGroup(DeleteGroupDto deleteGroupDto) {
+    public DeleteGroupResponseDto deleteGroup(DeleteGroupDto deleteGroupDto, AuthDto authDto) {
 
         Integer groupId = deleteGroupDto.getGroupId();
         Integer orgId = deleteGroupDto.getOrgId();
@@ -283,7 +298,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
     @Override
     @Transactional(readOnly = true)
-    public ReadTemplatesResponseDto readTemplates(Integer cursor, Integer limit) {
+    public ReadTemplatesResponseDto readTemplates(Integer cursor, Integer limit, AuthDto authDto) {
 
         Pageable pageable = PageRequest.of(cursor, limit);
         List<TemplateGroup> groups = templateGroupRepository.findGroups(pageable);
@@ -323,9 +338,8 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build();
     }
 
-    // TODO: 이미지 저장하기 (지금은 임시로 Template_image 테이블 하나 더 만들어서 사용중)
     @Override
-    public CreateTemplateResponseDto createTemplate(CreateTemplateRequestDto createTemplateDto) {
+    public CreateTemplateResponseDto createTemplate(CreateTemplateRequestDto createTemplateDto, AuthDto authDto) {
 
         if (createTemplateDto.getImageCount() != null && createTemplateDto.getImageCount() > 10) {
             throw new IllegalArgumentException("최대 개수를 초과했습니다. 최대 " + 10 + "개까지 업로드할 수 있습니다.");
@@ -365,7 +379,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     }
 
     @Override
-    public CreateGroupResponseDto createGroup(CreateGroupRequestDto createGroupDto) {
+    public CreateGroupResponseDto createGroup(CreateGroupRequestDto createGroupDto, AuthDto authDto) {
 
         Organization org = organizationRepository.findById(createGroupDto.getOrgId())
                 .orElseThrow(() -> new IllegalArgumentException("기관 없음"));
@@ -386,7 +400,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     }
 
     @Override
-    public CreateRecruitResponseDto createRecruit(CreateRecruitRequestDto createRecruitDto) {
+    public CreateRecruitResponseDto createRecruit(CreateRecruitRequestDto createRecruitDto, AuthDto authDto) {
 
         Instant deadlineInstant = createRecruitDto.getDeadline() != null
                 ? createRecruitDto.getDeadline().atZone(ZoneId.systemDefault()).toInstant()
@@ -419,7 +433,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
     @Override
     @Transactional(readOnly = true)
-    public ReadRecruitResponseDto readRecruit(Integer recruitId) {
+    public ReadRecruitResponseDto readRecruit(Integer recruitId, AuthDto authDto) {
 
         Recruit recruit = recruitRepository.findById(recruitId)
                 .orElseThrow(() -> new RuntimeException("해당 공고가 없습니다"));
@@ -490,7 +504,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
     @Override
     @Transactional(readOnly = true)
-    public ReadApplicationsResponseDto readApplications(Integer recruitId) {
+    public ReadApplicationsResponseDto readApplications(Integer recruitId, AuthDto authDto) {
 
         List<Application> applications = applicationRepository.findByRecruitIdWithUser(recruitId);
 
@@ -530,7 +544,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     }
 
     @Override
-    public UpdateApplicationsResponseDto updateStatuses(UpdateApplicationsRequestDto updateApplicationDto) {
+    public UpdateApplicationsResponseDto updateStatuses(UpdateApplicationsRequestDto updateApplicationDto, AuthDto authDto) {
 
         Integer applicationId = updateApplicationDto.getApplicationId();
         Integer recruitId = updateApplicationDto.getRecruitId();
@@ -555,7 +569,8 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     @Override
     public List<EvaluateApplicationsResponseDto> evaluateApplicants(
             Integer recruitId,
-            List<EvaluateApplicationsRequestDto> evaluateApplicationDtoList) {
+            List<EvaluateApplicationsRequestDto> evaluateApplicationDtoList,
+            AuthDto authDto) {
 
         return evaluateApplicationDtoList.stream().map(dto -> {
             Integer volunteerId = dto.getVolunteerId();
