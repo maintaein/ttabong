@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TemplateRepository extends JpaRepository<Template, Integer> {
@@ -42,5 +43,22 @@ public interface TemplateRepository extends JpaRepository<Template, Integer> {
 //    @Transactional
 //    @Query("UPDATE Template t SET t.image.id = :imageId WHERE t.id = :templateId")
 //    void updateTemplateImage(@Param("templateId") Integer templateId, @Param("imageId") Integer imageId);
+
+
+
+    // vol-recruit를 위해 추가 --------------------------------------------
+    // 특정 templateId 이후의 모집 공고 리스트 조회 (isDeleted = false 조건 포함)
+    @Query("SELECT t FROM Template t WHERE t.id > :cursor AND t.isDeleted = false ORDER BY t.id ASC LIMIT :limit")
+    List<Template> findTemplatesAfterCursor(@Param("cursor") Integer cursor, @Param("limit") Integer limit);
+
+    // 가장 처음 limit 개수만큼의 모집 공고 조회 (isDeleted = false 조건 포함)
+    @Query("SELECT t FROM Template t WHERE t.isDeleted = false ORDER BY t.id ASC LIMIT :limit")
+    List<Template> findTopNTemplates(@Param("limit") Integer limit);
+
+    // 특정 템플릿 ID로 템플릿 조회 (isDeleted = false 조건 포함)
+    @Query("SELECT t FROM Template t WHERE t.id = :templateId AND t.isDeleted = false")
+    Optional<Template> findById(@Param("templateId") Integer templateId);
+
+
 
 }

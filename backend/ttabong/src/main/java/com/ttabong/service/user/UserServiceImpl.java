@@ -1,6 +1,8 @@
 package com.ttabong.service.user;
 
 import com.ttabong.dto.user.LoginRequest;
+import com.ttabong.dto.user.UserLoginProjection;
+import com.ttabong.dto.user.VolunteerRegisterRequest;
 import com.ttabong.dto.user.OrganizationRegisterRequest;
 import com.ttabong.dto.user.VolunteerRegisterRequest;
 import com.ttabong.entity.user.Organization;
@@ -38,13 +40,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public long login(LoginRequest loginRequest) {
-        Optional<User> userOpt = userRepository.findByEmailAndIsDeletedFalse(loginRequest.getEmail());
+        Optional<UserLoginProjection> userOpt = userRepository.findByEmailAndIsDeletedFalse(loginRequest.getEmail());
+
         if (userOpt.isEmpty()) {
             throw new RuntimeException("User not found");
         }
-        User user = userOpt.get();
-        System.out.println(user.getPassword());
-        System.out.println(loginRequest.getPassword());
+        UserLoginProjection user = userOpt.get(); // 아이디와 비밀번호만 가져오도록 프로젝션추가
+
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid password");
         }
@@ -57,7 +59,6 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("이미 계정이 존재합니다.");
         }
 
-        // 기본 User 정보 저장 (비밀번호는 암호화)
         User user = User.builder()
                 .email(request.getEmail())
                 .name(request.getName())
@@ -70,7 +71,6 @@ public class UserServiceImpl implements UserService {
                 .build();
         user = userRepository.save(user);
 
-        // 봉사자 전용 정보 저장
         Volunteer volunteer = Volunteer.builder()
                 .user(user)
                 .preferredTime(request.getPreferredTime())
@@ -91,18 +91,18 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("이미 계정이 존재합니다.");
         }
 
-        // 기본 User 정보 저장 (비밀번호는 암호화)
         User user = User.builder()
                 .email(request.getEmail())
                 .name(request.getName())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .phone(request.getPhone())
                 .profileImage(request.getProfileImage())
+                .createdAt(Instant.now())
                 .isDeleted(false)
+                .totalVolunteerHours(BigDecimal.valueOf(0))
                 .build();
         user = userRepository.save(user);
 
-        // 기관 전용 정보 저장
         Organization organization = Organization.builder()
                 .user(user)
                 .businessRegNumber(request.getBusinessRegNumber())
@@ -115,9 +115,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public boolean checkEmail(String email, String type) {
-        boolean exists = userRepository.existsByEmailAndIsDeletedFalse(email);
-
         //이메일이 있다면 true, 없다면 false를 반환하는데, 이를 상황에 따라 어떻게 응답할 지는 컨트롤러에서 정할 것임.
-        return exists;
+        return userRepository.existsByEmailAndIsDeletedFalse(email);
     }
 }

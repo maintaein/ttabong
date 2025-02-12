@@ -11,9 +11,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MyAllReviewPreviewResponseDto {
+public class RecruitReviewResponseDto {
     private ReviewDto review;
-//    private WriterDto writer;
+    private WriterDto writer;
     private GroupDto group;
     private OrganizationDto organization;
 //    private List<String> images;
@@ -33,14 +33,14 @@ public class MyAllReviewPreviewResponseDto {
         private LocalDateTime createdAt;
     }
 
-//    @Getter
-//    @NoArgsConstructor
-//    @AllArgsConstructor
-//    @Builder
-//    public static class WriterDto {
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class WriterDto {
 //        private Integer writerId;
-//        private String name;
-//    }
+        private String name;
+    }
 
     @Getter
     @NoArgsConstructor
