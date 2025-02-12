@@ -25,13 +25,6 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
     """)
     List<Review> findAllReviews(@Param("cursor") Integer cursor, Pageable pageable);
 
-//    @Query("""
-//        SELECT r FROM Review r
-//        WHERE r.org.id = r.writer.id
-//        AND r.recruit.id = :recruitId
-//        ORDER BY r.createdAt DESC
-//        LIMIT 1
-//""")
     @Query("""
         SELECT r FROM Review r
         WHERE r.org.id = r.writer.id
@@ -39,18 +32,6 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
         ORDER BY r.createdAt DESC
     """)
     List<Review> findByOrgWriterAndRecruit(@Param("recruitId") Integer recruitId);
-
-//    @Query("""
-//    SELECT r FROM Review r
-//    WHERE r.org.id = r.writer.id  -- ✅ writer_id == org_id 조건 추가
-//    AND r.recruit.id = :recruitId  -- ✅ recruit_id가 같은 리뷰 찾기
-//    ORDER BY r.createdAt DESC
-//    LIMIT 1
-//""")
-//    Optional<Review> findTopByOrgWriterAndRecruit(
-//            @Param("recruitId") Integer recruitId
-//    );
-
 
     @Query("""
         SELECT r FROM Review r
@@ -66,33 +47,17 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
     List<Review> findMyReviews(@Param("userId") Integer userId, Pageable pageable);
 
 
-
-//    @Query("""
-//        SELECT r FROM Review r
-//        LEFT JOIN FETCH r.writer w
-//        LEFT JOIN FETCH r.org o
-//        LEFT JOIN FETCH r.recruit rec
-//        LEFT JOIN FETCH rec.template t
-//        LEFT JOIN FETCH t.group g
-//        WHERE rec.id = :recruitId
-//        AND r.isDeleted = false
-//        ORDER BY r.createdAt DESC
-//    """)
-//    List<Review> findByRecruitId(@Param("recruitId") Integer recruitId);
-
     @Query("""
-    SELECT r FROM Review r
-    LEFT JOIN FETCH r.writer w
-    LEFT JOIN FETCH r.org o
-    LEFT JOIN FETCH r.recruit rec
-    LEFT JOIN FETCH rec.template t
-    LEFT JOIN FETCH t.group g
-    WHERE rec.id = :recruitId
-    AND r.isDeleted = false
-    ORDER BY r.createdAt DESC
-""")
+        SELECT r FROM Review r
+        LEFT JOIN FETCH r.writer w
+        LEFT JOIN FETCH r.org o
+        LEFT JOIN FETCH r.recruit rec
+        LEFT JOIN FETCH rec.template t
+        LEFT JOIN FETCH t.group g
+        WHERE rec.id = :recruitId
+        AND r.isDeleted = false
+        ORDER BY r.createdAt DESC
+    """)
     List<Review> findByRecruitId(@Param("recruitId") Integer recruitId);
-
-
 
 }

@@ -71,18 +71,10 @@ public class ReviewServiceImpl implements ReviewService {
                 .orElseThrow(() -> new RuntimeException("해당 템플릿 없음"));
 
         final Integer groupId = template.getGroup().getId();
-        // ✅ 기관이 작성한 기존 리뷰 중 recruit_id가 같은 리뷰 가져오기
+
         List<Review> parentReviews = reviewRepository.findByOrgWriterAndRecruit(recruit.getId());
 
-// ✅ 가장 최신 리뷰 선택
         final Review parentReview = parentReviews.isEmpty() ? null : parentReviews.get(0);
-
-//        final Review parentReview = reviewRepository.findTopByOrgAndWriterAndRecruit(
-//                organization.getId(),
-//                writer.getId(),
-//                recruit.getId()
-//        ).orElse(null);
-        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>"+organization.getId()+ " "+writer.getId()+ " "+recruit.getId());
 
         final Review review = Review.builder()
                 .recruit(recruit)
@@ -133,7 +125,6 @@ public class ReviewServiceImpl implements ReviewService {
                 .uploadedImages(requestDto.getUploadedImages())  // 그대로 반환 (objectPath 아님)
                 .build();
     }
-
 
     @Override
     public ReviewEditStartResponseDto startReviewEdit(Integer reviewId, AuthDto authDto) {
@@ -344,10 +335,6 @@ public class ReviewServiceImpl implements ReviewService {
                                 .orgId(review.getOrg().getId())
                                 .orgName(review.getOrg().getOrgName())
                                 .build())
-//                        .images(review.getReviewComments().stream()
-//                                .flatMap(c -> c.getReview().getReviewComments().stream()
-//                                        .map(comment -> comment.getWriter().getProfileImage()))
-//                                .collect(Collectors.toList())) // 이미지 리스트 생성
                         .images(
                                 reviewImageRepository.findThumbnailImageByReviewId(review.getId()).orElse(null) // ✅ 썸네일 가져오기
                         )
@@ -387,24 +374,12 @@ public class ReviewServiceImpl implements ReviewService {
                                 .orgName(review.getOrg() != null ? review.getOrg().getOrgName() : "N/A")
                                 .build()
                         )
-//                        .images(Optional.ofNullable(review.getReviewComments())
-//                                .orElse(Collections.emptySet()).stream()
-//                                .flatMap(c -> Optional.ofNullable(c.getReview())
-//                                        .map(Review::getReviewComments)
-//                                        .orElse(Collections.emptySet()).stream()
-//                                        .map(comment -> Optional.ofNullable(comment.getWriter())
-//                                                .map(User::getProfileImage)
-//                                                .orElse(null)))
-//                                .filter(Objects::nonNull)
-//                                .collect(Collectors.toList()))
                         .images(
                                 reviewImageRepository.findThumbnailImageByReviewId(review.getId()).orElse(null) // ✅ 썸네일 가져오기
                         )
                         .build())
                 .collect(Collectors.toList());
     }
-
-
 
     @Override
     @Transactional(readOnly = true)
@@ -517,11 +492,6 @@ public class ReviewServiceImpl implements ReviewService {
                                 reviewImageRepository.findThumbnailImageByReviewId(review.getId())
                                         .orElse(null)
                         )
-//                        .images(review.getReviewComments().stream()
-//                                .flatMap(c -> c.getReview().getReviewComments().stream()
-//                                        .map(comment -> comment.getWriter() != null ? comment.getWriter().getProfileImage() : null))
-//                                .filter(Objects::nonNull)
-//                                .collect(Collectors.toList()))
                         .build())
                 .collect(Collectors.toList());
     }

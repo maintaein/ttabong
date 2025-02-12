@@ -34,9 +34,9 @@ public interface ReviewImageRepository extends JpaRepository<ReviewImage, Intege
         // List<ReviewImage> findByReviewIdAndIsDeletedFalseOrderByIdAsc(Integer reviewId);
 
         @Query("""
-    SELECT ri.imageUrl FROM ReviewImage ri
-    WHERE ri.review.id = :reviewId
-            AND ri.isThumbnail = true
+            SELECT ri.imageUrl FROM ReviewImage ri
+            WHERE ri.review.id = :reviewId
+                    AND ri.isThumbnail = true
         """)
         Optional<String> findThumbnailImageByReviewId(@Param("reviewId") Integer reviewId);
 
