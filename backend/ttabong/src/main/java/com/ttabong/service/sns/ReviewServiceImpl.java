@@ -32,8 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -54,6 +53,12 @@ public class ReviewServiceImpl implements ReviewService {
     // TODO: parent-review-id 설정하는거 해야함.
     @Override
     public ReviewCreateResponseDto createReview(AuthDto authDto, ReviewCreateRequestDto requestDto) {
+
+        if (authDto == null || authDto.getUserId() == null) {
+            throw new SecurityException("로그인이 필요합니다.");
+        }
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>"+authDto.getUserId());
+
         final Organization organization = organizationRepository.findById(requestDto.getOrgId())
                 .orElseThrow(() -> new RuntimeException("기관 없음"));
 
@@ -112,15 +117,20 @@ public class ReviewServiceImpl implements ReviewService {
         });
 
         return ReviewCreateResponseDto.builder()
-                .message("Review created successfully")
-                .reviewId(review.getId())
-                .writerId(writer.getId())
+                .message("리뷰가 생성되었습니다.")
+//                .reviewId(review.getId())
+//                .writerId(authDto.getUserId())
                 .uploadedImages(requestDto.getUploadedImages())  // 그대로 반환 (objectPath 아님)
                 .build();
     }
 
     @Override
-    public ReviewEditStartResponseDto startReviewEdit(Integer reviewId) {
+    public ReviewEditStartResponseDto startReviewEdit(Integer reviewId, AuthDto authDto) {
+
+        if (authDto == null || authDto.getUserId() == null) {
+            throw new SecurityException("로그인이 필요합니다.");
+        }
+
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 리뷰가 없습니다"));
 
@@ -161,7 +171,11 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public ReviewEditResponseDto updateReview(Integer reviewId, ReviewEditRequestDto requestDto) {
+    public ReviewEditResponseDto updateReview(Integer reviewId, ReviewEditRequestDto requestDto, AuthDto authDto) {
+        if (authDto == null || authDto.getUserId() == null) {
+            throw new SecurityException("로그인이 필요합니다.");
+        }
+
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new RuntimeException("Review not found"));
 
@@ -243,9 +257,13 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public ReviewDeleteResponseDto deleteReview(Integer reviewId) {
+    public ReviewDeleteResponseDto deleteReview(Integer reviewId, AuthDto authDto) {
         Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 후기를 찾을 수 없습니다. id: " + reviewId));
+                .orElseThrow(() -> new RuntimeException("해당 후기를 찾을 수 없습니다. reviewId: " + reviewId));
+
+        if (!review.getWriter().getId().equals(authDto.getUserId())) {
+            throw new SecurityException("본인이 작성한 후기만 삭제할 수 있습니다.");
+        }
 
         Review updatedReview = review.toBuilder()
                 .isDeleted(true)
@@ -257,9 +275,15 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public ReviewVisibilitySettingResponseDto updateVisibility(Integer reviewId, ReviewVisibilitySettingRequestDto requestDto) {
+    public ReviewVisibilitySettingResponseDto updateVisibility(Integer reviewId,
+                                                               ReviewVisibilitySettingRequestDto requestDto,
+                                                               AuthDto authDto) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 후기를 찾을 수 없습니다. id: " + reviewId));
+
+        if (!review.getWriter().getId().equals(authDto.getUserId())) {
+            throw new SecurityException("본인이 작성한 후기만 수정할 수 있습니다.");
+        }
 
         Review updatedReviewVisibility = review.toBuilder()
                 .isPublic(!review.getIsPublic())
@@ -322,8 +346,6 @@ public class ReviewServiceImpl implements ReviewService {
     public List<MyAllReviewPreviewResponseDto> readMyAllReviews(AuthDto authDto) {
         List<Review> reviews = reviewRepository.findMyReviews(authDto.getUserId(), PageRequest.of(0, 10));
 
-        System.out.println(authDto.getUserId());
-
         return reviews.stream()
                 .map(review -> MyAllReviewPreviewResponseDto.builder()
                         .review(MyAllReviewPreviewResponseDto.ReviewDto.builder()
@@ -337,8 +359,8 @@ public class ReviewServiceImpl implements ReviewService {
                                 .build()
                         )
                         .writer(MyAllReviewPreviewResponseDto.WriterDto.builder()
-                                .writerId(authDto.getUserId()) // Security에서 가져온 사용자 ID 사용
-                                .name(authDto.getUserType()) // 예시: userType을 활용해 표시 가능
+                                .writerId(authDto.getUserId()) // 현재 로그인한 사용자의 ID
+                                .name(authDto.getUserId().toString()) // ID를 문자열로 변환하여 사용
                                 .build()
                         )
                         .group(MyAllReviewPreviewResponseDto.GroupDto.builder()
@@ -351,17 +373,24 @@ public class ReviewServiceImpl implements ReviewService {
                                 .build()
                         )
                         .organization(MyAllReviewPreviewResponseDto.OrganizationDto.builder()
-                                .orgId(review.getOrg().getId())
-                                .orgName(review.getOrg().getOrgName())
+                                .orgId(review.getOrg() != null ? review.getOrg().getId() : null)
+                                .orgName(review.getOrg() != null ? review.getOrg().getOrgName() : "N/A")
                                 .build()
                         )
-                        .images(review.getReviewComments().stream()
-                                .flatMap(c -> c.getReview().getReviewComments().stream()
-                                        .map(comment -> comment.getWriter().getProfileImage()))
+                        .images(Optional.ofNullable(review.getReviewComments())
+                                .orElse(Collections.emptySet()).stream()
+                                .flatMap(c -> Optional.ofNullable(c.getReview())
+                                        .map(Review::getReviewComments)
+                                        .orElse(Collections.emptySet()).stream()
+                                        .map(comment -> Optional.ofNullable(comment.getWriter())
+                                                .map(User::getProfileImage)
+                                                .orElse(null)))
+                                .filter(Objects::nonNull)
                                 .collect(Collectors.toList()))
                         .build())
                 .collect(Collectors.toList());
     }
+
 
     @Override
     @Transactional(readOnly = true)
@@ -457,7 +486,7 @@ public class ReviewServiceImpl implements ReviewService {
                                 .createdAt(review.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
                                 .build())
                         .writer(RecruitReviewResponseDto.WriterDto.builder()
-                                .writerId(review.getWriter().getId())
+//                                .writerId(review.getWriter().getId())
                                 .name(review.getWriter().getName())
                                 .build())
                         .group(review.getRecruit().getTemplate() != null && review.getRecruit().getTemplate().getGroup() != null ?

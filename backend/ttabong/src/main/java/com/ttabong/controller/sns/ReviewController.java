@@ -1,6 +1,5 @@
 package com.ttabong.controller.sns;
 
-import com.ttabong.dto.recruit.responseDto.org.CreateTemplateResponseDto;
 import com.ttabong.dto.sns.request.ReviewCreateRequestDto;
 import com.ttabong.dto.sns.request.ReviewEditRequestDto;
 import com.ttabong.dto.sns.request.ReviewVisibilitySettingRequestDto;
@@ -36,7 +35,8 @@ public class ReviewController {
 
     // 2. 해당 후기 상세 조회
     @GetMapping("/{reviewId}")
-    public ResponseEntity<ReviewDetailResponseDto> detailReview(@PathVariable(name = "reviewId") Integer reviewId) {
+    public ResponseEntity<ReviewDetailResponseDto> detailReview(
+            @PathVariable(name = "reviewId") Integer reviewId) {
 
         ReviewDetailResponseDto response = reviewService.detailReview(reviewId);
 
@@ -69,42 +69,48 @@ public class ReviewController {
     @PatchMapping("/{reviewId}/visibility")
     public ResponseEntity<ReviewVisibilitySettingResponseDto> updateVisibility(
             @PathVariable(name = "reviewId") Integer reviewId,
-            @RequestBody ReviewVisibilitySettingRequestDto requestDto) {
+            @RequestBody ReviewVisibilitySettingRequestDto requestDto,
+            @AuthenticationPrincipal AuthDto authDto) {
 
-        ReviewVisibilitySettingResponseDto response = reviewService.updateVisibility(reviewId, requestDto);
+        ReviewVisibilitySettingResponseDto response = reviewService.updateVisibility(reviewId, requestDto, authDto);
 
         return ResponseEntity.ok(response);
 
     }
 
-    // 6. 후기 삭제
+    // TODO: 이미 삭제된거면 삭제된거라고 말하기
     @PatchMapping("/{reviewId}/delete")
-    public ResponseEntity<ReviewDeleteResponseDto> deleteReview(@PathVariable(name = "reviewId") Integer reviewId) {
+    public ResponseEntity<ReviewDeleteResponseDto> deleteReview(
+            @PathVariable(name = "reviewId") Integer reviewId,
+            @AuthenticationPrincipal AuthDto authDto) {
 
-        ReviewDeleteResponseDto response = reviewService.deleteReview(reviewId);
+        ReviewDeleteResponseDto response = reviewService.deleteReview(reviewId, authDto);
 
         return ResponseEntity.ok(response);
-
     }
+
 
     // 7. 후기 작성 시작
-    // minio Presigned URL 발급 API
+    // minio Presigned URL 발급 API /api/reviews/{reviewId}/write
     @GetMapping("/write")
-    public ResponseEntity<CreateTemplateResponseDto> generatePresignedUrls() {
+    public ResponseEntity<CreateReviewPresignedUrlResponseDto> generatePresignedUrls(@AuthenticationPrincipal AuthDto authDto) {
+
+        if (authDto == null || authDto.getUserId() == null) {
+            throw new SecurityException("로그인된 유저만 후기를 생성할 수 있습니다.");
+        }
 
         List<String> presignedUrls = cacheService.generatePresignedUrlsForTemplate();
 
-        CreateTemplateResponseDto response =  CreateTemplateResponseDto.builder()
-                .message("Presigned URL 생성 완료")
-                .images(presignedUrls)
+        CreateReviewPresignedUrlResponseDto response =  CreateReviewPresignedUrlResponseDto.builder()
+                .imageUrls(presignedUrls)
                 .build();
 
         return ResponseEntity.ok().body(response);
 
     }
 
-    // 8. 후기 작성 완료
-    @PostMapping
+    // 8. 후기 작성 완료 /api/reviews/{reviewId}/write
+    @PostMapping("/write")
     public ResponseEntity<ReviewCreateResponseDto> createReview(
             @AuthenticationPrincipal AuthDto authDto,
             @RequestBody @Valid ReviewCreateRequestDto requestDto) {
@@ -116,10 +122,12 @@ public class ReviewController {
     }
 
     // 9. 후기수정 시작 _ (presigneed)요청
-    @GetMapping("/{reviewId}/edit")
-    public ResponseEntity<ReviewEditStartResponseDto> startReviewEdit(@PathVariable(name = "reviewId") Integer reviewId) {
+    @GetMapping("/edit")
+    public ResponseEntity<ReviewEditStartResponseDto> startReviewEdit(
+            @PathVariable(name = "reviewId") Integer reviewId,
+            @AuthenticationPrincipal AuthDto authDto) {
 
-        ReviewEditStartResponseDto response = reviewService.startReviewEdit(reviewId);
+        ReviewEditStartResponseDto response = reviewService.startReviewEdit(reviewId, authDto);
 
         return ResponseEntity.ok(response);
 
@@ -129,9 +137,10 @@ public class ReviewController {
     @PatchMapping("/{reviewId}/edit")
     public ResponseEntity<ReviewEditResponseDto> updateReview(
             @PathVariable(name = "reviewId") Integer reviewId,
-            @RequestBody ReviewEditRequestDto requestDto) {
+            @RequestBody ReviewEditRequestDto requestDto,
+            @AuthenticationPrincipal AuthDto authDto) {
 
-        ReviewEditResponseDto response = reviewService.updateReview(reviewId, requestDto);
+        ReviewEditResponseDto response = reviewService.updateReview(reviewId, requestDto, authDto);
 
         return ResponseEntity.ok(response);
 

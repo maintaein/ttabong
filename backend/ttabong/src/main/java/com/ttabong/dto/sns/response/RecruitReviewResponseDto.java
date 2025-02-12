@@ -38,7 +38,7 @@ public class RecruitReviewResponseDto {
     @AllArgsConstructor
     @Builder
     public static class WriterDto {
-        private Integer writerId;
+//        private Integer writerId;
         private String name;
     }
 
