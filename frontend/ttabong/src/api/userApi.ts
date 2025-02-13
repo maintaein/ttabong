@@ -3,7 +3,9 @@ import type {
   LoginRequest, 
   LoginResponse,
   VolunteerRegisterRequest,
-  OrganizationRegisterRequest 
+  OrganizationRegisterRequest,
+  GetLikedTemplatesParams,
+  GetLikedTemplatesResponse
 } from '@/types/userType';
 
 export const userApi = {
@@ -23,5 +25,19 @@ export const userApi = {
 
   registerOrganization: async (data: OrganizationRegisterRequest): Promise<void> => {
     await axiosInstance.post('/org/register', data);
+  },
+
+  getLikedTemplates: async (params?: GetLikedTemplatesParams): Promise<GetLikedTemplatesResponse> => {
+    const { cursor = 0, limit = 10 } = params || {};
+    const queryParams = new URLSearchParams();
+    
+    queryParams.append('cursor', cursor.toString());
+    queryParams.append('limit', limit.toString());
+    
+    const queryString = queryParams.toString();
+    const url = `/vol/volunteer-reactions/likes?${queryString}`;
+    
+    const response = await axiosInstance.get(url);
+    return response.data;
   },
 }; 
