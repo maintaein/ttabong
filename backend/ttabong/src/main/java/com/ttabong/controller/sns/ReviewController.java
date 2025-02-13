@@ -26,8 +26,8 @@ public class ReviewController implements LoggerConfig {
     // 1. 내가 쓴 후기 조회
     @GetMapping("/mine")
     public ResponseEntity<List<MyAllReviewPreviewResponseDto>> readMyAllReviews(
-            @AuthenticationPrincipal AuthDto userPrincipal) { // 현재 로그인한 사용자 정보 가져오기
-        logger().info("1. 후기 조회\"mine\"");
+            @AuthenticationPrincipal AuthDto userPrincipal) {
+
         List<MyAllReviewPreviewResponseDto> response = reviewService.readMyAllReviews(userPrincipal);
 
         return ResponseEntity.ok(response);
@@ -100,7 +100,7 @@ public class ReviewController implements LoggerConfig {
             throw new SecurityException("로그인된 유저만 후기를 생성할 수 있습니다.");
         }
 
-        List<String> presignedUrls = cacheService.generatePresignedUrlsForTemplate();
+        List<String> presignedUrls = cacheService.generatePresignedUrlsForTemplate(authDto);
 
         CreateReviewPresignedUrlResponseDto response = CreateReviewPresignedUrlResponseDto.builder()
                 .imageUrls(presignedUrls)

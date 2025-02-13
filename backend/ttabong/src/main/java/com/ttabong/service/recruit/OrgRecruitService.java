@@ -2,27 +2,28 @@ package com.ttabong.service.recruit;
 
 import com.ttabong.dto.recruit.requestDto.org.*;
 import com.ttabong.dto.recruit.responseDto.org.*;
+import com.ttabong.dto.user.AuthDto;
 
 import java.util.List;
 
 public interface OrgRecruitService {
 
-    ReadAvailableRecruitsResponseDto readAvailableRecruits(Integer cursor, Integer limit);
-    ReadMyRecruitsResponseDto readMyRecruits(Integer cursor, Integer limit);
-    DeleteRecruitsResponseDto deleteRecruits(DeleteRecruitsRequestDto deleteRecruitDto);
-    UpdateRecruitsResponseDto updateRecruit(Integer recruitId, UpdateRecruitsRequestDto requestDto);
-    CloseRecruitResponseDto closeRecruit(CloseRecruitRequestDto closeRecruitDto);
-    UpdateGroupResponseDto updateGroup(UpdateGroupRequestDto updateGroupDto);
-    UpdateTemplateResponse updateTemplate(UpdateTemplateRequestDto updateTemplateDto);
-    DeleteTemplatesResponseDto deleteTemplates(DeleteTemplatesRequestDto deleteTemplatesDto);
-    DeleteGroupResponseDto deleteGroup(DeleteGroupDto deleteGroupDto);
-    ReadTemplatesResponseDto readTemplates(Integer cursor, Integer limit);
-    CreateTemplateResponseDto createTemplate(CreateTemplateRequestDto createTemplateDto);
-    CreateGroupResponseDto createGroup(CreateGroupRequestDto createGroupDto);
-    CreateRecruitResponseDto createRecruit(CreateRecruitRequestDto createRecruitDto);
-    ReadRecruitResponseDto readRecruit(Integer recruitId);
-    ReadApplicationsResponseDto readApplications(Integer recruitId);
-    UpdateApplicationsResponseDto updateStatuses(UpdateApplicationsRequestDto updateApplicationDto);
-    List<EvaluateApplicationsResponseDto> evaluateApplicants(Integer recruitId, List<EvaluateApplicationsRequestDto> evaluateApplicationDtoList);
+    ReadAvailableRecruitsResponseDto readAvailableRecruits(Integer cursor, Integer limit, AuthDto authDto);
+    ReadMyRecruitsResponseDto readMyRecruits(Integer cursor, Integer limit, AuthDto authDto);
+    DeleteRecruitsResponseDto deleteRecruits(DeleteRecruitsRequestDto deleteRecruitDto, AuthDto authDto);
+    UpdateRecruitsResponseDto updateRecruit(Integer recruitId, UpdateRecruitsRequestDto requestDto, AuthDto authDto);
+    CloseRecruitResponseDto closeRecruit(CloseRecruitRequestDto closeRecruitDto, AuthDto authDto);
+    UpdateGroupResponseDto updateGroup(UpdateGroupRequestDto updateGroupDto, AuthDto authDto);
+    UpdateTemplateResponse updateTemplate(UpdateTemplateRequestDto updateTemplateDto, AuthDto authDto);
+    DeleteTemplatesResponseDto deleteTemplates(DeleteTemplatesRequestDto deleteTemplatesDto, AuthDto authDto);
+    DeleteGroupResponseDto deleteGroup(DeleteGroupDto deleteGroupDto, AuthDto authDto);
+    ReadTemplatesResponseDto readTemplates(Integer cursor, Integer limit, AuthDto authDto);
+    CreateTemplateResponseDto createTemplate(CreateTemplateRequestDto createTemplateDto, AuthDto authDto);
+    CreateGroupResponseDto createGroup(CreateGroupRequestDto createGroupDto, AuthDto authDto);
+    CreateRecruitResponseDto createRecruit(CreateRecruitRequestDto createRecruitDto, AuthDto authDto);
+    ReadRecruitResponseDto readRecruit(Integer recruitId, AuthDto authDto);
+    ReadApplicationsResponseDto readApplications(Integer recruitId, AuthDto authDto);
+    UpdateApplicationsResponseDto updateStatuses(UpdateApplicationsRequestDto updateApplicationDto, AuthDto authDto);
+    List<EvaluateApplicationsResponseDto> evaluateApplicants(Integer recruitId, List<EvaluateApplicationsRequestDto> evaluateApplicationDtoList, AuthDto authDto);
 
 }
