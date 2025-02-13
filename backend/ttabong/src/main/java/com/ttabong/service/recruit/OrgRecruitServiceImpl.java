@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -49,38 +50,45 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         if (authDto == null || authDto.getUserId() == null) {
             throw new SecurityException("로그인이 필요합니다.");
         }
-//        else if (!"organization".equals(authDto.getUserType())) {
-//            throw new SecurityException("기관 계정으로 로그인을 해야 합니다.");
-//        }
+        else if (!"organization".equalsIgnoreCase(authDto.getUserType())) {
+            throw new SecurityException("기관 계정으로 로그인을 해야 합니다.");
+        }
     }
 
     // TODO: 마지막 공고까지 다 로드했다면? & db에서 정보 누락된게 있다면? , 삭제여부 확인, 마감인건 빼고 가져오기
-    @Override
     @Transactional(readOnly = true)
     public ReadAvailableRecruitsResponseDto readAvailableRecruits(Integer cursor, Integer limit, AuthDto authDto) {
-
         checkOrgToken(authDto);
 
-        List<Template> templates = templateRepository.findAvailableTemplates(cursor, limit);
+        Pageable pageable = PageRequest.of(0, limit);
+        List<Template> templates = templateRepository.findAvailableTemplates(cursor, authDto.getUserId(), pageable);
+
+        Map<Integer, List<Recruit>> recruitMap = templates.stream()
+                .map(template -> recruitRepository.findByTemplateId(template.getId()))
+                .flatMap(List::stream)
+                .collect(Collectors.groupingBy(recruit -> recruit.getTemplate().getId()));
+
+        Map<Integer, List<String>> imageMap = templates.stream()
+                .collect(Collectors.toMap(
+                        Template::getId,
+                        template -> imageService.getImageUrls(template.getId(), true)
+                ));
 
         List<ReadAvailableRecruitsResponseDto.TemplateDetail> templateDetails = templates.stream().map(template -> {
-
             ReadAvailableRecruitsResponseDto.Group groupInfo = template.getGroup() != null ?
                     new ReadAvailableRecruitsResponseDto.Group(
                             template.getGroup().getId(),
                             template.getGroup().getGroupName()
                     ) : new ReadAvailableRecruitsResponseDto.Group(1, "봉사");
 
-            List<Recruit> recruitEntities = recruitRepository.findByTemplateId(template.getId());
+            List<Recruit> recruitEntities = recruitMap.getOrDefault(template.getId(), List.of());
             List<ReadAvailableRecruitsResponseDto.Recruit> recruits = recruitEntities.stream()
                     .map(recruit -> ReadAvailableRecruitsResponseDto.Recruit.builder()
                             .recruitId(recruit.getId())
                             .deadline(recruit.getDeadline() != null ?
                                     recruit.getDeadline().atZone(ZoneId.systemDefault()).toLocalDateTime()
                                     : LocalDateTime.now())
-                            .activityDate(recruit.getActivityDate() != null
-                                    ? recruit.getActivityDate()
-                                    : new Date())
+                            .activityDate(recruit.getActivityDate() != null ? recruit.getActivityDate() : new Date())
                             .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.ZERO)
                             .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.ZERO)
                             .maxVolunteer(recruit.getMaxVolunteer())
@@ -95,7 +103,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                             .build())
                     .collect(Collectors.toList());
 
-            List<String> imageUrls = imageService.getImageUrls(template.getId(), true);
+            List<String> imageUrls = imageMap.getOrDefault(template.getId(), List.of());
             String thumbnailImageUrl = imageUrls.isEmpty() ? null : imageUrls.get(0);
 
             return ReadAvailableRecruitsResponseDto.TemplateDetail.builder()
@@ -122,6 +130,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .templates(templateDetails)
                 .build();
     }
+
 
     // TODO: 마지막 공고까지 다 로드했다면? & db에서 정보 누락된게 있다면?, 삭제여부 확인
     @Override

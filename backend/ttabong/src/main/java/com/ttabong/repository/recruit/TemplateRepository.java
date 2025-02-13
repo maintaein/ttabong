@@ -2,6 +2,7 @@ package com.ttabong.repository.recruit;
 
 import com.ttabong.entity.recruit.Template;
 import com.ttabong.entity.user.Organization;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -14,8 +15,15 @@ import java.util.Optional;
 @Repository
 public interface TemplateRepository extends JpaRepository<Template, Integer> {
 
-    @Query("SELECT t FROM Template t WHERE (:cursor IS NULL OR t.id < :cursor) ORDER BY t.id DESC LIMIT :limit")
-    List<Template> findAvailableTemplates(@Param("cursor") Integer cursor, @Param("limit") Integer limit);
+    @Query("SELECT t FROM Template t " +
+            "WHERE (:cursor IS NULL AND t.id = :userId OR t.id < :cursor)"+
+            "AND t.isDeleted = false "+
+            "ORDER BY t.id DESC")
+    List<Template> findAvailableTemplates(@Param("cursor") Integer cursor,
+                                          @Param("userId") Integer userId,
+                                          Pageable pageable);
+
+
 
     @Modifying
     @Query("UPDATE Template t SET t.title = :title, t.description = :description, t.activityLocation = :activityLocation, " +
