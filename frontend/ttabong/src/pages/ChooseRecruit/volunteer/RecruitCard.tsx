@@ -30,7 +30,7 @@ export const RecruitCard: React.FC<RecruitCardProps> = ({ application, onClick }
           </div>
           <div className="space-y-1">
             <p className="text-sm">
-              {application.recruit.activityDate} {application.recruit.activityTime}
+              {application.recruit.activityDate} {application.recruit.activityStart}:00~{application.recruit.activityEnd}:00
             </p>
             <p className="text-sm text-muted-foreground">{application.template.activityLocation}</p>
           </div>
