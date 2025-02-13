@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("") //자동 기본값이 /api
-public class UserController implements LoggerConfig {
+public class UserController extends LoggerConfig {
 
     private final UserService userService;
     private final JwtProvider jwtProvider;
@@ -24,7 +24,7 @@ public class UserController implements LoggerConfig {
 
     @PostMapping("/user/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
-        logger().info("1. 유저로그인\"/user/login\"");
+        logger.info("1. 유저로그인, <POST> \"/user/login\"");
 
         if (loginRequest.getUserType() == null || loginRequest.getUserType().isEmpty()) {
             return ResponseEntity.badRequest().body("userType이 필요합니다.");
@@ -45,7 +45,7 @@ public class UserController implements LoggerConfig {
 
     @PostMapping("/volunteer/register")
     public ResponseEntity<?> registerVolunteer(@RequestBody VolunteerRegisterRequest request) {
-        logger().info("2. 유저 회원가입\"volunteer/register\"");
+        logger.info("2. 유저 회원가입, <POST> \"volunteer/register\"");
         String registerResult = userService.registerVolunteer(request);
 
         if (registerResult.isEmpty()) {
@@ -57,7 +57,7 @@ public class UserController implements LoggerConfig {
 
     @PostMapping("/org/register")
     public ResponseEntity<?> registerOrganization(@RequestBody OrganizationRegisterRequest request) {
-        logger().info("3. 기관 회원가입\"/org/register\"");
+        logger.info("3. 기관 회원가입 <POST> \"/org/register\"");
         String registerResult = userService.registerOrganization(request);
         if (registerResult.isEmpty()) {
             return ResponseEntity.status(HttpStatus.CREATED).body(new RegisterResponse(201, "기관 회원가입이 완료되었습니다."));
@@ -68,7 +68,7 @@ public class UserController implements LoggerConfig {
 
     @GetMapping("/user/check-email")
     public ResponseEntity<EmailCheckResponse> checkEmail(@RequestParam String email, @RequestParam String type) {
-        logger().info("4. 이메일 중복가입 \"/user/check-email\"");
+        logger.info("4. 이메일 중복가입 <GET> \"/user/check-email\"");
         boolean exists = userService.checkEmail(email, type);
         String message;
 
