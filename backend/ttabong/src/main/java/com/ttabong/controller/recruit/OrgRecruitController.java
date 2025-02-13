@@ -1,5 +1,6 @@
 package com.ttabong.controller.recruit;
 
+import com.ttabong.config.LoggerConfig;
 import com.ttabong.dto.recruit.requestDto.org.*;
 import com.ttabong.dto.recruit.responseDto.org.*;
 import com.ttabong.dto.user.AuthDto;
@@ -18,7 +19,7 @@ import java.util.List;
 @RequestMapping("/org")
 @RequiredArgsConstructor
 @Slf4j
-public class OrgRecruitController {
+public class OrgRecruitController implements LoggerConfig {
     private final OrgRecruitService orgRecruitService;
     private final CacheService cacheService;
 
@@ -153,7 +154,7 @@ public class OrgRecruitController {
     public ResponseEntity<CreateTemplateResponseDto> generatePresignedUrls(@AuthenticationPrincipal AuthDto authDto) throws Exception {
         List<String> presignedUrls = cacheService.generatePresignedUrlsForTemplate(authDto);
 
-        CreateTemplateResponseDto response =  CreateTemplateResponseDto.builder()
+        CreateTemplateResponseDto response = CreateTemplateResponseDto.builder()
                 .message("Presigned URL 생성 완료")
                 .images(presignedUrls)
                 .build();
