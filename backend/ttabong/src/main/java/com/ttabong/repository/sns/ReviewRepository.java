@@ -56,7 +56,7 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
         LEFT JOIN FETCH t.group g
         WHERE rec.id = :recruitId
         AND r.isDeleted = false
-        ORDER BY r.createdAt ASC
+        ORDER BY r.createdAt DESC
     """)
     List<Review> findByRecruitId(@Param("recruitId") Integer recruitId);
 
