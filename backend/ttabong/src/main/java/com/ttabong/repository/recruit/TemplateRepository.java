@@ -20,10 +20,17 @@ public interface TemplateRepository extends JpaRepository<Template, Integer> {
             "WHERE (:cursor = 0 OR t.id > :cursor) " +
             "AND o.user.id = :userId " +
             "AND t.isDeleted = false " +
+            "AND EXISTS ( " +
+            "   SELECT r FROM Recruit r " +
+            "   WHERE r.template.id = t.id " +
+            "   AND r.isDeleted = false " +
+            "   AND r.status <> 'RECRUITING' " +
+            ") " +
             "ORDER BY t.id DESC")
     List<Template> findAvailableTemplates(@Param("cursor") Integer cursor,
                                           @Param("userId") Integer userId,
                                           Pageable pageable);
+
 
     @Modifying
     @Query("UPDATE Template t SET t.title = :title, t.description = :description, t.activityLocation = :activityLocation, " +
