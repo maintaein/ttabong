@@ -1,30 +1,5 @@
 import axiosInstance from './axiosInstance';
-import type { Review, ReviewDetail, Comment } from '@/types/reviewType';
-
-interface RecruitReview {
-  review: {
-    reviewId: number;
-    recruitId: number;
-    title: string;
-    content: string;
-    isDeleted: boolean;
-    updatedAt: string;
-    createdAt: string;
-  };
-  writer: {
-    writerId: number;
-    name: string;
-  };
-  group: {
-    groupId: number;
-    groupName: string;
-  };
-  organization: {
-    orgId: number;
-    orgName: string;
-  };
-  images: string[];
-}
+import type { Review, ReviewDetail, Comment, ReviewEditResponse, VisibilityResponse, RecruitReview, UpdateReviewRequest, CommentDeleteResponse } from '@/types/reviewType';
 
 export const reviewApi = {
   getReviews: async (): Promise<Review[]> => {
@@ -38,21 +13,46 @@ export const reviewApi = {
   },
   
   addComment: async (reviewId: number, content: string): Promise<Comment> => {
-    const response = await axiosInstance.post(`/reviews/${reviewId}/comments`, { content });
+    const response = await axiosInstance.post(`/reviews/comments/${reviewId}`, { content });
     return response.data;
   },
   
   getRecruitReviews: async (recruitId: number): Promise<RecruitReview[]> => {
-    const response = await axiosInstance.get(`/recruits/${recruitId}/reviews`);
+    const response = await axiosInstance.get(`/reviews/recruits/${recruitId}`);
     return response.data;
   },
   
-  updateReview: async (reviewId: number, data: Partial<ReviewDetail>): Promise<ReviewDetail> => {
-    const response = await axiosInstance.patch(`/reviews/${reviewId}`, data);
+  updateReview: async (reviewId: number, data: UpdateReviewRequest): Promise<ReviewEditResponse> => {
+    const response = await axiosInstance.patch(`/reviews/${reviewId}/edit`, data);
     return response.data;
   },
   
   deleteReview: async (reviewId: number): Promise<void> => {
     await axiosInstance.patch(`/reviews/${reviewId}/delete`);
   },
+  
+  uploadReviewImage: async (presignedUrl: string, file: File): Promise<void> => {
+    await fetch(presignedUrl, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': file.type
+      }
+    });
+  },
+  
+  updateVisibility: async (reviewId: number, isPublic: boolean): Promise<VisibilityResponse> => {
+    const response = await axiosInstance.patch(`/reviews/${reviewId}/visibility`, { isPublic });
+    return response.data;
+  },
+  
+  updateComment: async (commentId: number, content: string): Promise<Comment> => {
+    const response = await axiosInstance.patch(`/reviews/comments/${commentId}`, { content });
+    return response.data;
+  },
+  
+  deleteComment: async (commentId: number): Promise<CommentDeleteResponse> => {
+    const response = await axiosInstance.patch(`/reviews/comments/${commentId}/delete`);
+    return response.data;
+  }
 }; 

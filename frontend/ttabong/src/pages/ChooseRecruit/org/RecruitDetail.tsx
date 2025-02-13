@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import type { OrgRecruit } from '@/types/recruitType';
 import { recruitApi } from '@/api/recruitApi';
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -22,6 +22,7 @@ const RecruitDetail: React.FC = () => {
   const [recruit, setRecruit] = useState<OrgRecruit | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentImageIndex] = useState(0);
+  const { toast } = useToast();
 
   const slideVariants = {
     enter: (direction: number) => ({
@@ -71,7 +72,11 @@ const RecruitDetail: React.FC = () => {
         setRecruit(data);
       } catch (error) {
         console.error('공고 상세 조회 실패:', error);
-        toast.error('공고 정보를 불러오는데 실패했습니다.');
+        toast({
+          variant: "destructive",
+          title: "오류",
+          description: "공고 정보를 불러오는데 실패했습니다"
+        });
       } finally {
         setIsLoading(false);
       }
@@ -80,7 +85,7 @@ const RecruitDetail: React.FC = () => {
     if (recruitId) {
       fetchRecruitDetail();
     }
-  }, [recruitId, location.state]);
+  }, [recruitId, location.state, toast]);
 
   if (isLoading) {
     return (

@@ -8,13 +8,13 @@ import Step3VolunteerLocation from "@/pages/Me/TemplateComponents/Step3Volunteer
 import Step4ContactInfo from "@/pages/Me/TemplateComponents/Step4ContactInfo";
 import { motion, AnimatePresence } from "framer-motion";
 import { TemplateFormData } from '@/types/template';
-import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useScroll } from '@/contexts/ScrollContext';
 import { useTemplateStore } from '@/stores/templateStore';
 import { templateApi } from '@/api/templateApi';
 import { recruitApi } from '@/api/recruitApi';
 import { transformTemplateData } from '@/types/template';
+import { useToast } from "@/hooks/use-toast";
 
 const formatTime = (time: number) => {
   const hours = Math.floor(time);
@@ -41,6 +41,7 @@ const TemplateAndGroupWrite: React.FC = () => {
   const recruitData = location.state?.recruitData;
   const { scrollToTop } = useScroll();
   const { createTemplate: createTemplateApi } = useTemplateStore();
+  const { toast } = useToast();
 
   // 🔹 모든 step의 데이터를 하나의 state로 관리
   const [templateData, setTemplateData] = useState<TemplateFormData>({
@@ -136,7 +137,11 @@ const TemplateAndGroupWrite: React.FC = () => {
           });
         } catch (error) {
           console.error('데이터 로드 실패:', error);
-          toast.error('데이터를 불러오는데 실패했습니다.');
+          toast({
+            variant: "destructive",
+            title: "오류",
+            description: "데이터를 불러오는데 실패했습니다."
+          });
         }
       };
       loadTemplateAndRecruit();
@@ -178,7 +183,11 @@ const TemplateAndGroupWrite: React.FC = () => {
           });
         } catch (error) {
           console.error('템플릿 로드 실패:', error);
-          toast.error('템플릿을 불러오는데 실패했습니다.');
+          toast({
+            variant: "destructive",
+            title: "오류",
+            description: "템플릿을 불러오는데 실패했습니다."
+          });
         }
       };
       loadTemplate();
@@ -204,7 +213,10 @@ const TemplateAndGroupWrite: React.FC = () => {
           images: templateData.images,
           imageCount: templateData.images.length
         });
-        toast.success('공고가 수정되었습니다.');
+        toast({
+          title: "성공",
+          description: "공고가 수정되었습니다."
+        });
       } else {
         let newTemplateId;
         if (templateId) {
@@ -212,12 +224,18 @@ const TemplateAndGroupWrite: React.FC = () => {
           const apiData = transformTemplateData(templateData);
           await templateApi.updateTemplate(templateId, apiData);
           newTemplateId = templateId;
-          toast.success('공고가 생성되었습니다.');
+          toast({
+            title: "성공",
+            description: "공고가 생성되었습니다."
+          });
         } else {
           // 새 템플릿 생성
           const response = await createTemplateApi(templateData);
           newTemplateId = response.templateId;
-          toast.success('템플릿과 공고가 생성되었습니다.');
+          toast({
+            title: "성공",
+            description: "템플릿과 공고가 생성되었습니다."
+          });
         }
 
         // 공고 자동 생성
@@ -243,7 +261,11 @@ const TemplateAndGroupWrite: React.FC = () => {
 
     } catch (error) {
       console.error('실패:', error);
-      toast.error(isRecruitEdit ? '공고 수정에 실패했습니다.' : '템플릿 생성에 실패했습니다.');
+      toast({
+        variant: "destructive",
+        title: "오류",
+        description: isRecruitEdit ? '공고 수정에 실패했습니다.' : '템플릿 생성에 실패했습니다.'
+      });
     }
   };
 
@@ -279,7 +301,11 @@ const TemplateAndGroupWrite: React.FC = () => {
     }
 
     if (errors.length > 0) {
-      errors.forEach(error => toast.error(error));
+      errors.forEach(error => toast({
+        variant: "destructive",
+        title: "오류",
+        description: error
+      }));
       return false;
     }
     return true;
@@ -297,7 +323,11 @@ const TemplateAndGroupWrite: React.FC = () => {
     }
 
     if (errors.length > 0) {
-      errors.forEach(error => toast.error(error));
+      errors.forEach(error => toast({
+        variant: "destructive",
+        title: "오류",
+        description: error
+      }));
       return false;
     }
 
@@ -319,7 +349,11 @@ const TemplateAndGroupWrite: React.FC = () => {
     }
 
     if (errors.length > 0) {
-      errors.forEach(error => toast.error(error));
+      errors.forEach(error => toast({
+        variant: "destructive",
+        title: "오류",
+        description: error
+      }));
       return false;
     }
     return true;
@@ -343,7 +377,11 @@ const TemplateAndGroupWrite: React.FC = () => {
     }
 
     if (errors.length > 0) {
-      errors.forEach(error => toast.error(error));
+      errors.forEach(error => toast({
+        variant: "destructive",
+        title: "오류",
+        description: error
+      }));
       return false;
     }
     return true;
@@ -368,7 +406,11 @@ const TemplateAndGroupWrite: React.FC = () => {
     }
 
     if (errors.length > 0) {
-      errors.forEach(error => toast.error(error));
+      errors.forEach(error => toast({
+        variant: "destructive",
+        title: "오류",
+        description: error
+      }));
       return false;
     }
     return true;
