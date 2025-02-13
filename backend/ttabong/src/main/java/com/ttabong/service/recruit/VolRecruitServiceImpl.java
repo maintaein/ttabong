@@ -5,6 +5,7 @@ import com.ttabong.dto.user.OrganizationDto;
 import com.ttabong.entity.recruit.Application;
 import com.ttabong.entity.recruit.Recruit;
 import com.ttabong.entity.recruit.Template;
+import com.ttabong.entity.recruit.VolunteerReaction;
 import com.ttabong.entity.user.Volunteer;
 import com.ttabong.repository.recruit.ApplicationRepository;
 import com.ttabong.repository.recruit.RecruitRepository;
@@ -51,7 +52,7 @@ public class VolRecruitServiceImpl implements VolRecruitService {
 
         List<ReadVolRecruitsListResponseDto.TemplateWrapper> templateDetails = templates.stream()
                 .map(template -> new ReadVolRecruitsListResponseDto.TemplateWrapper(
-                        ReadVolRecruitsResponseDto.from(template),
+                        TemplateDto.from(template),
                         GroupDto.from(template.getGroup()),
                         template.getOrg() != null ? OrganizationDto.from(template.getOrg()) : null
                 ))
@@ -88,7 +89,7 @@ public class VolRecruitServiceImpl implements VolRecruitService {
 
     // 4. 공고 신청 취소
     @Override
-    public void cancelRecruitApplication(Integer applicationId) {
+    public Application cancelRecruitApplication(Integer applicationId) {
         Application application = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new IllegalArgumentException("신청 내역을 찾을 수 없습니다."));
 
@@ -98,6 +99,7 @@ public class VolRecruitServiceImpl implements VolRecruitService {
 
         application.setIsDeleted(true);
         applicationRepository.save(application);
+        return application;
     }
 
     // 5. 신청한 공고 목록 조회
@@ -113,15 +115,21 @@ public class VolRecruitServiceImpl implements VolRecruitService {
     // 6. 특정 공고 상세 조회
     @Override
     public Optional<MyApplicationDetailResponseDto> getRecruitDetail(Integer recruitId) {
-        return recruitRepository.findByRecruitId(recruitId)
+        return recruitRepository.findByIdAndIsDeletedFalse(recruitId)
                 .map(MyApplicationDetailResponseDto::from);
     }
+
 
     // 7. "좋아요"한 템플릿 목록 조회
     @Override
     public List<MyLikesRecruitsResponseDto> getLikedTemplates(Integer userId, Integer cursor, Integer limit) {
-        return reactionRepository.findLikedTemplatesByUserId(userId, cursor, limit);
+        List<VolunteerReaction> reactions = reactionRepository.findLikedTemplatesByUserId(userId, cursor, limit);
+
+        return reactions.stream()
+                .map(MyLikesRecruitsResponseDto::from)
+                .collect(Collectors.toList());
     }
+
 
     // 8. 특정 템플릿 "좋아요" 혹은 "싫어요"하기
     @Override

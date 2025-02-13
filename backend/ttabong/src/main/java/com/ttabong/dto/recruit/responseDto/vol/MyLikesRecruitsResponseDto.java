@@ -1,32 +1,30 @@
 package com.ttabong.dto.recruit.responseDto.vol;
 
+import com.ttabong.entity.recruit.VolunteerReaction;
 import lombok.*;
 
-import java.time.LocalDateTime;
-import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MyApplicationsResponseDto {
-    private Integer applicationId;
-    private String status;
-    private Boolean evaluationDone;
-    private Instant createdAt;
-    private TemplateDto template;
-    private GroupDto group;
+public class MyLikesRecruitsResponseDto {
+    private Integer templateId;
+    private String thumbnailImg;
+    private String activityLocation;
+    private String title;
     private RecruitDto recruit;
+    private GroupDto group;
 
-    public static MyApplicationsResponseDto from(Application application) {
-        return MyApplicationsResponseDto.builder()
-                .applicationId(application.getId())
-                .status(application.getStatus())
-                .evaluationDone(application.getEvaluationDone())
-                .createdAt(application.getCreatedAt())
-                .template(TemplateDto.from(application.getRecruit().getTemplate()))
-                .group(GroupDto.from(application.getRecruit().getTemplate().getGroup()))
-                .recruit(RecruitDto.from(application.getRecruit()))
+    public static MyLikesRecruitsResponseDto from(VolunteerReaction reaction) {
+        return MyLikesRecruitsResponseDto.builder()
+                .templateId(reaction.getRecruit().getTemplate().getId())
+                .thumbnailImg(reaction.getRecruit().getTemplate().getThumbnailImage() != null ?
+                        reaction.getRecruit().getTemplate().getThumbnailImage().getImageUrl() : null)
+                .activityLocation(reaction.getRecruit().getTemplate().getActivityLocation())
+                .title(reaction.getRecruit().getTemplate().getTitle())
+                .recruit(RecruitDto.from(reaction.getRecruit()))
+                .group(GroupDto.from(reaction.getRecruit().getTemplate().getGroup()))
                 .build();
     }
 }

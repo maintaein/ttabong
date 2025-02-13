@@ -67,15 +67,17 @@ public class VolRecruitController {
     // 4. 공고 신청 취소
     @PatchMapping("/applications/{applicationId}")
     public ResponseEntity<CancelRecruitResponseDto> cancelRecruit(@PathVariable Integer applicationId) {
-        volRecruitService.cancelRecruitApplication(applicationId);
+        Application application = volRecruitService.cancelRecruitApplication(applicationId);
 
         CancelRecruitResponseDto responseDto = CancelRecruitResponseDto.builder()
                 .message("신청 취소 완료")
-                .application(new CancelRecruitResponseDto.Application(applicationId, true))
+                .application(CancelRecruitResponseDto.ApplicationDto.fromEntity(application))
                 .build();
 
         return ResponseEntity.ok().body(responseDto);
     }
+
+
 
     // 5. 신청한 공고 목록 조회
     @GetMapping("/applications/recruits")

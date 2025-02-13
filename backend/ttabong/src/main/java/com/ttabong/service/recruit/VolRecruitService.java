@@ -13,7 +13,7 @@ public interface VolRecruitService {
 
     Application applyRecruit(int userId, int recruitId);
 
-    void cancelRecruitApplication(Integer applicationId);
+    Application cancelRecruitApplication(Integer applicationId);
 
     List<MyApplicationsResponseDto> getMyApplications(Integer userId, Integer cursor, Integer limit);
 

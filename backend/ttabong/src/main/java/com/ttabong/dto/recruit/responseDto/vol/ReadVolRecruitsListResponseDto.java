@@ -1,6 +1,7 @@
 package com.ttabong.dto.recruit.responseDto.vol;
 
 import com.ttabong.dto.user.OrganizationDto;
+import com.ttabong.entity.recruit.Template;
 import lombok.*;
 
 import java.util.List;

@@ -1,7 +1,9 @@
 package com.ttabong.dto.recruit.responseDto.vol;
 
+import com.ttabong.entity.recruit.Application;
 import lombok.*;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 @Getter
