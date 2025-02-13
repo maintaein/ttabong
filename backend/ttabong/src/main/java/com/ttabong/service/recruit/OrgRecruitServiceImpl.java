@@ -378,13 +378,16 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         imageService.updateThumbnailImage(savedTemplate.getId(), true);
 
+        List<String> imageUrls = imageService.getImageUrls(savedTemplate.getId(), true);
+
         return CreateTemplateResponseDto.builder()
                 .message("템플릿 생성 성공")
                 .templateId(savedTemplate.getId())
-                .imageUrl(imageService.getImageUrls(savedTemplate.getId(), true).stream().findFirst().orElse(null)) // 대표 이미지 URL
-                .images(imageService.getImageUrls(savedTemplate.getId(), true)) // 전체 이미지 URL 리스트
+                .imageUrl(imageUrls.stream().findFirst().orElse(null)) // 썸네일 이미지 url
+                .images(imageUrls)
                 .build();
     }
+
 
     @Override
     public CreateGroupResponseDto createGroup(CreateGroupRequestDto createGroupDto, AuthDto authDto) {
