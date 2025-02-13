@@ -2,7 +2,6 @@ package com.ttabong.service.recruit;
 
 import com.ttabong.dto.recruit.requestDto.org.*;
 import com.ttabong.dto.recruit.responseDto.org.*;
-import com.ttabong.dto.recruit.responseDto.org.ReadMyRecruitsResponseDto.RecruitDetail;
 import com.ttabong.dto.user.AuthDto;
 import com.ttabong.entity.recruit.Application;
 import com.ttabong.entity.recruit.Recruit;
@@ -20,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,7 +30,6 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -159,28 +158,40 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         }
     }
 
-    // TODO: 마지막 공고까지 다 로드했다면? & db에서 정보 누락된게 있다면?, 삭제여부 확인
     @Override
     @Transactional(readOnly = true)
     public ReadMyRecruitsResponseDto readMyRecruits(Integer cursor, Integer limit, AuthDto authDto) {
 
         checkOrgToken(authDto);
 
-        List<Recruit> recruits = recruitRepository.findAvailableRecruits(cursor, limit);
+        if (cursor == null) {
+            cursor = Integer.MAX_VALUE;
+        }
 
-        List<RecruitDetail> recruitDetails = recruits.stream().map(recruit -> {
+        Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "id"));
+
+        List<Recruit> recruits = recruitRepository.findAvailableRecruits(cursor, authDto.getUserId(), pageable);
+
+        if (recruits.isEmpty()) {
+            throw new NotFoundException("활성화된 모집 공고가 없습니다.");
+        }
+
+        List<ReadMyRecruitsResponseDto.RecruitDetail> recruitDetails = recruits.stream().map(recruit -> {
             Template template = recruit.getTemplate();
             TemplateGroup templateGroup = template.getGroup();
-            ReadMyRecruitsResponseDto.Group group = Optional.ofNullable(templateGroup)
-                    .map(g -> ReadMyRecruitsResponseDto.Group.builder()
-                            .groupId(g.getId())
-                            .groupName(g.getGroupName())
-                            .build())
-                    .orElse(null);
+
+            ReadMyRecruitsResponseDto.Group group = templateGroup != null ?
+                    ReadMyRecruitsResponseDto.Group.builder()
+                            .groupId(templateGroup.getId())
+                            .groupName(templateGroup.getGroupName())
+                            .build()
+                    : null;
+
             ReadMyRecruitsResponseDto.Template dtoTemplate = ReadMyRecruitsResponseDto.Template.builder()
                     .templateId(template.getId())
                     .title(template.getTitle())
                     .build();
+
             ReadMyRecruitsResponseDto.Recruit dtoRecruit = ReadMyRecruitsResponseDto.Recruit.builder()
                     .recruitId(recruit.getId())
                     .status(recruit.getStatus())
@@ -197,7 +208,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                             : LocalDateTime.now())
                     .build();
 
-            return RecruitDetail.builder()
+            return ReadMyRecruitsResponseDto.RecruitDetail.builder()
                     .group(group)
                     .template(dtoTemplate)
                     .recruit(dtoRecruit)
@@ -208,6 +219,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .recruits(recruitDetails)
                 .build();
     }
+
 
     // TODO: 이미 삭제된 공고는 어떻게 처리? 삭제 실패시 처리
     @Override
