@@ -16,7 +16,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import type { ApiError } from '@/api/axiosInstance';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { TopBar } from '@/components/TopBar';
 
 const loginSchema = z.object({
@@ -44,6 +44,7 @@ export default function Login() {
       password: ''
     }
   });
+  const { toast } = useToast();
 
   const handleTabChange = (value: string) => {
     setActiveTab(value as 'volunteer' | 'organization');
@@ -60,17 +61,19 @@ export default function Login() {
   const onSubmit = async (values: LoginValues) => {
     try {
       const message = await login(values.email, values.password, activeTab);
-      toast.success(message);
+      toast({
+        title: "로그인 성공",
+        description: message,
+      });
       navigate('/main');
     } catch (error) {
       const apiError = error as ApiError;
-      if (apiError.type === 'VALIDATION') {
-        form.setError('email', { message: apiError.message });
-      } else if (apiError.type === 'AUTH') {
-        form.setError('root', { message: apiError.message });
-      } else {
-        form.setError('root', { message: apiError.message });
-      }
+      toast({
+        variant: "destructive",
+        title: "로그인 실패",
+        description: apiError.message,
+      });
+      form.setError('root', { message: apiError.message });
     }
   };
 
