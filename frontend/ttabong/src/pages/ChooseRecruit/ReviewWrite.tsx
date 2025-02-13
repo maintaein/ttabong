@@ -1,29 +1,51 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ReviewWriteHeader } from './components/ReviewWriteHeader';
 import { ReviewWriteImages } from './components/ReviewWriteImages';
 import { ReviewWriteForm } from './components/ReviewWriteForm';
-import { useReviewWriteStore } from '@/stores/reviewWriteStore';
+import { useReviewStore } from '@/stores/reviewStore';
+import { reviewApi } from '@/api/reviewApi';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ReviewWrite() {
   const navigate = useNavigate();
-  const { recruitId, orgId, resetReviewInfo } = useReviewWriteStore();
+  const location = useLocation();
+  const { orgId, resetReviewInfo } = useReviewStore();
+  const { updateReview } = useReviewStore();
+  
+  // location.state에서 수정 관련 정보 가져오기
+  const isEdit = Boolean(location.state?.isEdit);
+  const editReviewId = location.state?.reviewId;
+  
   const [images, setImages] = useState<string[]>([]);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isPublic, setIsPublic] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
-    const currentRecruitId = Number(sessionStorage.getItem('reviewWrite.recruitId'));
-    const currentOrgId = Number(sessionStorage.getItem('reviewWrite.orgId'));
-    
-    if (!currentRecruitId || !currentOrgId) {
-      navigate('/choose-recruit');
-      return;
+    if (isEdit && editReviewId) {
+      const loadReview = async () => {
+        try {
+          const review = await reviewApi.getReviewDetail(Number(editReviewId));
+          setTitle(review.title);
+          setContent(review.content);
+          setImages(review.images || []);
+          setIsPublic(review.isPublic);
+        } catch (error) {
+          toast({
+            variant: "destructive",
+            title: "오류",
+            description: "리뷰 정보를 불러오는데 실패했습니다."
+          });
+          navigate(-1);
+        }
+      };
+      loadReview();
     }
-  }, [navigate]);
+  }, [editReviewId, isEdit, navigate, toast]);
 
   useEffect(() => {
     return () => resetReviewInfo();
@@ -45,24 +67,49 @@ export default function ReviewWrite() {
   };
 
   const handleSubmit = async () => {
-    if (!recruitId || !orgId) {
-      console.error('Required information is missing');
+    if (!title.trim() || !content.trim()) {
+      toast({
+        variant: "destructive",
+        title: "오류",
+        description: "제목과 내용을 입력해주세요."
+      });
       return;
     }
 
-    const reviewData = {
-      recruitId,
-      orgId,
-      writerId: 10, // TODO: 실제 사용자 ID로 대체
-      title,
-      content,
-      isPublic,
-      thumbnailImg: images[0], // TODO: 실제 이미지 업로드 로직 추가
-      imgCount: images.length
-    };
+    try {
+      const reviewData = {
+        title,
+        content,
+        isPublic,
+        images,
+        imageCount: images.length
+      };
 
-    // TODO: API 연동
-    console.log(reviewData);
+      if (isEdit && editReviewId) {
+        const response = await updateReview(Number(editReviewId), reviewData);
+        
+        // 새로운 이미지가 있다면 업로드
+        if (response.presignedUrl.length > 0) {
+          // 이미지 업로드 로직 구현
+          // response.presignedUrl을 사용하여 이미지 업로드
+        }
+
+        toast({
+          title: "성공",
+          description: "리뷰가 수정되었습니다."
+        });
+      } else {
+        // 새 리뷰 생성 로직
+      }
+      
+      navigate(-1);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "오류",
+        description: isEdit ? "리뷰 수정에 실패했습니다." : "리뷰 등록에 실패했습니다."
+      });
+    }
   };
 
   return (
@@ -74,7 +121,7 @@ export default function ReviewWrite() {
           writerProfileImage: "https://picsum.photos/100/100"
         }}
         organization={{
-          orgId: 1,
+          orgId: orgId!,
           orgName: "서울 환경 봉사단"
         }}
       />
@@ -100,7 +147,7 @@ export default function ReviewWrite() {
             취소
           </Button>
           <Button className="flex-1" onClick={handleSubmit}>
-            작성
+            {isEdit ? '수정' : '등록'}
           </Button>
         </div>
       </div>

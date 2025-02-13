@@ -1,54 +1,129 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from "@/hooks/theme-provider";
-import { MainLayout } from "@/layout/MainLayout";
-import { PageLayout } from "@/layout/PageLayout";
 import { Toaster } from "sonner";
+import { useUserStore } from '@/stores/userStore';
+import { Layout } from "@/layout/Layout";
 
-import Me from "@/pages/Me";
-import TemplateAndGroup from "@/pages/Me/TemplateAndGroup";
-import TemplateAndGroupWrite from "@/pages/Me/TemplateAndGroupWrite";
-import ChooseRecruit from "@/pages/ChooseRecruit";
-import ReviewFind from "@/pages/ReviewFind";
-import ReviewDetail from "@/pages/ReviewFind/ReviewDetail";
-import ReviewDetailList from "@/pages/ReviewFind/ReviewDetailList";
-import RecruitDetail from "@/pages/ChooseRecruit/org/RecruitDetail";
-import RecruitFind from './pages/RecruitFind';
-import RecruitInfo from './pages/MainPage/RecruitInfo';
-import MainPage from './pages/MainPage';
-import ReviewWrite from '@/pages/ChooseRecruit/ReviewWrite';
+// Pages
 import Login from '@/pages/Login';
+import MainPage from '@/pages/MainPage';
+import OrgMainPage from '@/pages/OrgMainPage';
+import RecruitFind from '@/pages/RecruitFind';
+import ReviewFind from '@/pages/ReviewFind';
+import ReviewDetail from '@/pages/ReviewFind/ReviewDetail';
+import ReviewDetailList from '@/pages/ReviewFind/ReviewDetailList';
+import MyPage from '@/pages/MyPage';
+import OrgMyPage from '@/pages/OrgMyPage';
+import RecruitDetail from '@/pages/ChooseRecruit/org/RecruitDetail';
+import ReviewWrite from '@/pages/ChooseRecruit/ReviewWrite';
 import SignUp from '@/pages/SignUp';
 import OrgSignUp from '@/pages/OrgSignUp';
+import AddRecruit from '@/pages/AddRecruit';
+import ChooseRecruit from './pages/ChooseRecruit';
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { userId } = useUserStore();
+  if (!userId) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
+function UserTypeRoute({ 
+  volunteerComponent: VolunteerComponent,
+  orgComponent: OrgComponent 
+}: {
+  volunteerComponent: React.ComponentType;
+  orgComponent: React.ComponentType;
+}) {
+  const { userType } = useUserStore();
+  return userType === 'volunteer' ? <VolunteerComponent /> : <OrgComponent />;
+}
 
 const App: React.FC = () => {
   return (
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-      <Toaster position="top-center" richColors />
+      <Toaster />
       <div className="min-h-screen bg-zinc-100 dark:bg-zinc-900">
         <div className="mx-auto max-w-[600px] min-w-[320px] h-screen bg-background">
-          <MainLayout>
-            <PageLayout>
-              <Routes>
-                <Route path="/" element={<Me />} />
-                <Route path="/recruit-find" element={<RecruitFind />} />
-                <Route path="/recruit-info" element={<RecruitInfo />} />
-                <Route path="/main-page" element={<MainPage />} />
-                <Route path="/my-page" element={<Me />} />
-                <Route path="/template-and-group" element={<TemplateAndGroup />} />
-                <Route path="/template-and-group-write" element={<TemplateAndGroupWrite />} />
-                <Route path="/choose-recruit" element={<ChooseRecruit />} />
-                <Route path="/review-find" element={<ReviewFind />} />
-                <Route path="/review-find/:reviewId" element={<ReviewDetail />} />
-                <Route path="/review-find/:reviewId/reviews" element={<ReviewDetailList />} />
-                <Route path="/recruits/:recruitId" element={<RecruitDetail />} />
-                <Route path="/review-write" element={<ReviewWrite />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<SignUp />} />
-                <Route path="/org-signup" element={<OrgSignUp />} />
-              </Routes>
-            </PageLayout>
-          </MainLayout>
+          <Routes>
+            {/* 인증이 필요없는 라우트 */}
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/org-signup" element={<OrgSignUp />} />
+            
+            {/* 인증이 필요한 라우트 */}
+            <Route element={<Layout />}>
+              <Route path="/main" element={
+                <ProtectedRoute>
+                  <UserTypeRoute 
+                    volunteerComponent={MainPage}
+                    orgComponent={OrgMainPage}
+                  />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/recruit" element={
+                <ProtectedRoute>
+                  <UserTypeRoute 
+                    volunteerComponent={ChooseRecruit}
+                    orgComponent={AddRecruit}
+                  />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/recruit-find" element={
+                <ProtectedRoute>
+                  <RecruitFind />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/recruits/:recruitId" element={
+                <ProtectedRoute>
+                  <RecruitDetail />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/review-find" element={
+                <ProtectedRoute>
+                  <ReviewFind />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/review-find/:reviewId" element={
+                <ProtectedRoute>
+                  <ReviewDetail />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/review-find/:reviewId/reviews" element={
+                <ProtectedRoute>
+                  <ReviewDetailList />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/review-write" element={
+                <ProtectedRoute>
+                  <ReviewWrite />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/mypage" element={
+                <ProtectedRoute>
+                  <UserTypeRoute 
+                    volunteerComponent={MyPage}
+                    orgComponent={OrgMyPage}
+                  />
+                </ProtectedRoute>
+              } />
+
+              <Route path="/add-recruit" element={
+                <ProtectedRoute>
+                  <AddRecruit />
+                </ProtectedRoute>
+              } />
+            </Route>
+          </Routes>
         </div>
       </div>
     </ThemeProvider>

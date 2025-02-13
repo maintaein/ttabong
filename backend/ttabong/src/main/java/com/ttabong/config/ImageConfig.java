@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class ImageConfig implements LoggerConfig {
+public class ImageConfig extends LoggerConfig {
     MinioClient minioClient;
 
     @Value("${minio.bucket-name}")
@@ -19,12 +19,12 @@ public class ImageConfig implements LoggerConfig {
                 @Value("${minio.access-key}") String accessKey,
                 @Value("${minio.secret-key}") String secretKey,
                 @Value("${minio.bucket-name}") String bucketName) {
-        logger().info("미니오 접속 URL : " + minioUrl);
-        logger().info("미니오 접속 AccessKey : " + accessKey);
-        logger().info("미니오 접속 SecretKey : " + secretKey);
-        logger().info("미니오 접속 BucketName : " + bucketName);
+        logger.info("미니오 접속 URL : " + minioUrl);
+        logger.info("미니오 접속 AccessKey : " + accessKey);
+        logger.info("미니오 접속 SecretKey : " + secretKey);
+        logger.info("미니오 접속 BucketName : " + bucketName);
         this.minioClient = MinioClient.builder()
-                .endpoint(minioUrl)
+                .endpoint(minioUrl, 9000, false)
                 .credentials(accessKey, secretKey)
                 .build();
     }
@@ -38,13 +38,13 @@ public class ImageConfig implements LoggerConfig {
     public void ensureBucketExists() {
         try {
             MinioClient client = this.minioClient;
-            logger().info(" Bucket '" + bucketName + "' 관리를 시작합니다!");
+            logger.info(" Bucket '" + bucketName + "' 관리를 시작합니다!");
             boolean found = client.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
             if (!found) {
                 client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
-                logger().info("✅ Bucket '" + bucketName + "' created successfully!");
+                logger.info("✅ Bucket '" + bucketName + "' created successfully!");
             } else {
-                logger().info("✅ Bucket '" + bucketName + "' already exists.");
+                logger.info("✅ Bucket '" + bucketName + "' already exists.");
             }
         } catch (Exception e) {
             e.printStackTrace();
