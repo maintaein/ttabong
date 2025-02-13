@@ -28,13 +28,19 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
             "AND o.user.id = :userId " +
             "AND r.isDeleted = false " +
             "ORDER BY r.id DESC")
-    List<Recruit> findAvailableRecruits(@Param("cursor") Integer cursor,
-                                        @Param("userId") Integer userId,
-                                        Pageable pageable);
+    List<Recruit> findAvailableRecruits(@Param("cursor") Integer cursor, @Param("userId") Integer userId,  Pageable pageable);
 
     @Modifying
-    @Query("UPDATE Recruit r SET r.isDeleted = true WHERE r.id IN :deleteIds")
-    void markAsDeleted(@Param("deleteIds") List<Integer> deleteIds);
+    @Query("UPDATE Recruit r " +
+            "SET r.isDeleted = true " +
+            "WHERE r.id IN :deleteIds " +
+            "AND EXISTS ( " +
+            "    SELECT t FROM Template t " +
+            "    WHERE t.id = r.template.id " +
+            "    AND t.org.user.id = :userId " +
+            ") " +
+            "AND r.isDeleted = false")
+    int markAsDeleted(@Param("deleteIds") List<Integer> deleteIds, @Param("userId") Integer userId);
 
     @Modifying
     @Query("UPDATE Recruit r " +

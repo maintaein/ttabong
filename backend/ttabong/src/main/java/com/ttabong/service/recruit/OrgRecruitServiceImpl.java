@@ -30,6 +30,7 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -221,23 +222,30 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     }
 
 
-    // TODO: 이미 삭제된 공고는 어떻게 처리? 삭제 실패시 처리
     @Override
     public DeleteRecruitsResponseDto deleteRecruits(DeleteRecruitsRequestDto deleteRecruitDto, AuthDto authDto) {
 
+        checkOrgToken(authDto);
+
         List<Integer> recruitIds = deleteRecruitDto.getDeletedRecruits();
 
-        recruitRepository.markAsDeleted(recruitIds);
+        int deletedCount = recruitRepository.markAsDeleted(recruitIds, authDto.getUserId());
+
+        if (deletedCount == 0) {
+            throw new NotFoundException("삭제할 수 있는 공고가 없습니다. 이미 삭제되었거나 권한이 없습니다.");
+        }
 
         return DeleteRecruitsResponseDto.builder()
                 .message("공고 삭제 완료")
                 .deletedRecruits(recruitIds)
                 .build();
-
     }
+
 
     @Override
     public UpdateRecruitsResponseDto updateRecruit(Integer recruitId, UpdateRecruitsRequestDto requestDto, AuthDto authDto) {
+
+        checkOrgToken(authDto);
 
         Instant deadlineInstant = requestDto.getDeadline() != null
                 ? requestDto.getDeadline().atZone(ZoneId.systemDefault()).toInstant()
@@ -251,8 +259,8 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 recruitId,
                 deadlineInstant,
                 activityDate,
-                requestDto.getActivityStart() != null ? requestDto.getActivityStart() : BigDecimal.ZERO,
-                requestDto.getActivityEnd() != null ? requestDto.getActivityEnd() : BigDecimal.ZERO,
+                requestDto.getActivityStart() != null ? requestDto.getActivityStart() : BigDecimal.valueOf(10.00),
+                requestDto.getActivityEnd() != null ? requestDto.getActivityEnd() : BigDecimal.valueOf(12.00),
                 requestDto.getMaxVolunteer()
         );
 
@@ -263,11 +271,29 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
     }
 
-    // TODO: db에 있는지 보고, 마감으로 수정하기
     @Override
     public CloseRecruitResponseDto closeRecruit(CloseRecruitRequestDto closeRecruitDto, AuthDto authDto) {
 
+        checkOrgToken(authDto);
+
         Integer recruitId = closeRecruitDto.getRecruitId();
+
+        Optional<Recruit> optionalRecruit = recruitRepository.findById(recruitId);
+
+        if (optionalRecruit.isEmpty()) {
+            throw new NotFoundException("해당 공고를 찾을 수 없습니다.");
+        }
+
+        Recruit recruit = optionalRecruit.get();
+
+        Integer recruitOrgId = recruit.getTemplate().getOrg().getId();
+        Integer userOrgId = organizationRepository.findByUserId(authDto.getUserId())
+                .orElseThrow(() -> new NotFoundException("해당 사용자의 기관 정보를 찾을 수 없습니다."))
+                .getId();
+
+        if (!recruitOrgId.equals(userOrgId)) {
+            throw new UnauthorizedException("해당 공고를 마감할 권한이 없습니다.");
+        }
 
         recruitRepository.closeRecruit(recruitId);
 
@@ -275,8 +301,8 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .message("공고 마감 완료")
                 .recruitId(recruitId)
                 .build();
-
     }
+
 
     @Override
     public UpdateGroupResponseDto updateGroup(UpdateGroupRequestDto updateGroupDto, AuthDto authDto) {
