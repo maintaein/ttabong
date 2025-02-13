@@ -1,9 +1,6 @@
 package com.ttabong.service.user;
 
-import com.ttabong.dto.user.LoginRequest;
-import com.ttabong.dto.user.UserLoginProjection;
-import com.ttabong.dto.user.VolunteerRegisterRequest;
-import com.ttabong.dto.user.OrganizationRegisterRequest;
+import com.ttabong.dto.user.*;
 import com.ttabong.dto.user.VolunteerRegisterRequest;
 import com.ttabong.entity.user.Organization;
 import com.ttabong.entity.user.User;
@@ -38,20 +35,24 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String login(LoginRequest loginRequest) {
+    public UserLoginResponseDto login(LoginRequest loginRequest) {
         UserLoginProjection user = userRepository.findByEmailAndIsDeletedFalse(loginRequest.getEmail());
 
         if (user == null) {
-            return "failed : user not found";
+            return null; // 혹은 Optional<UserLoginResponseDto>로 감싸서 반환 가능
         }
 
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            return "failed : invalid password";
+            return null;
         }
-        return "userId : " + user.getId()
-                + "name : " + user.getName()
-                + "email : " + user.getEmail();
+
+        return UserLoginResponseDto.builder()
+                .userId(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .build();
     }
+
 
     @Override
     public String registerVolunteer(VolunteerRegisterRequest request) {

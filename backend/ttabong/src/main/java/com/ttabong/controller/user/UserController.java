@@ -1,11 +1,6 @@
 package com.ttabong.controller.user;
 
-import com.ttabong.dto.user.EmailCheckResponse;
-import com.ttabong.dto.user.LoginRequest;
-import com.ttabong.dto.user.LoginResponse;
-import com.ttabong.dto.user.RegisterResponse;
-import com.ttabong.dto.user.OrganizationRegisterRequest;
-import com.ttabong.dto.user.VolunteerRegisterRequest;
+import com.ttabong.dto.user.*;
 import com.ttabong.entity.user.User;
 import com.ttabong.jwt.JwtProvider;
 import com.ttabong.service.user.UserService;
@@ -29,25 +24,24 @@ public class UserController {
     @PostMapping("/user/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
 
-
         if (loginRequest.getUserType() == null || loginRequest.getUserType().isEmpty()) {
             return ResponseEntity.badRequest().body("userType이 필요합니다.");
         }
 
+        UserLoginResponseDto loginResult = userService.login(loginRequest);
 
-        String loginResult = userService.login(loginRequest);
+        if (loginResult != null) {
+            String accessToken = jwtProvider.createToken(loginResult.getUserId().toString(), loginRequest.getUserType());
 
-        if(loginResult.startsWith("userId")){
-            String userId = loginResult.substring(loginResult.indexOf("userId :") + 2);
-            String name = loginResult.substring(loginResult.indexOf("name :") + 2);
-            String email = loginResult.substring(loginResult.indexOf("email :") + 2);
-            String accessToken = jwtProvider.createToken(userId, loginRequest.getUserType());
-            return ResponseEntity.ok(new LoginResponse(200, "로그인 성공", accessToken, name, email));
+            return ResponseEntity.ok(new LoginResponse(
+                    200, "로그인 성공", accessToken, loginResult.getName(), loginResult.getEmail()
+            ));
         }
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new LoginResponse(401, "이메일 또는 비밀번호가 일치하지 않습니다.", null, null, null));
     }
+
 
     @PostMapping("/volunteer/register")
     public ResponseEntity<?> registerVolunteer(@RequestBody VolunteerRegisterRequest request) {
