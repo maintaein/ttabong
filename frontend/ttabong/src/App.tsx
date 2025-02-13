@@ -42,7 +42,7 @@ function UserTypeRoute({
 const App: React.FC = () => {
   return (
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-      <Toaster position="top-center" richColors />
+      <Toaster />
       <div className="min-h-screen bg-zinc-100 dark:bg-zinc-900">
         <div className="mx-auto max-w-[600px] min-w-[320px] h-screen bg-background">
           <Routes>

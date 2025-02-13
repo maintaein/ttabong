@@ -1,9 +1,8 @@
 import React from "react";
-import { Bell } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface TopBarProps {
   showNav?: boolean;
@@ -78,10 +77,7 @@ export const TopBar: React.FC<TopBarProps> = ({ showNav = true }) => {
             className="h-8 w-auto absolute left-1/2 -translate-x-1/2"
           />
 
-          <Button variant="ghost" size="icon" className="text-foreground">
-            <Bell className="h-5 w-5" />
-            <span className="sr-only">Notifications</span>
-          </Button>
+          <div className="w-14" /> {/* 레이아웃 균형을 위한 빈 공간 */}
         </div>
       </div>
 
