@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("test")
 @RequiredArgsConstructor
-public class TestController implements LoggerConfig {
+public class TestController extends LoggerConfig {
 
     private final TestService testService;
 
@@ -39,7 +39,7 @@ public class TestController implements LoggerConfig {
     @GetMapping("/token")
     public ResponseEntity<?> getToken(@AuthenticationPrincipal AuthDto authDto) throws Exception {
 
-        logger().info(authDto.getUserType() + "유저타입의" + authDto.getUserId() + "유저ID가 토큰을 사용했습니다");
+        logger.info(authDto.getUserType() + "유저타입의" + authDto.getUserId() + "유저ID가 토큰을 사용했습니다");
 
         return ResponseEntity.ok().build();
     }

@@ -1,5 +1,6 @@
 package com.ttabong.controller.sns;
 
+import com.ttabong.config.LoggerConfig;
 import com.ttabong.dto.sns.request.ReviewCreateRequestDto;
 import com.ttabong.dto.sns.request.ReviewEditRequestDto;
 import com.ttabong.dto.sns.request.ReviewVisibilitySettingRequestDto;
@@ -18,7 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/reviews")
 @RequiredArgsConstructor
-public class ReviewController {
+public class ReviewController extends LoggerConfig {
     private final ReviewService reviewService;
     private final CacheService cacheService;
 
@@ -26,6 +27,7 @@ public class ReviewController {
     @GetMapping("/mine")
     public ResponseEntity<List<MyAllReviewPreviewResponseDto>> readMyAllReviews(
             @AuthenticationPrincipal AuthDto userPrincipal) {
+        logger.info("1. 내가쓴 후기 조회, <GET>  /mine");
 
         List<MyAllReviewPreviewResponseDto> response = reviewService.readMyAllReviews(userPrincipal);
 
@@ -37,6 +39,7 @@ public class ReviewController {
     @GetMapping("/{reviewId}")
     public ResponseEntity<ReviewDetailResponseDto> detailReview(
             @PathVariable(name = "reviewId") Integer reviewId) throws Exception {
+        logger.info("1. 해당후기 상세 조회,<GET> /{reviewId}");
 
         ReviewDetailResponseDto response = reviewService.detailReview(reviewId);
 
@@ -46,6 +49,7 @@ public class ReviewController {
     // 3. 공고 관련 후기들 조회
     @GetMapping("/recruits/{recruitId}")
     public ResponseEntity<List<RecruitReviewResponseDto>> recruitReview(@PathVariable(name = "recruitId") Integer recruitId) {
+        logger.info("3. 공고 관련 후기들 조회,<GET> /recruits/{recruitId}");
 
         List<RecruitReviewResponseDto> response = reviewService.recruitReview(recruitId);
 
@@ -58,6 +62,7 @@ public class ReviewController {
     public ResponseEntity<List<AllReviewPreviewResponseDto>> readAllReviews(
             @RequestParam(required = false, name = "reviewId") Integer cursor,
             @RequestParam(defaultValue = "10", name = "limit") Integer limit) {
+        logger.info("4. 후기 _ 전체 조회 (봉사자+기관) (미리보기)_피드부분,<GET> /");
 
         List<AllReviewPreviewResponseDto> response = reviewService.readAllReviews(cursor, limit);
 
@@ -71,6 +76,7 @@ public class ReviewController {
             @PathVariable(name = "reviewId") Integer reviewId,
             @RequestBody ReviewVisibilitySettingRequestDto requestDto,
             @AuthenticationPrincipal AuthDto authDto) {
+        logger.info("5. 후기 공개 여부 설정,<PATCH> /{reviewId}/visibility");
 
         ReviewVisibilitySettingResponseDto response = reviewService.updateVisibility(reviewId, requestDto, authDto);
 
@@ -83,7 +89,7 @@ public class ReviewController {
     public ResponseEntity<ReviewDeleteResponseDto> deleteReview(
             @PathVariable(name = "reviewId") Integer reviewId,
             @AuthenticationPrincipal AuthDto authDto) {
-
+        logger.info("6. 후기 삭제,<PATCH> /{reviewId}/delete");
         ReviewDeleteResponseDto response = reviewService.deleteReview(reviewId, authDto);
 
         return ResponseEntity.ok(response);
@@ -94,6 +100,7 @@ public class ReviewController {
     // minio Presigned URL 발급 API /api/reviews/{reviewId}/write
     @GetMapping("/write")
     public ResponseEntity<CreateReviewPresignedUrlResponseDto> generatePresignedUrls(@AuthenticationPrincipal AuthDto authDto) {
+        logger.info("7. 후기 작성 시작,<GET> /write");
 
         if (authDto == null || authDto.getUserId() == null) {
             throw new SecurityException("로그인된 유저만 후기를 생성할 수 있습니다.");
@@ -101,7 +108,7 @@ public class ReviewController {
 
         List<String> presignedUrls = cacheService.generatePresignedUrlsForTemplate(authDto);
 
-        CreateReviewPresignedUrlResponseDto response =  CreateReviewPresignedUrlResponseDto.builder()
+        CreateReviewPresignedUrlResponseDto response = CreateReviewPresignedUrlResponseDto.builder()
                 .imageUrls(presignedUrls)
                 .build();
 
@@ -114,7 +121,7 @@ public class ReviewController {
     public ResponseEntity<ReviewCreateResponseDto> createReview(
             @AuthenticationPrincipal AuthDto authDto,
             @RequestBody @Valid ReviewCreateRequestDto requestDto) {
-
+        logger.info("8. 후기 작성 완료,<POST> /write");
         ReviewCreateResponseDto response = reviewService.createReview(authDto, requestDto);
 
         return ResponseEntity.ok(response);
@@ -126,7 +133,7 @@ public class ReviewController {
     public ResponseEntity<ReviewEditStartResponseDto> startReviewEdit(
             @PathVariable(name = "reviewId") Integer reviewId,
             @AuthenticationPrincipal AuthDto authDto) {
-
+        logger.info("9. 후기 수정 시작,<GET> /{reviewId}/edit");
         ReviewEditStartResponseDto response = reviewService.startReviewEdit(reviewId, authDto);
 
         return ResponseEntity.ok(response);
@@ -139,7 +146,7 @@ public class ReviewController {
             @PathVariable(name = "reviewId") Integer reviewId,
             @RequestBody ReviewEditRequestDto requestDto,
             @AuthenticationPrincipal AuthDto authDto) {
-
+        logger.info("10. 후기 수정 완료,<PATCH> /{reviewId}/edit");
         ReviewEditResponseDto response = reviewService.updateReview(reviewId, requestDto, authDto);
 
         return ResponseEntity.ok(response);
