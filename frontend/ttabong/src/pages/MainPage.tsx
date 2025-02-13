@@ -81,7 +81,7 @@ const MainPage: React.FC = () => {
           key={volunteerPosts[i].id}
           className="absolute w-[320px] h-[480px] bg-white shadow-xl rounded-2xl overflow-hidden"
           style={{
-            left: "25%",
+            left: "20%",
             top: "45%",
             transform: interpolate([x, y, rot, scale], (x, y, rot, scale) =>
               `translate3d(${x - 160}px,${y - 240}px,0) rotate(${rot}deg) scale(${scale})`
