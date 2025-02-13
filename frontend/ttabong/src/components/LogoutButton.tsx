@@ -2,8 +2,14 @@ import { useNavigate } from 'react-router-dom';
 import { useUserStore } from '@/stores/userStore';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { LogOut } from 'lucide-react';
 
-export const LogoutButton = () => {
+interface LogoutButtonProps {
+  className?: string;
+  variant?: "link" | "default" | "destructive" | "outline" | "secondary" | "ghost" | null | undefined;
+}
+
+export const LogoutButton = ({ className, variant = "ghost" }: LogoutButtonProps) => {
   const navigate = useNavigate();
   const { logout } = useUserStore();
 
@@ -18,14 +24,14 @@ export const LogoutButton = () => {
   };
 
   return (
-    <div className="pt-6 border-t">
-      <Button 
-        variant="destructive"
-        className="w-full"
-        onClick={handleLogout}
-      >
-        로그아웃
-      </Button>
-    </div>
+    <Button 
+      variant={variant}
+      size="sm"
+      className={className}
+      onClick={handleLogout}
+    >
+      <LogOut className="h-4 w-4 mr-2" />
+      로그아웃
+    </Button>
   );
 }; 

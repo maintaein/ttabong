@@ -503,7 +503,6 @@ const TemplateAndGroupWrite: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      <Toaster position="top-center" />
     </div>
   );
 };

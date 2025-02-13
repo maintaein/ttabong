@@ -37,10 +37,33 @@ export interface Application {
   applicationId: number;
   status: 'PENDING' | 'APPROVED' | 'COMPLETED' | 'REJECTED';
   evaluationDone: boolean;
-  isDeleted: boolean;
   createdAt: string;
-  template: Template;
-  recruit: Recruit;
+  template: {
+    templateId: number;
+    title: string;
+    activityLocation: string;
+    status: 'ALL' | 'YOUTH';
+    imageId: string;
+    contactName: string;
+    contactPhone: string;
+    description: string;
+    createdAt: string;
+  };
+  group: {
+    groupId: number;
+    groupName: string;
+  };
+  recruit: {
+    recruitId: number;
+    deadline: string;
+    activityDate: string;
+    activityStart: number;
+    activityEnd: number;
+    maxVolunteer: number;
+    participateVolCount: number;
+    status: 'RECRUITING' | 'CLOSED';
+    createdAt: string;
+  };
 }
 
 export interface CreateRecruitRequest {
@@ -90,4 +113,9 @@ export interface OrgRecruit {
 
 export interface OrgRecruitsResponse {
   recruits: OrgRecruit[];
+}
+
+export interface GetApplicationsParams {
+  cursor?: number;
+  limit?: number;
 } 
