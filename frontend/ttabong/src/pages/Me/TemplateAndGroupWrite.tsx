@@ -12,15 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { useScroll } from '@/contexts/ScrollContext';
 import { useTemplateStore } from '@/stores/templateStore';
 import { templateApi } from '@/api/templateApi';
-import { recruitApi } from '@/api/recruitApi';
-import { transformTemplateData } from '@/types/template';
+import { CreateTemplateRequest } from '@/types/template';
 import { useToast } from "@/hooks/use-toast";
-
-const formatTime = (time: number) => {
-  const hours = Math.floor(time);
-  const minutes = Math.round((time - hours) * 60);
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-};
 
 const steps = [
   "공고 내용 입력(1/2)",
@@ -36,9 +29,6 @@ const TemplateAndGroupWrite: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const templateId = location.state?.templateId;
-  const isRecruitEdit = location.state?.isRecruitEdit;
-  const recruitId = location.state?.recruitId;
-  const recruitData = location.state?.recruitData;
   const { scrollToTop } = useScroll();
   const { createTemplate: createTemplateApi } = useTemplateStore();
   const { toast } = useToast();
@@ -72,80 +62,19 @@ const TemplateAndGroupWrite: React.FC = () => {
 
   // 상태 추가
   const [showImageDialog, setShowImageDialog] = useState(false);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
 
   useEffect(() => {
     if (isCompleted) {
       setTimeout(() => {
-        navigate("/choose-recruit");
+        navigate("/main");
       }, 2000);
     }
   }, [isCompleted, navigate]);
 
   // 초기 데이터 로드
   useEffect(() => {
-    if (isRecruitEdit && recruitData) {
-      const loadTemplateAndRecruit = async () => {
-        try {
-          const template = await templateApi.getTemplate(templateId);
-          
-          // 날짜 문자열을 UTC 기준으로 변환
-          const deadline = new Date(recruitData.deadline);
-          const activityDate = new Date(recruitData.activityDate);
-          
-          // 시간대 오프셋 조정
-          deadline.setMinutes(deadline.getMinutes() - deadline.getTimezoneOffset());
-          activityDate.setMinutes(activityDate.getMinutes() - activityDate.getTimezoneOffset());
-
-          setTemplateData({
-            ...templateData,
-            groupId: template.groupId,
-            title: template.title || "",
-            description: template.description || "",
-            images: template.images || [],
-            volunteerTypes: Array.isArray(template.volunteerTypes) 
-              ? template.volunteerTypes 
-              : (template.volunteerTypes?.split(", ") || []),
-            locationType: template.activityLocation === "재택" ? "재택" : "주소",
-            address: template.activityLocation !== "재택" 
-              ? template.activityLocation.split(" ").slice(0, -1).join(" ")
-              : "",
-            detailAddress: template.activityLocation !== "재택"
-              ? template.activityLocation.split(" ").slice(-1)[0]
-              : "",
-            contactName: template.contactName || "",
-            // contactPhone 처리 개선
-            contactPhone: template.contactPhone 
-              ? {
-                  areaCode: template.contactPhone.split("-")[0] || "010",
-                  middle: template.contactPhone.split("-")[1] || "",
-                  last: template.contactPhone.split("-")[2] || ""
-                }
-              : {
-                  areaCode: "010",
-                  middle: "",
-                  last: ""
-                },
-            volunteerField: Array.isArray(template.volunteerField)
-              ? template.volunteerField
-              : (template.volunteerField?.split(", ") || []),
-            startDate: new Date(),
-            endDate: deadline,
-            volunteerDate: activityDate,
-            startTime: formatTime(recruitData.activityStart),
-            endTime: formatTime(recruitData.activityEnd),
-            volunteerCount: recruitData.maxVolunteer
-          });
-        } catch (error) {
-          console.error('데이터 로드 실패:', error);
-          toast({
-            variant: "destructive",
-            title: "오류",
-            description: "데이터를 불러오는데 실패했습니다."
-          });
-        }
-      };
-      loadTemplateAndRecruit();
-    } else if (templateId) {
+    if (templateId) {
       const loadTemplate = async () => {
         try {
           const template = await templateApi.getTemplate(templateId);
@@ -192,79 +121,72 @@ const TemplateAndGroupWrite: React.FC = () => {
       };
       loadTemplate();
     }
-  }, [templateId, isRecruitEdit, recruitData]);
-
-  const timeToNumber = (time: string) => {
-    const [hours, minutes] = time.split(':').map(Number);
-    return hours + (minutes / 60);
-  };
+  }, [templateId]);
 
   // 템플릿 생성 및 저장 함수
   const createTemplate = async () => {
     try {
-      if (isRecruitEdit) {
-        // 공고만 수정하는 경우
-        await recruitApi.updateRecruit(recruitId, {
-          deadline: templateData.endDate?.toISOString(),
-          activityDate: templateData.volunteerDate?.toISOString().split('T')[0],
-          activityStart: timeToNumber(templateData.startTime),
-          activityEnd: timeToNumber(templateData.endTime),
-          maxVolunteer: templateData.volunteerCount,
-          images: templateData.images,
-          imageCount: templateData.images.length
-        });
-        toast({
-          title: "성공",
-          description: "공고가 수정되었습니다."
-        });
-      } else {
-        let newTemplateId;
-        if (templateId) {
-          // 템플릿 수정
-          const apiData = transformTemplateData(templateData);
-          await templateApi.updateTemplate(templateId, apiData);
-          newTemplateId = templateId;
-          toast({
-            title: "성공",
-            description: "공고가 생성되었습니다."
+      // 1. Presigned URL 요청
+      const presignedUrls = await templateApi.getPresignedUrls();
+      console.log('Presigned URLs:', presignedUrls);
+      
+      // 2. 이미지 업로드 (presigned URL 사용)
+      const uploadedImageUrls = await Promise.all(
+        imageFiles.map(async (image, index) => {
+          console.log('Uploading image:', image);
+          console.log('Using presigned URL:', presignedUrls.images[index]);
+          
+          await fetch(presignedUrls.images[index], {
+            method: 'PUT',
+            body: image,
+            headers: {
+              'Content-Type': image.type || 'image/webp'
+            }
           });
-        } else {
-          // 새 템플릿 생성
-          const response = await createTemplateApi(templateData);
-          newTemplateId = response.templateId;
-          toast({
-            title: "성공",
-            description: "템플릿과 공고가 생성되었습니다."
-          });
-        }
+          
+          const imageUrl = presignedUrls.images[index].split('?')[0];
+          console.log('Generated image URL:', imageUrl);
+          return imageUrl;
+        })
+      );
+      
+      console.log('Final uploaded image URLs:', uploadedImageUrls);
 
-        // 공고 자동 생성
-        const today = new Date();
-        const activityDate = templateData.volunteerDate;
-        
-        if (activityDate && templateData.startTime && templateData.endTime) {
-          await recruitApi.createRecruit({
-            templateId: newTemplateId,
-            deadline: templateData.endDate?.toISOString() || today.toISOString(),
-            activityDate: activityDate.toISOString().split('T')[0],
-            activityStart: timeToNumber(templateData.startTime),
-            activityEnd: timeToNumber(templateData.endTime),
-            maxVolunteer: templateData.volunteerCount
-          });
-        }
-      }
+      // 3. 업로드된 이미지 URL로 templateData 업데이트
+      const updatedTemplateData: CreateTemplateRequest = {
+        groupId: templateData.groupId || 0,
+        orgId: 5,
+        categoryId: 3,
+        title: templateData.title,
+        activityLocation: templateData.locationType === "재택" ? "재택" : `${templateData.address} ${templateData.detailAddress}`.trim(),
+        status: "ALL",
+        images: uploadedImageUrls,
+        imageCount: uploadedImageUrls.length,
+        contactName: templateData.contactName,
+        contactPhone: `${templateData.contactPhone.areaCode}-${templateData.contactPhone.middle}-${templateData.contactPhone.last}`,
+        description: templateData.description,
+        volunteerField: templateData.volunteerField,
+        volunteerTypes: templateData.volunteerTypes,
+        volunteerCount: templateData.volunteerCount
+      };
+      
+      console.log('Final request data:', updatedTemplateData);
 
+      // 4. 템플릿 생성
+      await createTemplateApi(updatedTemplateData);
+      toast({
+        title: "템플릿과 공고가 생성되었습니다.",
+        description: "2초 후 메인 페이지로 이동합니다."
+      });
       setIsCompleted(true);
       setTimeout(() => {
-        navigate('/choose-recruit');
+        navigate('/main');
       }, 2000);
-
     } catch (error) {
       console.error('실패:', error);
       toast({
-        variant: "destructive",
-        title: "오류",
-        description: isRecruitEdit ? '공고 수정에 실패했습니다.' : '템플릿 생성에 실패했습니다.'
+        title: "템플릿 생성에 실패했습니다.",
+        description: "다시 시도해주세요."
       });
     }
   };
@@ -457,6 +379,9 @@ const TemplateAndGroupWrite: React.FC = () => {
     if (step > 0) {
       scrollToTop();
       setStep(step - 1);
+    } else {
+      // step이 0일 때는 main 페이지로 이동
+      navigate('/main');
     }
   };
 
@@ -484,7 +409,14 @@ const TemplateAndGroupWrite: React.FC = () => {
             ) : (
               <>
                 {step === 0 && <Step0GroupSelection templateData={templateData} setTemplateData={setTemplateData} />}
-                {step === 1 && <Step1AnnouncementDetails templateData={templateData} setTemplateData={setTemplateData} />}
+                {step === 1 && (
+                  <Step1AnnouncementDetails 
+                    templateData={templateData} 
+                    setTemplateData={setTemplateData}
+                    imageFiles={imageFiles}
+                    setImageFiles={setImageFiles}
+                  />
+                )}
                 {step === 2 && <Step2RecruitmentConditions templateData={templateData} setTemplateData={setTemplateData} />}
                 {step === 3 && <Step3VolunteerLocation templateData={templateData} setTemplateData={setTemplateData} />}
                 {step === 4 && <Step4ContactInfo templateData={templateData} setTemplateData={setTemplateData} />}
