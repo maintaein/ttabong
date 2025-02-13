@@ -20,7 +20,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,15 +59,16 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
     @Transactional(readOnly = true)
     public ReadAvailableRecruitsResponseDto readAvailableRecruits(Integer cursor, Integer limit, AuthDto authDto) {
-        checkOrgToken(authDto);
+//        checkOrgToken(authDto);
 
         try {
-            if (cursor == null) {
-                cursor = 0;
-            }
+            checkOrgToken(authDto);
 
-            Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.ASC, "id"));
-            List<Template> templates = templateRepository.findAvailableTemplates(cursor, authDto.getUserId(), pageable);
+            if (cursor == null || cursor == 0) { cursor = Integer.MAX_VALUE; }
+
+            if (limit == null || limit == 0) { limit=10; }
+
+            List<Template> templates = templateRepository.findAvailableTemplates(cursor, authDto.getUserId(), PageRequest.of(0, limit));
 
             if (templates.isEmpty()) {
                 throw new NotFoundException("활성화된 템플릿이 없습니다.");
