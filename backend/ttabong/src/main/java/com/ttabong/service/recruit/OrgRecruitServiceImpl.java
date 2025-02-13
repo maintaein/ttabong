@@ -159,6 +159,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         }
     }
 
+
     @Override
     @Transactional(readOnly = true)
     public ReadMyRecruitsResponseDto readMyRecruits(Integer cursor, Integer limit, AuthDto authDto) {
@@ -271,6 +272,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
     }
 
+
     @Override
     public CloseRecruitResponseDto closeRecruit(CloseRecruitRequestDto closeRecruitDto, AuthDto authDto) {
 
@@ -307,19 +309,27 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     @Override
     public UpdateGroupResponseDto updateGroup(UpdateGroupRequestDto updateGroupDto, AuthDto authDto) {
 
-        // TODO: 토큰 인증 할거지만, 일단 기관까지 그냥 체크해주자 +그룹id로 하자
-        Organization org = organizationRepository.findById(updateGroupDto.getOrgId())
-                .orElseThrow(() -> new IllegalArgumentException("해당 기관 없음"));
+        checkOrgToken(authDto);
 
-        templateGroupRepository.updateGroup(updateGroupDto.getGroupId(), org, updateGroupDto.getGroupName());
+        Organization userOrg = organizationRepository.findByUserId(authDto.getUserId())
+                .orElseThrow(() -> new NotFoundException("해당 사용자의 기관 정보를 찾을 수 없습니다."));
+        TemplateGroup templateGroup = templateGroupRepository.findById(updateGroupDto.getGroupId())
+                .orElseThrow(() -> new NotFoundException("해당 그룹을 찾을 수 없습니다."));
+
+        if (!templateGroup.getOrg().getId().equals(userOrg.getId())) {
+            throw new UnauthorizedException("이 그룹을 수정할 권한이 없습니다.");
+        }
+
+        templateGroupRepository.updateGroup(updateGroupDto.getGroupId(), userOrg.getId(), updateGroupDto.getGroupName());
 
         return UpdateGroupResponseDto.builder()
                 .message("수정 성공")
                 .groupId(updateGroupDto.getGroupId())
-                .orgId(updateGroupDto.getOrgId())
+                .orgId(userOrg.getId())
                 .build();
-
     }
+
+
 
     @Override
     public UpdateTemplateResponse updateTemplate(UpdateTemplateRequestDto updateTemplateDto, AuthDto authDto) {
