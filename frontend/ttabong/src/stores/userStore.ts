@@ -8,6 +8,7 @@ import {
   VolunteerRegisterRequest, 
   OrganizationRegisterRequest 
 } from '@/types/userType';
+import type { LikedTemplate } from '@/types/userType';
 
 interface UserState {
   userId: string | null;
@@ -19,6 +20,10 @@ interface UserState {
   clearError: () => void;
   registerVolunteer: (data: VolunteerRegisterRequest) => Promise<void>;
   registerOrganization: (data: OrganizationRegisterRequest) => Promise<void>;
+  likedTemplates: LikedTemplate[];
+  hasMoreLikes: boolean;
+  isLoadingLikes: boolean;
+  fetchLikedTemplates: (params?: { cursor?: number; limit?: number }) => Promise<void>;
 }
 
 // store 초기화 시 토큰 체크
@@ -46,10 +51,13 @@ const initializeAuth = () => {
 
 export const useUserStore = create<UserState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       ...initializeAuth(),
       isLoading: false,
       error: null,
+      likedTemplates: [],
+      hasMoreLikes: true,
+      isLoadingLikes: false,
 
       login: async (email, password, userType) => {
         set({ isLoading: true, error: null });
@@ -127,12 +135,37 @@ export const useUserStore = create<UserState>()(
           set({ isLoading: false });
         }
       },
+
+      fetchLikedTemplates: async (params) => {
+        set({ isLoadingLikes: true });
+        try {
+          const response = await userApi.getLikedTemplates(params);
+          
+          if (params?.cursor) {
+            const currentTemplates = get().likedTemplates;
+            set({ 
+              likedTemplates: [...currentTemplates, ...response.likedTemplates],
+              hasMoreLikes: response.likedTemplates.length === (params.limit || 10)
+            });
+          } else {
+            set({ 
+              likedTemplates: response.likedTemplates,
+              hasMoreLikes: response.likedTemplates.length === (params?.limit || 10)
+            });
+          }
+        } catch (error) {
+          console.error('좋아요 목록 조회 실패:', error);
+        } finally {
+          set({ isLoadingLikes: false });
+        }
+      },
     }),
     {
       name: 'user-storage',
       partialize: (state) => ({ 
         userId: state.userId,
-        userType: state.userType 
+        userType: state.userType,
+        likedTemplates: state.likedTemplates
       }),
     }
   )

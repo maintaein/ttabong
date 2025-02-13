@@ -123,3 +123,26 @@ export interface VolunteerRegisterRequest extends CreateUserRequest {
 }
 
 export interface OrganizationRegisterRequest extends CreateUserRequest, CreateOrganizationRequest {}
+
+export interface LikedTemplate {
+  templateId: number;
+  thumbnailImg: string;
+  activityLocation: string;
+  title: string;
+  recruit: {
+    deadline: string;
+  };
+  group: {
+    groupId: number;
+    groupName: string;
+  };
+}
+
+export interface GetLikedTemplatesResponse {
+  likedTemplates: LikedTemplate[];
+}
+
+export interface GetLikedTemplatesParams {
+  cursor?: number;
+  limit?: number;
+}
