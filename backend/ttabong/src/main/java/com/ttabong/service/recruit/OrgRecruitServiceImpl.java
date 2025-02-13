@@ -12,6 +12,9 @@ import com.ttabong.entity.user.Organization;
 import com.ttabong.repository.recruit.*;
 import com.ttabong.repository.user.OrganizationRepository;
 import com.ttabong.repository.user.VolunteerRepository;
+import com.ttabong.exception.ForbiddenException;
+import com.ttabong.exception.NotFoundException;
+import com.ttabong.exception.UnauthorizedException;
 import com.ttabong.util.service.ImageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,13 +48,12 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     private final VolunteerRepository volunteerRepository;
     private final ImageService imageService;
 
-    // 토큰 검증 로직
     public void checkOrgToken(AuthDto authDto) {
         if (authDto == null || authDto.getUserId() == null) {
-            throw new SecurityException("로그인이 필요합니다.");
+            throw new UnauthorizedException("로그인이 필요합니다.");
         }
         else if (!"organization".equalsIgnoreCase(authDto.getUserType())) {
-            throw new SecurityException("기관 계정으로 로그인을 해야 합니다.");
+            throw new ForbiddenException("기관 계정으로 로그인을 해야 합니다.");
         }
     }
 
@@ -60,76 +62,99 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     public ReadAvailableRecruitsResponseDto readAvailableRecruits(Integer cursor, Integer limit, AuthDto authDto) {
         checkOrgToken(authDto);
 
-        Pageable pageable = PageRequest.of(0, limit);
-        List<Template> templates = templateRepository.findAvailableTemplates(cursor, authDto.getUserId(), pageable);
+        try {
+            Pageable pageable = PageRequest.of(0, limit);
+            List<Template> templates = templateRepository.findAvailableTemplates(cursor, authDto.getUserId(), pageable);
 
-        Map<Integer, List<Recruit>> recruitMap = templates.stream()
-                .map(template -> recruitRepository.findByTemplateId(template.getId()))
-                .flatMap(List::stream)
-                .collect(Collectors.groupingBy(recruit -> recruit.getTemplate().getId()));
+            if (templates.isEmpty()) {
+                throw new NotFoundException("활성화된 템플릿이 없습니다.");
+            }
 
-        Map<Integer, List<String>> imageMap = templates.stream()
-                .collect(Collectors.toMap(
-                        Template::getId,
-                        template -> imageService.getImageUrls(template.getId(), true)
-                ));
+            Map<Integer, List<Recruit>> recruitMap = templates.stream()
+                    .map(template -> {
+                        try {
+                            return recruitRepository.findByTemplateId(template.getId());
+                        } catch (Exception e) {
+                            throw new NotFoundException("템플릿 ID " + template.getId() + "에 대한 모집 공고를 찾을 수 없습니다.");
+                        }
+                    })
+                    .flatMap(List::stream)
+                    .collect(Collectors.groupingBy(recruit -> recruit.getTemplate().getId()));
 
-        List<ReadAvailableRecruitsResponseDto.TemplateDetail> templateDetails = templates.stream().map(template -> {
-            ReadAvailableRecruitsResponseDto.Group groupInfo = template.getGroup() != null ?
-                    new ReadAvailableRecruitsResponseDto.Group(
-                            template.getGroup().getId(),
-                            template.getGroup().getGroupName()
-                    ) : new ReadAvailableRecruitsResponseDto.Group(1, "봉사");
+            Map<Integer, List<String>> imageMap = templates.stream()
+                    .collect(Collectors.toMap(
+                            Template::getId,
+                            template -> {
+                                try {
+                                    return imageService.getImageUrls(template.getId(), true);
+                                } catch (Exception e) {
+                                    return List.of();
+                                }
+                            }
+                    ));
 
-            List<Recruit> recruitEntities = recruitMap.getOrDefault(template.getId(), List.of());
-            List<ReadAvailableRecruitsResponseDto.Recruit> recruits = recruitEntities.stream()
-                    .map(recruit -> ReadAvailableRecruitsResponseDto.Recruit.builder()
-                            .recruitId(recruit.getId())
-                            .deadline(recruit.getDeadline() != null ?
-                                    recruit.getDeadline().atZone(ZoneId.systemDefault()).toLocalDateTime()
-                                    : LocalDateTime.now())
-                            .activityDate(recruit.getActivityDate() != null ? recruit.getActivityDate() : new Date())
-                            .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.ZERO)
-                            .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.ZERO)
-                            .maxVolunteer(recruit.getMaxVolunteer())
-                            .participateVolCount(recruit.getParticipateVolCount())
-                            .status(recruit.getStatus())
-                            .updatedAt(recruit.getUpdatedAt() != null ?
-                                    recruit.getUpdatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime()
-                                    : LocalDateTime.now())
-                            .createdAt(recruit.getCreatedAt() != null ?
-                                    recruit.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime()
-                                    : LocalDateTime.now())
-                            .build())
-                    .collect(Collectors.toList());
+            List<ReadAvailableRecruitsResponseDto.TemplateDetail> templateDetails = templates.stream().map(template -> {
+                ReadAvailableRecruitsResponseDto.Group groupInfo = template.getGroup() != null ?
+                        new ReadAvailableRecruitsResponseDto.Group(
+                                template.getGroup().getId(),
+                                template.getGroup().getGroupName()
+                        ) : new ReadAvailableRecruitsResponseDto.Group(1, "봉사");
 
-            List<String> imageUrls = imageMap.getOrDefault(template.getId(), List.of());
-            String thumbnailImageUrl = imageUrls.isEmpty() ? null : imageUrls.get(0);
+                List<Recruit> recruitEntities = recruitMap.getOrDefault(template.getId(), List.of());
+                List<ReadAvailableRecruitsResponseDto.Recruit> recruits = recruitEntities.stream()
+                        .map(recruit -> ReadAvailableRecruitsResponseDto.Recruit.builder()
+                                .recruitId(recruit.getId())
+                                .deadline(recruit.getDeadline() != null ?
+                                        recruit.getDeadline().atZone(ZoneId.systemDefault()).toLocalDateTime()
+                                        : LocalDateTime.now())
+                                .activityDate(recruit.getActivityDate() != null ? recruit.getActivityDate() : new Date())
+                                .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.ZERO)
+                                .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.ZERO)
+                                .maxVolunteer(recruit.getMaxVolunteer())
+                                .participateVolCount(recruit.getParticipateVolCount())
+                                .status(recruit.getStatus())
+                                .updatedAt(recruit.getUpdatedAt() != null ?
+                                        recruit.getUpdatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime()
+                                        : LocalDateTime.now())
+                                .createdAt(recruit.getCreatedAt() != null ?
+                                        recruit.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime()
+                                        : LocalDateTime.now())
+                                .build())
+                        .collect(Collectors.toList());
 
-            return ReadAvailableRecruitsResponseDto.TemplateDetail.builder()
-                    .template(ReadAvailableRecruitsResponseDto.Template.builder()
-                            .templateId(template.getId())
-                            .categoryId(template.getCategory() != null ? template.getCategory().getId() : null)
-                            .title(template.getTitle())
-                            .activityLocation(template.getActivityLocation())
-                            .status(template.getStatus())
-                            .imageUrl(thumbnailImageUrl)
-                            .contactName(template.getContactName())
-                            .contactPhone(template.getContactPhone())
-                            .description(template.getDescription())
-                            .createdAt(template.getCreatedAt() != null ?
-                                    template.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime()
-                                    : LocalDateTime.now())
-                            .build())
-                    .group(groupInfo)
-                    .recruits(recruits)
+                List<String> imageUrls = imageMap.getOrDefault(template.getId(), List.of());
+                String thumbnailImageUrl = imageUrls.isEmpty() ? null : imageUrls.get(0);
+
+                return ReadAvailableRecruitsResponseDto.TemplateDetail.builder()
+                        .template(ReadAvailableRecruitsResponseDto.Template.builder()
+                                .templateId(template.getId())
+                                .categoryId(template.getCategory() != null ? template.getCategory().getId() : null)
+                                .title(template.getTitle())
+                                .activityLocation(template.getActivityLocation())
+                                .status(template.getStatus())
+                                .imageUrl(thumbnailImageUrl)
+                                .contactName(template.getContactName())
+                                .contactPhone(template.getContactPhone())
+                                .description(template.getDescription())
+                                .createdAt(template.getCreatedAt() != null ?
+                                        template.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime()
+                                        : LocalDateTime.now())
+                                .build())
+                        .group(groupInfo)
+                        .recruits(recruits)
+                        .build();
+            }).toList();
+
+            return ReadAvailableRecruitsResponseDto.builder()
+                    .templates(templateDetails)
                     .build();
-        }).toList();
-
-        return ReadAvailableRecruitsResponseDto.builder()
-                .templates(templateDetails)
-                .build();
+        } catch (NotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("모집 정보를 불러오는 중 오류가 발생했습니다.", e);
+        }
     }
+
 
 
     // TODO: 마지막 공고까지 다 로드했다면? & db에서 정보 누락된게 있다면?, 삭제여부 확인
