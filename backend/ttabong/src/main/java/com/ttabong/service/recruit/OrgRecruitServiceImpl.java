@@ -330,38 +330,56 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     }
 
 
-
     @Override
     public UpdateTemplateResponse updateTemplate(UpdateTemplateRequestDto updateTemplateDto, AuthDto authDto) {
 
-        Organization org = organizationRepository.findById(updateTemplateDto.getOrgId())
-                .orElseThrow(() -> new IllegalArgumentException("해당 기관 없음"));
+        checkOrgToken(authDto);
 
-        templateRepository.updateTemplate(updateTemplateDto.getTemplateId(), org, updateTemplateDto.getTitle(),
-                updateTemplateDto.getDescription(), updateTemplateDto.getActivityLocation(),
-                updateTemplateDto.getContactName(), updateTemplateDto.getContactPhone());
+        Organization userOrg = organizationRepository.findByUserId(authDto.getUserId())
+                .orElseThrow(() -> new NotFoundException("해당 사용자의 기관 정보를 찾을 수 없습니다."));
+        Template template = templateRepository.findById(updateTemplateDto.getTemplateId())
+                .orElseThrow(() -> new NotFoundException("해당 템플릿을 찾을 수 없습니다."));
+
+        if (!template.getOrg().getId().equals(userOrg.getId())) {
+            throw new UnauthorizedException("이 템플릿을 수정할 권한이 없습니다.");
+        }
+
+        templateRepository.updateTemplate(updateTemplateDto.getTemplateId(), userOrg.getId(),
+                updateTemplateDto.getTitle(), updateTemplateDto.getDescription(),
+                updateTemplateDto.getActivityLocation(), updateTemplateDto.getContactName(),
+                updateTemplateDto.getContactPhone());
 
         return UpdateTemplateResponse.builder()
                 .message("템플릿 수정 성공")
                 .templateId(updateTemplateDto.getTemplateId())
-                .orgId(updateTemplateDto.getOrgId())
+                .orgId(userOrg.getId())
                 .build();
-
     }
+
 
     @Override
     public DeleteTemplatesResponseDto deleteTemplates(DeleteTemplatesRequestDto deleteTemplatesDto, AuthDto authDto) {
 
-        List<Integer> deleteTemplateIds = deleteTemplatesDto.getDeletedTemplates();
+        checkOrgToken(authDto);
 
-        templateRepository.deleteTemplates(deleteTemplateIds);
+        Organization userOrg = organizationRepository.findByUserId(authDto.getUserId())
+                .orElseThrow(() -> new NotFoundException("해당 사용자의 기관 정보를 찾을 수 없습니다."));
+
+        List<Integer> deleteTemplateIds = deleteTemplatesDto.getDeletedTemplates();
+        List<Template> templatesToDelete = templateRepository.findByIdsAndOrgId(deleteTemplateIds, userOrg.getId());
+
+        if (templatesToDelete.isEmpty()) {
+            throw new NotFoundException("삭제할 수 있는 템플릿이 없습니다.");
+        }
+
+        templateRepository.deleteTemplates(templatesToDelete.stream().map(Template::getId).toList(), authDto.getUserId());
 
         return DeleteTemplatesResponseDto.builder()
                 .message("템플릿 삭제 성공")
-                .deletedTemplates(deleteTemplateIds)  // 삭제된 템플릿 ID 리스트 전달
+                .deletedTemplates(templatesToDelete.stream().map(Template::getId).toList())
                 .build();
-
     }
+
 
     @Override
     public DeleteGroupResponseDto deleteGroup(DeleteGroupDto deleteGroupDto, AuthDto authDto) {
