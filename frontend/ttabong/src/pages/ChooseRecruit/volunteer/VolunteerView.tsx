@@ -3,12 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { RecruitList } from './RecruitList';
 import type { Application } from '@/types/recruitType';
 import { useRecruitStore } from '@/stores/recruitStore';
-import { useReviewWriteStore } from '@/stores/reviewWriteStore';
+import { useReviewStore } from '@/stores/reviewStore';
 
 export const VolunteerView: React.FC = () => {
   const navigate = useNavigate();
   const { myRecruits, isLoading, error, fetchMyRecruits } = useRecruitStore();
-  const setReviewInfo = useReviewWriteStore(state => state.setReviewInfo);
+  const setReviewInfo = useReviewStore(state => state.setReviewInfo);
 
   React.useEffect(() => {
     fetchMyRecruits();

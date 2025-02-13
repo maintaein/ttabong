@@ -1,5 +1,6 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import config from '@/config';
+import { toast } from 'sonner';
 
 export interface ApiResponse<T = any> {
   data: T;
@@ -9,7 +10,6 @@ export interface ApiResponse<T = any> {
 export interface ApiError {
   status: number;
   message: string;
-  type?: 'VALIDATION' | 'AUTH' | 'SERVER';
 }
 
 const axiosInstance = axios.create({
@@ -35,12 +35,17 @@ axiosInstance.interceptors.request.use(
 // 응답 인터셉터
 axiosInstance.interceptors.response.use(
   response => response,
-  (error: AxiosError<{ message: string; type?: string }>) => {
+  (error: AxiosError<{ message: string }>) => {
     const apiError: ApiError = {
       status: error.response?.status || 500,
-      message: error.response?.data?.message || '서버 오류가 발생했습니다.',
-      type: error.response?.data?.type as ApiError['type']
+      message: error.response?.data?.message || '서버 오류가 발생했습니다.'
     };
+
+    // 에러 메시지 토스트로 표시
+    toast.error('오류가 발생했습니다.', {
+      description: apiError.message
+    });
+
     throw apiError;
   }
 );
