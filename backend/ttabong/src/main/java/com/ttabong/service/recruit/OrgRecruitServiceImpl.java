@@ -9,17 +9,18 @@ import com.ttabong.entity.recruit.Recruit;
 import com.ttabong.entity.recruit.Template;
 import com.ttabong.entity.recruit.TemplateGroup;
 import com.ttabong.entity.user.Organization;
-import com.ttabong.repository.recruit.*;
-import com.ttabong.repository.user.OrganizationRepository;
-import com.ttabong.repository.user.VolunteerRepository;
 import com.ttabong.exception.ForbiddenException;
 import com.ttabong.exception.NotFoundException;
 import com.ttabong.exception.UnauthorizedException;
+import com.ttabong.repository.recruit.*;
+import com.ttabong.repository.user.OrganizationRepository;
+import com.ttabong.repository.user.VolunteerRepository;
 import com.ttabong.util.service.ImageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,7 +64,11 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         checkOrgToken(authDto);
 
         try {
-            Pageable pageable = PageRequest.of(0, limit);
+            if (cursor == null) {
+                cursor = 0;
+            }
+
+            Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.ASC, "id"));
             List<Template> templates = templateRepository.findAvailableTemplates(cursor, authDto.getUserId(), pageable);
 
             if (templates.isEmpty()) {
@@ -154,8 +159,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
             throw new RuntimeException("모집 정보를 불러오는 중 오류가 발생했습니다.", e);
         }
     }
-
-
 
     // TODO: 마지막 공고까지 다 로드했다면? & db에서 정보 누락된게 있다면?, 삭제여부 확인
     @Override

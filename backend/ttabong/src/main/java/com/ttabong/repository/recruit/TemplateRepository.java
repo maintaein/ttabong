@@ -16,14 +16,14 @@ import java.util.Optional;
 public interface TemplateRepository extends JpaRepository<Template, Integer> {
 
     @Query("SELECT t FROM Template t " +
-            "WHERE (:cursor IS NULL AND t.id = :userId OR t.id < :cursor)"+
-            "AND t.isDeleted = false "+
+            "JOIN FETCH t.org o " +
+            "WHERE (:cursor = 0 OR t.id > :cursor) " +
+            "AND o.user.id = :userId " +
+            "AND t.isDeleted = false " +
             "ORDER BY t.id DESC")
     List<Template> findAvailableTemplates(@Param("cursor") Integer cursor,
                                           @Param("userId") Integer userId,
                                           Pageable pageable);
-
-
 
     @Modifying
     @Query("UPDATE Template t SET t.title = :title, t.description = :description, t.activityLocation = :activityLocation, " +
