@@ -160,9 +160,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         checkOrgToken(authDto);
 
-        if (cursor == null) {
-            cursor = Integer.MAX_VALUE;
-        }
+        if (cursor == null) { cursor = Integer.MAX_VALUE; }
 
         Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "id"));
 
@@ -521,7 +519,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     }
 
 
-
     @Override
     public CreateRecruitResponseDto createRecruit(CreateRecruitRequestDto createRecruitDto, AuthDto authDto) {
 
@@ -565,8 +562,8 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     @Transactional(readOnly = true)
     public ReadRecruitResponseDto readRecruit(Integer recruitId, AuthDto authDto) {
 
-        Recruit recruit = recruitRepository.findById(recruitId)
-                .orElseThrow(() -> new RuntimeException("해당 공고가 없습니다"));
+        Recruit recruit = recruitRepository.findByRecruitIdOrg(recruitId)
+                .orElseThrow(() -> new NotFoundException("해당 공고가 없거나 삭제되었습니다."));
 
         LocalDateTime deadlineLocalDateTime = recruit.getDeadline() != null
                 ? LocalDateTime.ofInstant(recruit.getDeadline(), ZoneId.systemDefault())
@@ -631,6 +628,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .organization(orgDto)
                 .build();
     }
+
 
     @Override
     @Transactional(readOnly = true)
