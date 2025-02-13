@@ -452,3 +452,4 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- SELECT * FROM Review_comment;      -- 후기 댓글 조회
 -- SELECT * FROM Volunteer_reaction;  -- 봉사자 반응(좋아요/싫어요) 조회
 
+
