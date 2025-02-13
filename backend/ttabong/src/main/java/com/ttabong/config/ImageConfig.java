@@ -24,7 +24,7 @@ public class ImageConfig extends LoggerConfig {
         logger.info("미니오 접속 SecretKey : " + secretKey);
         logger.info("미니오 접속 BucketName : " + bucketName);
         this.minioClient = MinioClient.builder()
-                .endpoint(minioUrl)
+                .endpoint(minioUrl, 9000, false)
                 .credentials(accessKey, secretKey)
                 .build();
     }
