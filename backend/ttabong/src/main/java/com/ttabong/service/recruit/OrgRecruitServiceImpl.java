@@ -3,14 +3,9 @@ package com.ttabong.service.recruit;
 import com.ttabong.dto.recruit.requestDto.org.*;
 import com.ttabong.dto.recruit.responseDto.org.*;
 import com.ttabong.dto.user.AuthDto;
-import com.ttabong.entity.recruit.Application;
-import com.ttabong.entity.recruit.Recruit;
-import com.ttabong.entity.recruit.Template;
-import com.ttabong.entity.recruit.TemplateGroup;
+import com.ttabong.entity.recruit.*;
 import com.ttabong.entity.user.Organization;
-import com.ttabong.exception.ForbiddenException;
-import com.ttabong.exception.NotFoundException;
-import com.ttabong.exception.UnauthorizedException;
+import com.ttabong.exception.*;
 import com.ttabong.repository.recruit.*;
 import com.ttabong.repository.user.OrganizationRepository;
 import com.ttabong.repository.user.VolunteerRepository;
@@ -52,6 +47,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         if (authDto == null || authDto.getUserId() == null) {
             throw new UnauthorizedException("로그인이 필요합니다.");
         }
+
         else if (!"organization".equalsIgnoreCase(authDto.getUserType())) {
             throw new ForbiddenException("기관 계정으로 로그인을 해야 합니다.");
         }
@@ -59,13 +55,11 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
     @Transactional(readOnly = true)
     public ReadAvailableRecruitsResponseDto readAvailableRecruits(Integer cursor, Integer limit, AuthDto authDto) {
-//        checkOrgToken(authDto);
 
         try {
             checkOrgToken(authDto);
 
             if (cursor == null || cursor == 0) { cursor = Integer.MAX_VALUE; }
-
             if (limit == null || limit == 0) { limit=10; }
 
             List<Template> templates = templateRepository.findAvailableTemplates(cursor, authDto.getUserId(), PageRequest.of(0, limit));
@@ -79,7 +73,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                         try {
                             return recruitRepository.findByTemplateId(template.getId());
                         } catch (Exception e) {
-                            throw new NotFoundException("템플릿 ID " + template.getId() + "에 대한 모집 공고를 찾을 수 없습니다.");
+                            throw new NotFoundException("해당 템플릿에 대한 모집 공고를 찾을 수 없습니다.");
                         }
                     })
                     .flatMap(List::stream)
@@ -250,7 +244,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         Instant deadlineInstant = requestDto.getDeadline() != null
                 ? requestDto.getDeadline().atZone(ZoneId.systemDefault()).toInstant()
-                : Instant.now(); // null일 경우 현재 시간 설정
+                : Instant.now();
 
         Date activityDate = requestDto.getActivityDate() != null
                 ? new java.sql.Date(requestDto.getActivityDate().getTime())
@@ -384,18 +378,28 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     @Override
     public DeleteGroupResponseDto deleteGroup(DeleteGroupDto deleteGroupDto, AuthDto authDto) {
 
-        Integer groupId = deleteGroupDto.getGroupId();
-        Integer orgId = deleteGroupDto.getOrgId();
+        checkOrgToken(authDto);
 
-        templateGroupRepository.deleteGroupByIdAndOrg(groupId, orgId);
+        Organization userOrg = organizationRepository.findByUserId(authDto.getUserId())
+                .orElseThrow(() -> new NotFoundException("없는 기관입니다."));
+
+        Integer groupId = deleteGroupDto.getGroupId();
+        TemplateGroup groupToDelete = templateGroupRepository.findById(groupId)
+                .orElseThrow(() -> new NotFoundException("해당 그룹을 찾을 수 없습니다."));
+
+        if (!groupToDelete.getOrg().getId().equals(userOrg.getId())) {
+            throw new UnauthorizedException("이 그룹을 삭제할 권한이 없습니다.");
+        }
+
+        templateGroupRepository.deleteGroupByIdAndOrg(groupId, userOrg.getId());
 
         return DeleteGroupResponseDto.builder()
                 .message("삭제 성공")
                 .groupId(groupId)
-                .orgId(orgId)
+                .orgId(userOrg.getId())
                 .build();
-
     }
+
 
     @Override
     @Transactional(readOnly = true)
@@ -445,18 +449,20 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         checkOrgToken(authDto);
 
         if (createTemplateDto.getImageCount() != null && createTemplateDto.getImageCount() > 10) {
-            throw new IllegalArgumentException("최대 개수를 초과했습니다. 최대 " + 10 + "개까지 업로드할 수 있습니다.");
+            throw new BadRequestException("최대 개수를 초과했습니다. 최대 " + 10 + "개까지 업로드할 수 있습니다.");
         }
 
         Organization organization = organizationRepository.findByUserId(authDto.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException("해당 유저의 기관 정보 없음"));
+                .orElseThrow(() -> new NotFoundException("해당 유저의 기관 정보 없음"));
+        TemplateGroup group = templateGroupRepository.findById(createTemplateDto.getGroupId())
+                .orElseThrow(() -> new NotFoundException("해당 그룹 없음"));
+        Category category = categoryRepository.findById(createTemplateDto.getCategoryId())
+                .orElseThrow(() -> new NotFoundException("해당 카테고리 없음"));
 
         Template savedTemplate = templateRepository.save(Template.builder()
-                .group(templateGroupRepository.findById(createTemplateDto.getGroupId())
-                        .orElseThrow(() -> new IllegalArgumentException("해당 그룹 없음")))
+                .group(group)
                 .org(organization)
-                .category(categoryRepository.findById(createTemplateDto.getCategoryId())
-                        .orElseThrow(() -> new IllegalArgumentException("해당 카테고리 없음")))
+                .category(category)
                 .title(createTemplateDto.getTitle())
                 .activityLocation(createTemplateDto.getActivityLocation())
                 .status(createTemplateDto.getStatus())
@@ -480,22 +486,29 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         return CreateTemplateResponseDto.builder()
                 .message("템플릿 생성 성공")
                 .templateId(savedTemplate.getId())
-                .imageUrl(imageUrls.stream().findFirst().orElse(null)) // 썸네일 이미지 url
+                .imageUrl(imageUrls.stream().findFirst().orElse(null))
                 .images(imageUrls)
                 .build();
     }
 
-
-
+    // TODO: 봉사 그룹의 디폴트 이름을 봉사 그룹 개수를 세어서 만들어보자(중복되지 않도록)
     @Override
     public CreateGroupResponseDto createGroup(CreateGroupRequestDto createGroupDto, AuthDto authDto) {
 
-        Organization org = organizationRepository.findById(createGroupDto.getOrgId())
-                .orElseThrow(() -> new IllegalArgumentException("기관 없음"));
+        checkOrgToken(authDto);
+
+        Organization org = organizationRepository.findByUserId(authDto.getUserId())
+                .orElseThrow(() -> new NotFoundException("기관 정보가 존재하지 않습니다."));
+
+        String groupName = Optional.ofNullable(createGroupDto.getGroupName()).orElse("봉사");
+
+        if (templateGroupRepository.existsByOrgAndGroupName(org, groupName)) {
+            throw new ConflictException("이미 존재하는 그룹명입니다: " + groupName);
+        }
 
         TemplateGroup newGroup = TemplateGroup.builder()
                 .org(org)
-                .groupName(createGroupDto.getGroupName() != null ? createGroupDto.getGroupName() : "봉사")
+                .groupName(groupName)
                 .isDeleted(false)
                 .build();
 
@@ -505,40 +518,48 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .message("그룹 생성 성공")
                 .groupId(savedGroup.getId())
                 .build();
-
     }
+
+
 
     @Override
     public CreateRecruitResponseDto createRecruit(CreateRecruitRequestDto createRecruitDto, AuthDto authDto) {
 
-        Instant deadlineInstant = createRecruitDto.getDeadline() != null
-                ? createRecruitDto.getDeadline().atZone(ZoneId.systemDefault()).toInstant()
-                : Instant.now();
+        checkOrgToken(authDto);
+
+        Organization org = organizationRepository.findByUserId(authDto.getUserId())
+                .orElseThrow(() -> new NotFoundException("해당 유저의 기관 정보 없음"));
 
         Template template = templateRepository.findById(createRecruitDto.getTemplateId())
-                .orElseThrow(() -> new IllegalArgumentException("해당 템플릿이 존재하지 않습니다."));
+                .orElseThrow(() -> new NotFoundException("해당 템플릿이 존재하지 않습니다."));
 
-        Recruit recruit = Recruit.builder()
+        if (!template.getOrg().getId().equals(org.getId())) {
+            throw new ForbiddenException("해당 템플릿에 대한 권한이 없습니다.");
+        }
+
+        Instant deadlineInstant = Optional.ofNullable(createRecruitDto.getDeadline())
+                .map(deadline -> deadline.atZone(ZoneId.systemDefault()).toInstant())
+                .orElse(Instant.now());
+
+        Recruit recruit = recruitRepository.save(Recruit.builder()
                 .template(template)
                 .deadline(deadlineInstant)
-                .activityDate(createRecruitDto.getActivityDate() != null ? createRecruitDto.getActivityDate() : new Date())
-                .activityStart(createRecruitDto.getActivityStart() != null ? createRecruitDto.getActivityStart() : BigDecimal.ZERO)
-                .activityEnd(createRecruitDto.getActivityEnd() != null ? createRecruitDto.getActivityEnd() : BigDecimal.ZERO)
-                .maxVolunteer(createRecruitDto.getMaxVolunteer() != null ? createRecruitDto.getMaxVolunteer() : 0)
+                .activityDate(Optional.ofNullable(createRecruitDto.getActivityDate()).orElse(new Date()))
+                .activityStart(Optional.ofNullable(createRecruitDto.getActivityStart()).orElse(BigDecimal.valueOf(10.00)))
+                .activityEnd(Optional.ofNullable(createRecruitDto.getActivityEnd()).orElse(BigDecimal.valueOf(12.00)))
+                .maxVolunteer(Optional.ofNullable(createRecruitDto.getMaxVolunteer()).orElse(1))
                 .status("RECRUITING")
                 .isDeleted(false)
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
-                .build();
-
-        recruit = recruitRepository.save(recruit);
+                .build());
 
         return CreateRecruitResponseDto.builder()
                 .message("공고 생성 완료")
                 .recruitId(recruit.getId())
                 .build();
-
     }
+
 
     @Override
     @Transactional(readOnly = true)

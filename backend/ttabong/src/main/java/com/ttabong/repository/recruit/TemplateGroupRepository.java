@@ -1,6 +1,7 @@
 package com.ttabong.repository.recruit;
 
 import com.ttabong.entity.recruit.TemplateGroup;
+import com.ttabong.entity.user.Organization;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -24,7 +25,5 @@ public interface TemplateGroupRepository extends JpaRepository<TemplateGroup, In
     @Query("SELECT tg FROM TemplateGroup tg WHERE tg.isDeleted = false")
     List<TemplateGroup> findGroups(Pageable pageable);
 
-    @Query("SELECT t.group.id FROM Template t WHERE t.id = :templateId")
-    Integer findGroupIdByTemplateId(@Param("templateId") Integer templateId);
-
+    boolean existsByOrgAndGroupName(Organization org, String groupName);
 }
