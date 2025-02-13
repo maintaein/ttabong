@@ -97,7 +97,7 @@ services:
       - external
   certbot:
     build:
-      context: ./docker/certbot               # 현재 디렉토리에서 빌드
+      context: ./docker/certbot # 현재 디렉토리에서 빌드
     image: ${DOCKER_HUB_USERNAME}/ttabong:$CI_PIPELINE_ID-certbot
     container_name: certbot
     platform: "linux/amd64"
@@ -110,7 +110,7 @@ services:
 networks:
   internal:
     driver: bridge
-    internal: true # 🔥 내부 네트워크이므로 외부 접근 차단
+    #internal: true # 🔥 내부 네트워크이므로 외부 접근 차단
   external:
     driver: bridge # 🔥 외부에서 접근 가능 (nginx만연결)
 
