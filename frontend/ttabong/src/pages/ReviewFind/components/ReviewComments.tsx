@@ -2,22 +2,44 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Send } from 'lucide-react';
+import { Send, MoreVertical } from 'lucide-react';
 import type { Comment } from '@/types/reviewType';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useState } from 'react';
 
 interface ReviewCommentsProps {
   comments: Comment[];
   commentContent: string;
+  userId: number;
   onCommentChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSubmit: (e: React.FormEvent) => void;
+  onUpdateComment: (commentId: number, content: string) => Promise<void>;
+  onDeleteComment: (commentId: number) => Promise<void>;
 }
 
 export function ReviewComments({ 
   comments, 
   commentContent, 
+  userId, 
   onCommentChange, 
-  onSubmit 
+  onSubmit, 
+  onUpdateComment, 
+  onDeleteComment 
 }: ReviewCommentsProps) {
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editContent, setEditContent] = useState('');
+
+  const handleEdit = (commentId: number, content: string) => {
+    setEditingId(commentId);
+    setEditContent(content);
+  };
+
+  const handleUpdate = async (commentId: number) => {
+    await onUpdateComment(commentId, editContent);
+    setEditingId(null);
+    setEditContent('');
+  };
+
   return (
     <>
       <Card className="border-0 shadow-none mb-16">
@@ -27,12 +49,41 @@ export function ReviewComments({
             {comments.map((comment) => (
               <div key={comment.commentId} className="flex gap-2 items-start">
                 <Avatar className="w-8 h-8">
-                  <AvatarFallback>{comment.writerName[0]}</AvatarFallback>
+                  <AvatarFallback>{(comment.writerName || '?')[0]}</AvatarFallback>
                 </Avatar>
-                <div>
+                <div className="flex-1">
                   <strong className="text-sm">{comment.writerName}</strong>
-                  <p className="text-sm text-gray-600">{comment.content}</p>
+                  {editingId === comment.commentId ? (
+                    <div className="flex gap-2 mt-1">
+                      <Input
+                        value={editContent}
+                        onChange={(e) => setEditContent(e.target.value)}
+                        className="flex-1"
+                      />
+                      <Button size="sm" onClick={() => handleUpdate(comment.commentId)}>저장</Button>
+                      <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>취소</Button>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-600">{comment.content}</p>
+                  )}
                 </div>
+                {userId === comment.writerId && !editingId && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleEdit(comment.commentId, comment.content)}>
+                        수정하기
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onDeleteComment(comment.commentId)} className="text-destructive">
+                        삭제하기
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </div>
             ))}
           </div>
