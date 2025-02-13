@@ -58,7 +58,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         }
     }
 
-    // TODO: 마지막 공고까지 다 로드했다면? & db에서 정보 누락된게 있다면? , 삭제여부 확인, 마감인건 빼고 가져오기
     @Transactional(readOnly = true)
     public ReadAvailableRecruitsResponseDto readAvailableRecruits(Integer cursor, Integer limit, AuthDto authDto) {
         checkOrgToken(authDto);
@@ -377,15 +376,19 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     @Override
     public CreateTemplateResponseDto createTemplate(CreateTemplateRequestDto createTemplateDto, AuthDto authDto) {
 
+        checkOrgToken(authDto);
+
         if (createTemplateDto.getImageCount() != null && createTemplateDto.getImageCount() > 10) {
             throw new IllegalArgumentException("최대 개수를 초과했습니다. 최대 " + 10 + "개까지 업로드할 수 있습니다.");
         }
 
+        Organization organization = organizationRepository.findByUserId(authDto.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("해당 유저의 기관 정보 없음"));
+
         Template savedTemplate = templateRepository.save(Template.builder()
                 .group(templateGroupRepository.findById(createTemplateDto.getGroupId())
                         .orElseThrow(() -> new IllegalArgumentException("해당 그룹 없음")))
-                .org(organizationRepository.findById(createTemplateDto.getOrgId())
-                        .orElseThrow(() -> new IllegalArgumentException("해당 기관 없음")))
+                .org(organization)
                 .category(categoryRepository.findById(createTemplateDto.getCategoryId())
                         .orElseThrow(() -> new IllegalArgumentException("해당 카테고리 없음")))
                 .title(createTemplateDto.getTitle())
@@ -415,6 +418,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .images(imageUrls)
                 .build();
     }
+
 
 
     @Override

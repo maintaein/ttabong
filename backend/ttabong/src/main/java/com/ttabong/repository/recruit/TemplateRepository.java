@@ -15,6 +15,7 @@ import java.util.Optional;
 @Repository
 public interface TemplateRepository extends JpaRepository<Template, Integer> {
 
+    // 1.
     @Query("SELECT t FROM Template t " +
             "JOIN FETCH t.org o " +
             "WHERE (:cursor = 0 OR t.id > :cursor) " +
