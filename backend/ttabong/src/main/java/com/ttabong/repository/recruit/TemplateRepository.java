@@ -47,17 +47,16 @@ public interface TemplateRepository extends JpaRepository<Template, Integer> {
 
 
     // vol-recruit를 위해 추가 --------------------------------------------
-    // 특정 templateId 이후의 모집 공고 리스트 조회 (isDeleted = false 조건 포함)
-    @Query("SELECT t FROM Template t WHERE t.id > :cursor AND t.isDeleted = false ORDER BY t.id ASC LIMIT :limit")
-    List<Template> findTemplatesAfterCursor(@Param("cursor") Integer cursor, @Param("limit") Integer limit);
+    // 최신 모집 공고 N개 조회
+    @Query("SELECT t FROM Template t WHERE t.isDeleted = FALSE ORDER BY t.createdAt DESC LIMIT :limit")
+    List<Template> findTopNTemplates(Integer limit);
 
-    // 가장 처음 limit 개수만큼의 모집 공고 조회 (isDeleted = false 조건 포함)
-    @Query("SELECT t FROM Template t WHERE t.isDeleted = false ORDER BY t.id ASC LIMIT :limit")
-    List<Template> findTopNTemplates(@Param("limit") Integer limit);
+    // 특정 cursor 이후의 모집 공고 조회
+    @Query("SELECT t FROM Template t WHERE t.id > :cursor AND t.isDeleted = FALSE ORDER BY t.createdAt DESC LIMIT :limit")
+    List<Template> findTemplatesAfterCursor(Integer cursor, Integer limit);
 
-    // 특정 템플릿 ID로 템플릿 조회 (isDeleted = false 조건 포함)
-    @Query("SELECT t FROM Template t WHERE t.id = :templateId AND t.isDeleted = false")
-    Optional<Template> findById(@Param("templateId") Integer templateId);
+    // 특정 모집 공고 조회
+    Optional<Template> findByIdAndIsDeletedFalse(Integer templateId);
 
 
 

@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class LikeOnRecruitResponseDto {
-    Integer relationId;
-    Boolean isLike;
+    private Integer relationId;
+    private Boolean isLike;
 }

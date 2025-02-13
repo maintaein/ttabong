@@ -48,7 +48,9 @@ public class UserServiceImpl implements UserService {
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             return "failed : invalid password";
         }
-        return "userId : " + user.getId();
+        return "userId : " + user.getId()
+                + "name : " + user.getName()
+                + "email : " + user.getEmail();
     }
 
     @Override

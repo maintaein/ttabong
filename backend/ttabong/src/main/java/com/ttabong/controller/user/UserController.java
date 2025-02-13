@@ -38,13 +38,15 @@ public class UserController {
         String loginResult = userService.login(loginRequest);
 
         if(loginResult.startsWith("userId")){
-            String userId = loginResult.substring(loginResult.indexOf(":") + 2);
+            String userId = loginResult.substring(loginResult.indexOf("userId :") + 2);
+            String name = loginResult.substring(loginResult.indexOf("name :") + 2);
+            String email = loginResult.substring(loginResult.indexOf("email :") + 2);
             String accessToken = jwtProvider.createToken(userId, loginRequest.getUserType());
-            return ResponseEntity.ok(new LoginResponse(200, "로그인 성공", accessToken));
+            return ResponseEntity.ok(new LoginResponse(200, "로그인 성공", accessToken, name, email));
         }
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new LoginResponse(401, "이메일 또는 비밀번호가 일치하지 않습니다.", null));
+                .body(new LoginResponse(401, "이메일 또는 비밀번호가 일치하지 않습니다.", null, null, null));
     }
 
     @PostMapping("/volunteer/register")
