@@ -190,7 +190,7 @@ public class ReviewServiceImpl implements ReviewService {
         }
 
         Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new RuntimeException("Review not found"));
+                .orElseThrow(() -> new RuntimeException("리뷰를 찾을 수 없습니다."));
 
         Review updatedReview = review.toBuilder()
                 .title(requestDto.getTitle())
@@ -260,7 +260,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .stream()
                 .map(ReviewImage::getImageUrl)
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                .toList();
 
         List<String> imageUrls = objectPaths.stream()
                 .map(path -> {
