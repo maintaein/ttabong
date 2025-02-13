@@ -18,7 +18,7 @@ export const recruitApi = {
     const url = `/vol/applications/recruits?${queryString}`;
     
     const response = await axiosInstance.get(url);
-    return response.data;
+    return response.data; 
   },
 
   getOrgRecruits: async () => {

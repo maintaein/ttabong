@@ -9,7 +9,6 @@ import Step4ContactInfo from "@/pages/Me/TemplateComponents/Step4ContactInfo";
 import { motion, AnimatePresence } from "framer-motion";
 import { TemplateFormData } from '@/types/template';
 import { toast } from "sonner";
-import { Toaster } from "react-hot-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useScroll } from '@/contexts/ScrollContext';
 import { useTemplateStore } from '@/stores/templateStore';

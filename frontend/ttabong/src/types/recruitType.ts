@@ -1,9 +1,9 @@
-interface Group {
+export interface Group {
   groupId: number;
   groupName: string;
 }
 
-interface Template {
+export interface Template {
   templateId: number;
   title: string;
   activityLocation: string;
@@ -38,21 +38,8 @@ export interface Application {
   status: 'PENDING' | 'APPROVED' | 'COMPLETED' | 'REJECTED';
   evaluationDone: boolean;
   createdAt: string;
-  template: {
-    templateId: number;
-    title: string;
-    activityLocation: string;
-    status: 'ALL' | 'YOUTH';
-    imageId: string;
-    contactName: string;
-    contactPhone: string;
-    description: string;
-    createdAt: string;
-  };
-  group: {
-    groupId: number;
-    groupName: string;
-  };
+  template: Template;
+  group: Group;
   recruit: {
     recruitId: number;
     deadline: string;
@@ -70,16 +57,19 @@ export interface CreateRecruitRequest {
   templateId: number;
   deadline: string;
   activityDate: string;
-  activityTime: string;
+  activityStart: number;
+  activityEnd: number;
   maxVolunteer: number;
 }
 
 export interface UpdateRecruitRequest {
   deadline?: string;
   activityDate?: string;
-  activityTime?: string;
+  activityStart?: number;
+  activityEnd?: number;
   maxVolunteer?: number;
-  status?: 'RECRUITING' | 'CLOSED';
+  images?: string[];
+  imageCount?: number;
 }
 
 export interface OrgRecruit {
