@@ -1,5 +1,6 @@
 package com.ttabong.controller.sns;
 
+import com.ttabong.config.LoggerConfig;
 import com.ttabong.dto.sns.request.CommentCreateAndUpdateRequestDto;
 import com.ttabong.dto.sns.response.CommentCreateAndUpdateResponseDto;
 import com.ttabong.dto.sns.response.CommentDeleteResponseDto;
@@ -14,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/reviews/comments")
 @RequiredArgsConstructor
-public class CommentController {
+public class CommentController extends LoggerConfig {
 
     private final CommentService commentService;
 
@@ -24,7 +25,7 @@ public class CommentController {
             @AuthenticationPrincipal AuthDto authDto,
             @PathVariable(name = "reviewId") Integer reviewId,
             @RequestBody @Valid CommentCreateAndUpdateRequestDto requestDto) {
-
+        logger.info("11. 댓글 작성 <POST> \"/{reviewId}\"");
         CommentCreateAndUpdateResponseDto response = commentService.createComment(authDto, reviewId, requestDto);
 
         return ResponseEntity.ok(response);
@@ -36,7 +37,7 @@ public class CommentController {
             @AuthenticationPrincipal AuthDto authDto,
             @PathVariable Integer commentId,
             @RequestBody @Valid CommentCreateAndUpdateRequestDto requestDto) {
-
+        logger.info("12. 댓글 수정 <PATCH> \"/{commentId}\"");
         CommentCreateAndUpdateResponseDto response = commentService.updateComment(authDto, commentId, requestDto);
 
         return ResponseEntity.ok(response);
@@ -47,7 +48,7 @@ public class CommentController {
     public ResponseEntity<CommentDeleteResponseDto> deleteComment(
             @AuthenticationPrincipal AuthDto authDto,
             @PathVariable(name = "commentId") Integer commentId) {
-
+        logger.info("13. 댓글 삭제 <PATCH> \"/{commentId}/delete\"");
         CommentDeleteResponseDto response = commentService.deleteComment(authDto, commentId);
 
         return ResponseEntity.ok(response);
