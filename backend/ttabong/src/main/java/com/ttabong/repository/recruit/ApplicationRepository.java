@@ -26,6 +26,9 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
     @Query("UPDATE Application a SET a.status = :status WHERE a.id = :applicationId")
     void updateApplicationStatus(@Param("applicationId") Integer applicationId, @Param("status") String status);
 
+    @Query("SELECT r.template.org.id FROM Application a JOIN a.recruit r JOIN r.template t WHERE a.id = :applicationId")
+    Optional<Integer> findOrgIdByApplicationId(@Param("applicationId") Integer applicationId);
+
     // for VolRecruit -------------------------------------------
     // 사용자가 신청한 모집 공고 목록 조회
 //    @Query("SELECT a FROM Application a WHERE a.volunteer.user.id = :userId AND a.id > :cursor AND a.isDeleted = FALSE ORDER BY a.createdAt DESC")
