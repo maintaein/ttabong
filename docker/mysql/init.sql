@@ -278,178 +278,199 @@ INSERT INTO Category (name, parent_id) VALUES
 INSERT INTO Category (name, parent_id) VALUES ('기타', 15);
 
 
--- SELECT * FROM Category;
+-- -----------------------
 
 USE volunteer_service;
 
-SET SQL_SAFE_UPDATES = 0;
-SET FOREIGN_KEY_CHECKS = 0;
-
+--  User 데이터 삽입 (비밀번호 "11111111"의 Bcrypt 해시 적용)
 INSERT INTO User (email, name, password, phone, total_volunteer_hours, profile_image, is_deleted, created_at)
-VALUES ('user1@example.com', '홍길동', 'hashedpassword1', '010-1234-5678', 12.50, 'profile1.jpg', FALSE, NOW()),
-       ('user2@example.com', '김영희', 'hashedpassword2', '010-2345-6789', 25.75, 'profile2.jpg', FALSE, NOW()),
-       ('user3@example.com', '이철수', 'hashedpassword3', '010-3456-7890', 30.00, 'profile3.jpg', FALSE, NOW()),
-       ('user4@example.com', '박민수', 'hashedpassword4', '010-4567-8901', 45.20, 'profile4.jpg', FALSE, NOW()),
-       ('user5@example.com', '정다혜', 'hashedpassword5', '010-5678-9012', 5.50, 'profile5.jpg', FALSE, NOW());
+VALUES
+    ('volunteer1@example.com', '김철수', '$2a$10$N9qo8uLOickgx2ZMRZo5e.PrPj1l.e9PqQ./7L48rJPEm6/4T.GC6', '010-1234-5678', 12.5, '1_1.webp', FALSE, NOW()),
+    ('volunteer2@example.com', '이영희', '$2a$10$N9qo8uLOickgx2ZMRZo5e.PrPj1l.e9PqQ./7L48rJPEm6/4T.GC6', '010-2345-6789', 30.0, '2_1.webp', FALSE, NOW()),
+    ('volunteer3@example.com', '박민수', '$2a$10$N9qo8uLOickgx2ZMRZo5e.PrPj1l.e9PqQ./7L48rJPEm6/4T.GC6', '010-3456-7890', 5.0, '3_1.webp', FALSE, NOW()),
+    ('organization1@example.com', '굿네이버스', '$2a$10$N9qo8uLOickgx2ZMRZo5e.PrPj1l.e9PqQ./7L48rJPEm6/4T.GC6', '010-4567-8901', 0.0, '4_1.webp', FALSE, NOW()),
+    ('organization2@example.com', '초록우산어린이재단', '$2a$10$N9qo8uLOickgx2ZMRZo5e.PrPj1l.e9PqQ./7L48rJPEm6/4T.GC6', '010-5678-9012', 0.0, '5_1.webp', FALSE, NOW());
 
-INSERT INTO Volunteer (user_id, preferred_time, interest_theme, duration_time, region, birth_date, gender,
-                       recommended_count, not_recommended_count)
-VALUES (1, '오전', '환경보호', '2시간', '서울', '1995-06-15', 'M', 10, 2),
-       (2, '오후', '교육', '3시간', '부산', '2000-01-20', 'F', 8, 1);
+-- Volunteer 데이터 삽입 (User 테이블의 ID를 참조)
+INSERT INTO Volunteer (user_id, preferred_time, interest_theme, duration_time, region, birth_date, gender, recommended_count, not_recommended_count)
+VALUES
+    (1, '주말 오후', '환경 보호', '2시간', '서울', '1995-06-15', 'M', 5, 0),
+    (2, '평일 저녁', '교육 봉사', '3시간', '부산', '1998-09-22', 'F', 10, 1),
+    (3, '주말 오전', '동물 보호', '1시간', '대전', '2000-01-10', 'M', 3, 0);
 
+-- Organization 데이터 삽입 (User 테이블의 ID를 참조)
 INSERT INTO Organization (user_id, business_reg_number, org_name, representative_name, org_address, created_at)
-VALUES (3, '345-67-89012', '사랑의손길', '박철민', '대구광역시 수성구 동대구로 45', NOW()),
-       (4, '456-78-90123', '행복한세상', '최민영', '인천광역시 남동구 남동대로 67', NOW()),
-       (5, '567-89-01234', '희망의빛', '정은영', '대전광역시 유성구 유성대로 89', NOW());
+VALUES
+    (4, '123-45-67890', '굿네이버스', '김기관', '서울특별시 강남구 테헤란로 123', NOW()),
+    (5, '987-65-43210', '초록우산어린이재단', '이재단', '서울특별시 종로구 종로 456', NOW());
 
+-- select * from User;
+-- select * from Organization;
+-- select * from Volunteer;
 
+-- Template_group 데이터 삽입 (각 기관마다 2개씩)
 INSERT INTO Template_group (org_id, group_name, is_deleted)
-SELECT org_id, CONCAT('봉사 그룹 ', n), FALSE
-FROM Organization, (SELECT 1 AS n UNION SELECT 2 UNION SELECT 3) AS numbers;
+VALUES
+    (1, '환경 보호 캠페인', FALSE),
+    (1, '아동 교육 지원', FALSE),
+    (2, '노인 돌봄 활동', FALSE),
+    (2, '동물 보호 봉사', FALSE);
 
+-- Template 데이터 삽입 (각 그룹마다 2개씩)
 INSERT INTO Template (group_id, org_id, category_id, title, activity_location, status, contact_name, contact_phone, description, is_deleted, created_at)
-SELECT
-    g.group_id, g.org_id, NULL,
-    CONCAT('봉사 활동 ', n),
-    '서울 강남구',
-    'ALL',
-    '담당자',
-    CONCAT('010-', LPAD(FLOOR(RAND() * 9000) + 1000, 4, '0'), '-', LPAD(FLOOR(RAND() * 9000) + 1000, 4, '0')),
-    '이 봉사 활동은 지역사회에 기여하기 위한 활동입니다.',
-    FALSE, NOW()
-FROM Template_group g,
-     (SELECT 1 AS n UNION SELECT 2 UNION SELECT 3) AS numbers;
+VALUES
+    -- 굿네이버스(기관 1번)의 첫 번째 그룹(환경 보호 캠페인)
+    (1, 1, 1, '하천 정화 활동', '서울 강남구 청담천', 'ALL', '김담당', '010-1111-1111', '하천 주변의 쓰레기를 정리하는 봉사입니다.', FALSE, NOW()),
+    (1, 1, 2, '도시 숲 가꾸기', '서울 강남구 양재 시민의 숲', 'ALL', '박책임', '010-2222-2222', '도시 내 숲을 가꾸고 보호하는 활동입니다.', FALSE, NOW()),
+    -- 굿네이버스(기관 1번)의 두 번째 그룹(아동 교육 지원)
+    (2, 1, 3, '초등학생 학습 멘토링', '서울 종로구 어린이도서관', 'YOUTH', '이강사', '010-3333-3333', '초등학생 대상 학습 지도 및 멘토링.', FALSE, NOW()),
+    (2, 1, 4, '저소득층 아동 영어 교육', '서울 동대문구 청소년센터', 'YOUTH', '최관리', '010-4444-4444', '경제적 어려움을 겪는 아동을 위한 영어 수업 지원.', FALSE, NOW()),
+    -- 초록우산어린이재단(기관 2번)의 첫 번째 그룹(노인 돌봄 활동)
+    (3, 2, 5, '경로당 청소 및 식사 지원', '부산 수영구 경로당', 'ADULT', '장센터', '010-5555-5555', '노인을 위한 청소 및 식사 제공 봉사.', FALSE, NOW()),
+    (3, 2, 6, '독거노인 말벗 봉사', '부산 해운대구 독거노인 센터', 'ADULT', '홍담당', '010-6666-6666', '혼자 사시는 노인분들과 대화 및 산책 봉사.', FALSE, NOW()),
+    -- 초록우산어린이재단(기관 2번)의 두 번째 그룹(동물 보호 봉사)
+    (4, 2, 7, '유기견 보호소 봉사', '대전 유기견 보호소', 'ALL', '김보호', '010-7777-7777', '유기견 보호소에서 강아지 돌봄 봉사.', FALSE, NOW()),
+    (4, 2, 8, '길고양이 급식소 운영', '대전 중앙시장', 'ALL', '이집사', '010-8888-8888', '길고양이 급식소를 운영하며 보살피는 활동.', FALSE, NOW());
 
+-- Recruit 데이터 삽입 (각 템플릿마다 2개씩)
 INSERT INTO Recruit (template_id, deadline, activity_date, activity_start, activity_end, max_volunteer, participate_vol_count, status, is_deleted, updated_at, created_at)
-SELECT
-    t.template_id,
-    DATE_ADD(NOW(), INTERVAL FLOOR(RAND() * 15) DAY),
-    DATE_ADD(NOW(), INTERVAL FLOOR(RAND() * 30) DAY),
-    ROUND(RAND() * 6 + 8, 2),
-    ROUND(RAND() * 3 + 12, 2),
-    FLOOR(RAND() * 20) + 5,
-    FLOOR(RAND() * 5),
-    'RECRUITING', FALSE, NOW(), NOW()
-FROM Template t,
-     (SELECT 1 AS n UNION SELECT 2 UNION SELECT 3) AS numbers;
+VALUES
+    -- 하천 정화 활동
+    (1, NOW() + INTERVAL 5 DAY, NOW() + INTERVAL 7 DAY, 9.00, 12.00, 20, 0, 'RECRUITING', FALSE, NOW(), NOW()),
+    (1, NOW() + INTERVAL 10 DAY, NOW() + INTERVAL 14 DAY, 14.00, 17.00, 15, 0, 'RECRUITING', FALSE, NOW(), NOW()),
 
-INSERT INTO Review (recruit_id, org_id, writer_id, title, content, is_deleted, is_public, img_count, updated_at, created_at)
-SELECT r.recruit_id, o.org_id, u.user_id,
-       CONCAT('봉사 후기 - ', n),
-       '이 봉사는 매우 의미 있었습니다. 많은 배움을 얻었고 추천합니다!',
-       FALSE, TRUE, FLOOR(RAND() * 2) + 1, NOW(), NOW()
-FROM User u
-         JOIN Volunteer v ON u.user_id = v.user_id
-         JOIN Organization o ON v.region = '서울'
-         JOIN Template t ON o.org_id = t.org_id
-         JOIN Recruit r ON t.template_id = r.template_id
-         CROSS JOIN (SELECT 1 AS n UNION SELECT 2) AS numbers
-WHERE RAND() > 0.5
+    -- 도시 숲 가꾸기
+    (2, NOW() + INTERVAL 3 DAY, NOW() + INTERVAL 6 DAY, 10.00, 13.00, 25, 0, 'RECRUITING', FALSE, NOW(), NOW()),
+    (2, NOW() + INTERVAL 8 DAY, NOW() + INTERVAL 12 DAY, 13.00, 16.00, 30, 0, 'RECRUITING', FALSE, NOW(), NOW()),
 
-UNION ALL
+    -- 초등학생 학습 멘토링
+    (3, NOW() + INTERVAL 7 DAY, NOW() + INTERVAL 10 DAY, 15.00, 18.00, 10, 0, 'RECRUITING', FALSE, NOW(), NOW()),
+    (3, NOW() + INTERVAL 12 DAY, NOW() + INTERVAL 15 DAY, 16.00, 19.00, 12, 0, 'RECRUITING', FALSE, NOW(), NOW()),
 
-SELECT r.recruit_id, o.org_id, o.user_id,
-       CONCAT('기관 후기 - ', n),
-       '우리 기관에서 진행한 봉사활동에 대한 좋은 경험이었습니다.',
-       FALSE, TRUE, FLOOR(RAND() * 2) + 1, NOW(), NOW()
-FROM Organization o
-         JOIN Template t ON o.org_id = t.org_id
-         JOIN Recruit r ON t.template_id = r.template_id
-         CROSS JOIN (SELECT 1 AS n UNION SELECT 2) AS numbers
-WHERE RAND() > 0.5
+    -- 저소득층 아동 영어 교육
+    (4, NOW() + INTERVAL 4 DAY, NOW() + INTERVAL 9 DAY, 17.00, 19.00, 10, 0, 'RECRUITING', FALSE, NOW(), NOW()),
+    (4, NOW() + INTERVAL 9 DAY, NOW() + INTERVAL 13 DAY, 14.00, 17.00, 15, 0, 'RECRUITING', FALSE, NOW(), NOW()),
 
-UNION ALL
+    -- 경로당 청소 및 식사 지원
+    (5, NOW() + INTERVAL 6 DAY, NOW() + INTERVAL 11 DAY, 8.00, 11.00, 20, 0, 'RECRUITING', FALSE, NOW(), NOW()),
+    (5, NOW() + INTERVAL 10 DAY, NOW() + INTERVAL 14 DAY, 9.00, 12.00, 18, 0, 'RECRUITING', FALSE, NOW(), NOW()),
 
-SELECT r.recruit_id, o.org_id, o.user_id,
-       CONCAT('기관 직접 작성 후기 - ', n),
-       '이 봉사는 우리 기관의 주최로 진행되었으며, 성공적으로 마무리되었습니다.',
-       FALSE, TRUE, FLOOR(RAND() * 2) + 1, NOW(), NOW()
-FROM Organization o
-         JOIN Template t ON o.org_id = t.org_id
-         JOIN Recruit r ON t.template_id = r.template_id
-         JOIN User u ON o.user_id = u.user_id
-         CROSS JOIN (SELECT 1 AS n UNION SELECT 2) AS numbers
-WHERE RAND() > 0.5
-  AND o.user_id = o.org_id;
+    -- 독거노인 말벗 봉사
+    (6, NOW() + INTERVAL 5 DAY, NOW() + INTERVAL 10 DAY, 14.00, 17.00, 10, 0, 'RECRUITING', FALSE, NOW(), NOW()),
+    (6, NOW() + INTERVAL 10 DAY, NOW() + INTERVAL 15 DAY, 15.00, 18.00, 12, 0, 'RECRUITING', FALSE, NOW(), NOW()),
 
-UPDATE Review r
-    JOIN (
-    SELECT r1.review_id AS child_id,
-    (SELECT r2.review_id
-    FROM Review r2
-    WHERE r2.recruit_id = r1.recruit_id
-    AND r2.org_id = r1.org_id
-    AND r2.writer_id = r1.writer_id
-    AND r2.review_id < r1.review_id
-    ORDER BY r2.review_id ASC
-    LIMIT 1) AS parent_id
-    FROM Review r1
-    ) AS temp
-ON r.review_id = temp.child_id
-    SET r.parent_review_id = temp.parent_id
-WHERE r.parent_review_id IS NULL;
+    -- 유기견 보호소 봉사
+    (7, NOW() + INTERVAL 3 DAY, NOW() + INTERVAL 6 DAY, 10.00, 13.00, 15, 0, 'RECRUITING', FALSE, NOW(), NOW()),
+    (7, NOW() + INTERVAL 8 DAY, NOW() + INTERVAL 12 DAY, 13.00, 16.00, 20, 0, 'RECRUITING', FALSE, NOW(), NOW()),
 
-INSERT INTO Review_image (review_id, template_id, image_url, is_deleted, is_thumbnail, created_at)
-SELECT
-    r.review_id,
-    rc.template_id,
-    CASE
-        WHEN n = 1 THEN 'https://cdn.pixabay.com/photo/2016/03/27/19/40/volunteer-1289340_1280.jpg'
-        WHEN n = 2 THEN 'https://images.unsplash.com/photo-1505678261036-a3fcc5e884ee'
-        WHEN n = 3 THEN 'https://cdn.pixabay.com/photo/2018/01/23/20/12/volunteers-3109806_1280.jpg'
-        END,
-    FALSE,
-    CASE WHEN n = 1 THEN TRUE ELSE FALSE END,  -- 첫 번째 이미지는 썸네일로 지정
-    NOW()
-FROM Review r
-         JOIN Recruit rc ON r.recruit_id = rc.recruit_id
-         CROSS JOIN (SELECT 1 AS n UNION SELECT 2 UNION SELECT 3) AS numbers
-WHERE n <= r.img_count;
+    -- 길고양이 급식소 운영
+    (8, NOW() + INTERVAL 5 DAY, NOW() + INTERVAL 10 DAY, 18.00, 20.00, 8, 0, 'RECRUITING', FALSE, NOW(), NOW()),
+    (8, NOW() + INTERVAL 10 DAY, NOW() + INTERVAL 15 DAY, 17.00, 20.00, 10, 0, 'RECRUITING', FALSE, NOW(), NOW());
 
-UPDATE Review r
-    JOIN Recruit rc ON r.recruit_id = rc.recruit_id
-    JOIN Template t ON rc.template_id = t.template_id
-    JOIN Template_group tg ON t.group_id = tg.group_id
-    SET r.group_id = tg.group_id
-WHERE r.group_id IS NULL;
+-- select * from Template;
+-- select * from Template_group;
+-- select * from Recruit;
 
-INSERT INTO Review_comment (writer_id, review_id, content, is_deleted, updated_at, created_at)
-SELECT r.writer_id, r.review_id,
-       CONCAT('댓글 - ',
-              CASE FLOOR(RAND() * 3)
-                  WHEN 0 THEN '정말 공감됩니다!'
-                  WHEN 1 THEN '좋은 정보네요!'
-                  ELSE '유익한 후기 감사합니다!'
-                  END),
-       FALSE, NOW(), NOW()
-FROM Review r
-ORDER BY RAND()
-    LIMIT 10;
+-- 🔹 Review_image 데이터 삽입 (각 Template에 2개씩)
+INSERT INTO Review_image (template_id, image_url, is_deleted, is_thumbnail, created_at, next_image_id)
+VALUES
+    (1, '1_1.webp', FALSE, TRUE, NOW(), NULL), -- 하천 정화 활동
+    (1, '1_2.webp', FALSE, FALSE, NOW(), NULL),
+    (2, '2_1.webp', FALSE, TRUE, NOW(), NULL), -- 도시 숲 가꾸기
+    (2, '2_2.webp', FALSE, FALSE, NOW(), NULL),
+    (3, '3_1.webp', FALSE, TRUE, NOW(), NULL), -- 초등학생 학습 멘토링
+    (3, '3_2.webp', FALSE, FALSE, NOW(), NULL),
+    (4, '4_1.webp', FALSE, TRUE, NOW(), NULL), -- 저소득층 아동 영어 교육
+    (4, '4_2.webp', FALSE, FALSE, NOW(), NULL),
+    (5, '5_1.webp', FALSE, TRUE, NOW(), NULL), -- 경로당 청소 및 식사 지원
+    (5, '5_2.webp', FALSE, FALSE, NOW(), NULL),
+    (6, '6_1.webp', FALSE, TRUE, NOW(), NULL), -- 독거노인 말벗 봉사
+    (6, '6_2.webp', FALSE, FALSE, NOW(), NULL),
+    (7, '7_1.webp', FALSE, TRUE, NOW(), NULL), -- 유기견 보호소 봉사
+    (7, '7_2.webp', FALSE, FALSE, NOW(), NULL),
+    (8, '8_1.webp', FALSE, TRUE, NOW(), NULL), -- 길고양이 급식소 운영
+    (8, '8_2.webp', FALSE, FALSE, NOW(), NULL);
 
-INSERT INTO Volunteer_reaction (volunteer_id, recruit_id, is_like, is_deleted, created_at)
-SELECT
-    v.volunteer_id,
-    r.recruit_id,
-    IF(RAND() > 0.5, TRUE, FALSE),
-    FALSE, NOW()
-FROM Volunteer v
-         JOIN Recruit r ON 1=1
-ORDER BY RAND()
-    LIMIT 5;
+-- Safe Mode 해제
+SET SQL_SAFE_UPDATES = 0;
 
+-- next_image_id 업데이트 실행
+UPDATE Review_image AS img1
+    JOIN Review_image AS img2
+ON img1.template_id = img2.template_id
+    AND img1.image_url < img2.image_url
+    SET img1.next_image_id = img2.image_id;
+
+-- Safe Mode 다시 활성화 (보안 목적)
 SET SQL_SAFE_UPDATES = 1;
-SET FOREIGN_KEY_CHECKS = 1;
 
+-- select * from Review_image;
 
--- SELECT * FROM User;                -- 모든 유저 조회
--- SELECT * FROM Volunteer;           -- 봉사자 정보 조회
--- SELECT * FROM Organization;        -- 기관 정보 조회
--- SELECT * FROM Template_group;      -- 템플릿 그룹 조회
--- SELECT * FROM Template;            -- 개별 템플릿 조회
--- SELECT * FROM Recruit;             -- 봉사 공고 조회
--- SELECT * FROM Review;              -- 후기 조회
--- SELECT * FROM Review_image;        -- 후기 이미지 조회
--- SELECT * FROM Review_comment;      -- 후기 댓글 조회
--- SELECT * FROM Volunteer_reaction;  -- 봉사자 반응(좋아요/싫어요) 조회
+-- ----------------------------------------
+INSERT INTO Review (parent_review_id, group_id, recruit_id, org_id, writer_id, title, content, is_deleted, is_public, img_count, updated_at, created_at)
+VALUES
+    (NULL, 1, 1, 1, 1, '깨끗한 하천 만들기', '강남 청담천에서 봉사활동을 했습니다. 많은 분들이 함께해서 뿌듯했어요!', FALSE, TRUE, 2, NOW(), NOW()),
+    (NULL, 2, 3, 1, 1, '아이들에게 도움을 줄 수 있어서 기뻤어요', '초등학생들을 대상으로 학습 멘토링을 진행했습니다. 의미 있는 시간이었습니다.', FALSE, TRUE, 2, NOW(), NOW()),
+    (NULL, 3, 5, 2, 2, '노인분들과 함께한 따뜻한 하루', '경로당에서 청소와 식사를 도와드렸어요. 따뜻한 시간을 보냈습니다.', FALSE, TRUE, 2, NOW(), NOW()),
+    (NULL, 4, 7, 2, 2, '유기견 보호소에서의 하루', '강아지들과 시간을 보내면서 많이 배우고 느꼈어요!', FALSE, TRUE, 2, NOW(), NOW()),
+    (NULL, 1, 2, 1, 3, '도시 숲 가꾸기 봉사 후기', '양재 시민의 숲에서 나무를 심고 정리하는 활동을 했어요.', FALSE, TRUE, 2, NOW(), NOW()),
+    (NULL, 4, 8, 2, 3, '길고양이 급식소 운영 후기', '고양이들에게 사료를 나누어주고 관리하는 봉사를 했어요.', FALSE, TRUE, 2, NOW(), NOW());
+
+INSERT INTO Review (parent_review_id, group_id, recruit_id, org_id, writer_id, title, content, is_deleted, is_public, img_count, updated_at, created_at)
+VALUES
+    (NULL, 1, 1, 1, 4, '기관 관리자 리뷰 - 하천 정화 활동', '우리 기관이 주최한 봉사활동을 잘 마무리했습니다.', FALSE, TRUE, 1, NOW(), NOW()),
+    (NULL, 3, 5, 2, 5, '기관 관리자 리뷰 - 노인 돌봄 봉사', '노인 돌봄 봉사가 성공적으로 진행되었습니다.', FALSE, TRUE, 1, NOW(), NOW()),
+    (NULL, 1, 2, 1, 4, '기관 관리자 리뷰 - 도시 숲 가꾸기', '나무 심기 봉사활동이 잘 마무리되었습니다.', FALSE, TRUE, 1, NOW(), NOW()),
+    (NULL, 2, 3, 1, 4, '기관 관리자 리뷰 - 학습 멘토링', '멘토링 활동에 많은 분들이 참여해주셨습니다.', FALSE, TRUE, 1, NOW(), NOW()),
+    (NULL, 4, 8, 2, 5, '기관 관리자 리뷰 - 길고양이 급식소 운영', '급식소 운영이 잘 진행되고 있습니다.', FALSE, TRUE, 1, NOW(), NOW());
+
+-- Safe Mode 해제
+SET SQL_SAFE_UPDATES = 0;
+
+-- parent_review_id 업데이트 (기관 관리자 리뷰를 parent로 설정)
+UPDATE Review AS child
+    JOIN (
+    SELECT r1.review_id AS parent_id, r1.recruit_id, r1.org_id, r1.writer_id
+    FROM Review r1
+    JOIN Organization o ON r1.org_id = o.org_id
+    WHERE r1.writer_id = o.user_id  -- 기관 소속 유저인 경우만 선택
+    ) AS parent
+ON child.recruit_id = parent.recruit_id  -- 같은 모집 공고(recruit_id)를 가진 리뷰 선택
+    AND child.org_id = parent.org_id  -- 같은 기관 소속 리뷰 선택
+    AND child.review_id > parent.parent_id  -- 후속 리뷰만 업데이트
+    SET child.parent_review_id = parent.parent_id;
+
+-- Safe Mode 다시 활성화
+SET SQL_SAFE_UPDATES = 1;
+
+-- select * from Review;
+-- --------------------------
+INSERT INTO Review_comment (writer_id, review_id, content, is_deleted, updated_at, created_at)
+VALUES
+    (2, 1, '정말 멋진 활동이네요! 저도 다음번엔 참여하고 싶어요.', FALSE, NOW(), NOW()),
+    (4, 1, '기관 측에서도 감사드립니다. 참여해주셔서 고맙습니다!', FALSE, NOW(), NOW()),
+    (3, 2, '저도 학습 멘토링 했었는데 아이들이 너무 좋아하더라고요!', FALSE, NOW(), NOW()),
+    (5, 2, '우리 기관에서도 더 좋은 프로그램을 준비하겠습니다!', FALSE, NOW(), NOW()),
+    (1, 3, '봉사활동 정말 보람차네요. 저도 참여해 보고 싶어요!', FALSE, NOW(), NOW()),
+    (5, 3, '어르신들도 매우 만족하셨습니다. 감사합니다!', FALSE, NOW(), NOW()),
+    (3, 4, '강아지들이 너무 귀엽네요! 다음번엔 저도 함께할게요.', FALSE, NOW(), NOW()),
+    (4, 4, '보호소에서도 큰 도움 받았습니다. 참여해 주셔서 감사해요!', FALSE, NOW(), NOW()),
+    (2, 5, '숲이 깨끗해지니 기분이 너무 좋아요! 함께해서 즐거웠습니다.', FALSE, NOW(), NOW()),
+    (4, 5, '환경 보호 활동은 꾸준히 필요합니다. 좋은 후기 감사합니다!', FALSE, NOW(), NOW()),
+    (1, 6, '길고양이들에게 정말 도움이 되는 활동이네요!', FALSE, NOW(), NOW()),
+    (5, 6, '우리 기관에서도 급식소 운영을 적극 지원하겠습니다.', FALSE, NOW(), NOW());
+
+-- select * from Review_comment;
+-- ---------------
+INSERT INTO Application (volunteer_id, recruit_id, status, evaluation_done, is_deleted, created_at, updated_at)
+VALUES
+    (1, 1, 'APPROVED', TRUE, FALSE, NOW(), NOW()),
+    (1, 3, 'PENDING', FALSE, FALSE, NOW(), NOW()),
+    (2, 5, 'APPROVED', TRUE, FALSE, NOW(), NOW()),
+    (2, 7, 'REJECTED', FALSE, FALSE, NOW(), NOW()),
+    (3, 2, 'COMPLETED', TRUE, FALSE, NOW(), NOW()),
+    (3, 8, 'AUTO_CANCEL', FALSE, FALSE, NOW(), NOW());
+
+-- select * from Application;
 
 
