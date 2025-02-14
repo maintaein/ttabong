@@ -19,4 +19,7 @@ export default defineConfig({
     },
   },
   publicDir: 'public',
+  esbuild: {
+    logOverride: { 'unused-import': 'warning' }
+  }
 });

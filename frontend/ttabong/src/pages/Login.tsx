@@ -16,7 +16,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import type { ApiError } from '@/api/axiosInstance';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
+import { TopBar } from '@/components/TopBar';
 
 const loginSchema = z.object({
   email: z.string()
@@ -43,6 +44,7 @@ export default function Login() {
       password: ''
     }
   });
+  const { toast } = useToast();
 
   const handleTabChange = (value: string) => {
     setActiveTab(value as 'volunteer' | 'organization');
@@ -59,43 +61,50 @@ export default function Login() {
   const onSubmit = async (values: LoginValues) => {
     try {
       const message = await login(values.email, values.password, activeTab);
-      toast.success(message);
-      navigate('/me');
+      toast({
+        title: "로그인 성공",
+        description: message,
+      });
+      navigate('/main');
     } catch (error) {
       const apiError = error as ApiError;
-      if (apiError.type === 'VALIDATION') {
-        form.setError('email', { message: apiError.message });
-      } else if (apiError.type === 'AUTH') {
-        form.setError('root', { message: apiError.message });
-      } else {
-        form.setError('root', { message: apiError.message });
-      }
+      toast({
+        variant: "destructive",
+        title: "로그인 실패",
+        description: apiError.message,
+      });
+      form.setError('root', { message: apiError.message });
     }
   };
 
   return (
-    <div className="container max-w-md mx-auto px-4 h-full flex flex-col justify-center">
-      <div className="space-y-6 py-8">
-        <Tabs 
-          defaultValue="volunteer" 
-          className="w-full" 
-          onValueChange={handleTabChange}
-        >
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="volunteer">개인 회원</TabsTrigger>
-            <TabsTrigger value="organization">기관 회원</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="volunteer" className="space-y-6">
-            <LoginForm form={form} onSubmit={onSubmit} isLoading={isLoading} error={error} userType="volunteer" />
-          </TabsContent>
-          
-          <TabsContent value="organization" className="space-y-6">
-            <LoginForm form={form} onSubmit={onSubmit} isLoading={isLoading} error={error} userType="organization" />
-          </TabsContent>
-        </Tabs>
+    <>
+      <TopBar showNav={false} />
+      <div className="h-[calc(100vh-56px)] overflow-y-auto">
+        <div className="flex items-center justify-center p-4">
+          <div className="w-full max-w-md space-y-6">
+            <Tabs 
+              defaultValue="volunteer" 
+              className="w-full" 
+              onValueChange={handleTabChange}
+            >
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="volunteer">개인 회원</TabsTrigger>
+                <TabsTrigger value="organization">기관 회원</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="volunteer" className="space-y-6">
+                <LoginForm form={form} onSubmit={onSubmit} isLoading={isLoading} error={error} userType="volunteer" />
+              </TabsContent>
+              
+              <TabsContent value="organization" className="space-y-6">
+                <LoginForm form={form} onSubmit={onSubmit} isLoading={isLoading} error={error} userType="organization" />
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
