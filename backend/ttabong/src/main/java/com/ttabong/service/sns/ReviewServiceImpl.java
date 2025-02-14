@@ -10,6 +10,7 @@ import com.ttabong.entity.recruit.Recruit;
 import com.ttabong.entity.recruit.Template;
 import com.ttabong.entity.recruit.TemplateGroup;
 import com.ttabong.entity.sns.Review;
+import com.ttabong.entity.sns.ReviewComment;
 import com.ttabong.entity.sns.ReviewImage;
 import com.ttabong.entity.user.Organization;
 import com.ttabong.entity.user.User;
@@ -32,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -464,6 +466,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .collect(Collectors.toList());
 
         List<ReviewDetailResponseDto.CommentDto> comments = review.getReviewComments().stream()
+                .sorted(Comparator.comparing(ReviewComment::getCreatedAt))
                 .map(comment -> ReviewDetailResponseDto.CommentDto.builder()
                         .commentId(comment.getId())
                         .writerId(comment.getWriter().getId())
@@ -479,9 +482,9 @@ public class ReviewServiceImpl implements ReviewService {
                     .title(review.getTitle())
                     .content(review.getContent())
                     .isPublic(review.getIsPublic())
-                    .attended(true) // 참석 여부 확인 로직 추가 가능
+                    .attended(true)
                     .createdAt(review.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
-                    .images(imageUrls) // 모든 Presigned URL 리스트 반환
+                    .images(imageUrls)
                     .recruit(recruit != null ? ReviewDetailResponseDto.RecruitDto.builder()
                             .recruitId(recruit.getId())
                             .activityDate(recruit.getActivityDate().toInstant().atZone(ZoneId.of("Asia/Seoul")).toLocalDate())
