@@ -21,6 +21,9 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
 
     List<Recruit> findByTemplateId(Integer templateId);
 
+    @Query("SELECT t.org.id FROM Recruit r JOIN r.template t WHERE r.id = :recruitId")
+    Optional<Integer> findOrgIdByRecruitId(@Param("recruitId") Integer recruitId);
+
     @Query("SELECT r FROM Recruit r " +
             "JOIN FETCH r.template t " +
             "JOIN FETCH t.org o " +
@@ -88,4 +91,7 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
     List<Recruit> findByTemplateIdAndIsDeletedFalse(Integer templateId);
 
 
+
+    @Query("SELECT t.group.id FROM Recruit r JOIN r.template t WHERE r.id = :recruitId")
+    Optional<Integer> findGroupIdByRecruitId(@Param("recruitId") Integer recruitId);
 }

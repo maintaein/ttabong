@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ApplicationRepository extends JpaRepository<Application, Integer> {
@@ -24,6 +25,9 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
     @Modifying
     @Query("UPDATE Application a SET a.status = :status WHERE a.id = :applicationId")
     void updateApplicationStatus(@Param("applicationId") Integer applicationId, @Param("status") String status);
+
+    @Query("SELECT r.template.org.id FROM Application a JOIN a.recruit r JOIN r.template t WHERE a.id = :applicationId")
+    Optional<Integer> findOrgIdByApplicationId(@Param("applicationId") Integer applicationId);
 
     // for VolRecruit -------------------------------------------
     // 사용자가 신청한 모집 공고 목록 조회 (소프트 삭제 적용)
