@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { RecruitList } from './RecruitList';
+import { RecruitList } from './VolRecruitList';
 import type { Application } from '@/types/recruitType';
 import { useRecruitStore } from '@/stores/recruitStore';
 import { useReviewStore } from '@/stores/reviewStore';

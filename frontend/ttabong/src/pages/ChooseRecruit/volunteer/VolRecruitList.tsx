@@ -1,5 +1,5 @@
 import React from 'react';
-import { RecruitCard } from './RecruitCard';
+import { RecruitCard } from './VolRecruitCard';
 import type { Application } from '@/types/recruitType';
 
 interface RecruitListProps {

@@ -129,6 +129,27 @@ interface CommentDeleteResponse {
   commentId: number;
 }
 
+interface MyReview {
+  review: {
+    reviewId: number;
+    recruitId: number;
+    title: string;
+    content: string;
+    isDeleted: boolean;
+    updatedAt: string;
+    createdAt: string;
+  };
+  group: {
+    groupId: number;
+    groupName: string;
+  };
+  organization: {
+    orgId: number;
+    orgName: string;
+  };
+  images?: string;
+}
+
 export type { 
   Review, 
   ReviewDetail, 
@@ -137,5 +158,6 @@ export type {
   ReviewEditResponse, 
   VisibilityResponse, 
   RecruitReview,
-  CommentDeleteResponse 
+  CommentDeleteResponse,
+  MyReview
 };
