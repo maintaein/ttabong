@@ -285,11 +285,11 @@ USE volunteer_service;
 --  User 데이터 삽입 (비밀번호 "11111111"의 Bcrypt 해시 적용)
 INSERT INTO User (email, name, password, phone, total_volunteer_hours, profile_image, is_deleted, created_at)
 VALUES
-    ('volunteer1@example.com', '김철수', '$2a$10$N9qo8uLOickgx2ZMRZo5e.PrPj1l.e9PqQ./7L48rJPEm6/4T.GC6', '010-1234-5678', 12.5, '1_1.webp', FALSE, NOW()),
-    ('volunteer2@example.com', '이영희', '$2a$10$N9qo8uLOickgx2ZMRZo5e.PrPj1l.e9PqQ./7L48rJPEm6/4T.GC6', '010-2345-6789', 30.0, '2_1.webp', FALSE, NOW()),
-    ('volunteer3@example.com', '박민수', '$2a$10$N9qo8uLOickgx2ZMRZo5e.PrPj1l.e9PqQ./7L48rJPEm6/4T.GC6', '010-3456-7890', 5.0, '3_1.webp', FALSE, NOW()),
-    ('organization1@example.com', '굿네이버스', '$2a$10$N9qo8uLOickgx2ZMRZo5e.PrPj1l.e9PqQ./7L48rJPEm6/4T.GC6', '010-4567-8901', 0.0, '4_1.webp', FALSE, NOW()),
-    ('organization2@example.com', '초록우산어린이재단', '$2a$10$N9qo8uLOickgx2ZMRZo5e.PrPj1l.e9PqQ./7L48rJPEm6/4T.GC6', '010-5678-9012', 0.0, '5_1.webp', FALSE, NOW());
+    ('volunteer1@example.com', '김철수', '$2a$10$1lk5DL4n4jMV1cRhH4fsFemVHLcibKI7OHGBx5GJEACL.UOfneut6', '010-1234-5678', 12.5, '1_1.webp', FALSE, NOW()),
+    ('volunteer2@example.com', '이영희', '$2a$10$1lk5DL4n4jMV1cRhH4fsFemVHLcibKI7OHGBx5GJEACL.UOfneut6', '010-2345-6789', 30.0, '2_1.webp', FALSE, NOW()),
+    ('volunteer3@example.com', '박민수', '$2a$10$1lk5DL4n4jMV1cRhH4fsFemVHLcibKI7OHGBx5GJEACL.UOfneut6', '010-3456-7890', 5.0, '3_1.webp', FALSE, NOW()),
+    ('organization1@example.com', '굿네이버스', '$2a$10$1lk5DL4n4jMV1cRhH4fsFemVHLcibKI7OHGBx5GJEACL.UOfneut6', '010-4567-8901', 0.0, '4_1.webp', FALSE, NOW()),
+    ('organization2@example.com', '초록우산어린이재단', '$2a$10$1lk5DL4n4jMV1cRhH4fsFemVHLcibKI7OHGBx5GJEACL.UOfneut6', '010-5678-9012', 0.0, '5_1.webp', FALSE, NOW());
 
 -- Volunteer 데이터 삽입 (User 테이블의 ID를 참조)
 INSERT INTO Volunteer (user_id, preferred_time, interest_theme, duration_time, region, birth_date, gender, recommended_count, not_recommended_count)
