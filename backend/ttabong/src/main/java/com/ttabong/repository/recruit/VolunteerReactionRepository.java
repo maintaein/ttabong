@@ -2,8 +2,10 @@ package com.ttabong.repository.recruit;
 
 import com.ttabong.entity.recruit.VolunteerReaction;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -26,8 +28,9 @@ public interface VolunteerReactionRepository extends JpaRepository<VolunteerReac
             @Param("limit") Integer limit
     );
 
-    // 특정 "좋아요" 취소
-    @Query("UPDATE VolunteerReaction v SET v.isDeleted = TRUE WHERE v.id IN (:reactionIds)")
-    void deleteAllById(List<Integer> reactionIds);
+    @Modifying
+    @Transactional
+    @Query("UPDATE VolunteerReaction v SET v.isDeleted = TRUE WHERE v.id IN :reactionIds")
+    void softDeleteByIds(@Param("reactionIds") List<Integer> reactionIds);
 
 }

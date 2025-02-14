@@ -169,6 +169,10 @@ public class VolRecruitServiceImpl implements VolRecruitService {
     // 9. "좋아요" 취소
     @Override
     public void deleteReactions(List<Integer> reactionIds) {
-        reactionRepository.deleteAllById(reactionIds);
+        if (reactionIds == null || reactionIds.isEmpty()) {
+            throw new IllegalArgumentException("삭제할 좋아요 ID 목록이 비어 있습니다.");
+        }
+        reactionRepository.softDeleteByIds(reactionIds);
     }
+
 }
