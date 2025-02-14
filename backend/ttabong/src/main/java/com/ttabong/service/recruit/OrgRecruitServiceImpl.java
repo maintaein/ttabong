@@ -155,7 +155,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         }
     }
 
-
     @Override
     @Transactional(readOnly = true)
     public ReadMyRecruitsResponseDto readMyRecruits(Integer cursor, Integer limit, AuthDto authDto) {
@@ -216,7 +215,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build();
     }
 
-
     @Override
     public DeleteRecruitsResponseDto deleteRecruits(DeleteRecruitsRequestDto deleteRecruitDto, AuthDto authDto) {
 
@@ -235,7 +233,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .deletedRecruits(recruitIds)
                 .build();
     }
-
 
     @Override
     public UpdateRecruitsResponseDto updateRecruit(Integer recruitId, UpdateRecruitsRequestDto requestDto, AuthDto authDto) {
@@ -265,7 +262,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build();
 
     }
-
 
     @Override
     public CloseRecruitResponseDto closeRecruit(CloseRecruitRequestDto closeRecruitDto, AuthDto authDto) {
@@ -299,7 +295,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build();
     }
 
-
     @Override
     public UpdateGroupResponseDto updateGroup(UpdateGroupRequestDto updateGroupDto, AuthDto authDto) {
 
@@ -322,7 +317,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .orgId(userOrg.getId())
                 .build();
     }
-
 
     @Override
     public UpdateTemplateResponse updateTemplate(UpdateTemplateRequestDto updateTemplateDto, AuthDto authDto) {
@@ -350,7 +344,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build();
     }
 
-
     @Override
     public DeleteTemplatesResponseDto deleteTemplates(DeleteTemplatesRequestDto deleteTemplatesDto, AuthDto authDto) {
 
@@ -373,7 +366,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .deletedTemplates(templatesToDelete.stream().map(Template::getId).toList())
                 .build();
     }
-
 
     @Override
     public DeleteGroupResponseDto deleteGroup(DeleteGroupDto deleteGroupDto, AuthDto authDto) {
@@ -399,7 +391,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .orgId(userOrg.getId())
                 .build();
     }
-
 
     @Override
     @Transactional(readOnly = true)
@@ -520,7 +511,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build();
     }
 
-
     @Override
     public CreateRecruitResponseDto createRecruit(CreateRecruitRequestDto createRecruitDto, AuthDto authDto) {
 
@@ -558,7 +548,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .recruitId(recruit.getId())
                 .build();
     }
-
 
     @Override
     @Transactional(readOnly = true)
@@ -631,7 +620,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build();
     }
 
-
     @Override
     @Transactional(readOnly = true)
     public ReadApplicationsResponseDto readApplications(Integer recruitId, AuthDto authDto) {
@@ -695,8 +683,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build();
     }
 
-
-
     @Override
     public UpdateApplicationsResponseDto updateStatuses(UpdateApplicationsRequestDto updateApplicationDto, AuthDto authDto) {
 
@@ -734,7 +720,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build();
     }
 
-
     @Override
     public List<EvaluateApplicationsResponseDto> evaluateApplicants(
             Integer recruitId,
@@ -757,11 +742,19 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
             Integer volunteerId = dto.getVolunteerId();
             String recommendationStatus = dto.getRecommendationStatus();
 
+            Application application = applicationRepository.findByRecruitIdAndVolunteerId(recruitId, volunteerId)
+                    .filter(a -> !a.getEvaluationDone())
+                    .orElseThrow(() -> new NotFoundException("해당 봉사자가 신청하지 않았거나 이미 평가 완료되었습니다. volunteerId: " + volunteerId));
+
+            Integer applicationId = application.getId();
+
             if ("RECOMMEND".equalsIgnoreCase(recommendationStatus)) {
                 volunteerRepository.incrementRecommendation(volunteerId);
             } else if ("NOTRECOMMEND".equalsIgnoreCase(recommendationStatus)) {
                 volunteerRepository.incrementNotRecommendation(volunteerId);
             }
+
+            applicationRepository.markEvaluationAsDone(applicationId);
 
             return EvaluateApplicationsResponseDto.builder()
                     .volunteerId(volunteerId)

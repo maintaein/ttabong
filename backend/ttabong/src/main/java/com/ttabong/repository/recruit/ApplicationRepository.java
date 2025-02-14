@@ -17,16 +17,19 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
     @Query("SELECT a FROM Application a JOIN FETCH a.volunteer v JOIN FETCH v.user u WHERE a.recruit.id = :recruitId")
     List<Application> findByRecruitIdWithUser(@Param("recruitId") Integer recruitId);
 
-    @Transactional
-    @Modifying
+    @Modifying @Transactional
     @Query("UPDATE Application a SET a.status = :status WHERE a.id = :applicationId")
     void updateApplicationStatus(@Param("applicationId") Integer applicationId, @Param("status") String status);
 
-    @Query("SELECT a FROM Application a JOIN FETCH a.recruit r JOIN FETCH a.volunteer v WHERE r.id = :recruitId AND v.id = :volunteerId AND r.isDeleted = false AND a.evaluationDone = false ")
-    Optional<Application> findByRecruitIdAndVolunteerId(@Param("recruitId") Integer recruitId, @Param("volunteerId") Integer volunteerId);
-
     @Query("SELECT r.template.org.id FROM Application a JOIN a.recruit r JOIN r.template t WHERE a.id = :applicationId")
     Optional<Integer> findOrgIdByApplicationId(@Param("applicationId") Integer applicationId);
+
+    @Query("SELECT a FROM Application a WHERE a.recruit.id = :recruitId AND a.volunteer.id = :volunteerId")
+    Optional<Application> findByRecruitIdAndVolunteerId(@Param("recruitId") Integer recruitId, @Param("volunteerId") Integer volunteerId);
+
+    @Modifying @Transactional
+    @Query("UPDATE Application a SET a.evaluationDone = true WHERE a.id = :applicationId")
+    void markEvaluationAsDone(@Param("applicationId") Integer applicationId);
 
     // for VolRecruit -------------------------------------------
     // 사용자가 신청한 모집 공고 목록 조회
