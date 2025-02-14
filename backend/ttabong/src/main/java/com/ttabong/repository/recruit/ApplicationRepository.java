@@ -1,7 +1,6 @@
 package com.ttabong.repository.recruit;
 
 import com.ttabong.entity.recruit.Application;
-import com.ttabong.entity.user.Volunteer;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -15,16 +14,16 @@ import java.util.Optional;
 @Repository
 public interface ApplicationRepository extends JpaRepository<Application, Integer> {
 
-    @Query("SELECT a FROM Application a " +
-            "JOIN FETCH a.volunteer v " +
-            "JOIN FETCH v.user u " +
-            "WHERE a.recruit.id = :recruitId")
+    @Query("SELECT a FROM Application a JOIN FETCH a.volunteer v JOIN FETCH v.user u WHERE a.recruit.id = :recruitId")
     List<Application> findByRecruitIdWithUser(@Param("recruitId") Integer recruitId);
 
     @Transactional
     @Modifying
     @Query("UPDATE Application a SET a.status = :status WHERE a.id = :applicationId")
     void updateApplicationStatus(@Param("applicationId") Integer applicationId, @Param("status") String status);
+
+    @Query("SELECT a FROM Application a JOIN FETCH a.recruit r JOIN FETCH a.volunteer v WHERE r.id = :recruitId AND v.id = :volunteerId AND r.isDeleted = false AND a.evaluationDone = false ")
+    Optional<Application> findByRecruitIdAndVolunteerId(@Param("recruitId") Integer recruitId, @Param("volunteerId") Integer volunteerId);
 
     @Query("SELECT r.template.org.id FROM Application a JOIN a.recruit r JOIN r.template t WHERE a.id = :applicationId")
     Optional<Integer> findOrgIdByApplicationId(@Param("applicationId") Integer applicationId);

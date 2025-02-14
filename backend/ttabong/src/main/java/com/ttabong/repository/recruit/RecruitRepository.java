@@ -1,8 +1,6 @@
 package com.ttabong.repository.recruit;
 
-import com.ttabong.entity.recruit.Application;
 import com.ttabong.entity.recruit.Recruit;
-import com.ttabong.entity.recruit.VolunteerReaction;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

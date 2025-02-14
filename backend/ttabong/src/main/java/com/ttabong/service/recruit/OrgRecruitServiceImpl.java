@@ -704,8 +704,12 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         Integer applicationId = updateApplicationDto.getApplicationId();
         Integer recruitId = updateApplicationDto.getRecruitId();
+        Integer volunteerId = updateApplicationDto.getVolunteerId();
         Boolean accept = updateApplicationDto.getAccept();
         String status = accept ? "APPROVED" : "REJECTED";
+
+        applicationRepository.findByRecruitIdAndVolunteerId(recruitId, volunteerId)
+                .orElseThrow(() -> new NotFoundException("관련 데이터 없음"));
 
         Organization org = organizationRepository.findByUserId(authDto.getUserId())
                 .orElseThrow(() -> new ForbiddenException("해당 기관을 찾을 수 없습니다."));
