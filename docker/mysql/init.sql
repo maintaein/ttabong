@@ -472,3 +472,14 @@ VALUES
     (7, '7_7.webp', FALSE, TRUE, NOW(), NULL),
     (7, '7_8.webp', FALSE, FALSE, NOW(), NULL),
     (7, '7_9.webp', FALSE, TRUE, NOW(), NULL);
+
+INSERT INTO Volunteer_reaction (volunteer_id, recruit_id, is_like, created_at)
+SELECT
+    v.volunteer_id,
+    r.recruit_id,
+    CASE WHEN RAND() > 0.5 THEN TRUE ELSE FALSE END,
+    NOW()
+FROM Volunteer v
+         JOIN Recruit r
+              ON RAND() < 0.5
+    LIMIT 50;
