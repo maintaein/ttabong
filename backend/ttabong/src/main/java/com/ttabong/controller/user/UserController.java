@@ -1,5 +1,7 @@
 package com.ttabong.controller.user;
 
+import com.ttabong.dto.user.*;
+import com.ttabong.entity.user.User;
 import com.ttabong.config.LoggerConfig;
 import com.ttabong.dto.user.*;
 import com.ttabong.jwt.JwtProvider;
@@ -30,18 +32,20 @@ public class UserController extends LoggerConfig {
             return ResponseEntity.badRequest().body("userType이 필요합니다.");
         }
 
+        UserLoginResponseDto loginResult = userService.login(loginRequest);
 
-        String loginResult = userService.login(loginRequest);
+        if (loginResult != null) {
+            String accessToken = jwtProvider.createToken(loginResult.getUserId().toString(), loginRequest.getUserType());
 
-        if (loginResult.startsWith("userId")) {
-            String userId = loginResult.substring(loginResult.indexOf(":") + 2);
-            String accessToken = jwtProvider.createToken(userId, loginRequest.getUserType());
-            return ResponseEntity.ok(new LoginResponse(200, "로그인 성공", accessToken));
+            return ResponseEntity.ok(new LoginResponse(
+                    200, "로그인 성공", accessToken, loginResult.getName(), loginResult.getEmail()
+            ));
         }
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new LoginResponse(401, "이메일 또는 비밀번호가 일치하지 않습니다.", null));
+                .body(new LoginResponse(401, "이메일 또는 비밀번호가 일치하지 않습니다.", null, null, null));
     }
+
 
     @PostMapping("/volunteer/register")
     public ResponseEntity<?> registerVolunteer(@RequestBody VolunteerRegisterRequest request) {
@@ -52,7 +56,7 @@ public class UserController extends LoggerConfig {
             return ResponseEntity.status(HttpStatus.CREATED).body(new RegisterResponse(201, "봉사자 회원가입이 완료되었습니다."));
         }
 
-        return ResponseEntity.badRequest().body(new RegisterResponse(400, "이미 계정이 존재합니다."));
+        return ResponseEntity.badRequest().body(new RegisterResponse(409, "이미 계정이 존재합니다."));
     }
 
     @PostMapping("/org/register")
@@ -63,7 +67,7 @@ public class UserController extends LoggerConfig {
             return ResponseEntity.status(HttpStatus.CREATED).body(new RegisterResponse(201, "기관 회원가입이 완료되었습니다."));
         }
 
-        return ResponseEntity.badRequest().body(new RegisterResponse(400, "이미 계정이 존재합니다."));
+        return ResponseEntity.badRequest().body(new RegisterResponse(409, "이미 계정이 존재합니다."));
     }
 
     @GetMapping("/user/check-email")
