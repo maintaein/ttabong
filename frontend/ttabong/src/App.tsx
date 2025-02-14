@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/hooks/theme-provider";
 import { Toaster } from "sonner";
 import { useUserStore } from '@/stores/userStore';
 import { Layout } from "@/layout/Layout";
+import TemplateAndGroupWrite from '@/pages/Me/TemplateAndGroupWrite';
 
 // Pages
 import Login from '@/pages/Login';
@@ -21,6 +22,7 @@ import SignUp from '@/pages/SignUp';
 import OrgSignUp from '@/pages/OrgSignUp';
 import AddRecruit from '@/pages/AddRecruit';
 import ChooseRecruit from './pages/ChooseRecruit';
+import OrgDetailPage from '@/pages/OrgDetailPage';
 import MyReviews from '@/pages/MyReviews';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -43,6 +45,7 @@ function UserTypeRoute({
 const App: React.FC = () => {
   return (
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+      <Toaster />
       <Toaster />
       <div className="min-h-screen bg-zinc-100 dark:bg-zinc-900">
         <div className="mx-auto max-w-[600px] min-w-[320px] h-screen bg-background">
@@ -121,6 +124,18 @@ const App: React.FC = () => {
               <Route path="/add-recruit" element={
                 <ProtectedRoute>
                   <AddRecruit />
+                </ProtectedRoute>
+              } />
+
+              <Route path="/template-and-group-write" element={
+                <ProtectedRoute>
+                  <TemplateAndGroupWrite />
+                </ProtectedRoute>
+              } />
+
+              <Route path="/org-detail" element={
+                <ProtectedRoute>
+                  <OrgDetailPage />
                 </ProtectedRoute>
               } />
 

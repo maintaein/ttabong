@@ -1,18 +1,18 @@
 import { create } from 'zustand';
 import { templateApi } from '@/api/templateApi';
-import type { APIGroup, TemplateFormData } from '@/types/template';
-import { transformTemplateData } from '@/types/template';
-import { useToast } from "@/hooks/use-toast";
+import type { APIGroup, CreateTemplateRequest } from '@/types/template';
+import { toast } from 'react-hot-toast';
 
 interface TemplateStore {
   groups: APIGroup[];
   isLoading: boolean;
   error: string | null;
   fetchTemplates: (cursor?: number) => Promise<void>;
-  createTemplate: (data: TemplateFormData) => Promise<{ templateId: number }>;
+  createTemplate: (data: CreateTemplateRequest) => Promise<{ templateId: number }>;
   createGroup: (groupName: string) => Promise<{ groupId: number; groupName: string }>;
   deleteTemplate: (templateId: number) => Promise<void>;
   deleteGroup: (groupId: number) => Promise<void>;
+  deleteTemplates: (templateIds: number[]) => Promise<void>;
 }
 
 export const useTemplateStore = create<TemplateStore>((set, get) => {
@@ -35,20 +35,16 @@ export const useTemplateStore = create<TemplateStore>((set, get) => {
       }
     },
 
-    createTemplate: async (templateData: TemplateFormData) => {
-      set({ isLoading: true });
-      try {
-        const apiData = transformTemplateData(templateData);
-        const response = await templateApi.createTemplate(apiData);
-        return response;
-      } catch (error) {
-        console.error('템플릿 생성 실패:', error);
-        set({ error: '템플릿 생성에 실패했습니다.' });
-        throw error;
-      } finally {
-        set({ isLoading: false });
-      }
-    },
+  createTemplate: async (data: CreateTemplateRequest) => {
+    try {
+      console.log('Template creation request body:', JSON.stringify(data, null, 2));
+      const response = await templateApi.createTemplate(data);
+      return response;
+    } catch (error) {
+      console.error('템플릿 생성 실패:', error);
+      throw error;
+    }
+  },
 
     createGroup: async (groupName: string) => {
       try {
@@ -69,26 +65,41 @@ export const useTemplateStore = create<TemplateStore>((set, get) => {
       }
     },
 
-    deleteTemplate: async (templateId: number) => {
-      try {
-        await templateApi.deleteTemplate(templateId);
-        const response = await templateApi.getTemplates();
-        set({ groups: response.groups, error: null });
-      } catch (error) {
-        console.error('템플릿 삭제 실패:', error);
-        set({ error: '템플릿 삭제에 실패했습니다.' });
-      }
-    },
-
-    deleteGroup: async (groupId: number) => {
-      try {
-        await templateApi.deleteGroup(groupId, 5); // orgId는 현재 로그인한 기관 ID
-        const response = await templateApi.getTemplates();
-        set({ groups: response.groups, error: null });
-      } catch (error) {
-        console.error('그룹 삭제 실패:', error);
-        set({ error: '그룹 삭제에 실패했습니다.' });
-      }
+  deleteTemplate: async (templateId: number) => {
+    try {
+      await templateApi.deleteTemplates([templateId]);
+      const response = await templateApi.getTemplates();
+      set({ groups: response.groups, error: null });
+    } catch (error) {
+      console.error('템플릿 삭제 실패:', error);
+      set({ error: '템플릿 삭제에 실패했습니다.' });
     }
-  };
-}); 
+  },
+
+  deleteGroup: async (groupId: number) => {
+    try {
+      await templateApi.deleteGroup(groupId, 5);
+      toast.success('그룹이 삭제되었습니다.');
+      // 서버에서 새로운 데이터를 받아와서 한 번에 갱신
+      const response = await templateApi.getTemplates();
+      set({ groups: response.groups, error: null });
+    } catch (error) {
+      console.error('그룹 삭제 실패:', error);
+      toast.error('그룹 삭제에 실패했습니다.');
+      throw error;
+    }
+  },
+
+  deleteTemplates: async (templateIds: number[]) => {
+    try {
+      await templateApi.deleteTemplates(templateIds);
+      toast.success('템플릿이 삭제되었습니다.');
+      const response = await templateApi.getTemplates();
+      set({ groups: response.groups, error: null });
+    } catch (error) {
+      console.error('템플릿 삭제 실패:', error);
+      toast.error('템플릿 삭제에 실패했습니다.');
+      throw error;
+    }
+  }
+})); 

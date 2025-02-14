@@ -21,6 +21,7 @@ const formatTime = (time: number) => {
   const minutes = Math.round((time - hours) * 60);
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 };
+import { useToast } from "@/hooks/use-toast";
 
 const steps = [
   "공고 내용 입력(1/2)",
@@ -36,11 +37,9 @@ const TemplateAndGroupWrite: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const templateId = location.state?.templateId;
-  const isRecruitEdit = location.state?.isRecruitEdit;
-  const recruitId = location.state?.recruitId;
-  const recruitData = location.state?.recruitData;
   const { scrollToTop } = useScroll();
   const { createTemplate: createTemplateApi } = useTemplateStore();
+  const { toast } = useToast();
   const { toast } = useToast();
 
   // 🔹 모든 step의 데이터를 하나의 state로 관리
@@ -72,6 +71,7 @@ const TemplateAndGroupWrite: React.FC = () => {
 
   // 상태 추가
   const [showImageDialog, setShowImageDialog] = useState(false);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
 
   useEffect(() => {
     if (isCompleted) {
@@ -146,9 +146,16 @@ const TemplateAndGroupWrite: React.FC = () => {
       };
       loadTemplateAndRecruit();
     } else if (templateId) {
+    if (templateId) {
       const loadTemplate = async () => {
         try {
+          console.log('Loading template with ID:', templateId); // 디버깅용
           const template = await templateApi.getTemplate(templateId);
+          
+          if (!template) {
+            throw new Error('Template not found');
+          }
+
           setTemplateData({
             ...templateData,
             groupId: template.groupId,
@@ -188,25 +195,94 @@ const TemplateAndGroupWrite: React.FC = () => {
             title: "오류",
             description: "템플릿을 불러오는데 실패했습니다."
           });
+          toast({
+            variant: "destructive",
+            title: "오류",
+            description: "템플릿을 불러오는데 실패했습니다."
+          });
         }
       };
       loadTemplate();
     }
-  }, [templateId, isRecruitEdit, recruitData]);
+  }, [templateId]);
 
   const timeToNumber = (time: string) => {
     const [hours, minutes] = time.split(':').map(Number);
     return hours + (minutes / 60);
   };
 
+  const uploadImage = async (url: string, image: File, index: number, retries = 3): Promise<string> => {
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60초
+
+        const response = await fetch(url, {
+          method: 'PUT',
+          body: image,
+          headers: {
+            'Content-Type': image.type || 'image/webp',
+            'x-amz-acl': 'public-read'  // MinIO 권한 설정
+          },
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return url.split('?')[0];
+      } catch (error) {
+        console.error(`Upload attempt ${attempt + 1} failed for image ${index + 1}:`, error);
+        
+        if (attempt === retries - 1) {
+          throw new Error(`이미지 업로드에 실패했습니다 (${index + 1}번째 이미지)`);
+        }
+        
+        // 재시도 전 대기
+        await new Promise(resolve => setTimeout(resolve, 2000 * (attempt + 1)));
+      }
+    }
+    throw new Error(`이미지 업로드에 실패했습니다 (${index + 1}번째 이미지)`);
+  };
+
   // 템플릿 생성 및 저장 함수
   const createTemplate = async () => {
     try {
-      if (isRecruitEdit) {
-        // 공고만 수정하는 경우
-        await recruitApi.updateRecruit(recruitId, {
-          deadline: templateData.endDate?.toISOString(),
-          activityDate: templateData.volunteerDate?.toISOString().split('T')[0],
+      // 1. Presigned URL 요청
+      const presignedUrls = await templateApi.getPresignedUrls();
+      
+      // 2. 이미지 업로드 - 실패 시 명확한 에러 처리 필요
+      const uploadedImageUrls = await Promise.all(
+        imageFiles.map((image, index) => 
+          uploadImage(presignedUrls.images[index], image, index)
+        )
+      );
+
+      // 업로드된 이미지 URL이 모두 있는지 확인
+      if (uploadedImageUrls.some(url => !url)) {
+        throw new Error('일부 이미지 업로드에 실패했습니다.');
+      }
+
+      // 3. 템플릿 데이터 준비
+      const updatedTemplateData = {
+        ...templateData,
+        images: uploadedImageUrls,
+        imageCount: uploadedImageUrls.length
+      };
+
+      // 4. 템플릿 생성
+      const apiData = transformTemplateData(updatedTemplateData);
+      const response = await createTemplateApi(apiData);
+      
+      // 5. 공고 자동 생성
+      if (templateData.volunteerDate && templateData.startTime && templateData.endTime) {
+        await recruitApi.createRecruit({
+          templateId: response.templateId,
+          deadline: templateData.endDate?.toISOString() || new Date().toISOString(),
+          activityDate: templateData.volunteerDate.toISOString().split('T')[0],
           activityStart: timeToNumber(templateData.startTime),
           activityEnd: timeToNumber(templateData.endTime),
           maxVolunteer: templateData.volunteerCount,
@@ -254,10 +330,15 @@ const TemplateAndGroupWrite: React.FC = () => {
         }
       }
 
+          maxVolunteer: templateData.volunteerCount
+        });
+      }
+
+      toast({
+        title: "성공",
+        description: "템플릿과 공고가 생성되었습니다."
+      });
       setIsCompleted(true);
-      setTimeout(() => {
-        navigate('/choose-recruit');
-      }, 2000);
 
     } catch (error) {
       console.error('실패:', error);
@@ -265,6 +346,12 @@ const TemplateAndGroupWrite: React.FC = () => {
         variant: "destructive",
         title: "오류",
         description: isRecruitEdit ? '공고 수정에 실패했습니다.' : '템플릿 생성에 실패했습니다.'
+      });
+      console.error('템플릿 생성 실패:', error);
+      toast({
+        variant: "destructive",
+        title: "오류",
+        description: error instanceof Error ? error.message : "템플릿 생성에 실패했습니다."
       });
     }
   };
@@ -306,6 +393,11 @@ const TemplateAndGroupWrite: React.FC = () => {
         title: "오류",
         description: error
       }));
+      errors.forEach(error => toast({
+        variant: "destructive",
+        title: "오류",
+        description: error
+      }));
       return false;
     }
     return true;
@@ -323,6 +415,11 @@ const TemplateAndGroupWrite: React.FC = () => {
     }
 
     if (errors.length > 0) {
+      errors.forEach(error => toast({
+        variant: "destructive",
+        title: "오류",
+        description: error
+      }));
       errors.forEach(error => toast({
         variant: "destructive",
         title: "오류",
@@ -349,6 +446,11 @@ const TemplateAndGroupWrite: React.FC = () => {
     }
 
     if (errors.length > 0) {
+      errors.forEach(error => toast({
+        variant: "destructive",
+        title: "오류",
+        description: error
+      }));
       errors.forEach(error => toast({
         variant: "destructive",
         title: "오류",
@@ -382,6 +484,11 @@ const TemplateAndGroupWrite: React.FC = () => {
         title: "오류",
         description: error
       }));
+      errors.forEach(error => toast({
+        variant: "destructive",
+        title: "오류",
+        description: error
+      }));
       return false;
     }
     return true;
@@ -406,6 +513,11 @@ const TemplateAndGroupWrite: React.FC = () => {
     }
 
     if (errors.length > 0) {
+      errors.forEach(error => toast({
+        variant: "destructive",
+        title: "오류",
+        description: error
+      }));
       errors.forEach(error => toast({
         variant: "destructive",
         title: "오류",
@@ -484,7 +596,14 @@ const TemplateAndGroupWrite: React.FC = () => {
             ) : (
               <>
                 {step === 0 && <Step0GroupSelection templateData={templateData} setTemplateData={setTemplateData} />}
-                {step === 1 && <Step1AnnouncementDetails templateData={templateData} setTemplateData={setTemplateData} />}
+                {step === 1 && (
+                  <Step1AnnouncementDetails 
+                    templateData={templateData} 
+                    setTemplateData={setTemplateData}
+                    imageFiles={imageFiles}
+                    setImageFiles={setImageFiles}
+                  />
+                )}
                 {step === 2 && <Step2RecruitmentConditions templateData={templateData} setTemplateData={setTemplateData} />}
                 {step === 3 && <Step3VolunteerLocation templateData={templateData} setTemplateData={setTemplateData} />}
                 {step === 4 && <Step4ContactInfo templateData={templateData} setTemplateData={setTemplateData} />}

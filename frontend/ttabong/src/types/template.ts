@@ -53,6 +53,8 @@ export interface TemplateFormData {
 export interface StepProps {
   templateData: TemplateFormData;
   setTemplateData: React.Dispatch<React.SetStateAction<TemplateFormData>>;
+  imageFiles?: File[];
+  setImageFiles?: React.Dispatch<React.SetStateAction<File[]>>;
 }
 
 // Daum 우편번호 API 응답 타입 추가
@@ -110,16 +112,27 @@ export const transformTemplateData = (localData: TemplateFormData): CreateTempla
     orgId: 5,
     categoryId: 3,
     title: localData.title,
-    activityLocation: `${localData.address} ${localData.detailAddress}`.trim(),
-    status: "ALL",
+    activityLocation: localData.locationType === '재택' ? '재택' : `${localData.address} ${localData.detailAddress}`.trim(),
+    status: 'ALL',
     images: localData.images,
     imageCount: localData.images.length,
     contactName: localData.contactName,
     contactPhone: `${localData.contactPhone.areaCode}-${localData.contactPhone.middle}-${localData.contactPhone.last}`,
-    description: localData.description,
-    volunteerField: localData.volunteerField,
-    volunteerTypes: localData.volunteerTypes,
-    volunteerCount: localData.volunteerCount,
+    description: localData.description
   };
 };
+
+export interface PresignedUrlResponse {
+  message: string;
+  templateId: number | null;
+  images: string[];
+  imageUrl: string | null;
+}
+
+export interface CreateTemplateResponse {
+  message: string;
+  templateId: number;
+  images: string[];
+  imageUrl: string;
+}
 
