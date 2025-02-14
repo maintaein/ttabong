@@ -1,40 +1,47 @@
 package com.ttabong.dto.recruit.responseDto.vol;
 
+import com.ttabong.entity.recruit.VolunteerReaction;
 import lombok.*;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import java.time.Instant;
 
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class MyLikesRecruitsResponseDto {
-    private List<LikedTemplate> likedTemplates;
+    private Integer templateId;
+    private String thumbnailImg;
+    private String activityLocation;
+    private String title;
+    private RecruitDto recruit;
+    private GroupDto group;
 
-    @Getter
-    @Setter
-    @Builder
-    public static class LikedTemplate {
-        private Integer templateId;
-        private String thumbnailImg;
-        private String activityLocation;
-        private String title;
-        private Recruit recruit;
-        private Group group;
+    public static MyLikesRecruitsResponseDto from(VolunteerReaction reaction) {
+        return MyLikesRecruitsResponseDto.builder()
+                .templateId(reaction.getRecruit().getTemplate().getId())
+                .thumbnailImg(reaction.getRecruit().getTemplate().getThumbnailImage() != null ?
+                        reaction.getRecruit().getTemplate().getThumbnailImage().getImageUrl() : null)
+                .activityLocation(reaction.getRecruit().getTemplate().getActivityLocation())
+                .title(reaction.getRecruit().getTemplate().getTitle())
+                .recruit(new RecruitDto(reaction.getRecruit().getDeadline()))
+                .group(new GroupDto(reaction.getRecruit().getTemplate().getGroup().getId(),
+                        reaction.getRecruit().getTemplate().getGroup().getGroupName()))
+                .build();
     }
 
     @Getter
     @Setter
-    @Builder
-    public static class Recruit {
-        private LocalDateTime deadline;
+    @AllArgsConstructor
+    public static class RecruitDto {
+        private Instant deadline;
     }
 
     @Getter
     @Setter
-    @Builder
-    public static class Group {
+    @AllArgsConstructor
+    public static class GroupDto {
         private Integer groupId;
         private String groupName;
     }
