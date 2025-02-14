@@ -371,25 +371,6 @@ VALUES
 -- select * from Template_group;
 -- select * from Recruit;
 
--- 🔹 Review_image 데이터 삽입 (각 Template에 2개씩)
-INSERT INTO Review_image (template_id, image_url, is_deleted, is_thumbnail, created_at, next_image_id)
-VALUES
-    (1, '1_1.webp', FALSE, TRUE, NOW(), NULL), -- 하천 정화 활동
-    (1, '1_2.webp', FALSE, FALSE, NOW(), NULL),
-    (2, '2_1.webp', FALSE, TRUE, NOW(), NULL), -- 도시 숲 가꾸기
-    (2, '2_2.webp', FALSE, FALSE, NOW(), NULL),
-    (3, '3_1.webp', FALSE, TRUE, NOW(), NULL), -- 초등학생 학습 멘토링
-    (3, '3_2.webp', FALSE, FALSE, NOW(), NULL),
-    (4, '4_1.webp', FALSE, TRUE, NOW(), NULL), -- 저소득층 아동 영어 교육
-    (4, '4_2.webp', FALSE, FALSE, NOW(), NULL),
-    (5, '5_1.webp', FALSE, TRUE, NOW(), NULL), -- 경로당 청소 및 식사 지원
-    (5, '5_2.webp', FALSE, FALSE, NOW(), NULL),
-    (6, '6_1.webp', FALSE, TRUE, NOW(), NULL), -- 독거노인 말벗 봉사
-    (6, '6_2.webp', FALSE, FALSE, NOW(), NULL),
-    (7, '7_1.webp', FALSE, TRUE, NOW(), NULL), -- 유기견 보호소 봉사
-    (7, '7_2.webp', FALSE, FALSE, NOW(), NULL),
-    (8, '8_1.webp', FALSE, TRUE, NOW(), NULL), -- 길고양이 급식소 운영
-    (8, '8_2.webp', FALSE, FALSE, NOW(), NULL);
 
 -- Safe Mode 해제
 SET SQL_SAFE_UPDATES = 0;
@@ -418,8 +399,8 @@ VALUES
 
 INSERT INTO Review (parent_review_id, group_id, recruit_id, org_id, writer_id, title, content, is_deleted, is_public, img_count, updated_at, created_at)
 VALUES
-    (NULL, 1, 1, 1, 4, '기관 관리자 리뷰 - 하천 정화 활동', '우리 기관이 주최한 봉사활동을 잘 마무리했습니다.', FALSE, TRUE, 1, NOW(), NOW()),
-    (NULL, 3, 5, 2, 5, '기관 관리자 리뷰 - 노인 돌봄 봉사', '노인 돌봄 봉사가 성공적으로 진행되었습니다.', FALSE, TRUE, 1, NOW(), NOW()),
+    (NULL, 1, 1, 1, 4, '연탄 봉사', '사랑의 연탄 나르기', FALSE, TRUE, 1, NOW(), NOW()),
+    (NULL, 3, 5, 2, 5, '유기견 봉사', '사랑스러운 친구들과 함께하는 따뜻한 봉사', FALSE, TRUE, 1, NOW(), NOW()),
     (NULL, 1, 2, 1, 4, '기관 관리자 리뷰 - 도시 숲 가꾸기', '나무 심기 봉사활동이 잘 마무리되었습니다.', FALSE, TRUE, 1, NOW(), NOW()),
     (NULL, 2, 3, 1, 4, '기관 관리자 리뷰 - 학습 멘토링', '멘토링 활동에 많은 분들이 참여해주셨습니다.', FALSE, TRUE, 1, NOW(), NOW()),
     (NULL, 4, 8, 2, 5, '기관 관리자 리뷰 - 길고양이 급식소 운영', '급식소 운영이 잘 진행되고 있습니다.', FALSE, TRUE, 1, NOW(), NOW());
@@ -473,4 +454,21 @@ VALUES
 
 -- select * from Application;
 
-
+-- 🔹 Review_image 데이터 삽입 (각 Template에 2개씩)
+INSERT INTO Review_image (review_id, image_url, is_deleted, is_thumbnail, created_at, next_image_id)
+VALUES
+    (1, '1_1.webp', FALSE, TRUE, NOW(), NULL), -- 노인 말벗
+    (2, '2_1.webp', FALSE, FALSE, NOW(), NULL),-- 취약계층 일손 봉사
+    (3, '3_1.webp', FALSE, TRUE, NOW(), NULL), -- 공원 플로깅
+    (4, '4_1.webp', FALSE, FALSE, NOW(), NULL),-- 해외아동 교육 봉사
+    (5, '5_1.webp', FALSE, TRUE, NOW(), NULL), -- 초등학생 학습 멘토링
+    (6, '6_1.webp', FALSE, FALSE, NOW(), NULL),-- 재난지역 청소 지원 봉사
+    (7, '7_1.webp', FALSE, TRUE, NOW(), NULL), -- 저소득층 아동 영어 교육
+    (7, '7_2.webp', FALSE, FALSE, NOW(), NULL),-- 연탄봉사사
+    (7, '7_3.webp', FALSE, TRUE, NOW(), NULL),
+    (7, '7_4.webp', FALSE, FALSE, NOW(), NULL),
+    (7, '7_5.webp', FALSE, TRUE, NOW(), NULL),
+    (7, '7_6.webp', FALSE, FALSE, NOW(), NULL),
+    (7, '7_7.webp', FALSE, TRUE, NOW(), NULL),
+    (7, '7_8.webp', FALSE, FALSE, NOW(), NULL),
+    (7, '7_9.webp', FALSE, TRUE, NOW(), NULL);
