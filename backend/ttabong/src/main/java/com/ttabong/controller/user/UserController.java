@@ -56,7 +56,7 @@ public class UserController extends LoggerConfig {
             return ResponseEntity.status(HttpStatus.CREATED).body(new RegisterResponse(201, "봉사자 회원가입이 완료되었습니다."));
         }
 
-        return ResponseEntity.badRequest().body(new RegisterResponse(400, "이미 계정이 존재합니다."));
+        return ResponseEntity.badRequest().body(new RegisterResponse(409, "이미 계정이 존재합니다."));
     }
 
     @PostMapping("/org/register")
@@ -67,7 +67,7 @@ public class UserController extends LoggerConfig {
             return ResponseEntity.status(HttpStatus.CREATED).body(new RegisterResponse(201, "기관 회원가입이 완료되었습니다."));
         }
 
-        return ResponseEntity.badRequest().body(new RegisterResponse(400, "이미 계정이 존재합니다."));
+        return ResponseEntity.badRequest().body(new RegisterResponse(409, "이미 계정이 존재합니다."));
     }
 
     @GetMapping("/user/check-email")

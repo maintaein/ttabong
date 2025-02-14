@@ -16,7 +16,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -46,9 +48,7 @@ public class VolRecruitServiceImpl implements VolRecruitService {
     // 1. 모집 공고 리스트 조회
     @Override
     public ReadVolRecruitsListResponseDto getTemplates(Integer cursor, Integer limit) {
-        List<Template> templates = (cursor == 0) ?
-                templateRepository.findTopNTemplates(limit) :
-                templateRepository.findTemplatesAfterCursor(cursor, limit);
+        List<Template> templates = templateRepository.findTemplatesAfterCursor(cursor, limit);
 
         List<ReadVolRecruitsListResponseDto.TemplateWrapper> templateDetails = templates.stream()
                 .map(template -> new ReadVolRecruitsListResponseDto.TemplateWrapper(
@@ -81,6 +81,8 @@ public class VolRecruitServiceImpl implements VolRecruitService {
                 .volunteer(volunteer)
                 .recruit(recruit)
                 .status("PENDING")
+                .evaluationDone(false)
+                .isDeleted(false)
                 .createdAt(Instant.now())
                 .build();
 
@@ -114,28 +116,55 @@ public class VolRecruitServiceImpl implements VolRecruitService {
 
     // 6. 특정 공고 상세 조회
     @Override
-    public Optional<MyApplicationDetailResponseDto> getRecruitDetail(Integer recruitId) {
-        return recruitRepository.findByIdAndIsDeletedFalse(recruitId)
-                .map(MyApplicationDetailResponseDto::from);
+    public Optional<MyApplicationDetailResponseDto> getRecruitDetail(Integer userId, Integer recruitId) {
+        Recruit recruit = recruitRepository.findByIdAndIsDeletedFalse(recruitId)
+                .orElse(null);
+
+        if (recruit == null) {
+            return Optional.empty();
+        }
+
+        Optional<Application> application = applicationRepository.findApplicationByRecruitAndUser(recruitId, userId);
+
+        return Optional.of(MyApplicationDetailResponseDto.from(recruit, application.orElse(null)));
     }
 
 
     // 7. "좋아요"한 템플릿 목록 조회
     @Override
-    public List<MyLikesRecruitsResponseDto> getLikedTemplates(Integer userId, Integer cursor, Integer limit) {
+    public Map<String, Object> getLikedTemplates(Integer userId, Integer cursor, Integer limit) {
         List<VolunteerReaction> reactions = reactionRepository.findLikedTemplatesByUserId(userId, cursor, limit);
 
-        return reactions.stream()
+        List<MyLikesRecruitsResponseDto> likedTemplates = reactions.stream()
                 .map(MyLikesRecruitsResponseDto::from)
                 .collect(Collectors.toList());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("likedTemplates", likedTemplates);
+        return response;
     }
 
 
     // 8. 특정 템플릿 "좋아요" 혹은 "싫어요"하기
     @Override
-    public Integer saveReaction(Integer userId, Integer templateId, Boolean isLike) {
-        return reactionRepository.saveReaction(userId, templateId, isLike);
+    public Integer saveReaction(Integer userId, Integer recruitId, Boolean isLike) {
+        Volunteer volunteer = volunteerRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 사용자가 존재하지 않습니다."));
+
+        Recruit recruit = recruitRepository.findById(recruitId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 봉사공고가 존재하지 않습니다."));
+
+        VolunteerReaction reaction = VolunteerReaction.builder()
+                .volunteer(volunteer)
+                .recruit(recruit)
+                .isLike(isLike)
+                .isDeleted(false)
+                .createdAt(Instant.now())
+                .build();
+
+        return reactionRepository.save(reaction).getId();
     }
+
 
     // 9. "좋아요" 취소
     @Override

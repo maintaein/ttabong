@@ -30,8 +30,15 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
     Optional<Integer> findOrgIdByApplicationId(@Param("applicationId") Integer applicationId);
 
     // for VolRecruit -------------------------------------------
-    // 사용자가 신청한 모집 공고 목록 조회 (소프트 삭제 적용)
-    @Query("SELECT a FROM Application a WHERE a.volunteer.user.id = :userId AND a.id > :cursor AND a.isDeleted = FALSE ORDER BY a.createdAt DESC")
-    List<Application> findApplicationsByUserId(@Param("userId") Integer userId, @Param("cursor") Integer cursor, @Param("limit") Integer limit);
+    // 사용자가 신청한 모집 공고 목록 조회
+//    @Query("SELECT a FROM Application a WHERE a.volunteer.user.id = :userId AND a.id > :cursor AND a.isDeleted = FALSE ORDER BY a.createdAt DESC")
+//    List<Application> findApplicationsByUserId(@Param("userId") Integer userId, @Param("cursor") Integer cursor, @Param("limit") Integer limit);
+
+    @Query("SELECT a FROM Application a WHERE a.volunteer.id = (SELECT v.id FROM Volunteer v WHERE v.user.id = :userId) AND a.id > :cursor AND a.isDeleted = FALSE ORDER BY a.createdAt DESC Limit :limit")
+    List<Application> findApplicationsByUserId(@Param("userId") Integer userId,@Param("cursor") Integer cursor,@Param("limit") Integer limit);
+
+    // 해당 봉사자가 해당 공고를 신청했는지 확인
+    @Query("SELECT a FROM Application a WHERE a.recruit.id = :recruitId AND a.volunteer.user.id = :userId AND a.isDeleted = FALSE")
+    Optional<Application> findApplicationByRecruitAndUser(@Param("recruitId") Integer recruitId, @Param("userId") Integer userId);
 
 }

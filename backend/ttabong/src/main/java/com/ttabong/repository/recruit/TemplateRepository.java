@@ -80,8 +80,6 @@ public interface TemplateRepository extends JpaRepository<Template, Integer> {
     @Query("SELECT t FROM Template t WHERE t.id > :cursor AND t.isDeleted = FALSE ORDER BY t.createdAt DESC LIMIT :limit")
     List<Template> findTemplatesAfterCursor(Integer cursor, Integer limit);
 
-    // 특정 모집 공고 조회
-    Optional<Template> findByIdAndIsDeletedFalse(Integer templateId);
 
 
 
