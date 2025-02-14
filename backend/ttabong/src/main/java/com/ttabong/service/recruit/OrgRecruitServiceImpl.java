@@ -9,6 +9,7 @@ import com.ttabong.exception.*;
 import com.ttabong.repository.recruit.*;
 import com.ttabong.repository.user.OrganizationRepository;
 import com.ttabong.repository.user.VolunteerRepository;
+import com.ttabong.util.ImageUtil;
 import com.ttabong.util.service.ImageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +43,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     private final ApplicationRepository applicationRepository;
     private final VolunteerRepository volunteerRepository;
     private final ImageService imageService;
+    private final ImageUtil imageUtil;
 
     public void checkOrgToken(AuthDto authDto) {
         if (authDto == null || authDto.getUserId() == null) {
@@ -649,31 +651,42 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         List<Application> applications = applicationRepository.findByRecruitIdWithUser(recruitId);
 
         List<ReadApplicationsResponseDto.ApplicationDetail> applicationDetails = applications.stream()
-                .map(application -> ReadApplicationsResponseDto.ApplicationDetail.builder()
-                        .user(ReadApplicationsResponseDto.User.builder()
-                                .userId(application.getVolunteer().getUser().getId())
-                                .email(application.getVolunteer().getUser().getEmail())
-                                .name(application.getVolunteer().getUser().getName())
-                                .profileImage(application.getVolunteer().getUser().getProfileImage())
-                                .build())
-                        .volunteer(ReadApplicationsResponseDto.Volunteer.builder()
-                                .volunteerId(application.getVolunteer().getId())
-                                .recommendedCount(application.getVolunteer().getRecommendedCount())
-                                .totalVolunteerHours(
-                                        application.getVolunteer().getUser().getTotalVolunteerHours() != null
-                                                ? application.getVolunteer().getUser().getTotalVolunteerHours().intValue()
-                                                : 0
-                                )
-                                .build())
-                        .application(ReadApplicationsResponseDto.Application.builder()
-                                .applicationId(application.getId())
-                                .recruitId(application.getRecruit().getId())
-                                .status(application.getStatus())
-                                .createdAt(application.getCreatedAt() != null
-                                        ? LocalDateTime.ofInstant(application.getCreatedAt(), ZoneId.systemDefault())
-                                        : LocalDateTime.now())
-                                .build())
-                        .build())
+                .map(application -> {
+                    String profileImagePath = application.getVolunteer().getUser().getProfileImage();
+
+                    String profileImageUrl = null;
+                    try {
+                        profileImageUrl = (profileImagePath != null) ? imageUtil.getPresignedDownloadUrl(profileImagePath) : null;
+                    } catch (Exception e) {
+                        throw new RuntimeException("프로필 이미지 URL 생성 중 오류 발생", e);
+                    }
+
+                    return ReadApplicationsResponseDto.ApplicationDetail.builder()
+                            .user(ReadApplicationsResponseDto.User.builder()
+                                    .userId(application.getVolunteer().getUser().getId())
+                                    .email(application.getVolunteer().getUser().getEmail())
+                                    .name(application.getVolunteer().getUser().getName())
+                                    .profileImage(profileImageUrl)
+                                    .build())
+                            .volunteer(ReadApplicationsResponseDto.Volunteer.builder()
+                                    .volunteerId(application.getVolunteer().getId())
+                                    .recommendedCount(application.getVolunteer().getRecommendedCount())
+                                    .totalVolunteerHours(
+                                            application.getVolunteer().getUser().getTotalVolunteerHours() != null
+                                                    ? application.getVolunteer().getUser().getTotalVolunteerHours().intValue()
+                                                    : 0
+                                    )
+                                    .build())
+                            .application(ReadApplicationsResponseDto.Application.builder()
+                                    .applicationId(application.getId())
+                                    .recruitId(application.getRecruit().getId())
+                                    .status(application.getStatus())
+                                    .createdAt(application.getCreatedAt() != null
+                                            ? LocalDateTime.ofInstant(application.getCreatedAt(), ZoneId.systemDefault())
+                                            : LocalDateTime.now())
+                                    .build())
+                            .build();
+                })
                 .collect(Collectors.toList());
 
         return ReadApplicationsResponseDto.builder()
@@ -681,6 +694,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .applications(applicationDetails)
                 .build();
     }
+
 
 
     @Override
