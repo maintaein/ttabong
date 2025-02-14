@@ -1,5 +1,6 @@
 package com.ttabong.dto.recruit.responseDto.vol;
 
+import com.ttabong.entity.recruit.Application;
 import com.ttabong.entity.recruit.Recruit;
 import lombok.*;
 
@@ -20,7 +21,7 @@ public class MyApplicationDetailResponseDto {
     private OrganizationDto organization;
     private ApplicationDto application;
 
-    public static MyApplicationDetailResponseDto from(Recruit recruit) {
+    public static MyApplicationDetailResponseDto from(Recruit recruit, Application application) {
         return MyApplicationDetailResponseDto.builder()
                 .group(GroupDto.from(recruit.getTemplate().getGroup()))
                 .template(TemplateDto.from(recruit.getTemplate()))
@@ -28,9 +29,10 @@ public class MyApplicationDetailResponseDto {
                 .organization(recruit.getTemplate().getOrg() != null
                         ? OrganizationDto.from(recruit.getTemplate().getOrg())
                         : null)
-                .application(null)  // 필요시 ApplicationDto.from() 사용
+                .application(application != null ? ApplicationDto.from(application) : null)
                 .build();
     }
+
 
     @Getter
     @Setter
