@@ -1,11 +1,12 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { Review, ReviewDetail, UpdateReviewRequest, ReviewEditResponse } from '@/types/reviewType';
+import type { Review, ReviewDetail, UpdateReviewRequest, ReviewEditResponse, MyReview } from '@/types/reviewType';
 import { reviewApi } from '@/api/reviewApi';
 
 interface ReviewStore {
   reviews: Review[];
   reviewDetail: ReviewDetail | null;
+  myReviews: MyReview[];
   isLoading: boolean;
   error: string | null;
   recruitReviews: Review[];
@@ -22,6 +23,7 @@ interface ReviewStore {
   updateVisibility: (reviewId: number, isPublic: boolean) => Promise<void>;
   updateComment: (commentId: number, content: string) => Promise<void>;
   deleteComment: (commentId: number) => Promise<void>;
+  fetchMyReviews: () => Promise<void>;
 }
 
 export const useReviewStore = create<ReviewStore>()(
@@ -29,6 +31,7 @@ export const useReviewStore = create<ReviewStore>()(
     (set) => ({
       reviews: [],
       reviewDetail: null,
+      myReviews: [],
       isLoading: false,
       error: null,
       recruitReviews: [],
@@ -183,6 +186,19 @@ export const useReviewStore = create<ReviewStore>()(
         } catch (error) {
           console.error('댓글 삭제 실패:', error);
           throw error;
+        }
+      },
+
+      fetchMyReviews: async () => {
+        set({ isLoading: true });
+        try {
+          const reviews = await reviewApi.getMyReviews();
+          set({ myReviews: reviews, error: null });
+        } catch (error) {
+          console.error('내 리뷰 목록 불러오기 실패:', error);
+          set({ error: '리뷰 목록을 불러오는데 실패했습니다.' });
+        } finally {
+          set({ isLoading: false });
         }
       }
     }),
