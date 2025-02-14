@@ -31,7 +31,7 @@ type VolunteerPost = {
   image?: string | null;
 };
 
-const API_URL = "https://ttabong.store/api/org/recruits?cursor=null&limit=10";
+const API_URL = "https://ttabong.store/api/vol/templates?cursor=0&limit=20";
 
 const to = (i: number) => ({
   x: 0,
