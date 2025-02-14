@@ -44,7 +44,7 @@ spring:
         hibernate:
             ddl-auto: none
 minio:
-  url: http://ttabong.store:9000
+  url: http://ttabong.store/img
   access-key: ttabong
   secret-key: ttabong-bongteum
   bucket-name: ttabong-bucket
@@ -74,7 +74,7 @@ spring:
     username: user
     password: password
 minio:
-  url: http://localhost:9000
+  url: http://host.docker.internal:9000
   access-key: ttabong
   secret-key: ttabong-bongteum
   bucket-name: ttabong-bucket
@@ -90,8 +90,8 @@ spring:
       on-profile: dev
   datasource:
     url: jdbc:mysql://mysqldeploy:3306/volunteer_service
-    username: user
-    password: password
+    username: ddabong
+    password: 707
   data:
     redis:
       host: redisdeploy
@@ -100,7 +100,7 @@ spring:
     host: rabbitmqdeploy
     port: 5672
 minio:
-  url: http://localhost:9000
+  url: http://localhost:8000
   access-key: ttabong
   secret-key: ttabong-bongteum
   bucket-name: ttabong-bucket

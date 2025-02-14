@@ -21,17 +21,17 @@ services:
     ports:
       - "6379:6379"
 
-  rabbitmq:
-    build: ./docker/rabbitmq
-    image: local-rabbitmq:local
-    container_name: rabbitmq_container
-    restart: always
-    environment:
-      RABBITMQ_DEFAULT_USER: user
-      RABBITMQ_DEFAULT_PASS: password
-    ports:
-      - "5672:5672" # AMQP 프로토콜
-      - "15672:15672" # 관리 웹 콘솔
+  # rabbitmq:
+  #   build: ./docker/rabbitmq
+  #   image: local-rabbitmq:local
+  #   container_name: rabbitmq_container
+  #   restart: always
+  #   environment:
+  #     RABBITMQ_DEFAULT_USER: user
+  #     RABBITMQ_DEFAULT_PASS: password
+  #   ports:
+  #     - "5672:5672" # AMQP 프로토콜
+  #     - "15672:15672" # 관리 웹 콘솔
   minio:
     build:
       context: ./docker/minio

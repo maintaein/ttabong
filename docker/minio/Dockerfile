@@ -6,6 +6,7 @@ ENV MINIO_ROOT_USER=ttabong
 ENV MINIO_ROOT_PASSWORD=ttabong-bongteum
 ENV MINIO_DEFAULT_BUCKETS=ttabong-bucket
 
+ENV MINIO_LOG_LEVEL=trace
 # 데이터 저장소 설정
 VOLUME ["/data"]
 
