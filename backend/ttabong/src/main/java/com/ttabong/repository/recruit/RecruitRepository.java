@@ -2,8 +2,8 @@ package com.ttabong.repository.recruit;
 
 import com.ttabong.entity.recruit.Application;
 import com.ttabong.entity.recruit.Recruit;
-import com.ttabong.entity.recruit.Template;
 import com.ttabong.entity.recruit.VolunteerReaction;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -21,15 +21,26 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
 
     List<Recruit> findByTemplateId(Integer templateId);
 
-    @Query("SELECT r.template.id FROM Recruit r WHERE r.id = :recruitId")
-    Integer findTemplateIdByRecruitId(Integer recruitId);
-
-    @Query("SELECT r FROM Recruit r WHERE (:cursor IS NULL OR r.id < :cursor) ORDER BY r.id DESC LIMIT :limit")
-    List<Recruit> findAvailableRecruits(@Param("cursor") Integer cursor, @Param("limit") Integer limit);
+    @Query("SELECT r FROM Recruit r " +
+            "JOIN FETCH r.template t " +
+            "JOIN FETCH t.org o " +
+            "WHERE (:cursor IS NULL OR r.id < :cursor) " +
+            "AND o.user.id = :userId " +
+            "AND r.isDeleted = false " +
+            "ORDER BY r.id DESC")
+    List<Recruit> findAvailableRecruits(@Param("cursor") Integer cursor, @Param("userId") Integer userId,  Pageable pageable);
 
     @Modifying
-    @Query("UPDATE Recruit r SET r.isDeleted = true WHERE r.id IN :deleteIds")
-    void markAsDeleted(@Param("deleteIds") List<Integer> deleteIds);
+    @Query("UPDATE Recruit r " +
+            "SET r.isDeleted = true " +
+            "WHERE r.id IN :deleteIds " +
+            "AND EXISTS ( " +
+            "    SELECT t FROM Template t " +
+            "    WHERE t.id = r.template.id " +
+            "    AND t.org.user.id = :userId " +
+            ") " +
+            "AND r.isDeleted = false")
+    int markAsDeleted(@Param("deleteIds") List<Integer> deleteIds, @Param("userId") Integer userId);
 
     @Modifying
     @Query("UPDATE Recruit r " +
@@ -53,6 +64,8 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
     @Query("UPDATE Recruit r SET r.status = 'RECRUITMENT_CLOSED' WHERE r.id = :closeId")
     void closeRecruit(@Param("closeId") Integer closeId);
 
+    @Query("SELECT r FROM Recruit r WHERE r.id = :recruitId AND r.isDeleted = false")
+    Optional<Recruit> findByRecruitIdOrg(@Param("recruitId") Integer recruitId);
 
     // VolRecruit---------------------------------------------------------
 

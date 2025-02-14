@@ -1,10 +1,10 @@
 package com.ttabong.controller.recruit;
 
+import com.ttabong.config.LoggerConfig;
 import com.ttabong.dto.recruit.requestDto.vol.ApplyRecruitRequestDto;
 import com.ttabong.dto.recruit.requestDto.vol.DeleteLikesRequestDto;
 import com.ttabong.dto.recruit.requestDto.vol.LikeOnRecruitRequestDto;
 import com.ttabong.dto.recruit.responseDto.vol.*;
-import com.ttabong.dto.user.AuthDto;
 import com.ttabong.entity.recruit.Application;
 import com.ttabong.service.recruit.VolRecruitService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,13 +13,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import com.ttabong.dto.user.AuthDto;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
 @RestController
 @RequestMapping("vol")
-public class VolRecruitController {
+public class VolRecruitController extends LoggerConfig {
 
     private final VolRecruitService volRecruitService;
 
@@ -33,6 +34,8 @@ public class VolRecruitController {
     public ResponseEntity<ReadVolRecruitsListResponseDto> listRecruits(
             @RequestParam(required = false) Integer cursor,
             @RequestParam Integer limit) {
+        logger.info("1. 모집 공고 리스트 조회 <GET> \"/templates\"");
+
         ReadVolRecruitsListResponseDto responseDto = volRecruitService.getTemplates(cursor, limit);
         return ResponseEntity.ok().body(responseDto);
     }
@@ -40,6 +43,7 @@ public class VolRecruitController {
     // 2. 특정 모집 공고 상세 조회
     @GetMapping("/templates/{templateId}")
     public ResponseEntity<ReadRecruitDetailResponseDto> recruitsDetail(@PathVariable Integer templateId) {
+        logger.info("2. 특정 모집 공고 상세 조회 <GET> \"//templates/{templateId}\"");
         return volRecruitService.getTemplateById(templateId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -50,6 +54,7 @@ public class VolRecruitController {
     public ResponseEntity<ApplyRecruitResponseDto> applyRecruit(
             HttpServletRequest request,
             @RequestBody ApplyRecruitRequestDto applyRecruitRequest) {
+        logger.info("3. 모집 공고 신청 <POST> \"/applications\"");
 
         AuthDto authDto = (AuthDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         int userId = authDto.getUserId();
@@ -67,6 +72,8 @@ public class VolRecruitController {
     // 4. 공고 신청 취소
     @PatchMapping("/applications/{applicationId}")
     public ResponseEntity<CancelRecruitResponseDto> cancelRecruit(@PathVariable Integer applicationId) {
+        logger.info("4. 공고 신청 취소 <PATCH> \"//applications/{applicationsId}\"");
+
         Application application = volRecruitService.cancelRecruitApplication(applicationId);
 
         CancelRecruitResponseDto responseDto = CancelRecruitResponseDto.builder()
@@ -83,7 +90,7 @@ public class VolRecruitController {
     @GetMapping("/applications/recruits")
     public ResponseEntity<List<MyApplicationsResponseDto>> myApplications(
             @RequestParam Integer cursor, @RequestParam Integer limit, HttpServletRequest request) {
-
+        logger.info("5. 신청한 공고 목록 조회 <GET> \"/applications/recruits\"");
         AuthDto authDto = (AuthDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         int userId = authDto.getUserId();
 
@@ -94,6 +101,7 @@ public class VolRecruitController {
     // 6. 특정 공고 상세 조회
     @GetMapping("/recruits/{recruitId}")
     public ResponseEntity<MyApplicationDetailResponseDto> myApplicationsDetail(@PathVariable Integer recruitId) {
+        logger.info("6. 특정공고 상세 조회 <GET> \"/recruits/{recruitId}\"");
         return volRecruitService.getRecruitDetail(recruitId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -103,6 +111,7 @@ public class VolRecruitController {
     @GetMapping("/volunteer-reactions/likes")
     public ResponseEntity<List<MyLikesRecruitsResponseDto>> myLikesOnRecruits(
             @RequestParam Integer cursor, @RequestParam Integer limit) {
+        logger.info("7. \"좋아요\"한 템플릿 목록 조회 <GET> \"/volunteer-reactions/likes\"");
         AuthDto authDto = (AuthDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         int userId = authDto.getUserId();
 
@@ -113,6 +122,7 @@ public class VolRecruitController {
     // 8. 특정 템플릿 "좋아요" 혹은 "싫어요"하기
     @PostMapping("/volunteer-reactions")
     public ResponseEntity<LikeOnRecruitResponseDto> likeOnRecruit(@RequestBody LikeOnRecruitRequestDto request) {
+        logger.info("8. 특정 템플릿 \"좋아요\" 혹은 \"싫어요\"하기 <POST> \"volunteer_reactions\"");
         AuthDto authDto = (AuthDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         int userId = authDto.getUserId();
 
@@ -126,6 +136,7 @@ public class VolRecruitController {
     @PatchMapping("/volunteer-reactions/cancel")
     public ResponseEntity<?> deleteRecruitFromLike(@RequestBody DeleteLikesRequestDto request) {
         volRecruitService.deleteReactions(request.getReactionIds());
+        logger.info("9. 특 \"좋아요\"목록에서 특정 템플릿 \"좋아요\"취소 <PATCH> \"/volunteer_reactions/cancel\"");
         return ResponseEntity.noContent().build();
     }
 }
