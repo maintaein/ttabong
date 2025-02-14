@@ -8,28 +8,28 @@ const savedPosts = [
     title: "아름다운가게 부산사상점 매장운영지원",
     date: "2024.12.01 - 2025.02.28",
     location: "부산광역시 사상구",
-    image: "https://d2u3dcdbebyaiu.cloudfront.net/uploads/atch_img/749/ad58fe995cb9198412288b21bc63e1c9_res.jpeg",
+    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTe1vASrp5p7O4DxHi0tYVh2laWXPo83zaE0g&s",
   },
   {
     id: 2,
     title: "아름다운가게 부산사상점 매장운영지원",
     date: "2024.12.01 - 2025.02.28",
     location: "부산광역시 사상구",
-    image: "https://d2u3dcdbebyaiu.cloudfront.net/uploads/atch_img/749/ad58fe995cb9198412288b21bc63e1c9_res.jpeg",
+    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTe1vASrp5p7O4DxHi0tYVh2laWXPo83zaE0g&s",
   },
   {
     id: 2,
     title: "아름다운가게 부산사상점 매장운영지원",
     date: "2024.12.01 - 2025.02.28",
     location: "부산광역시 사상구",
-    image: "https://d2u3dcdbebyaiu.cloudfront.net/uploads/atch_img/749/ad58fe995cb9198412288b21bc63e1c9_res.jpeg",
+    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTe1vASrp5p7O4DxHi0tYVh2laWXPo83zaE0g&s",
   },
   {
     id: 2,
     title: "아름다운가게 부산사상점 매장운영지원",
     date: "2024.12.01 - 2025.02.28",
     location: "부산광역시 사상구",
-    image: "https://d2u3dcdbebyaiu.cloudfront.net/uploads/atch_img/749/ad58fe995cb9198412288b21bc63e1c9_res.jpeg",
+    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTe1vASrp5p7O4DxHi0tYVh2laWXPo83zaE0g&s",
   },
 ];
 

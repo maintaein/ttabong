@@ -48,12 +48,12 @@ export interface Volunteer {
 }
 
 export interface CreateVolunteerRequest {
-  preferredTime: string;
-  interestTheme: string;
-  durationTime: string;
-  region: string;
-  birthDate: string;
-  gender: string;
+  preferredTime?: string;
+  interestTheme?: string;
+  durationTime?: string;
+  region?: string;
+  birthDate?: string;
+  gender?: string;
 }
 
 export interface UpdateVolunteerRequest {
@@ -101,12 +101,48 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  accessToken: string;
-  refreshToken: string;
-  userType: 'volunteer' | 'organization';
+  status: number;
   message: string;
+  accessToken: string;
 }
 
-export interface VolunteerRegisterRequest extends CreateUserRequest, Partial<CreateVolunteerRequest> {}
+export interface JwtPayload {
+  sub: string;  // userId
+  userType: 'volunteer' | 'organization';
+  iat: number;
+  exp: number;
+}
+
+export interface VolunteerRegisterRequest extends CreateUserRequest {
+  preferredTime?: string;
+  interestTheme?: string;
+  durationTime?: string;
+  region?: string;
+  birthDate?: string;
+  gender?: string;
+}
 
 export interface OrganizationRegisterRequest extends CreateUserRequest, CreateOrganizationRequest {}
+
+export interface LikedTemplate {
+  templateId: number;
+  thumbnailImg: string;
+  activityLocation: string;
+  title: string;
+  recruit: {
+    deadline: string;
+  };
+  group: {
+    groupId: number;
+    groupName: string;
+  };
+}
+
+export interface GetLikedTemplatesResponse {
+  likedTemplates: LikedTemplate[];
+}
+
+export interface GetLikedTemplatesParams {
+  cursor?: number;
+  limit?: number;
+}
