@@ -27,9 +27,9 @@ public class JwtProvider {
         this.expiration = jwtProperties.getExpiration();
     }
 
-    public String createToken(String userId, String userType) {
+    public String createToken(Long userId, String userType) {
         Claims claims = Jwts.claims();
-        claims.setSubject(userId);
+        claims.setSubject(userId.toString());
         claims.put("userType", userType); // 유저 타입 추가
 
         Date now = new Date();

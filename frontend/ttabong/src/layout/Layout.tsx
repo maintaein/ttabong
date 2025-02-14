@@ -1,4 +1,4 @@
-import { Outlet, useLocation} from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { MainLayout } from './MainLayout';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ScrollProvider } from '@/contexts/ScrollContext';
