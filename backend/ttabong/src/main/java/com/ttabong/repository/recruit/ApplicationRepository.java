@@ -26,8 +26,8 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
     void updateApplicationStatus(@Param("applicationId") Integer applicationId, @Param("status") String status);
 
     // for VolRecruit -------------------------------------------
-    // 특정 봉사자가 신청한 봉사 리스트 조회
-    @Query("SELECT a FROM Application a WHERE a.volunteer = :volunteerId AND a.isDeleted = false ORDER BY a.createdAt DESC")
-    List<Application> findApplicationsByVolunteer(@Param("volunteerId") Volunteer volunteer);
+    // 사용자가 신청한 모집 공고 목록 조회 (소프트 삭제 적용)
+    @Query("SELECT a FROM Application a WHERE a.volunteer.user.id = :userId AND a.id > :cursor AND a.isDeleted = FALSE ORDER BY a.createdAt DESC")
+    List<Application> findApplicationsByUserId(@Param("userId") Integer userId, @Param("cursor") Integer cursor, @Param("limit") Integer limit);
 
 }
