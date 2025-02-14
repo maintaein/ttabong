@@ -399,8 +399,8 @@ VALUES
 
 INSERT INTO Review (parent_review_id, group_id, recruit_id, org_id, writer_id, title, content, is_deleted, is_public, img_count, updated_at, created_at)
 VALUES
-    (NULL, 1, 1, 1, 4, '기관 관리자 리뷰 - 하천 정화 활동', '우리 기관이 주최한 봉사활동을 잘 마무리했습니다.', FALSE, TRUE, 1, NOW(), NOW()),
-    (NULL, 3, 5, 2, 5, '기관 관리자 리뷰 - 노인 돌봄 봉사', '노인 돌봄 봉사가 성공적으로 진행되었습니다.', FALSE, TRUE, 1, NOW(), NOW()),
+    (NULL, 1, 1, 1, 4, '연탄 봉사', '사랑의 연탄 나르기', FALSE, TRUE, 1, NOW(), NOW()),
+    (NULL, 3, 5, 2, 5, '유기견 봉사', '사랑스러운 친구들과 함께하는 따뜻한 봉사', FALSE, TRUE, 1, NOW(), NOW()),
     (NULL, 1, 2, 1, 4, '기관 관리자 리뷰 - 도시 숲 가꾸기', '나무 심기 봉사활동이 잘 마무리되었습니다.', FALSE, TRUE, 1, NOW(), NOW()),
     (NULL, 2, 3, 1, 4, '기관 관리자 리뷰 - 학습 멘토링', '멘토링 활동에 많은 분들이 참여해주셨습니다.', FALSE, TRUE, 1, NOW(), NOW()),
     (NULL, 4, 8, 2, 5, '기관 관리자 리뷰 - 길고양이 급식소 운영', '급식소 운영이 잘 진행되고 있습니다.', FALSE, TRUE, 1, NOW(), NOW());
