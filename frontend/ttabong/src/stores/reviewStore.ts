@@ -14,7 +14,11 @@ interface ReviewStore {
   orgId: number | null;
   fetchReviews: () => Promise<void>;
   fetchReviewDetail: (id: number) => Promise<void>;
-  addComment: (reviewId: number, content: string) => Promise<void>;
+  addComment: (reviewId: number, commentData: { 
+    content: string;
+    writerId: number;
+    writerName: string;
+  }) => Promise<void>;
   fetchRecruitReviews: (recruitId: number) => Promise<void>;
   deleteReview: (reviewId: number) => Promise<void>;
   updateReview: (reviewId: number, data: UpdateReviewRequest) => Promise<ReviewEditResponse>;
@@ -67,18 +71,26 @@ export const useReviewStore = create<ReviewStore>()(
         }
       },
 
-      addComment: async (reviewId: number, content: string) => {
+      addComment: async (reviewId: number, commentData: { 
+        content: string;
+        writerId: number;
+        writerName: string;
+      }) => {
         try {
-          const newComment = await reviewApi.addComment(reviewId, content);
+          const newComment = await reviewApi.addComment(reviewId, commentData.content);
           set((state) => ({
             reviewDetail: state.reviewDetail ? {
               ...state.reviewDetail,
-              comments: [...state.reviewDetail.comments, newComment]
+              comments: [...state.reviewDetail.comments, {
+                ...newComment,
+                writerId: commentData.writerId,
+                writerName: commentData.writerName
+              }]
             } : null
           }));
         } catch (error) {
           console.error('댓글 작성 실패:', error);
-          set({ error: '댓글 작성에 실패했습니다.' });
+          throw error;
         }
       },
 
@@ -162,7 +174,13 @@ export const useReviewStore = create<ReviewStore>()(
             reviewDetail: state.reviewDetail ? {
               ...state.reviewDetail,
               comments: state.reviewDetail.comments.map(comment =>
-                comment.commentId === commentId ? updatedComment : comment
+                comment.commentId === commentId 
+                  ? { 
+                      ...updatedComment,
+                      writerId: comment.writerId,
+                      writerName: comment.writerName
+                    } 
+                  : comment
               )
             } : null
           }));
