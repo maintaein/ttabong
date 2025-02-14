@@ -1,23 +1,26 @@
 import React, { useEffect, useState } from "react";
 import { useSprings, animated, to as interpolate } from "@react-spring/web";
 import { useDrag } from "react-use-gesture";
+import axiosInstance from '@/api/axiosInstance';
 
 // API 응답 데이터 타입 정의
 type RecruitData = {
-  recruit: {
-    recruitId: number;
-    status: string;
-    maxVolunteer: number;
-    participateVolCount: number;
-    activityDate?: string;
-  };
-  group?: {
-    groupId: number;
-    groupName?: string;
-  };
-  template?: {
+  template: {
     templateId: number;
-    title?: string;
+    title: string;
+    activityLocation: string;
+    status: string;
+    imageId?: string;
+    description: string;
+    createdAt: string;
+  };
+  group: {
+    groupId: number;
+    groupName: string;
+  };
+  organization: {
+    orgId: number;
+    orgName: string;
   };
 };
 
@@ -30,8 +33,6 @@ type VolunteerPost = {
   description: string;
   image?: string | null;
 };
-
-const API_URL = "https://ttabong.store/api/vol/templates?cursor=0&limit=20";
 
 const to = (i: number) => ({
   x: 0,
@@ -50,19 +51,20 @@ const MainPage: React.FC = () => {
   useEffect(() => {
     const fetchRecruits = async () => {
       try {
-        const response = await fetch(API_URL);
-        const data = await response.json();
-
-        // 데이터 가공하여 VolunteerPost 타입에 맞게 변환
-        const formattedData: VolunteerPost[] = data.recruits.map((item: RecruitData, index: number) => ({
-          id: item.recruit.recruitId,
-          title: item.template?.title || "제목 없음", // title이 없으면 "제목 없음"
-          location: item.group?.groupName || "위치 미정",
-          date: item.recruit?.activityDate?.split("T")[0] || "날짜 미정", // 날짜가 없으면 "날짜 미정"
-          description: `모집 상태: ${item.recruit?.status} | 신청 인원: ${item.recruit?.participateVolCount || 0}/${item.recruit?.maxVolunteer || "?"}`,
-          image: item.template?.title
-            ? `https://source.unsplash.com/400x300/?volunteer&sig=${index}` // 랜덤 이미지
-            : null, // title이 없으면 이미지 없음
+        const response = await axiosInstance.get('/vol/templates', {
+          params: {
+            cursor: 0,
+            limit: 20
+          }
+        });
+        
+        const formattedData: VolunteerPost[] = response.data.templates.map((item: RecruitData, index: number) => ({
+          id: item.template.templateId,
+          title: item.template.title,
+          location: item.group.groupName,
+          date: item.template.createdAt.split('T')[0],
+          description: `${item.organization.orgName} | ${item.template.description}`,
+          image: item.template.imageId || `https://source.unsplash.com/400x300/?volunteer&sig=${index}`,
         }));
 
         setVolunteerPosts(formattedData);
@@ -100,34 +102,40 @@ const MainPage: React.FC = () => {
   });
 
   return (
-    <div className="relative flex items-center justify-center w-screen h-screen bg-gray-100">
-      {springs.map(({ x, y, rot, scale }, i) => (
-        <animated.div
-          key={volunteerPosts[i]?.id}
-          className="absolute w-[320px] h-[480px] bg-white shadow-xl rounded-2xl overflow-hidden"
-          style={{
-            left: "20%",
-            top: "45%",
-            transform: interpolate([x, y, rot, scale], (x, y, rot, scale) =>
-              `translate3d(${x - 160}px,${y - 240}px,0) rotate(${rot}deg) scale(${scale})`
-            ),
-          }}
-          {...bind(i)}
-        >
-          {volunteerPosts[i]?.image && (
-            <img
-              src={volunteerPosts[i]?.image}
-              alt={volunteerPosts[i]?.title}
-              className="w-full h-[60%] object-cover"
-            />
-          )}
-          <div className="p-4">
-            {volunteerPosts[i]?.title && <h2 className="text-lg font-bold">{volunteerPosts[i]?.title}</h2>}
-            <p className="text-sm text-gray-600">{volunteerPosts[i]?.location} | {volunteerPosts[i]?.date}</p>
-            <p className="text-sm text-gray-800 mt-2">{volunteerPosts[i]?.description}</p>
-          </div>
-        </animated.div>
-      ))}
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-112px)] bg-background relative">
+      <div className="w-full max-w-[600px] h-[calc(100vh-180px)] relative">
+        {springs.map(({ x, y, rot, scale }, i) => (
+          <animated.div
+            key={volunteerPosts[i]?.id}
+            className="absolute w-[90vw] max-w-[400px] h-[70vh] max-h-[600px] bg-white shadow-xl rounded-2xl overflow-hidden"
+            style={{
+              left: "50%",
+              top: "50%",
+              transform: interpolate(
+                [x, y, rot, scale],
+                (x, y, rot, scale) =>
+                  `translate3d(calc(${x}px - 50%), calc(${y}px - 50%), 0) rotate(${rot}deg) scale(${scale})`
+              ),
+            }}
+            {...bind(i)}
+          >
+            {volunteerPosts[i]?.image && (
+              <img
+                src={volunteerPosts[i]?.image}
+                alt={volunteerPosts[i]?.title}
+                className="w-full h-[60%] object-cover"
+              />
+            )}
+            <div className="p-6">
+              <h2 className="text-xl font-bold mb-2">{volunteerPosts[i]?.title}</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                {volunteerPosts[i]?.location} | {volunteerPosts[i]?.date}
+              </p>
+              <p className="text-sm text-foreground">{volunteerPosts[i]?.description}</p>
+            </div>
+          </animated.div>
+        ))}
+      </div>
     </div>
   );
 };
