@@ -72,20 +72,5 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
     // 특정 모집 공고 조회
     Optional<Recruit> findByIdAndIsDeletedFalse(Integer recruitId);
 
-    // 특정 봉사자(userId)와 모집 공고(recruitId)로 신청 기록 조회
-    @Query("SELECT a FROM Application a WHERE a.volunteer.id = :userId AND a.recruit.id = :recruitId AND a.isDeleted = false")
-    Optional<Application> findByVolunteerAndRecruit(@Param("userId") int userId, @Param("recruitId") int recruitId);
-
-    // 특정 봉사자(userId)가 신청한 모집 공고 목록 조회
-    @Query("SELECT a FROM Application a WHERE a.volunteer.id = :userId AND a.isDeleted = false ORDER BY a.createdAt DESC")
-    List<Application> findApplicationsByVolunteer(@Param("userId") int userId);
-
-    // 특정 봉사자(userId)가 좋아요한 모집 공고 리스트 조회
-    @Query("SELECT vr FROM VolunteerReaction vr WHERE vr.volunteer.id = :userId AND vr.isLike = true AND vr.isDeleted = false")
-    List<VolunteerReaction> findLikedTemplatesByVolunteer(@Param("userId") int userId);
-
-    // 특정 템플릿과 연결된 모집 공고 조회
-    List<Recruit> findByTemplateIdAndIsDeletedFalse(Integer templateId);
-
 
 }

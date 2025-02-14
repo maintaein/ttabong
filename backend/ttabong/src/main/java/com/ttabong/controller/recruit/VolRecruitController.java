@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("vol")
+@RequestMapping("/vol")
 public class VolRecruitController extends LoggerConfig {
 
     private final VolRecruitService volRecruitService;
@@ -52,7 +52,6 @@ public class VolRecruitController extends LoggerConfig {
     // 3. 모집 공고 신청
     @PostMapping("/applications")
     public ResponseEntity<ApplyRecruitResponseDto> applyRecruit(
-            HttpServletRequest request,
             @RequestBody ApplyRecruitRequestDto applyRecruitRequest) {
         logger.info("3. 모집 공고 신청 <POST> \"/applications\"");
 
@@ -89,7 +88,7 @@ public class VolRecruitController extends LoggerConfig {
     // 5. 신청한 공고 목록 조회
     @GetMapping("/applications/recruits")
     public ResponseEntity<List<MyApplicationsResponseDto>> myApplications(
-            @RequestParam Integer cursor, @RequestParam Integer limit, HttpServletRequest request) {
+            @RequestParam Integer cursor, @RequestParam Integer limit) {
         logger.info("5. 신청한 공고 목록 조회 <GET> \"/applications/recruits\"");
         AuthDto authDto = (AuthDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         int userId = authDto.getUserId();
@@ -102,21 +101,24 @@ public class VolRecruitController extends LoggerConfig {
     @GetMapping("/recruits/{recruitId}")
     public ResponseEntity<MyApplicationDetailResponseDto> myApplicationsDetail(@PathVariable Integer recruitId) {
         logger.info("6. 특정공고 상세 조회 <GET> \"/recruits/{recruitId}\"");
-        return volRecruitService.getRecruitDetail(recruitId)
+        AuthDto authDto = (AuthDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        int userId = authDto.getUserId();
+
+        return volRecruitService.getRecruitDetail(userId, recruitId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     // 7. "좋아요"한 템플릿 목록 조회
     @GetMapping("/volunteer-reactions/likes")
-    public ResponseEntity<List<MyLikesRecruitsResponseDto>> myLikesOnRecruits(
+    public ResponseEntity<Map<String, Object>> myLikesOnRecruits(
             @RequestParam Integer cursor, @RequestParam Integer limit) {
         logger.info("7. \"좋아요\"한 템플릿 목록 조회 <GET> \"/volunteer-reactions/likes\"");
         AuthDto authDto = (AuthDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         int userId = authDto.getUserId();
 
-        List<MyLikesRecruitsResponseDto> responseDto = volRecruitService.getLikedTemplates(userId, cursor, limit);
-        return ResponseEntity.ok().body(responseDto);
+        Map<String, Object> response = volRecruitService.getLikedTemplates(userId, cursor, limit);
+        return ResponseEntity.ok().body(response);
     }
 
     // 8. 특정 템플릿 "좋아요" 혹은 "싫어요"하기

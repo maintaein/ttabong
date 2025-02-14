@@ -4,6 +4,7 @@ import com.ttabong.dto.recruit.responseDto.vol.*;
 import com.ttabong.entity.recruit.Application;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface VolRecruitService {
@@ -17,9 +18,9 @@ public interface VolRecruitService {
 
     List<MyApplicationsResponseDto> getMyApplications(Integer userId, Integer cursor, Integer limit);
 
-    Optional<MyApplicationDetailResponseDto> getRecruitDetail(Integer recruitId);
+    Optional<MyApplicationDetailResponseDto> getRecruitDetail(Integer userId, Integer recruitId);
 
-    List<MyLikesRecruitsResponseDto> getLikedTemplates(Integer userId, Integer cursor, Integer limit);
+    Map<String, Object> getLikedTemplates(Integer userId, Integer cursor, Integer limit);
 
     Integer saveReaction(Integer userId, Integer templateId, Boolean isLike);
 
