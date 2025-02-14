@@ -48,9 +48,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     public void checkOrgToken(AuthDto authDto) {
         if (authDto == null || authDto.getUserId() == null) {
             throw new UnauthorizedException("로그인이 필요합니다.");
-        }
-
-        else if (!"organization".equalsIgnoreCase(authDto.getUserType())) {
+        } else if (!"organization".equalsIgnoreCase(authDto.getUserType())) {
             throw new ForbiddenException("기관 계정으로 로그인을 해야 합니다.");
         }
     }
@@ -61,8 +59,12 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         try {
             checkOrgToken(authDto);
 
-            if (cursor == null || cursor == 0) { cursor = Integer.MAX_VALUE; }
-            if (limit == null || limit == 0) { limit=10; }
+            if (cursor == null || cursor == 0) {
+                cursor = Integer.MAX_VALUE;
+            }
+            if (limit == null || limit == 0) {
+                limit = 10;
+            }
 
             List<Template> templates = templateRepository.findAvailableTemplates(cursor, authDto.getUserId(), PageRequest.of(0, limit));
 
@@ -71,27 +73,27 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
             }
 
             Map<Integer, List<Recruit>> recruitMap = templates.stream()
-                    .map(template -> {
-                        try {
-                            return recruitRepository.findByTemplateId(template.getId());
-                        } catch (Exception e) {
-                            throw new NotFoundException("해당 템플릿에 대한 모집 공고를 찾을 수 없습니다.");
-                        }
-                    })
-                    .flatMap(List::stream)
-                    .collect(Collectors.groupingBy(recruit -> recruit.getTemplate().getId()));
+                .map(template -> {
+                    try {
+                        return recruitRepository.findByTemplateId(template.getId());
+                    } catch (Exception e) {
+                        throw new NotFoundException("해당 템플릿에 대한 모집 공고를 찾을 수 없습니다.");
+                    }
+                })
+                .flatMap(List::stream)
+                .collect(Collectors.groupingBy(recruit -> recruit.getTemplate().getId()));
 
             Map<Integer, List<String>> imageMap = templates.stream()
-                    .collect(Collectors.toMap(
-                            Template::getId,
-                            template -> {
-                                try {
-                                    return imageService.getImageUrls(template.getId(), true);
-                                } catch (Exception e) {
-                                    return List.of();
-                                }
-                            }
-                    ));
+                .collect(Collectors.toMap(
+                    Template::getId,
+                    template -> {
+                        try {
+                            return imageService.getImageUrls(template.getId(), true);
+                        } catch (Exception e) {
+                            return List.of();
+                        }
+                    }
+            ));
 
             List<ReadAvailableRecruitsResponseDto.TemplateDetail> templateDetails = templates.stream().map(template -> {
                 ReadAvailableRecruitsResponseDto.Group groupInfo = template.getGroup() != null ?
@@ -161,7 +163,9 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         checkOrgToken(authDto);
 
-        if (cursor == null) { cursor = Integer.MAX_VALUE; }
+        if (cursor == null) {
+            cursor = Integer.MAX_VALUE;
+        }
 
         Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "id"));
 
@@ -193,8 +197,8 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                     .maxVolunteer(recruit.getMaxVolunteer())
                     .participateVolCount(recruit.getParticipateVolCount())
                     .activityDate(recruit.getActivityDate() != null ? recruit.getActivityDate() : new Date())
-                    .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.ZERO)
-                    .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.ZERO)
+                    .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.valueOf(10.00))
+                    .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.valueOf(12.00))
                     .deadline(recruit.getDeadline() != null ?
                             recruit.getDeadline().atZone(ZoneId.systemDefault()).toLocalDateTime()
                             : LocalDateTime.now())
@@ -642,7 +646,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .map(application -> {
                     String profileImagePath = application.getVolunteer().getUser().getProfileImage();
 
-                    String profileImageUrl = null;
+                    String profileImageUrl;
                     try {
                         profileImageUrl = (profileImagePath != null) ? imageUtil.getPresignedDownloadUrl(profileImagePath) : null;
                     } catch (Exception e) {
