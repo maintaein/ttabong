@@ -691,8 +691,17 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         Integer applicationId = updateApplicationDto.getApplicationId();
         Integer recruitId = updateApplicationDto.getRecruitId();
         Boolean accept = updateApplicationDto.getAccept();
-
         String status = accept ? "APPROVED" : "REJECTED";
+
+        Organization org = organizationRepository.findByUserId(authDto.getUserId())
+                .orElseThrow(() -> new ForbiddenException("해당 기관을 찾을 수 없습니다."));
+
+        Integer recruitOrgId = applicationRepository.findOrgIdByApplicationId(applicationId)
+                .orElseThrow(() -> new NotFoundException("해당 신청 내역을 찾을 수 없습니다."));
+
+        if (!org.getId().equals(recruitOrgId)) {
+            throw new ForbiddenException("해당 모집 공고의 신청 상태를 변경할 권한이 없습니다.");
+        }
 
         applicationRepository.updateApplicationStatus(applicationId, status);
 
@@ -705,8 +714,8 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                         .createdAt(LocalDateTime.now())
                         .build())
                 .build();
-
     }
+
 
     @Override
     public List<EvaluateApplicationsResponseDto> evaluateApplicants(
@@ -715,6 +724,16 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
             AuthDto authDto) {
 
         checkOrgToken(authDto);
+
+        Organization org = organizationRepository.findByUserId(authDto.getUserId())
+                .orElseThrow(() -> new ForbiddenException("해당 기관을 찾을 수 없습니다."));
+
+        Integer recruitOrgId = recruitRepository.findOrgIdByRecruitId(recruitId)
+                .orElseThrow(() -> new NotFoundException("해당 모집 공고를 찾을 수 없습니다."));
+
+        if (!org.getId().equals(recruitOrgId)) {
+            throw new ForbiddenException("이 모집 공고의 신청자를 평가할 권한이 없습니다.");
+        }
 
         return evaluateApplicationDtoList.stream().map(dto -> {
             Integer volunteerId = dto.getVolunteerId();
@@ -731,7 +750,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                     .recommendationStatus(recommendationStatus)
                     .build();
         }).collect(Collectors.toList());
-
     }
 
 }
