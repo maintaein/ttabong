@@ -125,3 +125,17 @@ export const transformTemplateData = (localData: TemplateFormData): CreateTempla
   };
 };
 
+export interface PresignedUrlResponse {
+  message: string;
+  templateId: number | null;
+  images: string[];
+  imageUrl: string | null;
+}
+
+export interface CreateTemplateResponse {
+  message: string;
+  templateId: number;
+  images: string[];
+  imageUrl: string;
+}
+

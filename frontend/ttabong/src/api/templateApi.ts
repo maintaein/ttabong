@@ -1,5 +1,6 @@
 import axiosInstance from './axiosInstance';
 import type { CreateTemplateRequest } from '@/types/template';
+import axios from 'axios';
 
 // 응답 타입 정의 추가
 interface CreateGroupResponse {
@@ -33,28 +34,42 @@ export const templateApi = {
 
   // Presigned URL 요청
   getPresignedUrls: async () => {
-    const response = await axiosInstance.get<PresignedUrlResponse>('/org/templates/presigned');
-    return response.data;
+    try {
+      const response = await axiosInstance.get<PresignedUrlResponse>('/org/templates/presigned');
+      
+      // 응답 데이터 유효성 검사
+      if (!response.data || !Array.isArray(response.data.images)) {
+        throw new Error('Invalid presigned URLs response format');
+      }
+
+      // 필수 필드 확인
+      if (response.data.images.length === 0) {
+        throw new Error('No presigned URLs received');
+      }
+
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('Presigned URL request failed:', {
+          status: error.response?.status,
+          message: error.response?.data?.message || error.message
+        });
+      }
+      throw error;
+    }
   },
 
   // 템플릿 생성
   createTemplate: async (data: CreateTemplateRequest) => {
-    // 이미지가 이미 URL 문자열이면 그대로 사용
-    const requestData = {
-      groupId: data.groupId,
-      orgId: 5,
-      categoryId: 3,
-      title: data.title,
-      activityLocation: data.activityLocation,
-      status: 'ALL',
-      contactName: data.contactName,
-      contactPhone: data.contactPhone,
-      description: data.description,
-      images: data.images,  // 이미 URL 문자열 배열
-      imageCount: data.images.length
-    };
-
-    const response = await axiosInstance.post<CreateTemplateResponse>('/org/templates', requestData);
+    const response = await axiosInstance.post<CreateTemplateResponse>(
+      '/org/templates',
+      data,  // JSON 형태로 직접 전송
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
     return response.data;
   },
 

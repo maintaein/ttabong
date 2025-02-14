@@ -12,7 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { useScroll } from '@/contexts/ScrollContext';
 import { useTemplateStore } from '@/stores/templateStore';
 import { templateApi } from '@/api/templateApi';
-import { CreateTemplateRequest } from '@/types/template';
+import { recruitApi } from '@/api/recruitApi';
+import { transformTemplateData } from '@/types/template';
 import { useToast } from "@/hooks/use-toast";
 
 const steps = [
@@ -67,7 +68,7 @@ const TemplateAndGroupWrite: React.FC = () => {
   useEffect(() => {
     if (isCompleted) {
       setTimeout(() => {
-        navigate("/main");
+        navigate("/choose-recruit");
       }, 2000);
     }
   }, [isCompleted, navigate]);
@@ -123,70 +124,96 @@ const TemplateAndGroupWrite: React.FC = () => {
     }
   }, [templateId]);
 
+  const timeToNumber = (time: string) => {
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours + (minutes / 60);
+  };
+
+  const uploadImage = async (url: string, image: File, index: number, retries = 3): Promise<string> => {
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60초
+
+        const response = await fetch(url, {
+          method: 'PUT',
+          body: image,
+          headers: {
+            'Content-Type': image.type || 'image/webp',
+            'x-amz-acl': 'public-read'  // MinIO 권한 설정
+          },
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return url.split('?')[0];
+      } catch (error) {
+        console.error(`Upload attempt ${attempt + 1} failed for image ${index + 1}:`, error);
+        
+        if (attempt === retries - 1) {
+          throw new Error(`이미지 업로드에 실패했습니다 (${index + 1}번째 이미지)`);
+        }
+        
+        // 재시도 전 대기
+        await new Promise(resolve => setTimeout(resolve, 2000 * (attempt + 1)));
+      }
+    }
+    throw new Error(`이미지 업로드에 실패했습니다 (${index + 1}번째 이미지)`);
+  };
+
   // 템플릿 생성 및 저장 함수
   const createTemplate = async () => {
     try {
       // 1. Presigned URL 요청
       const presignedUrls = await templateApi.getPresignedUrls();
-      console.log('Presigned URLs:', presignedUrls);
       
-      // 2. 이미지 업로드 (presigned URL 사용)
+      // 2. 이미지 업로드 (타임아웃 및 에러 처리 개선)
       const uploadedImageUrls = await Promise.all(
-        imageFiles.map(async (image, index) => {
-          console.log('Uploading image:', image);
-          console.log('Using presigned URL:', presignedUrls.images[index]);
-          
-          await fetch(presignedUrls.images[index], {
-            method: 'PUT',
-            body: image,
-            headers: {
-              'Content-Type': image.type || 'image/webp'
-            }
-          });
-          
-          const imageUrl = presignedUrls.images[index].split('?')[0];
-          console.log('Generated image URL:', imageUrl);
-          return imageUrl;
-        })
+        imageFiles.map((image, index) => 
+          uploadImage(presignedUrls.images[index], image, index)
+        )
       );
-      
-      console.log('Final uploaded image URLs:', uploadedImageUrls);
 
-      // 3. 업로드된 이미지 URL로 templateData 업데이트
-      const updatedTemplateData: CreateTemplateRequest = {
-        groupId: templateData.groupId || 0,
-        orgId: 5,
-        categoryId: 3,
-        title: templateData.title,
-        activityLocation: templateData.locationType === "재택" ? "재택" : `${templateData.address} ${templateData.detailAddress}`.trim(),
-        status: "ALL",
+      // 3. 템플릿 데이터 준비
+      const updatedTemplateData = {
+        ...templateData,
         images: uploadedImageUrls,
-        imageCount: uploadedImageUrls.length,
-        contactName: templateData.contactName,
-        contactPhone: `${templateData.contactPhone.areaCode}-${templateData.contactPhone.middle}-${templateData.contactPhone.last}`,
-        description: templateData.description,
-        volunteerField: templateData.volunteerField,
-        volunteerTypes: templateData.volunteerTypes,
-        volunteerCount: templateData.volunteerCount
+        imageCount: uploadedImageUrls.length
       };
-      
-      console.log('Final request data:', updatedTemplateData);
 
       // 4. 템플릿 생성
-      await createTemplateApi(updatedTemplateData);
+      const apiData = transformTemplateData(updatedTemplateData);
+      const response = await createTemplateApi(apiData);
+      
+      // 5. 공고 자동 생성
+      if (templateData.volunteerDate && templateData.startTime && templateData.endTime) {
+        await recruitApi.createRecruit({
+          templateId: response.templateId,
+          deadline: templateData.endDate?.toISOString() || new Date().toISOString(),
+          activityDate: templateData.volunteerDate.toISOString().split('T')[0],
+          activityStart: timeToNumber(templateData.startTime),
+          activityEnd: timeToNumber(templateData.endTime),
+          maxVolunteer: templateData.volunteerCount
+        });
+      }
+
       toast({
-        title: "템플릿과 공고가 생성되었습니다.",
-        description: "2초 후 메인 페이지로 이동합니다."
+        title: "성공",
+        description: "템플릿과 공고가 생성되었습니다."
       });
       setIsCompleted(true);
-      setTimeout(() => {
-        navigate('/main');
-      }, 2000);
+
     } catch (error) {
-      console.error('실패:', error);
+      console.error('템플릿 생성 실패:', error);
       toast({
-        title: "템플릿 생성에 실패했습니다.",
-        description: "다시 시도해주세요."
+        variant: "destructive",
+        title: "오류",
+        description: error instanceof Error ? error.message : "템플릿 생성에 실패했습니다."
       });
     }
   };
@@ -379,9 +406,6 @@ const TemplateAndGroupWrite: React.FC = () => {
     if (step > 0) {
       scrollToTop();
       setStep(step - 1);
-    } else {
-      // step이 0일 때는 main 페이지로 이동
-      navigate('/main');
     }
   };
 
