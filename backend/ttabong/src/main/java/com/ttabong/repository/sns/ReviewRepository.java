@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, Integer> {
@@ -24,6 +25,14 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
         ORDER BY r.id DESC
     """)
     List<Review> findAllReviews(@Param("cursor") Integer cursor, Pageable pageable);
+
+    @Query("""
+        SELECT r FROM Review r
+        WHERE r.org.user.id = r.writer.id
+        AND r.recruit.id = :recruitId
+        ORDER BY r.createdAt DESC
+    """)
+    Optional<Review> findInstitutionReviewByRecruitId(@Param("recruitId") Integer recruitId);
 
     @Query("""
         SELECT r FROM Review r
@@ -59,5 +68,21 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
         ORDER BY r.createdAt DESC
     """)
     List<Review> findByRecruitId(@Param("recruitId") Integer recruitId);
+
+    @Query("""
+        SELECT r FROM Review r
+        WHERE r.org.id = r.writer.id
+        AND r.recruit.id = :recruitId
+        ORDER BY r.createdAt DESC
+    """)
+    Optional<Review> findFirstByOrgWriterAndRecruit(@Param("recruitId") Integer recruitId);
+
+    @Query("""
+        SELECT COUNT(r) > 0 FROM Review r
+        WHERE r.recruit.id = :recruitId
+        AND r.writer.id = :userId
+        AND r.isDeleted = false
+    """)
+    boolean existsByWriterAndRecruit(@Param("userId") Integer userId, @Param("recruitId") Integer recruitId);
 
 }

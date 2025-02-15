@@ -14,6 +14,11 @@ import com.ttabong.entity.sns.ReviewComment;
 import com.ttabong.entity.sns.ReviewImage;
 import com.ttabong.entity.user.Organization;
 import com.ttabong.entity.user.User;
+import com.ttabong.exception.ConflictException;
+import com.ttabong.exception.ForbiddenException;
+import com.ttabong.exception.NotFoundException;
+import com.ttabong.exception.UnauthorizedException;
+import com.ttabong.repository.recruit.ApplicationRepository;
 import com.ttabong.repository.recruit.RecruitRepository;
 import com.ttabong.repository.recruit.TemplateRepository;
 import com.ttabong.repository.sns.ReviewImageRepository;
@@ -44,40 +49,66 @@ import java.util.stream.IntStream;
 @Transactional
 @RequiredArgsConstructor
 public class ReviewServiceImpl implements ReviewService {
+
     private final ReviewRepository reviewRepository;
     private final OrganizationRepository organizationRepository;
     private final UserRepository userRepository;
     private final RecruitRepository recruitRepository;
+    private final ApplicationRepository applicationRepository;
     private final TemplateRepository templateRepository;
     private final ReviewImageRepository reviewImageRepository;
     private final CacheUtil cacheUtil;
     private final ImageUtil imageUtil;
     private final MinioClient minioClient;
 
-    // TODO: parent-review-id 설정하는거 해야함.
+    public void checkToken(AuthDto authDto) {
+        if (authDto == null || authDto.getUserId() == null) {
+            throw new UnauthorizedException("로그인이 필요합니다.");
+        }
+    }
+
+    // TODO: 기관이 후기 생성시, 봉사자가 해당 공고에 관해 쓴 후기들에 대해서 parentid값 설정 필요
     @Override
     public ReviewCreateResponseDto createReview(AuthDto authDto, ReviewCreateRequestDto requestDto) {
 
-        if (authDto == null || authDto.getUserId() == null) {
-            throw new SecurityException("로그인이 필요합니다.");
-        }
-
-        final Organization organization = organizationRepository.findById(requestDto.getOrgId())
-                .orElseThrow(() -> new RuntimeException("기관 없음"));
+        checkToken(authDto);
 
         final User writer = userRepository.findById(authDto.getUserId())
-                .orElseThrow(() -> new RuntimeException("작성자 없음"));
+                .orElseThrow(() -> new NotFoundException("작성자 없음"));
 
         final Recruit recruit = recruitRepository.findById(requestDto.getRecruitId())
-                .orElseThrow(() -> new RuntimeException("해당 공고 없음"));
+                .orElseThrow(() -> new NotFoundException("해당 공고 없음"));
 
-        final Template template = templateRepository.findById(recruit.getTemplate().getId())
-                .orElseThrow(() -> new RuntimeException("해당 템플릿 없음"));
-
+        final Template template = recruit.getTemplate();
         final Integer groupId = template.getGroup().getId();
 
-        List<Review> parentReviews = reviewRepository.findByOrgWriterAndRecruit(recruit.getId());
-        final Review parentReview = parentReviews.isEmpty() ? null : parentReviews.get(0);
+        boolean alreadyReviewed = reviewRepository.existsByWriterAndRecruit(writer.getId(), recruit.getId());
+        if (alreadyReviewed) {
+            throw new ConflictException("이미 해당 모집 공고에 대한 후기를 작성하였습니다.");
+        }
+
+        Organization organization;
+        Review parentReview = null;
+
+        if (organizationRepository.existsByUserId(authDto.getUserId())) {
+            organization = organizationRepository.findByUserId(authDto.getUserId())
+                    .orElseThrow(() -> new NotFoundException("기관 정보 없음"));
+
+            if (!template.getOrg().getUser().getId().equals(authDto.getUserId())) {
+                throw new ForbiddenException("해당 기관의 리뷰만 작성할 수 있습니다.");
+            }
+
+        } else {
+            boolean isApplicant = applicationRepository.existsByVolunteerUserIdAndRecruitId(writer.getId(), recruit.getId());
+            if (!isApplicant) {
+                throw new ForbiddenException("해당 봉사 모집 공고에 참여한 사용자만 리뷰를 작성할 수 있습니다.");
+            }
+
+            organization = template.getOrg();
+
+            parentReview = reviewRepository.findFirstByOrgWriterAndRecruit(recruit.getId())
+                    .orElse(null);
+        }
 
         final Review review = Review.builder()
                 .recruit(recruit)
@@ -95,28 +126,31 @@ public class ReviewServiceImpl implements ReviewService {
                 .build();
 
         reviewRepository.save(review);
-        
-        List<ReviewImage> imageSlots = IntStream.range(0, 10)
+
+        List<ReviewImage> imageSlots = IntStream.range(0, requestDto.getImageCount())
                 .mapToObj(i -> ReviewImage.builder()
                         .review(review)
                         .template(template)
-                        .imageUrl(null)  // Presigned URL이 아니라, 객체명을 저장할 예정
-                        .isThumbnail(i == 0)  // 첫 번째 이미지만 썸네일로 설정
+                        .imageUrl(null)
+                        .isThumbnail(i == 0)
                         .isDeleted(false)
                         .createdAt(Instant.now())
                         .build())
                 .collect(Collectors.toList());
 
-        reviewImageRepository.saveAll(imageSlots); // 미리 저장
-        
-        // 이미지 업로드하기
+        for (int i = 0; i < imageSlots.size() - 1; i++) {
+            imageSlots.get(i).setNextImage(imageSlots.get(i + 1));
+        }
+
+        reviewImageRepository.saveAll(imageSlots);
         uploadImagesToMinio(requestDto.getUploadedImages(), imageSlots);
 
         return ReviewCreateResponseDto.builder()
                 .message("리뷰가 생성되었습니다.")
-                .uploadedImages(requestDto.getUploadedImages())  // 그대로 반환 (objectPath 아님)
+                .uploadedImages(requestDto.getUploadedImages())
                 .build();
     }
+
 
     public void uploadImagesToMinio(List<String> uploadedImages, List<ReviewImage> imageSlots) {
 

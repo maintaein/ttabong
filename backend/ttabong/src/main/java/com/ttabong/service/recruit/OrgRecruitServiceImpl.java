@@ -557,7 +557,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     @Transactional(readOnly = true)
     public ReadRecruitResponseDto readRecruit(Integer recruitId, AuthDto authDto) {
 
-        Recruit recruit = recruitRepository.findByRecruitIdOrg(recruitId)
+        Recruit recruit = recruitRepository.findByRecruitId(recruitId)
                 .orElseThrow(() -> new NotFoundException("해당 공고가 없거나 삭제되었습니다."));
 
         LocalDateTime deadlineLocalDateTime = recruit.getDeadline() != null
