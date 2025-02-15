@@ -8,5 +8,8 @@ import java.util.Optional;
 
 @Repository
 public interface OrganizationRepository extends JpaRepository<Organization, Integer> {
+
+    boolean existsByUserId(Integer userId);
     Optional<Organization> findByUserId(Integer userId);
+
 }
