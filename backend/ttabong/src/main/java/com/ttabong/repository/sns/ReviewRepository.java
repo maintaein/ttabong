@@ -72,5 +72,12 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
     List<Review> findDistinctByWriterId(@Param("userId") Integer userId, Pageable pageable);
 
 
+    @Query("""
+        SELECT r FROM Review r
+        WHERE r.recruit.id = :recruitId
+        AND r.isDeleted = false
+        ORDER BY r.createdAt DESC
+    """)
+    List<Review> findByRecruitIdAndIsDeletedFalse(@Param("recruitId") Integer recruitId);
 
 }

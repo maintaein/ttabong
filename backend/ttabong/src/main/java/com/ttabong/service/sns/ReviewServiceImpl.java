@@ -431,7 +431,7 @@ public class ReviewServiceImpl implements ReviewService {
                             .findThumbnailImageByReviewId(review.getId(), PageRequest.of(0, 1))
                             .stream().findFirst().orElse(null);
 
-                    String presignedUrl;
+                    String presignedUrl = null;
                     if (objectPath != null) {
                         try {
                             presignedUrl = imageUtil.getPresignedDownloadUrl(objectPath);
@@ -571,46 +571,58 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     @Transactional(readOnly = true)
     public List<RecruitReviewResponseDto> recruitReview(Integer recruitId) {
-        List<Review> reviews = reviewRepository.findByRecruitId(recruitId);
+
+        List<Review> reviews = reviewRepository.findByRecruitIdAndIsDeletedFalse(recruitId);
+
+        if (reviews.isEmpty()) {
+            throw new NotFoundException("해당 모집 공고에 대한 리뷰가 없습니다.");
+        }
 
         return reviews.stream()
                 .map(review -> {
-                    // 리뷰의 썸네일(Object Path) 가져오기
                     String objectPath = reviewImageRepository
                             .findThumbnailImageByReviewId(review.getId(), PageRequest.of(0, 1))
                             .stream().findFirst().orElse(null);
 
-                    // Presigned URL 변환 (Object Path -> Presigned URL)
                     String thumbnailUrl = null;
-                    try {
-                        thumbnailUrl = (objectPath != null) ? imageUtil.getPresignedDownloadUrl(objectPath) : null;
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
+                    if (objectPath != null) {
+                        try {
+                            thumbnailUrl = imageUtil.getPresignedDownloadUrl(objectPath);
+                        } catch (Exception e) {
+                            thumbnailUrl = null;
+                        }
                     }
+
+                    Recruit recruit = review.getRecruit();
+                    Template template = (recruit != null) ? recruit.getTemplate() : null;
+                    TemplateGroup group = (template != null) ? template.getGroup() : null;
+                    Organization org = review.getOrg();
 
                     return RecruitReviewResponseDto.builder()
                             .review(RecruitReviewResponseDto.ReviewDto.builder()
                                     .reviewId(review.getId())
-                                    .recruitId(review.getRecruit().getId())
+                                    .recruitId((recruit != null) ? recruit.getId() : null)
                                     .title(review.getTitle())
                                     .content(review.getContent())
                                     .isDeleted(review.getIsDeleted())
                                     .updatedAt(review.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
                                     .createdAt(review.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
-                                    .build())
+                                    .build()
+                            )
                             .writer(RecruitReviewResponseDto.WriterDto.builder()
-                                    .name(review.getWriter() != null ? review.getWriter().getName() : "Unknown")
-                                    .build())
-                            .group(review.getRecruit().getTemplate() != null && review.getRecruit().getTemplate().getGroup() != null ?
-                                    RecruitReviewResponseDto.GroupDto.builder()
-                                            .groupId(review.getRecruit().getTemplate().getGroup().getId())
-                                            .groupName(review.getRecruit().getTemplate().getGroup().getGroupName())
-                                            .build()
-                                    : null)
+                                    .name((review.getWriter() != null) ? review.getWriter().getName() : "Unknown")
+                                    .build()
+                            )
+                            .group((group != null) ? RecruitReviewResponseDto.GroupDto.builder()
+                                    .groupId(group.getId())
+                                    .groupName(group.getGroupName())
+                                    .build() : null
+                            )
                             .organization(RecruitReviewResponseDto.OrganizationDto.builder()
-                                    .orgId(review.getOrg().getId())
-                                    .orgName(review.getOrg().getOrgName())
-                                    .build())
+                                    .orgId((org != null) ? org.getId() : null)
+                                    .orgName((org != null) ? org.getOrgName() : "N/A")
+                                    .build()
+                            )
                             .images(thumbnailUrl)
                             .build();
                 })
