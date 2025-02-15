@@ -318,21 +318,23 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public ReviewDeleteResponseDto deleteReview(Integer reviewId, AuthDto authDto) {
-        Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new RuntimeException("해당 후기를 찾을 수 없습니다. reviewId: " + reviewId));
+
+        checkToken(authDto);
+
+        Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
+                .orElseThrow(() -> new NotFoundException("해당 후기를 찾을 수 없습니다. reviewId: " + reviewId));
 
         if (!review.getWriter().getId().equals(authDto.getUserId())) {
-            throw new SecurityException("본인이 작성한 후기만 삭제할 수 있습니다.");
+            throw new ForbiddenException("본인이 작성한 후기만 삭제할 수 있습니다.");
         }
 
-        Review updatedReview = review.toBuilder()
-                .isDeleted(true)
-                .build();
+        review.markDeleted();
 
-        reviewRepository.save(updatedReview);
+        reviewRepository.save(review);
 
-        return new ReviewDeleteResponseDto("삭제 성공하였습니다.", updatedReview.getId(), updatedReview.getTitle(), updatedReview.getContent());
+        return new ReviewDeleteResponseDto("삭제 성공하였습니다.", review.getId(), review.getTitle(), review.getContent());
     }
+
 
     @Override
     @Transactional
