@@ -11,4 +11,5 @@ public class ReviewEditRequestDto {
     private String content;
     private Boolean isPublic;
     private List<String> presignedUrl;
+    private List<String> images;
 }

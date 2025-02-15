@@ -1,8 +1,6 @@
 package com.ttabong.repository.recruit;
 
-import com.ttabong.entity.recruit.Application;
 import com.ttabong.entity.recruit.Recruit;
-import com.ttabong.entity.recruit.VolunteerReaction;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -67,8 +65,10 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
     @Query("UPDATE Recruit r SET r.status = 'RECRUITMENT_CLOSED' WHERE r.id = :closeId")
     void closeRecruit(@Param("closeId") Integer closeId);
 
+
     @Query("SELECT r FROM Recruit r WHERE r.id = :recruitId AND r.isDeleted = false")
-    Optional<Recruit> findByRecruitIdOrg(@Param("recruitId") Integer recruitId);
+    Optional<Recruit> findByRecruitId(@Param("recruitId") Integer recruitId);
+
 
     // VolRecruit---------------------------------------------------------
 
