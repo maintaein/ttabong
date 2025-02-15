@@ -7,6 +7,7 @@ import com.ttabong.dto.user.AuthDto;
 import com.ttabong.entity.sns.Review;
 import com.ttabong.entity.sns.ReviewComment;
 import com.ttabong.entity.user.User;
+import com.ttabong.exception.ForbiddenException;
 import com.ttabong.exception.ImageProcessException;
 import com.ttabong.exception.NotFoundException;
 import com.ttabong.exception.UnauthorizedException;
@@ -44,7 +45,7 @@ public class CommentServiceImpl implements CommentService{
 
         checkToken(authDto);
 
-        Review review = reviewRepository.findById(reviewId)
+        Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
                 .orElseThrow(() -> new NotFoundException("해당 후기를 찾을 수 없습니다. id: " + reviewId));
 
         User writer = userRepository.findById(authDto.getUserId())
@@ -86,14 +87,23 @@ public class CommentServiceImpl implements CommentService{
     @Override
     public CommentCreateAndUpdateResponseDto updateComment(AuthDto authDto, Integer commentId, CommentCreateAndUpdateRequestDto requestDto) {
 
-        ReviewComment existingComment = reviewCommentRepository.findById(commentId)
-                .orElseThrow(() -> new RuntimeException("댓글 없음"));
+        ReviewComment existingComment = reviewCommentRepository.findByIdAndIsDeletedFalse(commentId)
+                .orElseThrow(() -> new NotFoundException("해당 댓글을 찾을 수 없습니다. id: " + commentId));
 
         if (!existingComment.getWriter().getId().equals(authDto.getUserId())) {
-            throw new RuntimeException("댓글 수정 권한 없음");
+            throw new ForbiddenException("댓글을 수정할 권한이 없습니다.");
         }
 
         existingComment.updateContent(requestDto.getContent());
+
+        String profileImageUrl = null;
+        if (existingComment.getWriter().getProfileImage() != null) {
+            try {
+                profileImageUrl = imageUtil.getPresignedDownloadUrl(existingComment.getWriter().getProfileImage());
+            } catch (Exception e) {
+                throw new ImageProcessException("프로필 이미지 Presigned URL 생성 실패", e);
+            }
+        }
 
         return CommentCreateAndUpdateResponseDto.builder()
                 .commentId(existingComment.getId())
@@ -101,10 +111,10 @@ public class CommentServiceImpl implements CommentService{
                 .writer(CommentCreateAndUpdateResponseDto.WriterDto.builder()
                         .writerId(existingComment.getWriter().getId())
                         .writerName(existingComment.getWriter().getName())
-                        .writerProfileImage(existingComment.getWriter().getProfileImage())
+                        .writerProfileImage(profileImageUrl)
                         .build())
                 .content(existingComment.getContent())
-                .updatedAt(existingComment.getUpdatedAt().atZone(java.time.ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                .updatedAt(DateTimeUtil.convertToLocalDateTime(existingComment.getUpdatedAt()))
                 .build();
     }
 
