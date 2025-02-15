@@ -335,32 +335,29 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public ReviewVisibilitySettingResponseDto updateVisibility(Integer reviewId,
-                                                               ReviewVisibilitySettingRequestDto requestDto,
-                                                               AuthDto authDto) {
-        Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 후기를 찾을 수 없습니다. id: " + reviewId));
+    @Transactional
+    public ReviewVisibilitySettingResponseDto updateVisibility(Integer reviewId, ReviewVisibilitySettingRequestDto requestDto, AuthDto authDto) {
+
+        checkToken(authDto);
+
+        Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
+                .orElseThrow(() -> new NotFoundException("해당 후기를 찾을 수 없습니다. id: " + reviewId));
 
         if (!review.getWriter().getId().equals(authDto.getUserId())) {
-            throw new SecurityException("본인이 작성한 후기만 수정할 수 있습니다.");
+            throw new ForbiddenException("본인이 작성한 후기만 수정할 수 있습니다.");
         }
 
-        Review updatedReviewVisibility = review.toBuilder()
-                .isPublic(!review.getIsPublic())
-                .updatedAt(Instant.now())
-                .build();
-
-        reviewRepository.save(updatedReviewVisibility);
-
-        LocalDateTime updateTime = updatedReviewVisibility.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime();
+        reviewRepository.toggleReviewVisibility(reviewId);
 
         return new ReviewVisibilitySettingResponseDto(
                 "공개 여부를 수정했습니다",
                 reviewId,
-                updatedReviewVisibility.getIsPublic(),
-                updateTime
+                !review.getIsPublic(),
+                LocalDateTime.now()
         );
     }
+
+
 
     @Override
     @Transactional(readOnly = true)

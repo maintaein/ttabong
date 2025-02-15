@@ -3,6 +3,7 @@ package com.ttabong.repository.sns;
 import com.ttabong.entity.sns.Review;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -79,5 +80,17 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
         ORDER BY r.createdAt DESC
     """)
     List<Review> findByRecruitIdAndIsDeletedFalse(@Param("recruitId") Integer recruitId);
+
+    @Modifying
+    @Query("""
+        UPDATE Review r
+        SET r.isPublic = CASE WHEN r.isPublic = true THEN false ELSE true END,
+            r.updatedAt = CURRENT_TIMESTAMP
+        WHERE r.id = :reviewId
+    """)
+    void toggleReviewVisibility(@Param("reviewId") Integer reviewId);
+
+
+
 
 }
