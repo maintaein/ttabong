@@ -1,4 +1,3 @@
-import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { useReviewStore } from '@/stores/reviewStore';
 import { useRecruitStore } from '@/stores/recruitStore';
 import { reviewApi } from '@/api/reviewApi';
 import { useToast } from '@/hooks/use-toast';
+
 
 export default function ReviewWrite() {
   const navigate = useNavigate();
@@ -78,15 +78,56 @@ export default function ReviewWrite() {
     }
   }, [editReviewId, isEdit, navigate, toast]);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImages(prev => [...prev, reader.result as string]);
-      };
-      reader.readAsDataURL(file);
+  const handleImageUpload = async (files: File[]) => {
+    const imagePromises = files.map(file => {
+      return new Promise<{ data: string; name: string }>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (e.target?.result) {
+            resolve({
+              data: e.target.result as string,
+              name: file.name
+            });
+          } else {
+            reject(new Error('이미지 로드 실패'));
+          }
+        };
+        reader.onerror = () => reject(new Error('이미지 로드 실패'));
+        reader.readAsDataURL(file);
+      });
     });
+
+    try {
+      const newImageResults = await Promise.all(imagePromises);
+      const duplicates: string[] = [];
+      const newImages: string[] = [];
+
+      newImageResults.forEach(({ data, name }) => {
+        if (images.includes(data)) {
+          duplicates.push(name);
+        } else {
+          newImages.push(data);
+        }
+      });
+
+      if (duplicates.length > 0) {
+        toast({
+          variant: "destructive",
+          title: "중복된 이미지",
+          description: `다음 이미지는 이미 추가되어 있습니다: ${duplicates.join(', ')}`
+        });
+      }
+
+      if (newImages.length > 0) {
+        setImages(prev => [...prev, ...newImages]);
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "오류",
+        description: "이미지 업로드에 실패했습니다."
+      });
+    }
   };
 
   const handleImageRemove = (index: number) => {

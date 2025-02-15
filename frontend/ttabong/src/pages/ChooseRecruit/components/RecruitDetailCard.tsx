@@ -17,13 +17,25 @@ export function RecruitDetailCard({ recruitDetail }: RecruitDetailCardProps) {
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
   }
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'short'
+    });
+  };
+
   return (
-    <Card className="mb-6">
+    <Card className="mx-4 mb-4">
       <div className="p-4">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-start">
           <div>
             <p className="text-sm text-muted-foreground">{recruitDetail.group.groupName}</p>
-            <h2 className="text-lg font-semibold">{recruitDetail.template.title}</h2>
+            <h2 className="text-lg font-semibold mb-2">{recruitDetail.template.title}</h2>
+            <p className="text-sm">📍 {recruitDetail.template.activityLocation}</p>
+            <p className="text-sm">⏰ {formatTime(recruitDetail.recruit.activityStart)}~{formatTime(recruitDetail.recruit.activityEnd)}</p>
+            <p className="text-sm">👥 {recruitDetail.recruit.participateVolCount}/{recruitDetail.recruit.maxVolunteer}명</p>
           </div>
           <Button 
             variant="ghost" 
@@ -34,24 +46,11 @@ export function RecruitDetailCard({ recruitDetail }: RecruitDetailCardProps) {
           </Button>
         </div>
         
-        <div className="mt-2">
-          <p className="text-sm">{recruitDetail.template.activityLocation}</p>
-          <p className="text-sm">
-            활동시간: {formatTime(recruitDetail.recruit.activityStart)}~{formatTime(recruitDetail.recruit.activityEnd)}
-          </p>
-        </div>
-
         {isExpanded && (
           <div className="mt-4 space-y-4 border-t pt-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm font-medium">모집 현황</p>
-                <p className="text-sm">{recruitDetail.recruit.participateVolCount}/{recruitDetail.recruit.maxVolunteer}명</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium">모집 마감일</p>
-                <p className="text-sm">{recruitDetail.recruit.deadline}</p>
-              </div>
+            <div>
+              <p className="text-sm font-medium">모집 마감일</p>
+              <p className="text-sm">{formatDate(recruitDetail.recruit.deadline)}</p>
             </div>
             <div>
               <p className="text-sm font-medium">담당자 연락처</p>
