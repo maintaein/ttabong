@@ -15,6 +15,13 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
 
     @Query("""
         SELECT r FROM Review r
+        WHERE r.id = :reviewId AND r.isDeleted = false
+    """)
+    Optional<Review> findByIdAndIsDeletedFalse(@Param("reviewId") Integer reviewId);
+
+
+    @Query("""
+        SELECT r FROM Review r
         LEFT JOIN FETCH r.writer w
         LEFT JOIN FETCH r.org o
         LEFT JOIN FETCH r.recruit rec
