@@ -1,6 +1,7 @@
 package com.ttabong.repository.sns;
 
 import com.ttabong.entity.sns.ReviewImage;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -30,15 +31,14 @@ public interface ReviewImageRepository extends JpaRepository<ReviewImage, Intege
         // 특정 Review ID에 해당하는 이미지들을 ID 순으로 정렬하여 조회
         List<ReviewImage> findByReviewIdOrderByIdAsc(Integer reviewId);
 
-        // 특정 Review ID에 해당하는 삭제되지 않은 이미지 조회
-        // List<ReviewImage> findByReviewIdAndIsDeletedFalseOrderByIdAsc(Integer reviewId);
-
         @Query("""
             SELECT ri.imageUrl FROM ReviewImage ri
             WHERE ri.review.id = :reviewId
-                    AND ri.isThumbnail = true
+            AND ri.isThumbnail = true
+            ORDER BY ri.createdAt DESC
         """)
-        Optional<String> findThumbnailImageByReviewId(@Param("reviewId") Integer reviewId);
+        List<String> findThumbnailImageByReviewId(@Param("reviewId") Integer reviewId, Pageable pageable);
+
 
         @Query("""
             SELECT ri.imageUrl FROM ReviewImage ri

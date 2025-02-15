@@ -28,36 +28,6 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
 
     @Query("""
         SELECT r FROM Review r
-        WHERE r.org.user.id = r.writer.id
-        AND r.recruit.id = :recruitId
-        ORDER BY r.createdAt DESC
-    """)
-    Optional<Review> findInstitutionReviewByRecruitId(@Param("recruitId") Integer recruitId);
-
-    @Query("""
-        SELECT r FROM Review r
-        WHERE r.org.id = r.writer.id
-        AND r.recruit.id = :recruitId
-        ORDER BY r.createdAt DESC
-    """)
-    List<Review> findByOrgWriterAndRecruit(@Param("recruitId") Integer recruitId);
-
-    @Query("""
-        SELECT r FROM Review r
-        LEFT JOIN FETCH r.org o
-        LEFT JOIN FETCH r.recruit rec
-        LEFT JOIN FETCH rec.template t
-        LEFT JOIN FETCH t.group g
-        LEFT JOIN FETCH r.reviewImages ri
-        WHERE r.isDeleted = false
-        AND r.id IN (SELECT r2.id FROM Review r2 WHERE r2.writer.id = :userId)
-        ORDER BY r.id DESC
-    """)
-    List<Review> findMyReviews(@Param("userId") Integer userId, Pageable pageable);
-
-
-    @Query("""
-        SELECT r FROM Review r
         LEFT JOIN FETCH r.writer w
         LEFT JOIN FETCH r.org o
         LEFT JOIN FETCH r.recruit rec
@@ -70,11 +40,12 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
     List<Review> findByRecruitId(@Param("recruitId") Integer recruitId);
 
     @Query("""
-        SELECT r FROM Review r
-        WHERE r.org.id = r.writer.id
-        AND r.recruit.id = :recruitId
-        ORDER BY r.createdAt DESC
-    """)
+    SELECT r FROM Review r
+    WHERE r.org.id = r.writer.id
+    AND r.recruit.id = :recruitId
+    ORDER BY r.createdAt DESC
+    LIMIT 1
+""")
     Optional<Review> findFirstByOrgWriterAndRecruit(@Param("recruitId") Integer recruitId);
 
     @Query("""
@@ -84,5 +55,15 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
         AND r.isDeleted = false
     """)
     boolean existsByWriterAndRecruit(@Param("userId") Integer userId, @Param("recruitId") Integer recruitId);
+
+    @Query("""
+        SELECT DISTINCT r FROM Review r
+        WHERE r.writer.id = :userId
+        AND r.isDeleted = false
+        ORDER BY r.createdAt DESC
+    """)
+    List<Review> findDistinctByWriterId(@Param("userId") Integer userId, Pageable pageable);
+
+
 
 }

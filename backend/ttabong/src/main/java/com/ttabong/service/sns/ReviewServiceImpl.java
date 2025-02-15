@@ -372,11 +372,11 @@ public class ReviewServiceImpl implements ReviewService {
 
         return reviews.stream()
                 .map(review -> {
-                    // 리뷰의 썸네일(Object Path) 가져오기
-                    String objectPath = reviewImageRepository.findThumbnailImageByReviewId(review.getId()).orElse(null);
+                    String objectPath = reviewImageRepository
+                            .findThumbnailImageByReviewId(review.getId(), PageRequest.of(0, 1))
+                            .stream().findFirst().orElse(null);
 
-                    // Presigned URL 변환 (Object Path -> Presigned URL)
-                    String thumbnailUrl = null;
+                    String thumbnailUrl;
                     try {
                         thumbnailUrl = (objectPath != null) ? imageUtil.getPresignedDownloadUrl(objectPath) : null;
                     } catch (Exception e) {
@@ -418,25 +418,40 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     @Transactional(readOnly = true)
     public List<MyAllReviewPreviewResponseDto> readMyAllReviews(AuthDto authDto) {
-        List<Review> reviews = reviewRepository.findMyReviews(authDto.getUserId(), PageRequest.of(0, 10));
+
+        checkToken(authDto);
+
+        List<Review> reviews = reviewRepository.findDistinctByWriterId(authDto.getUserId(), PageRequest.of(0, 10));
+
+        if (reviews.isEmpty()) {
+            throw new NotFoundException("작성한 리뷰가 없습니다.");
+        }
 
         return reviews.stream()
+                .filter(review -> !review.getIsDeleted())
                 .map(review -> {
-                    // 1. DB에서 저장된 이미지의 Object Path 가져오기
-                    String objectPath = reviewImageRepository.findThumbnailImageByReviewId(review.getId()).orElse(null);
+                    String objectPath = reviewImageRepository
+                            .findThumbnailImageByReviewId(review.getId(), PageRequest.of(0, 1))
+                            .stream().findFirst().orElse(null);
 
-                    // 2. Presigned URL 변환 (Object Path -> Presigned URL)
                     String presignedUrl = null;
-                    try {
-                        presignedUrl = (objectPath != null) ? imageUtil.getPresignedDownloadUrl(objectPath) : null;
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
+                    if (objectPath != null) {
+                        try {
+                            presignedUrl = imageUtil.getPresignedDownloadUrl(objectPath);
+                        } catch (Exception e) {
+                            presignedUrl = null;
+                        }
                     }
+
+                    Recruit recruit = review.getRecruit();
+                    Template template = (recruit != null) ? recruit.getTemplate() : null;
+                    TemplateGroup group = (template != null) ? template.getGroup() : null;
+                    Organization org = review.getOrg();
 
                     return MyAllReviewPreviewResponseDto.builder()
                             .review(MyAllReviewPreviewResponseDto.ReviewDto.builder()
                                     .reviewId(review.getId())
-                                    .recruitId(review.getRecruit() != null ? review.getRecruit().getId() : null)
+                                    .recruitId((recruit != null) ? recruit.getId() : null)
                                     .title(review.getTitle())
                                     .content(review.getContent())
                                     .isDeleted(review.getIsDeleted())
@@ -445,24 +460,21 @@ public class ReviewServiceImpl implements ReviewService {
                                     .build()
                             )
                             .group(MyAllReviewPreviewResponseDto.GroupDto.builder()
-                                    .groupId(review.getRecruit() != null && review.getRecruit().getTemplate() != null &&
-                                            review.getRecruit().getTemplate().getGroup() != null ?
-                                            review.getRecruit().getTemplate().getGroup().getId() : null)
-                                    .groupName(review.getRecruit() != null && review.getRecruit().getTemplate() != null &&
-                                            review.getRecruit().getTemplate().getGroup() != null ?
-                                            review.getRecruit().getTemplate().getGroup().getGroupName() : "N/A")
+                                    .groupId((group != null) ? group.getId() : null)
+                                    .groupName((group != null) ? group.getGroupName() : "N/A")
                                     .build()
                             )
                             .organization(MyAllReviewPreviewResponseDto.OrganizationDto.builder()
-                                    .orgId(review.getOrg() != null ? review.getOrg().getId() : null)
-                                    .orgName(review.getOrg() != null ? review.getOrg().getOrgName() : "N/A")
+                                    .orgId((org != null) ? org.getId() : null)
+                                    .orgName((org != null) ? org.getOrgName() : "N/A")
                                     .build()
                             )
-                            .images(presignedUrl) // Presigned URL 반환
+                            .images(presignedUrl)
                             .build();
                 })
                 .collect(Collectors.toList());
     }
+
 
     @Override
     @Transactional(readOnly = true)
@@ -568,7 +580,9 @@ public class ReviewServiceImpl implements ReviewService {
         return reviews.stream()
                 .map(review -> {
                     // 리뷰의 썸네일(Object Path) 가져오기
-                    String objectPath = reviewImageRepository.findThumbnailImageByReviewId(review.getId()).orElse(null);
+                    String objectPath = reviewImageRepository
+                            .findThumbnailImageByReviewId(review.getId(), PageRequest.of(0, 1))
+                            .stream().findFirst().orElse(null);
 
                     // Presigned URL 변환 (Object Path -> Presigned URL)
                     String thumbnailUrl = null;
