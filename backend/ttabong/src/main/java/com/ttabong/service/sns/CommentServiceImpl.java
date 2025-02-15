@@ -7,10 +7,15 @@ import com.ttabong.dto.user.AuthDto;
 import com.ttabong.entity.sns.Review;
 import com.ttabong.entity.sns.ReviewComment;
 import com.ttabong.entity.user.User;
+import com.ttabong.exception.ImageProcessException;
+import com.ttabong.exception.NotFoundException;
+import com.ttabong.exception.UnauthorizedException;
 import com.ttabong.repository.sns.CommentRepository;
 import com.ttabong.repository.sns.ReviewCommentRepository;
 import com.ttabong.repository.sns.ReviewRepository;
 import com.ttabong.repository.user.UserRepository;
+import com.ttabong.util.DateTimeUtil;
+import com.ttabong.util.ImageUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,26 +31,44 @@ public class CommentServiceImpl implements CommentService{
     private final ReviewRepository reviewRepository;
     private final ReviewCommentRepository reviewCommentRepository;
     private final UserRepository userRepository;
+    private final ImageUtil imageUtil;
+
+    public void checkToken(AuthDto authDto) {
+        if (authDto == null || authDto.getUserId() == null) {
+            throw new UnauthorizedException("로그인이 필요합니다.");
+        }
+    }
 
     @Override
-    public CommentCreateAndUpdateResponseDto createComment(AuthDto authDto,
-                                                           Integer reviewId,
-                                                           CommentCreateAndUpdateRequestDto requestDto) {
+    public CommentCreateAndUpdateResponseDto createComment(AuthDto authDto, Integer reviewId, CommentCreateAndUpdateRequestDto requestDto) {
+
+        checkToken(authDto);
+
         Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new RuntimeException("해당 후기를 찾을 수 없습니다. id: " + reviewId));
+                .orElseThrow(() -> new NotFoundException("해당 후기를 찾을 수 없습니다. id: " + reviewId));
 
         User writer = userRepository.findById(authDto.getUserId())
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다. id: " + authDto.getUserId()));
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다. id: " + authDto.getUserId()));
 
         ReviewComment comment = ReviewComment.builder()
                 .review(review)
                 .writer(writer)
-                .content(requestDto.getContent())
+                .content(requestDto.getContent().trim())
                 .updatedAt(Instant.now())
                 .createdAt(Instant.now())
+                .isDeleted(false)
                 .build();
 
         commentRepository.save(comment);
+
+        String profileImageUrl = null;
+        if (writer.getProfileImage() != null) {
+            try {
+                profileImageUrl = imageUtil.getPresignedDownloadUrl(writer.getProfileImage());
+            } catch (Exception e) {
+                throw new ImageProcessException("프로필 이미지 Presigned URL 생성 실패", e);
+            }
+        }
 
         return CommentCreateAndUpdateResponseDto.builder()
                 .commentId(comment.getId())
@@ -53,10 +76,10 @@ public class CommentServiceImpl implements CommentService{
                 .writer(CommentCreateAndUpdateResponseDto.WriterDto.builder()
                         .writerId(writer.getId())
                         .writerName(writer.getName())
-                        .writerProfileImage(writer.getProfileImage())
+                        .writerProfileImage(profileImageUrl)
                         .build())
                 .content(comment.getContent())
-                .updatedAt(comment.getUpdatedAt().atZone(java.time.ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                .updatedAt(DateTimeUtil.convertToLocalDateTime(comment.getUpdatedAt()))
                 .build();
     }
 

@@ -17,7 +17,6 @@ import com.ttabong.entity.user.User;
 import com.ttabong.exception.*;
 import com.ttabong.repository.recruit.ApplicationRepository;
 import com.ttabong.repository.recruit.RecruitRepository;
-import com.ttabong.repository.recruit.TemplateRepository;
 import com.ttabong.repository.sns.ReviewImageRepository;
 import com.ttabong.repository.sns.ReviewRepository;
 import com.ttabong.repository.user.OrganizationRepository;
@@ -51,7 +50,6 @@ public class ReviewServiceImpl implements ReviewService {
     private final UserRepository userRepository;
     private final RecruitRepository recruitRepository;
     private final ApplicationRepository applicationRepository;
-    private final TemplateRepository templateRepository;
     private final ReviewImageRepository reviewImageRepository;
     private final CacheUtil cacheUtil;
     private final ImageUtil imageUtil;
