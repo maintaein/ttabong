@@ -431,7 +431,7 @@ public class ReviewServiceImpl implements ReviewService {
                             .findThumbnailImageByReviewId(review.getId(), PageRequest.of(0, 1))
                             .stream().findFirst().orElse(null);
 
-                    String presignedUrl = null;
+                    String presignedUrl;
                     if (objectPath != null) {
                         try {
                             presignedUrl = imageUtil.getPresignedDownloadUrl(objectPath);
