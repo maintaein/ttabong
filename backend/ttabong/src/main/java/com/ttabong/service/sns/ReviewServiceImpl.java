@@ -14,10 +14,7 @@ import com.ttabong.entity.sns.ReviewComment;
 import com.ttabong.entity.sns.ReviewImage;
 import com.ttabong.entity.user.Organization;
 import com.ttabong.entity.user.User;
-import com.ttabong.exception.ConflictException;
-import com.ttabong.exception.ForbiddenException;
-import com.ttabong.exception.NotFoundException;
-import com.ttabong.exception.UnauthorizedException;
+import com.ttabong.exception.*;
 import com.ttabong.repository.recruit.ApplicationRepository;
 import com.ttabong.repository.recruit.RecruitRepository;
 import com.ttabong.repository.recruit.TemplateRepository;
@@ -27,9 +24,10 @@ import com.ttabong.repository.user.OrganizationRepository;
 import com.ttabong.repository.user.UserRepository;
 import com.ttabong.util.CacheUtil;
 import com.ttabong.util.ImageUtil;
+import io.minio.CopyObjectArgs;
+import io.minio.CopySource;
 import io.minio.MinioClient;
 import io.minio.RemoveObjectArgs;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -41,6 +39,7 @@ import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @Service
 @Transactional
@@ -140,7 +139,7 @@ public class ReviewServiceImpl implements ReviewService {
         }
 
         reviewImageRepository.saveAll(imageSlots);
-        uploadImagesToMinio(requestDto.getUploadedImages(), imageSlots);
+        uploadImagesToMinio(requestDto.getUploadedImages(), imageSlots, authDto);
 
         return ReviewCreateResponseDto.builder()
                 .message("리뷰가 생성되었습니다.")
@@ -149,11 +148,9 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
 
-    public void uploadImagesToMinio(List<String> uploadedImages, List<ReviewImage> imageSlots) {
+    public void uploadImagesToMinio(List<String> uploadedImages, List<ReviewImage> imageSlots , AuthDto authDto) {
 
-        if (uploadedImages == null || uploadedImages.isEmpty()) {
-            return;
-        }
+        checkToken(authDto);
 
         IntStream.range(0, uploadedImages.size()).forEach(i -> {
             final String objectPath = cacheUtil.findObjectPath(uploadedImages.get(i));
@@ -173,12 +170,10 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     public ReviewEditStartResponseDto startReviewEdit(Integer reviewId, AuthDto authDto) {
 
-        if (authDto == null || authDto.getUserId() == null) {
-            throw new SecurityException("로그인이 필요합니다.");
-        }
+        checkToken(authDto);
 
         Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new EntityNotFoundException("해당 리뷰가 없습니다"));
+                .orElseThrow(() -> new NotFoundException("해당 리뷰가 없습니다"));
 
         // 2️.기존 업로드된 이미지 가져오기
         List<String> existingImages = reviewImageRepository.findByReviewId(reviewId).stream()
@@ -218,101 +213,168 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public ReviewEditResponseDto updateReview(Integer reviewId, ReviewEditRequestDto requestDto, AuthDto authDto) {
-        if (authDto == null || authDto.getUserId() == null) {
-            throw new SecurityException("로그인이 필요합니다.");
+
+        checkToken(authDto);
+
+        Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
+                .orElseThrow(() -> new NotFoundException("해당 리뷰를 찾을 수 없습니다. reviewId: " + reviewId));
+
+        if (!review.getWriter().getId().equals(authDto.getUserId())) {
+            throw new ForbiddenException("본인이 작성한 후기만 수정할 수 있습니다.");
         }
 
-        Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new RuntimeException("리뷰를 찾을 수 없습니다."));
+        if (cacheUtil.isProcessedCacheId(requestDto.getCacheId())) {
+            throw new BadRequestException("이미 처리된 요청입니다. 중복 요청을 방지합니다.");
+        }
+        cacheUtil.markCacheIdAsProcessed(requestDto.getCacheId());
+
+        boolean isNoInput = (requestDto.getTitle() == null || requestDto.getTitle().isBlank()) &&
+                (requestDto.getContent() == null || requestDto.getContent().isBlank()) &&
+                requestDto.getIsPublic() == null &&
+                (requestDto.getPresignedUrl() == null || requestDto.getPresignedUrl().isEmpty()) &&
+                (requestDto.getImages() == null || requestDto.getImages().isEmpty());
+
+        if (isNoInput) {
+            throw new BadRequestException("입력값이 없습니다.");
+        }
 
         Review updatedReview = review.toBuilder()
-                .title(requestDto.getTitle())
-                .content(requestDto.getContent())
-                .isPublic(requestDto.getIsPublic())
+                .title(requestDto.getTitle() != null && !requestDto.getTitle().isBlank() ? requestDto.getTitle() : review.getTitle())
+                .content(requestDto.getContent() != null && !requestDto.getContent().isBlank() ? requestDto.getContent() : review.getContent())
+                .isPublic(requestDto.getIsPublic() != null ? requestDto.getIsPublic() : review.getIsPublic())
                 .updatedAt(Instant.now())
                 .build();
+
         reviewRepository.save(updatedReview);
 
         List<ReviewImage> existingImages = reviewImageRepository.findByReviewIdOrderByIdAsc(reviewId);
+        List<String> selectedExistingImages = new ArrayList<>();
+        List<String> tempCopyPaths = new ArrayList<>();
 
-        if (existingImages.isEmpty()) {
-            existingImages = IntStream.rangeClosed(1, 10)
-                    .mapToObj(i -> ReviewImage.builder()
-                            .review(review)
-                            .imageUrl(null)  // 기본값은 null
-                            .isThumbnail(i == 1) // 첫 번째 이미지만 썸네일
-                            .isDeleted(false)
-                            .createdAt(Instant.now())
-                            .build())
-                    .collect(Collectors.toList());
-
-            reviewImageRepository.saveAll(existingImages);
-        }
-
-        List<String> presignedUrls = requestDto.getPresignedUrl();
-        int newSize = Math.min(presignedUrls.size(), 10); // 최대 10개까지만 허용
-
-        for (int i = 0; i < 10; i++) {
-            ReviewImage imageSlot = existingImages.get(i);
-
-            if (i < newSize) {  // 새로운 이미지로 업데이트
-                String objectPath = cacheUtil.findObjectPath(presignedUrls.get(i));
-                if (objectPath == null) {
-                    throw new RuntimeException("유효하지 않은 presigned URL입니다.");
+        if (requestDto.getImages() != null) {
+            for (String imageUrl : requestDto.getImages()) {
+                String objectPath = ImageUtil.extractObjectPath(imageUrl);
+                if (objectPath != null && !objectPath.isBlank()) {
+                    selectedExistingImages.add(objectPath);
                 }
-
-                try {
-                    if (imageSlot.getImageUrl() != null) {
-                        minioClient.removeObject(
-                                RemoveObjectArgs.builder()
-                                        .bucket("ttabong-bucket")
-                                        .object(imageSlot.getImageUrl())
-                                        .build()
-                        );
-                    }
-                } catch (Exception e) {
-                    throw new RuntimeException("MinIO에서 기존 이미지 삭제 실패", e);
-                }
-
-                imageSlot = imageSlot.toBuilder()
-                        .imageUrl(objectPath)
-                        .isThumbnail(i == 0) // 첫 번째 이미지만 썸네일 설정
-                        .isDeleted(false)
-                        .build();
-            } else {  // 새로운 이미지가 없는 경우, 기존 슬롯 초기화
-                imageSlot = imageSlot.toBuilder()
-                        .imageUrl(null)
-                        .isThumbnail(false)
-                        .isDeleted(false)
-                        .build();
             }
-            reviewImageRepository.save(imageSlot);
         }
 
-        List<String> objectPaths = reviewImageRepository.findByReviewIdOrderByIdAsc(reviewId)
-                .stream()
-                .map(ReviewImage::getImageUrl)
-                .filter(Objects::nonNull)
-                .toList();
+        int imageIndex = 1;
 
-        List<String> imageUrls = objectPaths.stream()
-                .map(path -> {
-                    try {
-                        return imageUtil.getPresignedDownloadUrl(path);
-                    } catch (Exception e) {
-                        throw new RuntimeException("Presigned URL 생성 중 오류 발생: " + e.getMessage(), e);
-                    }
-                })
-                .collect(Collectors.toList());
+        for (String oldObjectPath : selectedExistingImages) {
+            String tempCopyPath = "copy_" + oldObjectPath;
 
+            try {
+                minioClient.copyObject(
+                        CopyObjectArgs.builder()
+                                .bucket("ttabong-bucket")
+                                .source(CopySource.builder()
+                                        .bucket("ttabong-bucket")
+                                        .object(oldObjectPath)
+                                        .build())
+                                .object(tempCopyPath)
+                                .build()
+                );
+                tempCopyPaths.add(tempCopyPath);
+            } catch (Exception e) {
+                throw new RuntimeException("MinIO에서 파일 복사 실패: " + oldObjectPath, e);
+            }
+            imageIndex++;
+        }
+
+        for (ReviewImage image : existingImages) {
+            if (image.getImageUrl() != null && !image.getImageUrl().isBlank()) {
+                try {
+                    minioClient.removeObject(
+                            RemoveObjectArgs.builder()
+                                    .bucket("ttabong-bucket")
+                                    .object(image.getImageUrl())
+                                    .build()
+                    );
+                } catch (Exception e) {
+                    System.err.println("MinIO에서 기존 이미지 삭제 실패: " + image.getImageUrl());
+                }
+            }
+        }
+
+        imageIndex = 1;
+        List<String> finalObjectPaths = new ArrayList<>();
+        for (String tempCopyPath : tempCopyPaths) {
+            String newObjectPath = reviewId + "_" + imageIndex + ".webp";
+
+            try {
+                minioClient.copyObject(
+                        CopyObjectArgs.builder()
+                                .bucket("ttabong-bucket")
+                                .source(CopySource.builder()
+                                        .bucket("ttabong-bucket")
+                                        .object(tempCopyPath)
+                                        .build())
+                                .object(newObjectPath)
+                                .build()
+                );
+
+                minioClient.removeObject(
+                        RemoveObjectArgs.builder()
+                                .bucket("ttabong-bucket")
+                                .object(tempCopyPath)
+                                .build()
+                );
+
+            } catch (Exception e) {
+                throw new RuntimeException("MinIO에서 파일 이동 실패", e);
+            }
+
+            finalObjectPaths.add(newObjectPath);
+            imageIndex++;
+        }
+
+        if (requestDto.getPresignedUrl() != null) {
+            for (String presignedUrl : requestDto.getPresignedUrl()) {
+                String objectPath = cacheUtil.findObjectPath(presignedUrl);
+                if (objectPath == null) {
+                    throw new BadRequestException("유효하지 않은 presigned URL입니다.");
+                }
+                String newObjectPath = reviewId + "_" + imageIndex + ".webp";
+
+                finalObjectPaths.add(newObjectPath);
+                imageIndex++;
+            }
+        }
+
+        while (finalObjectPaths.size() < 10) {
+            finalObjectPaths.add(null);
+        }
+
+        List<ReviewImage> updatedImages = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            updatedImages.add(ReviewImage.builder()
+                    .review(updatedReview)
+                    .imageUrl(finalObjectPaths.get(i))
+                    .isThumbnail(i == 0)
+                    .isDeleted(false)
+                    .createdAt(Instant.now())
+                    .build());
+        }
+
+        reviewImageRepository.deleteByReviewId(reviewId);
+        reviewImageRepository.saveAll(updatedImages);
+
+        long finalImageCount = reviewImageRepository.countByReviewIdAndImageUrlIsNotNull(reviewId);
+
+        List<String> responseImages = Stream.concat(
+                Optional.ofNullable(requestDto.getImages()).orElse(new ArrayList<>()).stream(),
+                Optional.ofNullable(requestDto.getPresignedUrl()).orElse(new ArrayList<>()).stream()
+        ).collect(Collectors.toList());
 
         return ReviewEditResponseDto.builder()
                 .cacheId(requestDto.getCacheId())
                 .title(updatedReview.getTitle())
                 .content(updatedReview.getContent())
                 .isPublic(updatedReview.getIsPublic())
-                .imageCount(newSize)
-                .images(imageUrls)
+                .imageCount((int) finalImageCount)
+                .images(responseImages)
                 .build();
     }
 

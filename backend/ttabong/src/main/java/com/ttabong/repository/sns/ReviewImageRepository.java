@@ -3,9 +3,11 @@ package com.ttabong.repository.sns;
 import com.ttabong.entity.sns.ReviewImage;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -47,5 +49,18 @@ public interface ReviewImageRepository extends JpaRepository<ReviewImage, Intege
         List<String> findAllImagesByReviewId(@Param("reviewId") Integer reviewId);
 
 
+
+        @Modifying
+        @Transactional
+        @Query("DELETE FROM ReviewImage ri WHERE ri.review.id = :reviewId")
+        void deleteByReviewId(@Param("reviewId") Integer reviewId);
+
+        @Query("SELECT COUNT(ri) FROM ReviewImage ri WHERE ri.review.id = :reviewId AND ri.imageUrl IS NOT NULL")
+        long countByReviewIdAndImageUrlIsNotNull(@Param("reviewId") Integer reviewId);
+
+        @Modifying
+        @Transactional
+        @Query("DELETE FROM ReviewImage ri WHERE ri.review.id = :reviewId")
+        void deleteAllByReviewId(@Param("reviewId") Integer reviewId);
 
 }
