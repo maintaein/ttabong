@@ -87,6 +87,8 @@ public class CommentServiceImpl implements CommentService{
     @Override
     public CommentCreateAndUpdateResponseDto updateComment(AuthDto authDto, Integer commentId, CommentCreateAndUpdateRequestDto requestDto) {
 
+        checkToken(authDto);
+
         ReviewComment existingComment = reviewCommentRepository.findByIdAndIsDeletedFalse(commentId)
                 .orElseThrow(() -> new NotFoundException("해당 댓글을 찾을 수 없습니다. id: " + commentId));
 
@@ -121,14 +123,17 @@ public class CommentServiceImpl implements CommentService{
     @Override
     public CommentDeleteResponseDto deleteComment(AuthDto authDto, Integer commentId) {
 
-        ReviewComment existingComment = reviewCommentRepository.findById(commentId)
-                .orElseThrow(() -> new RuntimeException("댓글 없음"));
-        
+        checkToken(authDto);
+
+        ReviewComment existingComment = reviewCommentRepository.findByIdAndIsDeletedFalse(commentId)
+                .orElseThrow(() -> new NotFoundException("댓글 없음"));
+
         if (!existingComment.getWriter().getId().equals(authDto.getUserId())) {
-            throw new RuntimeException("댓글 삭제 권한 없습니다");
+            throw new ForbiddenException("댓글 삭제 권한 없습니다");
         }
-        
+
         existingComment.markDeleted();
+        reviewCommentRepository.save(existingComment);
 
         return CommentDeleteResponseDto.builder()
                 .message("댓글 삭제 성공")
