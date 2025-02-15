@@ -306,7 +306,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         Organization userOrg = organizationRepository.findByUserId(authDto.getUserId())
                 .orElseThrow(() -> new NotFoundException("해당 사용자의 기관 정보를 찾을 수 없습니다."));
-        TemplateGroup templateGroup = templateGroupRepository.findById(updateGroupDto.getGroupId())
+        TemplateGroup templateGroup = templateGroupRepository.findByIdAndIsDeletedFalse(updateGroupDto.getGroupId())
                 .orElseThrow(() -> new NotFoundException("해당 그룹을 찾을 수 없습니다."));
 
         if (!templateGroup.getOrg().getId().equals(userOrg.getId())) {
@@ -451,7 +451,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         Organization organization = organizationRepository.findByUserId(authDto.getUserId())
                 .orElseThrow(() -> new NotFoundException("해당 유저의 기관 정보 없음"));
-        TemplateGroup group = templateGroupRepository.findById(createTemplateDto.getGroupId())
+        TemplateGroup group = templateGroupRepository.findByIdAndIsDeletedFalse(createTemplateDto.getGroupId())
                 .orElseThrow(() -> new NotFoundException("해당 그룹 없음"));
         Category category = categoryRepository.findById(createTemplateDto.getCategoryId())
                 .orElseThrow(() -> new NotFoundException("해당 카테고리 없음"));
