@@ -5,25 +5,56 @@ import { Button } from '@/components/ui/button';
 import { ReviewWriteHeader } from './components/ReviewWriteHeader';
 import { ReviewWriteImages } from './components/ReviewWriteImages';
 import { ReviewWriteForm } from './components/ReviewWriteForm';
+import { RecruitDetailCard } from './components/RecruitDetailCard';
 import { useReviewStore } from '@/stores/reviewStore';
+import { useRecruitStore } from '@/stores/recruitStore';
 import { reviewApi } from '@/api/reviewApi';
 import { useToast } from '@/hooks/use-toast';
 
 export default function ReviewWrite() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { orgId, resetReviewInfo } = useReviewStore();
-  const { updateReview } = useReviewStore();
+  const { toast } = useToast();
   
-  // location.state에서 수정 관련 정보 가져오기
-  const isEdit = Boolean(location.state?.isEdit);
-  const editReviewId = location.state?.reviewId;
+  const { recruitDetail, fetchRecruitDetail, selectedRecruitId, resetSelectedRecruitId, setSelectedRecruitId } = useRecruitStore();
+  const { updateReview } = useReviewStore();
   
   const [images, setImages] = useState<string[]>([]);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isPublic, setIsPublic] = useState(true);
-  const { toast } = useToast();
+  
+  const isEdit = Boolean(location.state?.isEdit);
+  const editReviewId = location.state?.reviewId;
+
+  useEffect(() => {
+    const init = async () => {
+      const recruitId = selectedRecruitId || location.state?.recruitId;
+      
+      if (!recruitId) {
+        navigate('/volunteer-history');
+        return;
+      }
+
+      try {
+        await fetchRecruitDetail(recruitId);
+        if (!selectedRecruitId) {
+          await setSelectedRecruitId(recruitId);
+        }
+      } catch (error) {
+        console.error('공고 상세 정보 로딩 실패:', error);
+        navigate('/volunteer-history');
+      }
+    };
+
+    init();
+
+    return () => {
+      if (!isEdit) {
+        resetSelectedRecruitId();
+      }
+    };
+  }, [selectedRecruitId, location.state?.recruitId, isEdit, navigate, fetchRecruitDetail, setSelectedRecruitId]);
 
   useEffect(() => {
     if (isEdit && editReviewId) {
@@ -46,10 +77,6 @@ export default function ReviewWrite() {
       loadReview();
     }
   }, [editReviewId, isEdit, navigate, toast]);
-
-  useEffect(() => {
-    return () => resetReviewInfo();
-  }, [resetReviewInfo]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -114,6 +141,8 @@ export default function ReviewWrite() {
 
   return (
     <div className="pb-[calc(56px+56px)]">
+      {recruitDetail && <RecruitDetailCard recruitDetail={recruitDetail} />}
+      
       <ReviewWriteHeader
         writer={{
           writerId: 1,
@@ -121,8 +150,8 @@ export default function ReviewWrite() {
           writerProfileImage: "https://picsum.photos/100/100"
         }}
         organization={{
-          orgId: orgId!,
-          orgName: "서울 환경 봉사단"
+          orgId: recruitDetail?.organization.orgId!,
+          orgName: recruitDetail?.organization.name!
         }}
       />
       

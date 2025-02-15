@@ -1,18 +1,21 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { Review, ReviewDetail, UpdateReviewRequest, ReviewEditResponse, MyReview } from '@/types/reviewType';
+import type { ReviewListItem, ReviewDetail, UpdateReviewRequest, ReviewEditResponse, MyReview } from '@/types/reviewType';
 import { reviewApi } from '@/api/reviewApi';
 
 interface ReviewStore {
-  reviews: Review[];
+  reviews: ReviewListItem[];
+  hasMore: boolean;
+  nextCursor: number | null;
   reviewDetail: ReviewDetail | null;
   myReviews: MyReview[];
   isLoading: boolean;
   error: string | null;
-  recruitReviews: Review[];
+  recruitReviews: ReviewListItem[];
   recruitId: number | null;
   orgId: number | null;
-  fetchReviews: () => Promise<void>;
+  fetchReviews: (cursor?: number) => Promise<void>;
+  fetchMoreReviews: () => Promise<void>;
   fetchReviewDetail: (id: number) => Promise<void>;
   addComment: (reviewId: number, commentData: { 
     content: string;
@@ -32,8 +35,10 @@ interface ReviewStore {
 
 export const useReviewStore = create<ReviewStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       reviews: [],
+      hasMore: true,
+      nextCursor: null,
       reviewDetail: null,
       myReviews: [],
       isLoading: false,
@@ -45,14 +50,41 @@ export const useReviewStore = create<ReviewStore>()(
       setReviewInfo: (recruitId, orgId) => set({ recruitId, orgId }),
       resetReviewInfo: () => set({ recruitId: null, orgId: null }),
 
-      fetchReviews: async () => {
+      fetchReviews: async (cursor = 0) => {
         set({ isLoading: true });
         try {
-          const reviews = await reviewApi.getReviews();
-          set({ reviews, error: null });
+          const response = await reviewApi.getReviews(cursor);
+          set({ 
+            reviews: response.reviews,
+            hasMore: response.hasMore,
+            nextCursor: response.nextCursor,
+            error: null 
+          });
         } catch (error) {
           console.error('리뷰 불러오기 실패:', error);
           set({ error: '리뷰를 불러오는데 실패했습니다.' });
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      fetchMoreReviews: async () => {
+        const { hasMore, nextCursor, isLoading } = get();
+        
+        if (!hasMore || isLoading || nextCursor === null) return;
+        
+        set({ isLoading: true });
+        try {
+          const response = await reviewApi.getReviews(nextCursor);
+          set((state) => ({ 
+            reviews: [...state.reviews, ...response.reviews],
+            hasMore: response.hasMore,
+            nextCursor: response.nextCursor,
+            error: null 
+          }));
+        } catch (error) {
+          console.error('추가 리뷰 불러오기 실패:', error);
+          set({ error: '추가 리뷰를 불러오는데 실패했습니다.' });
         } finally {
           set({ isLoading: false });
         }
@@ -131,20 +163,10 @@ export const useReviewStore = create<ReviewStore>()(
                       ...review.review,
                       title: data.title,
                       content: data.content
-                    },
-                    images: data.images
+                    }
                   }
                 : review
-            ),
-            reviewDetail: state.reviewDetail?.reviewId === reviewId 
-              ? {
-                  ...state.reviewDetail,
-                  title: data.title,
-                  content: data.content,
-                  images: data.images,
-                  isPublic: data.isPublic
-                }
-              : state.reviewDetail
+            )
           }));
           return response;
         } catch (error) {

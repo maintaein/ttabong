@@ -8,10 +8,6 @@ interface Review {
     updatedAt: string;
     createdAt: string;
   };
-  writer: {
-    writerId: number;
-    name: string;
-  };
   group: {
     groupId: number;
     groupName: string;
@@ -20,7 +16,7 @@ interface Review {
     orgId: number;
     orgName: string;
   };
-  images: string[];
+  images: string;  // 단일 이미지 문자열로 변경
 }
 
 interface Comment {
@@ -121,7 +117,7 @@ interface RecruitReview {
     orgId: number;
     orgName: string;
   };
-  images: string[];
+  images: string;
 }
 
 interface CommentDeleteResponse {
@@ -150,6 +146,40 @@ interface MyReview {
   images?: string;
 }
 
+interface ReviewListItem {
+  review: {
+    reviewId: number;
+    recruitId: number;
+    title: string;
+    content: string;
+    isDeleted: boolean;
+    updatedAt: string;
+    createdAt: string;
+  };
+  group: {
+    groupId: number;
+    groupName: string;
+  };
+  organization: {
+    orgId: number;
+    orgName: string;
+  };
+  images: string;  // 단일 이미지 파일명
+}
+
+interface ReviewsResponse {
+  reviews: ReviewListItem[];
+  hasMore: boolean;
+  nextCursor: number | null;
+}
+
+interface ReviewEditRequest {
+  title: string;
+  content: string;
+  isPublic: boolean;
+  images: string[];  // 업로드에 사용된 presignedUrl 목록
+}
+
 export type { 
   Review, 
   ReviewDetail, 
@@ -159,5 +189,8 @@ export type {
   VisibilityResponse, 
   RecruitReview,
   CommentDeleteResponse,
-  MyReview
+  MyReview,
+  ReviewsResponse,
+  ReviewListItem,
+  ReviewEditRequest
 };
