@@ -377,7 +377,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         checkOrgToken(authDto);
 
         Organization userOrg = organizationRepository.findByUserId(authDto.getUserId())
-                .orElseThrow(() -> new NotFoundException("없는 기관입니다."));
+                .orElseThrow(() -> new NotFoundException("해당 기관이 없습니다."));
 
         Integer groupId = deleteGroupDto.getGroupId();
         TemplateGroup groupToDelete = templateGroupRepository.findById(groupId)
@@ -444,7 +444,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         checkOrgToken(authDto);
 
         if (createTemplateDto.getImageCount() != null && createTemplateDto.getImageCount() > 10) {
-            throw new BadRequestException("최대 개수를 초과했습니다. 최대 " + 10 + "개까지 업로드할 수 있습니다.");
+            throw new ImageProcessException("최대 개수를 초과했습니다. 최대 " + 10 + "개까지 업로드할 수 있습니다.");
         }
 
         Organization organization = organizationRepository.findByUserId(authDto.getUserId())
@@ -650,7 +650,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                     try {
                         profileImageUrl = (profileImagePath != null) ? imageUtil.getPresignedDownloadUrl(profileImagePath) : null;
                     } catch (Exception e) {
-                        throw new RuntimeException("프로필 이미지 URL 생성 중 오류 발생", e);
+                        throw new ImageProcessException("프로필 이미지 URL 생성 중 오류 발생", e);
                     }
 
                     return ReadApplicationsResponseDto.ApplicationDetail.builder()

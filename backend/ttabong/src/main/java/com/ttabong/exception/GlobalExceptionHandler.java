@@ -93,6 +93,7 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex) {
         ErrorResponse errorResponse = new ErrorResponse(
@@ -102,4 +103,15 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
+
+    @ExceptionHandler(ImageProcessException.class)
+    public ResponseEntity<ErrorResponse> handleImageProcessException(ImageProcessException ex) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                555,
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(555).body(errorResponse);
+    }
+
 }

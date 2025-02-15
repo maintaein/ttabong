@@ -155,7 +155,7 @@ public class ReviewServiceImpl implements ReviewService {
         IntStream.range(0, uploadedImages.size()).forEach(i -> {
             final String objectPath = cacheUtil.findObjectPath(uploadedImages.get(i));
             if (objectPath == null) {
-                throw new RuntimeException("Invalid or expired presigned URL");
+                throw new ImageProcessException("유효하지 않은  presigned URL입니다.");
             }
 
             // 기존 슬롯 업데이트 (Presigned URL이 아니라, objectPath를 저장)
@@ -175,19 +175,17 @@ public class ReviewServiceImpl implements ReviewService {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new NotFoundException("해당 리뷰가 없습니다"));
 
-        // 2️.기존 업로드된 이미지 가져오기
         List<String> existingImages = reviewImageRepository.findByReviewId(reviewId).stream()
                 .filter(image -> image.getImageUrl() != null)
                 .map(image -> {
                     try {
                         return imageUtil.getPresignedDownloadUrl(image.getImageUrl());
                     } catch (Exception e) {
-                        throw new RuntimeException("presigned URL 생성에 실패", e);
+                        throw new ImageProcessException("presigned URL 생성에 실패", e);
                     }
                 })
                 .collect(Collectors.toList());
 
-        // 3️. 새로 업로드할 Presigned URL 10개 생성
         List<String> newPresignedUrls = IntStream.range(0, 10)
                 .mapToObj(i -> {
                     String objectName = "review-images/" + UUID.randomUUID() + ".webp";
@@ -197,7 +195,6 @@ public class ReviewServiceImpl implements ReviewService {
                 })
                 .collect(Collectors.toList());
 
-        // 4️. cacheId 발급 (랜덤 UUID 사용)
         Integer cacheId = UUID.randomUUID().hashCode();
 
         return ReviewEditStartResponseDto.builder()
@@ -224,7 +221,7 @@ public class ReviewServiceImpl implements ReviewService {
         }
 
         if (cacheUtil.isProcessedCacheId(requestDto.getCacheId())) {
-            throw new BadRequestException("이미 처리된 요청입니다. 중복 요청을 방지합니다.");
+            throw new ImageProcessException("이미 처리된 요청입니다. 중복 요청을 방지합니다.");
         }
         cacheUtil.markCacheIdAsProcessed(requestDto.getCacheId());
 
@@ -278,7 +275,7 @@ public class ReviewServiceImpl implements ReviewService {
                 );
                 tempCopyPaths.add(tempCopyPath);
             } catch (Exception e) {
-                throw new RuntimeException("MinIO에서 파일 복사 실패: " + oldObjectPath, e);
+                throw new ImageProcessException("MinIO에서 파일 복사 실패: " + oldObjectPath, e);
             }
             imageIndex++;
         }
@@ -323,7 +320,7 @@ public class ReviewServiceImpl implements ReviewService {
                 );
 
             } catch (Exception e) {
-                throw new RuntimeException("MinIO에서 파일 이동 실패", e);
+                throw new ImageProcessException("MinIO에서 파일 이동 실패", e);
             }
 
             finalObjectPaths.add(newObjectPath);
@@ -334,7 +331,7 @@ public class ReviewServiceImpl implements ReviewService {
             for (String presignedUrl : requestDto.getPresignedUrl()) {
                 String objectPath = cacheUtil.findObjectPath(presignedUrl);
                 if (objectPath == null) {
-                    throw new BadRequestException("유효하지 않은 presigned URL입니다.");
+                    throw new ImageProcessException("유효하지 않은 presigned URL입니다.");
                 }
                 String newObjectPath = reviewId + "_" + imageIndex + ".webp";
 
