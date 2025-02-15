@@ -36,4 +36,8 @@ public class TemplateGroup {
     @OneToMany(mappedBy = "group")
     private Set<Template> templates = new LinkedHashSet<>();
 
+    public void markDeleted() {
+        this.isDeleted = true;
+    }
+
 }

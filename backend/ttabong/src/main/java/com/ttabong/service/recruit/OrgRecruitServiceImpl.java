@@ -380,14 +380,16 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .orElseThrow(() -> new NotFoundException("해당 기관이 없습니다."));
 
         Integer groupId = deleteGroupDto.getGroupId();
-        TemplateGroup groupToDelete = templateGroupRepository.findById(groupId)
-                .orElseThrow(() -> new NotFoundException("해당 그룹을 찾을 수 없습니다."));
+
+        TemplateGroup groupToDelete = templateGroupRepository.findByIdAndIsDeletedFalse(groupId)
+                .orElseThrow(() -> new NotFoundException("해당 그룹을 찾을 수 없거나 이미 삭제되었습니다."));
 
         if (!groupToDelete.getOrg().getId().equals(userOrg.getId())) {
             throw new UnauthorizedException("이 그룹을 삭제할 권한이 없습니다.");
         }
 
-        templateGroupRepository.deleteGroupByIdAndOrg(groupId, userOrg.getId());
+        groupToDelete.markDeleted();
+        templateGroupRepository.save(groupToDelete);
 
         return DeleteGroupResponseDto.builder()
                 .message("삭제 성공")
@@ -395,6 +397,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .orgId(userOrg.getId())
                 .build();
     }
+
 
     @Override
     @Transactional(readOnly = true)
@@ -410,7 +413,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                         .templates(
                                 templateRepository.findTemplatesByGroupId(group.getId()).stream()
                                         .map(template -> {
-                                            // 모든 이미지 프리사인드url 가져오기 (널값 제외)
                                             List<String> imageUrls = imageService.getImageUrls(template.getId(), true);
 
                                             return ReadTemplatesResponseDto.TemplateDto.builder()
