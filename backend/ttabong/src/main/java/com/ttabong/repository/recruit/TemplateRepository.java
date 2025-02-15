@@ -9,12 +9,10 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface TemplateRepository extends JpaRepository<Template, Integer> {
 
-    // 1.
     @Query("SELECT t FROM Template t " +
             "JOIN FETCH t.org o " +
             "WHERE (:cursor IS NULL OR :cursor = 0 OR t.id < :cursor) " +
@@ -27,9 +25,7 @@ public interface TemplateRepository extends JpaRepository<Template, Integer> {
             "   AND r.status = 'RECRUITING' " +
             ") " +
             "ORDER BY t.id DESC")
-    List<Template> findAvailableTemplates(@Param("cursor") Integer cursor,
-                                          @Param("userId") Integer userId,
-                                          Pageable pageable);
+    List<Template> findAvailableTemplates(@Param("cursor") Integer cursor,@Param("userId") Integer userId,Pageable pageable);
 
     @Modifying
     @Query("UPDATE Template t " +
@@ -48,7 +44,6 @@ public interface TemplateRepository extends JpaRepository<Template, Integer> {
                         @Param("contactName") String contactName,
                         @Param("contactPhone") String contactPhone);
 
-
     @Modifying
     @Query("UPDATE Template t SET t.isDeleted = true WHERE t.id IN :deleteTemplateIds AND t.org.id = :orgId")
     void deleteTemplates(@Param("deleteTemplateIds") List<Integer> deleteTemplateIds, @Param("orgId") Integer orgId);
@@ -56,20 +51,8 @@ public interface TemplateRepository extends JpaRepository<Template, Integer> {
     @Query("SELECT t FROM Template t WHERE t.isDeleted = false AND t.group.id = :groupId")
     List<Template> findTemplatesByGroupId(@Param("groupId") Integer groupId);
 
-
     @Query("SELECT t FROM Template t WHERE t.id IN :templateIds AND t.org.id = :orgId AND t.isDeleted = false")
     List<Template> findByIdsAndOrgId(@Param("templateIds") List<Integer> templateIds, @Param("orgId") Integer orgId);
-
-
-    @Query("SELECT r.template.id FROM Recruit r WHERE r.id = :recruitId")
-    Integer findTemplateIdByRecruitId(@Param("recruitId") Integer recruitId);
-
-//    @Modifying
-//    @Transactional
-//    @Query("UPDATE Template t SET t.image.id = :imageId WHERE t.id = :templateId")
-//    void updateTemplateImage(@Param("templateId") Integer templateId, @Param("imageId") Integer imageId);
-
-
 
     // vol-recruit를 위해 추가 --------------------------------------------
     // 최신 모집 공고 N개 조회
@@ -79,8 +62,5 @@ public interface TemplateRepository extends JpaRepository<Template, Integer> {
     // 특정 cursor 이후의 모집 공고 조회
     @Query("SELECT t FROM Template t WHERE t.id > :cursor AND t.isDeleted = FALSE ORDER BY t.createdAt DESC LIMIT :limit")
     List<Template> findTemplatesAfterCursor(Integer cursor, Integer limit);
-
-
-
 
 }

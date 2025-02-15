@@ -84,4 +84,10 @@ public class Review {
             isDeleted = false;
         }
     }
+
+    public void markDeleted() {
+        this.isDeleted = true;
+        this.updatedAt = Instant.now();
+    }
+
 }
