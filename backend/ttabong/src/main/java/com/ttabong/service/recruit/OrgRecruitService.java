@@ -26,4 +26,5 @@ public interface OrgRecruitService {
     UpdateApplicationsResponseDto updateStatuses(UpdateApplicationsRequestDto updateApplicationDto, AuthDto authDto);
     List<EvaluateApplicationsResponseDto> evaluateApplicants(Integer recruitId, List<EvaluateApplicationsRequestDto> evaluateApplicationDtoList, AuthDto authDto);
 
+    void updateScheduledStatus(int i);
 }

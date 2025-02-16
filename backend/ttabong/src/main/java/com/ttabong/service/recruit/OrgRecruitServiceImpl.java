@@ -771,6 +771,10 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                     .build();
         }).collect(Collectors.toList());
     }
+    //미완성
+    public void updateScheduledStatus(int i) {
+
+    }
 
     public int setUpdateStatusSchedule(Recruit recruit){
         Date activityDate = recruit.getActivityDate();

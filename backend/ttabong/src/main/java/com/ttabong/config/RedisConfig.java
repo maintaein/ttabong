@@ -1,6 +1,7 @@
 package com.ttabong.config;
 
 import com.ttabong.handler.RedisExpirationListener;
+import com.ttabong.service.recruit.OrgRecruitService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -56,11 +57,11 @@ public class RedisConfig {
 
     @Bean
     @Lazy
-    public RedisMessageListenerContainer keyExpirationListener(RedisConnectionFactory connectionFactory) {
+    public RedisMessageListenerContainer keyExpirationListener(RedisConnectionFactory connectionFactory, OrgRecruitService orgRecruitService) {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
         container.addMessageListener(
-                new RedisExpirationListener(container), // ✅ 직접 생성하여 순환 참조 방지
+                new RedisExpirationListener(container, orgRecruitService),
                 new PatternTopic("__keyevent@0__:expired")
         );
         return container;
