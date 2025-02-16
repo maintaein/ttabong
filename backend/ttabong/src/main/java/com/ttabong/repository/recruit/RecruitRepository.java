@@ -66,8 +66,10 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
     @Query("UPDATE Recruit r SET r.status = 'RECRUITMENT_CLOSED' WHERE r.id = :closeId")
     void closeRecruit(@Param("closeId") Integer closeId);
 
+
     @Query("SELECT r FROM Recruit r WHERE r.id = :recruitId AND r.isDeleted = false")
-    Optional<Recruit> findByRecruitIdOrg(@Param("recruitId") Integer recruitId);
+    Optional<Recruit> findByRecruitId(@Param("recruitId") Integer recruitId);
+
 
     @Query("""
         SELECT r FROM Recruit r 

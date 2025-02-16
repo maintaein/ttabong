@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -28,12 +30,14 @@ public class CacheUtil {
         return (String) redisTemplate.opsForHash().get(TEMP_CACHE, preSignedUrl);
     }
 
-//    public String findPresignedUrl(String objectPath) {
-//        if (objectPath == null || objectPath.isEmpty()) {
-//            return null;
-//        }
-//
-//        return ImageUtil.generatePresignedUrl(objectPath);
-//    }
+    private final Set<Integer> processedCacheIds = ConcurrentHashMap.newKeySet();
+
+    public boolean isProcessedCacheId(Integer cacheId) {
+        return processedCacheIds.contains(cacheId);
+    }
+
+    public void markCacheIdAsProcessed(Integer cacheId) {
+        processedCacheIds.add(cacheId);
+    }
 
 }

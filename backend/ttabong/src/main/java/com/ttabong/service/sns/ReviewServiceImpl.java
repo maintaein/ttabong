@@ -14,17 +14,19 @@ import com.ttabong.entity.sns.ReviewComment;
 import com.ttabong.entity.sns.ReviewImage;
 import com.ttabong.entity.user.Organization;
 import com.ttabong.entity.user.User;
+import com.ttabong.exception.*;
+import com.ttabong.repository.recruit.ApplicationRepository;
 import com.ttabong.repository.recruit.RecruitRepository;
-import com.ttabong.repository.recruit.TemplateRepository;
 import com.ttabong.repository.sns.ReviewImageRepository;
 import com.ttabong.repository.sns.ReviewRepository;
 import com.ttabong.repository.user.OrganizationRepository;
 import com.ttabong.repository.user.UserRepository;
 import com.ttabong.util.CacheUtil;
 import com.ttabong.util.ImageUtil;
+import io.minio.CopyObjectArgs;
+import io.minio.CopySource;
 import io.minio.MinioClient;
 import io.minio.RemoveObjectArgs;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -33,51 +35,74 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class ReviewServiceImpl implements ReviewService {
+
     private final ReviewRepository reviewRepository;
     private final OrganizationRepository organizationRepository;
     private final UserRepository userRepository;
     private final RecruitRepository recruitRepository;
-    private final TemplateRepository templateRepository;
+    private final ApplicationRepository applicationRepository;
     private final ReviewImageRepository reviewImageRepository;
     private final CacheUtil cacheUtil;
     private final ImageUtil imageUtil;
     private final MinioClient minioClient;
 
-    // TODO: parent-review-id 설정하는거 해야함.
+    public void checkToken(AuthDto authDto) {
+        if (authDto == null || authDto.getUserId() == null) {
+            throw new UnauthorizedException("로그인이 필요합니다.");
+        }
+    }
+
+    // TODO: 기관이 후기 생성시, 봉사자가 해당 공고에 관해 쓴 후기들에 대해서 parentid값 설정 필요
     @Override
     public ReviewCreateResponseDto createReview(AuthDto authDto, ReviewCreateRequestDto requestDto) {
 
-        if (authDto == null || authDto.getUserId() == null) {
-            throw new SecurityException("로그인이 필요합니다.");
-        }
-
-        final Organization organization = organizationRepository.findById(requestDto.getOrgId())
-                .orElseThrow(() -> new RuntimeException("기관 없음"));
+        checkToken(authDto);
 
         final User writer = userRepository.findById(authDto.getUserId())
-                .orElseThrow(() -> new RuntimeException("작성자 없음"));
+                .orElseThrow(() -> new NotFoundException("작성자 없음"));
 
         final Recruit recruit = recruitRepository.findById(requestDto.getRecruitId())
-                .orElseThrow(() -> new RuntimeException("해당 공고 없음"));
+                .orElseThrow(() -> new NotFoundException("해당 공고 없음"));
 
-        final Template template = templateRepository.findById(recruit.getTemplate().getId())
-                .orElseThrow(() -> new RuntimeException("해당 템플릿 없음"));
-
+        final Template template = recruit.getTemplate();
         final Integer groupId = template.getGroup().getId();
 
-        List<Review> parentReviews = reviewRepository.findByOrgWriterAndRecruit(recruit.getId());
-        final Review parentReview = parentReviews.isEmpty() ? null : parentReviews.get(0);
+        boolean alreadyReviewed = reviewRepository.existsByWriterAndRecruit(writer.getId(), recruit.getId());
+        if (alreadyReviewed) {
+            throw new ConflictException("이미 해당 모집 공고에 대한 후기를 작성하였습니다.");
+        }
+
+        Organization organization;
+        Review parentReview = null;
+
+        if (organizationRepository.existsByUserId(authDto.getUserId())) {
+            organization = organizationRepository.findByUserId(authDto.getUserId())
+                    .orElseThrow(() -> new NotFoundException("기관 정보 없음"));
+
+            if (!template.getOrg().getUser().getId().equals(authDto.getUserId())) {
+                throw new ForbiddenException("해당 기관의 리뷰만 작성할 수 있습니다.");
+            }
+
+        } else {
+            boolean isApplicant = applicationRepository.existsByVolunteerUserIdAndRecruitId(writer.getId(), recruit.getId());
+            if (!isApplicant) {
+                throw new ForbiddenException("해당 봉사 모집 공고에 참여한 사용자만 리뷰를 작성할 수 있습니다.");
+            }
+
+            organization = template.getOrg();
+
+            parentReview = reviewRepository.findFirstByOrgWriterAndRecruit(recruit.getId())
+                    .orElse(null);
+        }
 
         final Review review = Review.builder()
                 .recruit(recruit)
@@ -95,39 +120,40 @@ public class ReviewServiceImpl implements ReviewService {
                 .build();
 
         reviewRepository.save(review);
-        
-        List<ReviewImage> imageSlots = IntStream.range(0, 10)
+
+        List<ReviewImage> imageSlots = IntStream.range(0, requestDto.getImageCount())
                 .mapToObj(i -> ReviewImage.builder()
                         .review(review)
                         .template(template)
-                        .imageUrl(null)  // Presigned URL이 아니라, 객체명을 저장할 예정
-                        .isThumbnail(i == 0)  // 첫 번째 이미지만 썸네일로 설정
+                        .imageUrl(null)
+                        .isThumbnail(i == 0)
                         .isDeleted(false)
                         .createdAt(Instant.now())
                         .build())
                 .collect(Collectors.toList());
 
-        reviewImageRepository.saveAll(imageSlots); // 미리 저장
-        
-        // 이미지 업로드하기
-        uploadImagesToMinio(requestDto.getUploadedImages(), imageSlots);
+        for (int i = 0; i < imageSlots.size() - 1; i++) {
+            imageSlots.get(i).setNextImage(imageSlots.get(i + 1));
+        }
+
+        reviewImageRepository.saveAll(imageSlots);
+        uploadImagesToMinio(requestDto.getUploadedImages(), imageSlots, authDto);
 
         return ReviewCreateResponseDto.builder()
                 .message("리뷰가 생성되었습니다.")
-                .uploadedImages(requestDto.getUploadedImages())  // 그대로 반환 (objectPath 아님)
+                .uploadedImages(requestDto.getUploadedImages())
                 .build();
     }
 
-    public void uploadImagesToMinio(List<String> uploadedImages, List<ReviewImage> imageSlots) {
 
-        if (uploadedImages == null || uploadedImages.isEmpty()) {
-            return;
-        }
+    public void uploadImagesToMinio(List<String> uploadedImages, List<ReviewImage> imageSlots , AuthDto authDto) {
+
+        checkToken(authDto);
 
         IntStream.range(0, uploadedImages.size()).forEach(i -> {
             final String objectPath = cacheUtil.findObjectPath(uploadedImages.get(i));
             if (objectPath == null) {
-                throw new RuntimeException("Invalid or expired presigned URL");
+                throw new ImageProcessException("유효하지 않은  presigned URL입니다.");
             }
 
             // 기존 슬롯 업데이트 (Presigned URL이 아니라, objectPath를 저장)
@@ -142,26 +168,22 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     public ReviewEditStartResponseDto startReviewEdit(Integer reviewId, AuthDto authDto) {
 
-        if (authDto == null || authDto.getUserId() == null) {
-            throw new SecurityException("로그인이 필요합니다.");
-        }
+        checkToken(authDto);
 
         Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new EntityNotFoundException("해당 리뷰가 없습니다"));
+                .orElseThrow(() -> new NotFoundException("해당 리뷰가 없습니다"));
 
-        // 2️.기존 업로드된 이미지 가져오기
         List<String> existingImages = reviewImageRepository.findByReviewId(reviewId).stream()
                 .filter(image -> image.getImageUrl() != null)
                 .map(image -> {
                     try {
                         return imageUtil.getPresignedDownloadUrl(image.getImageUrl());
                     } catch (Exception e) {
-                        throw new RuntimeException("presigned URL 생성에 실패", e);
+                        throw new ImageProcessException("presigned URL 생성에 실패", e);
                     }
                 })
                 .collect(Collectors.toList());
 
-        // 3️. 새로 업로드할 Presigned URL 10개 생성
         List<String> newPresignedUrls = IntStream.range(0, 10)
                 .mapToObj(i -> {
                     String objectName = "review-images/" + UUID.randomUUID() + ".webp";
@@ -171,7 +193,6 @@ public class ReviewServiceImpl implements ReviewService {
                 })
                 .collect(Collectors.toList());
 
-        // 4️. cacheId 발급 (랜덤 UUID 사용)
         Integer cacheId = UUID.randomUUID().hashCode();
 
         return ReviewEditStartResponseDto.builder()
@@ -187,149 +208,215 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public ReviewEditResponseDto updateReview(Integer reviewId, ReviewEditRequestDto requestDto, AuthDto authDto) {
-        if (authDto == null || authDto.getUserId() == null) {
-            throw new SecurityException("로그인이 필요합니다.");
+
+        checkToken(authDto);
+
+        Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
+                .orElseThrow(() -> new NotFoundException("해당 리뷰를 찾을 수 없습니다. reviewId: " + reviewId));
+
+        if (!review.getWriter().getId().equals(authDto.getUserId())) {
+            throw new ForbiddenException("본인이 작성한 후기만 수정할 수 있습니다.");
         }
 
-        Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new RuntimeException("리뷰를 찾을 수 없습니다."));
+        if (cacheUtil.isProcessedCacheId(requestDto.getCacheId())) {
+            throw new ImageProcessException("이미 처리된 요청입니다. 중복 요청을 방지합니다.");
+        }
+        cacheUtil.markCacheIdAsProcessed(requestDto.getCacheId());
+
+        boolean isNoInput = (requestDto.getTitle() == null || requestDto.getTitle().isBlank()) &&
+                (requestDto.getContent() == null || requestDto.getContent().isBlank()) &&
+                requestDto.getIsPublic() == null &&
+                (requestDto.getPresignedUrl() == null || requestDto.getPresignedUrl().isEmpty()) &&
+                (requestDto.getImages() == null || requestDto.getImages().isEmpty());
+
+        if (isNoInput) {
+            throw new BadRequestException("입력값이 없습니다.");
+        }
 
         Review updatedReview = review.toBuilder()
-                .title(requestDto.getTitle())
-                .content(requestDto.getContent())
-                .isPublic(requestDto.getIsPublic())
+                .title(requestDto.getTitle() != null && !requestDto.getTitle().isBlank() ? requestDto.getTitle() : review.getTitle())
+                .content(requestDto.getContent() != null && !requestDto.getContent().isBlank() ? requestDto.getContent() : review.getContent())
+                .isPublic(requestDto.getIsPublic() != null ? requestDto.getIsPublic() : review.getIsPublic())
                 .updatedAt(Instant.now())
                 .build();
+
         reviewRepository.save(updatedReview);
 
         List<ReviewImage> existingImages = reviewImageRepository.findByReviewIdOrderByIdAsc(reviewId);
+        List<String> selectedExistingImages = new ArrayList<>();
+        List<String> tempCopyPaths = new ArrayList<>();
 
-        if (existingImages.isEmpty()) {
-            existingImages = IntStream.rangeClosed(1, 10)
-                    .mapToObj(i -> ReviewImage.builder()
-                            .review(review)
-                            .imageUrl(null)  // 기본값은 null
-                            .isThumbnail(i == 1) // 첫 번째 이미지만 썸네일
-                            .isDeleted(false)
-                            .createdAt(Instant.now())
-                            .build())
-                    .collect(Collectors.toList());
-
-            reviewImageRepository.saveAll(existingImages);
-        }
-
-        List<String> presignedUrls = requestDto.getPresignedUrl();
-        int newSize = Math.min(presignedUrls.size(), 10); // 최대 10개까지만 허용
-
-        for (int i = 0; i < 10; i++) {
-            ReviewImage imageSlot = existingImages.get(i);
-
-            if (i < newSize) {  // 새로운 이미지로 업데이트
-                String objectPath = cacheUtil.findObjectPath(presignedUrls.get(i));
-                if (objectPath == null) {
-                    throw new RuntimeException("유효하지 않은 presigned URL입니다.");
+        if (requestDto.getImages() != null) {
+            for (String imageUrl : requestDto.getImages()) {
+                String objectPath = ImageUtil.extractObjectPath(imageUrl);
+                if (objectPath != null && !objectPath.isBlank()) {
+                    selectedExistingImages.add(objectPath);
                 }
-
-                try {
-                    if (imageSlot.getImageUrl() != null) {
-                        minioClient.removeObject(
-                                RemoveObjectArgs.builder()
-                                        .bucket("ttabong-bucket")
-                                        .object(imageSlot.getImageUrl())
-                                        .build()
-                        );
-                    }
-                } catch (Exception e) {
-                    throw new RuntimeException("MinIO에서 기존 이미지 삭제 실패", e);
-                }
-
-                imageSlot = imageSlot.toBuilder()
-                        .imageUrl(objectPath)
-                        .isThumbnail(i == 0) // 첫 번째 이미지만 썸네일 설정
-                        .isDeleted(false)
-                        .build();
-            } else {  // 새로운 이미지가 없는 경우, 기존 슬롯 초기화
-                imageSlot = imageSlot.toBuilder()
-                        .imageUrl(null)
-                        .isThumbnail(false)
-                        .isDeleted(false)
-                        .build();
             }
-            reviewImageRepository.save(imageSlot);
         }
 
-        List<String> objectPaths = reviewImageRepository.findByReviewIdOrderByIdAsc(reviewId)
-                .stream()
-                .map(ReviewImage::getImageUrl)
-                .filter(Objects::nonNull)
-                .toList();
+        int imageIndex = 1;
 
-        List<String> imageUrls = objectPaths.stream()
-                .map(path -> {
-                    try {
-                        return imageUtil.getPresignedDownloadUrl(path);
-                    } catch (Exception e) {
-                        throw new RuntimeException("Presigned URL 생성 중 오류 발생: " + e.getMessage(), e);
-                    }
-                })
-                .collect(Collectors.toList());
+        for (String oldObjectPath : selectedExistingImages) {
+            String tempCopyPath = "copy_" + oldObjectPath;
 
+            try {
+                minioClient.copyObject(
+                        CopyObjectArgs.builder()
+                                .bucket("ttabong-bucket")
+                                .source(CopySource.builder()
+                                        .bucket("ttabong-bucket")
+                                        .object(oldObjectPath)
+                                        .build())
+                                .object(tempCopyPath)
+                                .build()
+                );
+                tempCopyPaths.add(tempCopyPath);
+            } catch (Exception e) {
+                throw new ImageProcessException("MinIO에서 파일 복사 실패: " + oldObjectPath, e);
+            }
+            imageIndex++;
+        }
+
+        for (ReviewImage image : existingImages) {
+            if (image.getImageUrl() != null && !image.getImageUrl().isBlank()) {
+                try {
+                    minioClient.removeObject(
+                            RemoveObjectArgs.builder()
+                                    .bucket("ttabong-bucket")
+                                    .object(image.getImageUrl())
+                                    .build()
+                    );
+                } catch (Exception e) {
+                    System.err.println("MinIO에서 기존 이미지 삭제 실패: " + image.getImageUrl());
+                }
+            }
+        }
+
+        imageIndex = 1;
+        List<String> finalObjectPaths = new ArrayList<>();
+        for (String tempCopyPath : tempCopyPaths) {
+            String newObjectPath = reviewId + "_" + imageIndex + ".webp";
+
+            try {
+                minioClient.copyObject(
+                        CopyObjectArgs.builder()
+                                .bucket("ttabong-bucket")
+                                .source(CopySource.builder()
+                                        .bucket("ttabong-bucket")
+                                        .object(tempCopyPath)
+                                        .build())
+                                .object(newObjectPath)
+                                .build()
+                );
+
+                minioClient.removeObject(
+                        RemoveObjectArgs.builder()
+                                .bucket("ttabong-bucket")
+                                .object(tempCopyPath)
+                                .build()
+                );
+
+            } catch (Exception e) {
+                throw new ImageProcessException("MinIO에서 파일 이동 실패", e);
+            }
+
+            finalObjectPaths.add(newObjectPath);
+            imageIndex++;
+        }
+
+        if (requestDto.getPresignedUrl() != null) {
+            for (String presignedUrl : requestDto.getPresignedUrl()) {
+                String objectPath = cacheUtil.findObjectPath(presignedUrl);
+                if (objectPath == null) {
+                    throw new ImageProcessException("유효하지 않은 presigned URL입니다.");
+                }
+                String newObjectPath = reviewId + "_" + imageIndex + ".webp";
+
+                finalObjectPaths.add(newObjectPath);
+                imageIndex++;
+            }
+        }
+
+        while (finalObjectPaths.size() < 10) {
+            finalObjectPaths.add(null);
+        }
+
+        List<ReviewImage> updatedImages = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            updatedImages.add(ReviewImage.builder()
+                    .review(updatedReview)
+                    .imageUrl(finalObjectPaths.get(i))
+                    .isThumbnail(i == 0)
+                    .isDeleted(false)
+                    .createdAt(Instant.now())
+                    .build());
+        }
+
+        reviewImageRepository.deleteByReviewId(reviewId);
+        reviewImageRepository.saveAll(updatedImages);
+
+        long finalImageCount = reviewImageRepository.countByReviewIdAndImageUrlIsNotNull(reviewId);
+
+        List<String> responseImages = Stream.concat(
+                Optional.ofNullable(requestDto.getImages()).orElse(new ArrayList<>()).stream(),
+                Optional.ofNullable(requestDto.getPresignedUrl()).orElse(new ArrayList<>()).stream()
+        ).collect(Collectors.toList());
 
         return ReviewEditResponseDto.builder()
                 .cacheId(requestDto.getCacheId())
                 .title(updatedReview.getTitle())
                 .content(updatedReview.getContent())
                 .isPublic(updatedReview.getIsPublic())
-                .imageCount(newSize)
-                .images(imageUrls)
+                .imageCount((int) finalImageCount)
+                .images(responseImages)
                 .build();
     }
 
     @Override
     public ReviewDeleteResponseDto deleteReview(Integer reviewId, AuthDto authDto) {
-        Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new RuntimeException("해당 후기를 찾을 수 없습니다. reviewId: " + reviewId));
+
+        checkToken(authDto);
+
+        Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
+                .orElseThrow(() -> new NotFoundException("해당 후기를 찾을 수 없습니다. reviewId: " + reviewId));
 
         if (!review.getWriter().getId().equals(authDto.getUserId())) {
-            throw new SecurityException("본인이 작성한 후기만 삭제할 수 있습니다.");
+            throw new ForbiddenException("본인이 작성한 후기만 삭제할 수 있습니다.");
         }
 
-        Review updatedReview = review.toBuilder()
-                .isDeleted(true)
-                .build();
+        review.markDeleted();
 
-        reviewRepository.save(updatedReview);
+        reviewRepository.save(review);
 
-        return new ReviewDeleteResponseDto("삭제 성공하였습니다.", updatedReview.getId(), updatedReview.getTitle(), updatedReview.getContent());
+        return new ReviewDeleteResponseDto("삭제 성공하였습니다.", review.getId(), review.getTitle(), review.getContent());
     }
 
+
     @Override
-    public ReviewVisibilitySettingResponseDto updateVisibility(Integer reviewId,
-                                                               ReviewVisibilitySettingRequestDto requestDto,
-                                                               AuthDto authDto) {
-        Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 후기를 찾을 수 없습니다. id: " + reviewId));
+    @Transactional
+    public ReviewVisibilitySettingResponseDto updateVisibility(Integer reviewId, ReviewVisibilitySettingRequestDto requestDto, AuthDto authDto) {
+
+        checkToken(authDto);
+
+        Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
+                .orElseThrow(() -> new NotFoundException("해당 후기를 찾을 수 없습니다. id: " + reviewId));
 
         if (!review.getWriter().getId().equals(authDto.getUserId())) {
-            throw new SecurityException("본인이 작성한 후기만 수정할 수 있습니다.");
+            throw new ForbiddenException("본인이 작성한 후기만 수정할 수 있습니다.");
         }
 
-        Review updatedReviewVisibility = review.toBuilder()
-                .isPublic(!review.getIsPublic())
-                .updatedAt(Instant.now())
-                .build();
-
-        reviewRepository.save(updatedReviewVisibility);
-
-        LocalDateTime updateTime = updatedReviewVisibility.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime();
+        reviewRepository.toggleReviewVisibility(reviewId);
 
         return new ReviewVisibilitySettingResponseDto(
                 "공개 여부를 수정했습니다",
                 reviewId,
-                updatedReviewVisibility.getIsPublic(),
-                updateTime
+                !review.getIsPublic(),
+                LocalDateTime.now()
         );
     }
+
+
 
     @Override
     @Transactional(readOnly = true)
@@ -338,11 +425,11 @@ public class ReviewServiceImpl implements ReviewService {
 
         return reviews.stream()
                 .map(review -> {
-                    // 리뷰의 썸네일(Object Path) 가져오기
-                    String objectPath = reviewImageRepository.findThumbnailImageByReviewId(review.getId()).orElse(null);
+                    String objectPath = reviewImageRepository
+                            .findThumbnailImageByReviewId(review.getId(), PageRequest.of(0, 1))
+                            .stream().findFirst().orElse(null);
 
-                    // Presigned URL 변환 (Object Path -> Presigned URL)
-                    String thumbnailUrl = null;
+                    String thumbnailUrl;
                     try {
                         thumbnailUrl = (objectPath != null) ? imageUtil.getPresignedDownloadUrl(objectPath) : null;
                     } catch (Exception e) {
@@ -384,25 +471,40 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     @Transactional(readOnly = true)
     public List<MyAllReviewPreviewResponseDto> readMyAllReviews(AuthDto authDto) {
-        List<Review> reviews = reviewRepository.findMyReviews(authDto.getUserId(), PageRequest.of(0, 10));
+
+        checkToken(authDto);
+
+        List<Review> reviews = reviewRepository.findDistinctByWriterId(authDto.getUserId(), PageRequest.of(0, 10));
+
+        if (reviews.isEmpty()) {
+            throw new NotFoundException("작성한 리뷰가 없습니다.");
+        }
 
         return reviews.stream()
+                .filter(review -> !review.getIsDeleted())
                 .map(review -> {
-                    // 1. DB에서 저장된 이미지의 Object Path 가져오기
-                    String objectPath = reviewImageRepository.findThumbnailImageByReviewId(review.getId()).orElse(null);
+                    String objectPath = reviewImageRepository
+                            .findThumbnailImageByReviewId(review.getId(), PageRequest.of(0, 1))
+                            .stream().findFirst().orElse(null);
 
-                    // 2. Presigned URL 변환 (Object Path -> Presigned URL)
                     String presignedUrl = null;
-                    try {
-                        presignedUrl = (objectPath != null) ? imageUtil.getPresignedDownloadUrl(objectPath) : null;
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
+                    if (objectPath != null) {
+                        try {
+                            presignedUrl = imageUtil.getPresignedDownloadUrl(objectPath);
+                        } catch (Exception e) {
+                            presignedUrl = null;
+                        }
                     }
+
+                    Recruit recruit = review.getRecruit();
+                    Template template = (recruit != null) ? recruit.getTemplate() : null;
+                    TemplateGroup group = (template != null) ? template.getGroup() : null;
+                    Organization org = review.getOrg();
 
                     return MyAllReviewPreviewResponseDto.builder()
                             .review(MyAllReviewPreviewResponseDto.ReviewDto.builder()
                                     .reviewId(review.getId())
-                                    .recruitId(review.getRecruit() != null ? review.getRecruit().getId() : null)
+                                    .recruitId((recruit != null) ? recruit.getId() : null)
                                     .title(review.getTitle())
                                     .content(review.getContent())
                                     .isDeleted(review.getIsDeleted())
@@ -411,59 +513,61 @@ public class ReviewServiceImpl implements ReviewService {
                                     .build()
                             )
                             .group(MyAllReviewPreviewResponseDto.GroupDto.builder()
-                                    .groupId(review.getRecruit() != null && review.getRecruit().getTemplate() != null &&
-                                            review.getRecruit().getTemplate().getGroup() != null ?
-                                            review.getRecruit().getTemplate().getGroup().getId() : null)
-                                    .groupName(review.getRecruit() != null && review.getRecruit().getTemplate() != null &&
-                                            review.getRecruit().getTemplate().getGroup() != null ?
-                                            review.getRecruit().getTemplate().getGroup().getGroupName() : "N/A")
+                                    .groupId((group != null) ? group.getId() : null)
+                                    .groupName((group != null) ? group.getGroupName() : "N/A")
                                     .build()
                             )
                             .organization(MyAllReviewPreviewResponseDto.OrganizationDto.builder()
-                                    .orgId(review.getOrg() != null ? review.getOrg().getId() : null)
-                                    .orgName(review.getOrg() != null ? review.getOrg().getOrgName() : "N/A")
+                                    .orgId((org != null) ? org.getId() : null)
+                                    .orgName((org != null) ? org.getOrgName() : "N/A")
                                     .build()
                             )
-                            .images(presignedUrl) // Presigned URL 반환
+                            .images(presignedUrl)
                             .build();
                 })
                 .collect(Collectors.toList());
     }
 
+
     @Override
     @Transactional(readOnly = true)
     public ReviewDetailResponseDto detailReview(Integer reviewId) {
 
-        Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new RuntimeException("해당 후기를 찾을 수 없습니다. reviewId: " + reviewId));
+        Review review = reviewRepository.findByIdAndIsDeletedFalse(reviewId)
+                .orElseThrow(() -> new NotFoundException("해당 후기를 찾을 수 없습니다. reviewId: " + reviewId));
 
         User writer = review.getWriter();
         Recruit recruit = review.getRecruit();
-        Template template = (recruit != null) ? recruit.getTemplate() : null;
-        TemplateGroup group = (template != null) ? template.getGroup() : null;
-        Category category = (template != null) ? template.getCategory() : null;
+        Template template = Optional.ofNullable(recruit).map(Recruit::getTemplate).orElse(null);
+        TemplateGroup group = Optional.ofNullable(template).map(Template::getGroup).orElse(null);
+        Category category = Optional.ofNullable(template).map(Template::getCategory).orElse(null);
         Organization organization = review.getOrg();
 
-        // 1. 리뷰의 모든 이미지 Object Path 가져오기
         List<String> objectPaths = reviewImageRepository.findAllImagesByReviewId(review.getId())
                 .stream()
-                .filter(Objects::nonNull) // null 값 제거
+                .filter(Objects::nonNull)
                 .toList();
 
-        // 2. Presigned URL 변환 (Object Path -> Presigned URL)
         List<String> imageUrls = objectPaths.stream()
                 .map(path -> {
-                    if (path == null || path.isEmpty()) {
-                        return null; // objectPath가 null이면 Presigned URL 생성하지 않음
-                    }
+                    if (path == null || path.isEmpty()) return null;
                     try {
                         return imageUtil.getPresignedDownloadUrl(path);
                     } catch (Exception e) {
-                        throw new RuntimeException("Presigned URL 생성 중 오류 발생: " + e.getMessage(), e);
+                        return null;
                     }
                 })
-                .filter(Objects::nonNull) // Presigned URL이 null이면 제거
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+
+        String profileImageUrl = null;
+        if (writer.getProfileImage() != null) {
+            try {
+                profileImageUrl = imageUtil.getPresignedDownloadUrl(writer.getProfileImage());
+            } catch (Exception e) {
+                profileImageUrl = null;
+            }
+        }
 
         List<ReviewDetailResponseDto.CommentDto> comments = review.getReviewComments().stream()
                 .sorted(Comparator.comparing(ReviewComment::getCreatedAt))
@@ -476,97 +580,105 @@ public class ReviewServiceImpl implements ReviewService {
                         .build())
                 .collect(Collectors.toList());
 
-        try {
-            return ReviewDetailResponseDto.builder()
-                    .reviewId(review.getId())
-                    .title(review.getTitle())
-                    .content(review.getContent())
-                    .isPublic(review.getIsPublic())
-                    .attended(true)
-                    .createdAt(review.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
-                    .images(imageUrls)
-                    .recruit(recruit != null ? ReviewDetailResponseDto.RecruitDto.builder()
-                            .recruitId(recruit.getId())
-                            .activityDate(recruit.getActivityDate().toInstant().atZone(ZoneId.of("Asia/Seoul")).toLocalDate())
-                            .activityStart(recruit.getActivityStart().doubleValue())
-                            .activityEnd(recruit.getActivityEnd().doubleValue())
-                            .status(recruit.getStatus())
-                            .build() : null)
-                    .category(category != null ? ReviewDetailResponseDto.CategoryDto.builder()
-                            .categoryId(category.getId())
-                            .name(category.getName())
-                            .build() : null)
-                    .writer(ReviewDetailResponseDto.WriterDto.builder()
-                            .writerId(writer.getId())
-                            .writerName(writer.getName())
-                            .writerEmail(writer.getEmail())
-                            .writerProfileImage(
-                                    writer.getProfileImage() != null ? imageUtil.getPresignedDownloadUrl(writer.getProfileImage()) : null
-                            ) // 작성자 프로필 이미지도 Presigned URL 변환
-                            .build())
-                    .template(template != null ? ReviewDetailResponseDto.TemplateDto.builder()
-                            .templateId(template.getId())
-                            .title(template.getTitle())
-                            .activityLocation(template.getActivityLocation())
-                            .status(template.getStatus())
-                            .group(group != null ? ReviewDetailResponseDto.GroupDto.builder()
-                                    .groupId(group.getId())
-                                    .groupName(group.getGroupName())
-                                    .build() : null)
-                            .build() : null)
-                    .organization(organization != null ? ReviewDetailResponseDto.OrganizationDto.builder()
-                            .orgId(organization.getId())
-                            .orgName(organization.getOrgName())
-                            .build() : null)
-                    .parentReviewId(review.getParentReview() != null ? review.getParentReview().getId() : null)
-                    .comments(comments)
-                    .build();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return ReviewDetailResponseDto.builder()
+                .reviewId(review.getId())
+                .title(review.getTitle())
+                .content(review.getContent())
+                .isPublic(review.getIsPublic())
+                .attended(true)
+                .createdAt(review.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                .images(imageUrls)
+                .recruit(Optional.ofNullable(recruit).map(r -> ReviewDetailResponseDto.RecruitDto.builder()
+                        .recruitId(r.getId())
+                        .activityDate(r.getActivityDate().toInstant().atZone(ZoneId.of("Asia/Seoul")).toLocalDate())
+                        .activityStart(r.getActivityStart().doubleValue())
+                        .activityEnd(r.getActivityEnd().doubleValue())
+                        .status(r.getStatus())
+                        .build()).orElse(null))
+                .category(Optional.ofNullable(category).map(c -> ReviewDetailResponseDto.CategoryDto.builder()
+                        .categoryId(c.getId())
+                        .name(c.getName())
+                        .build()).orElse(null))
+                .writer(ReviewDetailResponseDto.WriterDto.builder()
+                        .writerId(writer.getId())
+                        .writerName(writer.getName())
+                        .writerEmail(writer.getEmail())
+                        .writerProfileImage(profileImageUrl)
+                        .build())
+                .template(Optional.ofNullable(template).map(t -> ReviewDetailResponseDto.TemplateDto.builder()
+                        .templateId(t.getId())
+                        .title(t.getTitle())
+                        .activityLocation(t.getActivityLocation())
+                        .status(t.getStatus())
+                        .group(Optional.ofNullable(group).map(g -> ReviewDetailResponseDto.GroupDto.builder()
+                                .groupId(g.getId())
+                                .groupName(g.getGroupName())
+                                .build()).orElse(null))
+                        .build()).orElse(null))
+                .organization(Optional.ofNullable(organization).map(o -> ReviewDetailResponseDto.OrganizationDto.builder()
+                        .orgId(o.getId())
+                        .orgName(o.getOrgName())
+                        .build()).orElse(null))
+                .parentReviewId(Optional.ofNullable(review.getParentReview()).map(Review::getId).orElse(null))
+                .comments(comments)
+                .build();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<RecruitReviewResponseDto> recruitReview(Integer recruitId) {
-        List<Review> reviews = reviewRepository.findByRecruitId(recruitId);
+
+        List<Review> reviews = reviewRepository.findByRecruitIdAndIsDeletedFalse(recruitId);
+
+        if (reviews.isEmpty()) {
+            throw new NotFoundException("해당 모집 공고에 대한 리뷰가 없습니다.");
+        }
 
         return reviews.stream()
                 .map(review -> {
-                    // 리뷰의 썸네일(Object Path) 가져오기
-                    String objectPath = reviewImageRepository.findThumbnailImageByReviewId(review.getId()).orElse(null);
+                    String objectPath = reviewImageRepository
+                            .findThumbnailImageByReviewId(review.getId(), PageRequest.of(0, 1))
+                            .stream().findFirst().orElse(null);
 
-                    // Presigned URL 변환 (Object Path -> Presigned URL)
                     String thumbnailUrl = null;
-                    try {
-                        thumbnailUrl = (objectPath != null) ? imageUtil.getPresignedDownloadUrl(objectPath) : null;
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
+                    if (objectPath != null) {
+                        try {
+                            thumbnailUrl = imageUtil.getPresignedDownloadUrl(objectPath);
+                        } catch (Exception e) {
+                            thumbnailUrl = null;
+                        }
                     }
+
+                    Recruit recruit = review.getRecruit();
+                    Template template = (recruit != null) ? recruit.getTemplate() : null;
+                    TemplateGroup group = (template != null) ? template.getGroup() : null;
+                    Organization org = review.getOrg();
 
                     return RecruitReviewResponseDto.builder()
                             .review(RecruitReviewResponseDto.ReviewDto.builder()
                                     .reviewId(review.getId())
-                                    .recruitId(review.getRecruit().getId())
+                                    .recruitId((recruit != null) ? recruit.getId() : null)
                                     .title(review.getTitle())
                                     .content(review.getContent())
                                     .isDeleted(review.getIsDeleted())
                                     .updatedAt(review.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
                                     .createdAt(review.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
-                                    .build())
+                                    .build()
+                            )
                             .writer(RecruitReviewResponseDto.WriterDto.builder()
-                                    .name(review.getWriter() != null ? review.getWriter().getName() : "Unknown")
-                                    .build())
-                            .group(review.getRecruit().getTemplate() != null && review.getRecruit().getTemplate().getGroup() != null ?
-                                    RecruitReviewResponseDto.GroupDto.builder()
-                                            .groupId(review.getRecruit().getTemplate().getGroup().getId())
-                                            .groupName(review.getRecruit().getTemplate().getGroup().getGroupName())
-                                            .build()
-                                    : null)
+                                    .name((review.getWriter() != null) ? review.getWriter().getName() : "Unknown")
+                                    .build()
+                            )
+                            .group((group != null) ? RecruitReviewResponseDto.GroupDto.builder()
+                                    .groupId(group.getId())
+                                    .groupName(group.getGroupName())
+                                    .build() : null
+                            )
                             .organization(RecruitReviewResponseDto.OrganizationDto.builder()
-                                    .orgId(review.getOrg().getId())
-                                    .orgName(review.getOrg().getOrgName())
-                                    .build())
+                                    .orgId((org != null) ? org.getId() : null)
+                                    .orgName((org != null) ? org.getOrgName() : "N/A")
+                                    .build()
+                            )
                             .images(thumbnailUrl)
                             .build();
                 })

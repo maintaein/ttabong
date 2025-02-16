@@ -31,6 +31,16 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
     @Query("UPDATE Application a SET a.evaluationDone = true WHERE a.id = :applicationId")
     void markEvaluationAsDone(@Param("applicationId") Integer applicationId);
 
+    // review part
+    @Query("""
+        SELECT COUNT(a) > 0 FROM Application a
+        WHERE a.volunteer.user.id = :userId
+        AND a.recruit.id = :recruitId
+        AND a.isDeleted = false
+    """)
+    boolean existsByVolunteerUserIdAndRecruitId(@Param("userId") Integer userId,
+                                                @Param("recruitId") Integer recruitId);
+
     // for VolRecruit -------------------------------------------
     // 사용자가 신청한 모집 공고 목록 조회
 //    @Query("SELECT a FROM Application a WHERE a.volunteer.user.id = :userId AND a.id > :cursor AND a.isDeleted = FALSE ORDER BY a.createdAt DESC")

@@ -306,7 +306,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         Organization userOrg = organizationRepository.findByUserId(authDto.getUserId())
                 .orElseThrow(() -> new NotFoundException("해당 사용자의 기관 정보를 찾을 수 없습니다."));
-        TemplateGroup templateGroup = templateGroupRepository.findById(updateGroupDto.getGroupId())
+        TemplateGroup templateGroup = templateGroupRepository.findByIdAndIsDeletedFalse(updateGroupDto.getGroupId())
                 .orElseThrow(() -> new NotFoundException("해당 그룹을 찾을 수 없습니다."));
 
         if (!templateGroup.getOrg().getId().equals(userOrg.getId())) {
@@ -377,17 +377,19 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         checkOrgToken(authDto);
 
         Organization userOrg = organizationRepository.findByUserId(authDto.getUserId())
-                .orElseThrow(() -> new NotFoundException("없는 기관입니다."));
+                .orElseThrow(() -> new NotFoundException("해당 기관이 없습니다."));
 
         Integer groupId = deleteGroupDto.getGroupId();
-        TemplateGroup groupToDelete = templateGroupRepository.findById(groupId)
-                .orElseThrow(() -> new NotFoundException("해당 그룹을 찾을 수 없습니다."));
+
+        TemplateGroup groupToDelete = templateGroupRepository.findByIdAndIsDeletedFalse(groupId)
+                .orElseThrow(() -> new NotFoundException("해당 그룹을 찾을 수 없거나 이미 삭제되었습니다."));
 
         if (!groupToDelete.getOrg().getId().equals(userOrg.getId())) {
             throw new UnauthorizedException("이 그룹을 삭제할 권한이 없습니다.");
         }
 
-        templateGroupRepository.deleteGroupByIdAndOrg(groupId, userOrg.getId());
+        groupToDelete.markDeleted();
+        templateGroupRepository.save(groupToDelete);
 
         return DeleteGroupResponseDto.builder()
                 .message("삭제 성공")
@@ -395,6 +397,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .orgId(userOrg.getId())
                 .build();
     }
+
 
     @Override
     @Transactional(readOnly = true)
@@ -410,7 +413,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                         .templates(
                                 templateRepository.findTemplatesByGroupId(group.getId()).stream()
                                         .map(template -> {
-                                            // 모든 이미지 프리사인드url 가져오기 (널값 제외)
                                             List<String> imageUrls = imageService.getImageUrls(template.getId(), true);
 
                                             return ReadTemplatesResponseDto.TemplateDto.builder()
@@ -444,12 +446,12 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         checkOrgToken(authDto);
 
         if (createTemplateDto.getImageCount() != null && createTemplateDto.getImageCount() > 10) {
-            throw new BadRequestException("최대 개수를 초과했습니다. 최대 " + 10 + "개까지 업로드할 수 있습니다.");
+            throw new ImageProcessException("최대 개수를 초과했습니다. 최대 " + 10 + "개까지 업로드할 수 있습니다.");
         }
 
         Organization organization = organizationRepository.findByUserId(authDto.getUserId())
                 .orElseThrow(() -> new NotFoundException("해당 유저의 기관 정보 없음"));
-        TemplateGroup group = templateGroupRepository.findById(createTemplateDto.getGroupId())
+        TemplateGroup group = templateGroupRepository.findByIdAndIsDeletedFalse(createTemplateDto.getGroupId())
                 .orElseThrow(() -> new NotFoundException("해당 그룹 없음"));
         Category category = categoryRepository.findById(createTemplateDto.getCategoryId())
                 .orElseThrow(() -> new NotFoundException("해당 카테고리 없음"));
@@ -557,7 +559,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     @Transactional(readOnly = true)
     public ReadRecruitResponseDto readRecruit(Integer recruitId, AuthDto authDto) {
 
-        Recruit recruit = recruitRepository.findByRecruitIdOrg(recruitId)
+        Recruit recruit = recruitRepository.findByRecruitId(recruitId)
                 .orElseThrow(() -> new NotFoundException("해당 공고가 없거나 삭제되었습니다."));
 
         LocalDateTime deadlineLocalDateTime = recruit.getDeadline() != null
@@ -650,7 +652,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                     try {
                         profileImageUrl = (profileImagePath != null) ? imageUtil.getPresignedDownloadUrl(profileImagePath) : null;
                     } catch (Exception e) {
-                        throw new RuntimeException("프로필 이미지 URL 생성 중 오류 발생", e);
+                        throw new ImageProcessException("프로필 이미지 URL 생성 중 오류 발생", e);
                     }
 
                     return ReadApplicationsResponseDto.ApplicationDetail.builder()

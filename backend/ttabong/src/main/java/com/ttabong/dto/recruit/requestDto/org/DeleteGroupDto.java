@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class DeleteGroupDto {
-    Integer groupId;
-    Integer orgId;
+    private Integer groupId;
+    private Integer orgId;
 }
