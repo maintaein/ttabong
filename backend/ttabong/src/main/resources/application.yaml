@@ -44,7 +44,7 @@ spring:
         hibernate:
             ddl-auto: none
 minio:
-  url: http://ttabong.store:9000
+  url: http://ttabong.store:8000
   access-key: ttabong
   secret-key: ttabong-bongteum
   bucket-name: ttabong-bucket
@@ -74,7 +74,7 @@ spring:
     username: user
     password: password
 minio:
-  url: http://localhost:9000
+  url: http://localhost:8000
   access-key: ttabong
   secret-key: ttabong-bongteum
   bucket-name: ttabong-bucket
@@ -100,7 +100,7 @@ spring:
     host: rabbitmqdeploy
     port: 5672
 minio:
-  url: http://localhost
+  url: http://localhost:8000
   access-key: ttabong
   secret-key: ttabong-bongteum
   bucket-name: ttabong-bucket
