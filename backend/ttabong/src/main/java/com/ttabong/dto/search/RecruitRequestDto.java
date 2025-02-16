@@ -1,16 +1,39 @@
 package com.ttabong.dto.search;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.util.Date;
 
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class RecruitRequestDto {
-    private String recruitTitle;
-    private String status;
-    private String region;
-    private LocalDate startDate;
-    private LocalDate endDate;
+
+    private String templateTitle;
+
+    private SearchConditions searchConditions;
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class SearchConditions {
+        private String organizationName;
+        private String status;
+        private ActivityDate activityDate;
+        private String region;
+
+        @Getter
+        @NoArgsConstructor
+        @AllArgsConstructor
+        @Builder
+        public static class ActivityDate {
+            private Date start;
+            private Date end;
+        }
+    }
 }

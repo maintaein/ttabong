@@ -11,15 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -31,82 +23,97 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public RecruitResponseDto searchTemplates(RecruitRequestDto requestDto, Integer cursor, Integer limit) {
-        Instant currentDate = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant();
+        int pageSize = (limit == null) ? 10 : limit;
 
         List<Recruit> recruits = recruitRepository.searchRecruits(
-                requestDto.getRecruitTitle(),
-                requestDto.getStatus(),
-                requestDto.getRegion(),
-                requestDto.getStartDate(),
-                requestDto.getEndDate(),
+                requestDto.getTemplateTitle(),
+                requestDto.getSearchConditions().getOrganizationName(),
+                requestDto.getSearchConditions().getStatus(),
+                requestDto.getSearchConditions().getActivityDate() != null
+                        ? requestDto.getSearchConditions().getActivityDate().getStart() : null,
+                requestDto.getSearchConditions().getActivityDate() != null
+                        ? requestDto.getSearchConditions().getActivityDate().getEnd() : null,
+                requestDto.getSearchConditions().getRegion(),
                 cursor,
-                currentDate,
-                PageRequest.of(0, limit)
+                PageRequest.of(0, pageSize)
         );
 
-        Map<Integer, List<Recruit>> recruitMap = recruits.stream()
-                .collect(Collectors.groupingBy(r -> r.getTemplate().getId()));
+        Map<Integer, RecruitResponseDto.TemplateDto> templateMap = new LinkedHashMap<>();
 
-        List<RecruitResponseDto.TemplateDto> templates = recruitMap.entrySet().stream()
-                .map(entry -> {
-                    Recruit sampleRecruit = entry.getValue().get(0);
-                    var template = sampleRecruit.getTemplate();
-                    var group = template.getGroup();
-                    var org = template.getOrg();
+        for (Recruit recruit : recruits) {
+            var template = recruit.getTemplate();
+            var group = template.getGroup();
+            var org = template.getOrg();
 
-                    LocalDateTime createdAt = template.getCreatedAt() != null ?
-                            DateTimeUtil.convertToLocalDateTime(template.getCreatedAt()) : null;
+            if (templateMap.containsKey(template.getId())) {
+                templateMap.get(template.getId()).getRecruits().add(
+                        RecruitResponseDto.RecruitDto.builder()
+                                .recruitId(recruit.getId())
+                                .activityDate(recruit.getActivityDate())
+                                .deadline(recruit.getDeadline())
+                                .activityStart(recruit.getActivityStart())
+                                .activityEnd(recruit.getActivityEnd())
+                                .maxVolunteer(recruit.getMaxVolunteer())
+                                .participateVolCount(recruit.getParticipateVolCount())
+                                .status(recruit.getStatus())
+                                .updatedAt(DateTimeUtil.convertToLocalDateTime(recruit.getUpdatedAt()))
+                                .createdAt(DateTimeUtil.convertToLocalDateTime(recruit.getCreatedAt()))
+                                .build()
+                );
+            } else {
+                List<RecruitResponseDto.RecruitDto> recruitDtos = new ArrayList<>();
+                recruitDtos.add(
+                        RecruitResponseDto.RecruitDto.builder()
+                                .recruitId(recruit.getId())
+                                .activityDate(recruit.getActivityDate())
+                                .deadline(recruit.getDeadline())
+                                .activityStart(recruit.getActivityStart())
+                                .activityEnd(recruit.getActivityEnd())
+                                .maxVolunteer(recruit.getMaxVolunteer())
+                                .participateVolCount(recruit.getParticipateVolCount())
+                                .status(recruit.getStatus())
+                                .updatedAt(DateTimeUtil.convertToLocalDateTime(recruit.getUpdatedAt()))
+                                .createdAt(DateTimeUtil.convertToLocalDateTime(recruit.getCreatedAt()))
+                                .build()
+                );
 
-                    String imageUrl = Optional.ofNullable(template.getThumbnailImage())
-                            .map(image -> {
-                                try {
-                                    return imageUtil.getPresignedDownloadUrl(image.getImageUrl());
-                                } catch (Exception e) {
-                                    return null;
-                                }
-                            })
-                            .orElse(null);
+                String imageUrl = Optional.ofNullable(template.getThumbnailImage())
+                        .map(image -> {
+                            try {
+                                return imageUtil.getPresignedDownloadUrl(image.getImageUrl());
+                            } catch (Exception e) {
+                                return null;
+                            }
+                        })
+                        .orElse(null);
 
-                    List<RecruitResponseDto.RecruitDto> recruitDtos = entry.getValue().stream()
-                            .map(r -> RecruitResponseDto.RecruitDto.builder()
-                                    .recruitId(r.getId())
-                                    .activityDate(DateTimeUtil.convertToLocalDate(r.getActivityDate()))
-                                    .deadline(r.getDeadline())
-                                    .activityStart(r.getActivityStart())
-                                    .activityEnd(r.getActivityEnd())
-                                    .maxVolunteer(r.getMaxVolunteer())
-                                    .participateVolCount(r.getParticipateVolCount())
-                                    .status(r.getStatus())
-                                    .updatedAt(r.getUpdatedAt() != null ? DateTimeUtil.convertToLocalDateTime(r.getUpdatedAt()) : null)
-                                    .createdAt(r.getCreatedAt() != null ? DateTimeUtil.convertToLocalDateTime(r.getCreatedAt()) : null)
-                                    .build())
-                            .collect(Collectors.toList());
+                RecruitResponseDto.TemplateDto templateDto = RecruitResponseDto.TemplateDto.builder()
+                        .templateId(template.getId())
+                        .categoryId(template.getCategory() != null ? template.getCategory().getId() : null)
+                        .title(template.getTitle())
+                        .activityLocation(template.getActivityLocation())
+                        .status(recruit.getStatus())
+                        .imageUrl(imageUrl)
+                        .contactName(template.getContactName())
+                        .contactPhone(template.getContactPhone())
+                        .description(template.getDescription())
+                        .createdAt(DateTimeUtil.convertToLocalDateTime(template.getCreatedAt()))
+                        .organization(RecruitResponseDto.OrganizationDto.builder()
+                                .orgId(org != null ? org.getId() : null)
+                                .orgName(org != null ? org.getOrgName() : null)
+                                .build())
+                        .group(RecruitResponseDto.GroupDto.builder()
+                                .groupId(group.getId())
+                                .groupName(group.getGroupName())
+                                .build())
+                        .recruits(recruitDtos)
+                        .build();
 
-                    return RecruitResponseDto.TemplateDto.builder()
-                            .templateId(template.getId())
-                            .categoryId(template.getCategory() != null ? template.getCategory().getId() : null)
-                            .title(template.getTitle())
-                            .activityLocation(template.getActivityLocation())
-                            .status(sampleRecruit.getStatus())
-                            .imageUrl(imageUrl)
-                            .contactName(template.getContactName())
-                            .contactPhone(template.getContactPhone())
-                            .description(template.getDescription())
-                            .createdAt(createdAt)
-                            .organization(RecruitResponseDto.OrganizationDto.builder()
-                                    .orgId(org != null ? org.getId() : null)
-                                    .orgName(org != null ? org.getOrgName() : null)
-                                    .build())
-                            .group(RecruitResponseDto.GroupDto.builder()
-                                    .groupId(group.getId())
-                                    .groupName(group.getGroupName())
-                                    .build())
-                            .recruits(recruitDtos)
-                            .build();
-                })
-                .sorted(Comparator.comparing(RecruitResponseDto.TemplateDto::getTemplateId).reversed())
-                .collect(Collectors.toList());
+                templateMap.put(template.getId(), templateDto);
+            }
+        }
 
+        List<RecruitResponseDto.TemplateDto> templates = new ArrayList<>(templateMap.values());
         Integer nextCursor = templates.isEmpty() ? null : templates.get(templates.size() - 1).getTemplateId();
 
         return RecruitResponseDto.builder()
@@ -114,5 +121,4 @@ public class SearchServiceImpl implements SearchService {
                 .nextCursor(nextCursor)
                 .build();
     }
-
 }

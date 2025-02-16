@@ -7,8 +7,8 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Getter
@@ -63,7 +63,7 @@ public class RecruitResponseDto {
     @Builder
     public static class RecruitDto {
         private Integer recruitId;
-        private LocalDate activityDate;
+        private Date activityDate;
         private Instant deadline;
         private BigDecimal activityStart;
         private BigDecimal activityEnd;

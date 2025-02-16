@@ -10,7 +10,6 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -81,25 +80,24 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
         JOIN FETCH t.org o
         JOIN FETCH t.group g
         WHERE
-            (:recruitTitle IS NULL OR t.title LIKE %:recruitTitle% OR o.orgName LIKE %:recruitTitle%)
+            (:templateTitle IS NULL OR t.title LIKE %:templateTitle%)
+            AND (:organizationName IS NULL OR o.orgName LIKE %:organizationName%)
             AND (:status IS NULL OR r.status = :status)
-            AND (:region IS NULL OR t.activityLocation LIKE %:region%)
             AND ((:startDate IS NULL OR :endDate IS NULL) OR (r.activityDate BETWEEN :startDate AND :endDate))
-            AND (:cursor IS NULL OR t.id < :cursor)
+            AND (:region IS NULL OR t.activityLocation LIKE %:region%)
+            AND (:cursor IS NULL OR t.id > :cursor)
             AND r.isDeleted = false
             AND t.isDeleted = false
-            AND r.deadline >= :currentDate
-            AND r.status <> 'RECRUITMENT_CLOSED'
         ORDER BY t.id DESC, r.createdAt DESC
     """)
     List<Recruit> searchRecruits(
-            @Param("recruitTitle") String recruitTitle,
+            @Param("templateTitle") String templateTitle,
+            @Param("organizationName") String organizationName,
             @Param("status") String status,
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate,
             @Param("region") String region,
-            @Param("startDate") LocalDate startDate,
-            @Param("endDate") LocalDate endDate,
             @Param("cursor") Integer cursor,
-            @Param("currentDate") Instant currentDate,
             Pageable pageable
     );
 
