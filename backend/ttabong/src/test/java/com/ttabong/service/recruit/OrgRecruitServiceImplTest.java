@@ -146,31 +146,26 @@ class OrgRecruitServiceImplTest {
 
     @Test
     void testActivityEndTimeInFuture() {
-        // ✅ 현재 시간 + 2시간 후 종료
-        Recruit recruit = createRecruitWithEndTime(new BigDecimal("23.59"), 0); // 오늘 날짜, 18:30 종료
+        Recruit recruit = createRecruitWithEndTime(new BigDecimal("23.59"), 0);
 
         int remainingMinutes = orgRecruitService.setUpdateStatusSchedule(recruit);
 
-        // 🔥 18:30 종료니까 현재 시간이 16:30이라면 남은 시간은 120분 이상이어야 함
         assertTrue(remainingMinutes > 0);
         System.out.println("✅ 테스트 통과: 활동 종료까지 남은 시간 = " + remainingMinutes + "분");
     }
 
     @Test
     void testActivityEndTimeInPast() {
-        // ✅ 현재 시간 - 1시간 전 종료
-        Recruit recruit = createRecruitWithEndTime(new BigDecimal("00.00"), 0); // 오늘 날짜, 12:00 종료
+        Recruit recruit = createRecruitWithEndTime(new BigDecimal("00.00"), 0);
 
         int remainingMinutes = orgRecruitService.setUpdateStatusSchedule(recruit);
 
-        // 🔥 종료 시간이 이미 지났으므로 0 이하
         assertTrue(remainingMinutes <= 0);
         System.out.println("✅ 테스트 통과: 이미 종료된 활동, 남은 시간 = " + remainingMinutes + "분");
     }
 
     @Test
     void testActivityEndTimeTomorrow() {
-        // ✅ 내일 10:00 종료
         Recruit recruit = createRecruitWithEndTime(new BigDecimal("23.59"), 1); // 내일 날짜, 10:00 종료
 
         int remainingMinutes = orgRecruitService.setUpdateStatusSchedule(recruit);
