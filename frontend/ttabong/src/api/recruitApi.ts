@@ -3,7 +3,8 @@ import type {
   Application, 
   CreateRecruitRequest, 
   UpdateRecruitRequest,
-  GetApplicationsParams 
+  GetApplicationsParams,
+  RecruitDetail
 } from '@/types/recruitType';
 
 export const recruitApi = {
@@ -43,8 +44,12 @@ export const recruitApi = {
     return response.data;
   },
 
-  getRecruitDetail: async (recruitId: number) => {
-    const response = await axiosInstance.get(`/org/recruits/${recruitId}`);
+  getRecruitDetail: async (recruitId: number): Promise<RecruitDetail> => {
+    const response = await axiosInstance.get(`/vol/recruits/${recruitId}`);
     return response.data;
   },
+
+  cancelApplication: async (applicationId: number): Promise<void> => {
+    await axiosInstance.patch(`/vol/applications/${applicationId}`);
+  }
 }; 

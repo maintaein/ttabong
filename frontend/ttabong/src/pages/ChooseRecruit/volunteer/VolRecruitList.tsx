@@ -4,17 +4,19 @@ import type { Application } from '@/types/recruitType';
 
 interface RecruitListProps {
   recruits: Application[];
-  onRecruitClick: (application: Application) => void;
+  onReviewWrite: (application: Application) => void;
+  onCancelClick: (applicationId: number) => void;
 }
 
-export const RecruitList: React.FC<RecruitListProps> = ({ recruits, onRecruitClick }) => {
+export const RecruitList: React.FC<RecruitListProps> = ({ recruits, onReviewWrite, onCancelClick }) => {
   return (
     <div className="space-y-4">
-      {Array.isArray(recruits) && recruits.map((application) => (
-        <RecruitCard 
+      {recruits.map((application) => (
+        <RecruitCard
           key={application.applicationId}
           application={application}
-          onClick={onRecruitClick}
+          onReviewWrite={onReviewWrite}
+          onCancelClick={onCancelClick}
         />
       ))}
     </div>

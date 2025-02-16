@@ -12,6 +12,8 @@ import type { LikedTemplate } from '@/types/userType';
 
 interface UserState {
   userId: string | null;
+  userName: string | null; 
+  userEmail: string | null;
   userType: 'volunteer' | 'organization' | null;
   isLoading: boolean;
   error: string | null;
@@ -53,6 +55,8 @@ export const useUserStore = create<UserState>()(
   persist(
     (set, get) => ({
       ...initializeAuth(),
+      userName: null,
+      userEmail: null,
       isLoading: false,
       error: null,
       likedTemplates: [],
@@ -77,6 +81,8 @@ export const useUserStore = create<UserState>()(
           
           set({
             userId: decoded.sub,
+            userName: response.name,
+            userEmail: response.email,
             userType: decoded.userType as 'volunteer' | 'organization',
             error: null
           });
@@ -164,6 +170,8 @@ export const useUserStore = create<UserState>()(
       name: 'user-storage',
       partialize: (state) => ({ 
         userId: state.userId,
+        userName: state.userName,
+        userEmail: state.userEmail,
         userType: state.userType,
         likedTemplates: state.likedTemplates
       }),

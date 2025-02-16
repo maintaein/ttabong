@@ -6,6 +6,7 @@ import { Send, MoreVertical } from 'lucide-react';
 import type { Comment } from '@/types/reviewType';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useState } from 'react';
+import { useUserStore } from '@/stores/userStore';
 
 interface ReviewCommentsProps {
   comments: Comment[];
@@ -27,7 +28,8 @@ export function ReviewComments({
   onDeleteComment 
 }: ReviewCommentsProps) {
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editContent, setEditContent] = useState('');
+  const [editContent, setEditContent] = useState(''); 
+  const { userName } = useUserStore();
 
   const handleEdit = (commentId: number, content: string) => {
     setEditingId(commentId);
@@ -49,10 +51,10 @@ export function ReviewComments({
             {comments.map((comment) => (
               <div key={comment.commentId} className="flex gap-2 items-start">
                 <Avatar className="w-8 h-8">
-                  <AvatarFallback>{(comment.writerName || '?')[0]}</AvatarFallback>
+                  <AvatarFallback>{(comment.writerName || userName || '?')[0]}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <strong className="text-sm">{comment.writerName}</strong>
+                  <strong className="text-sm">{comment.writerName || userName}</strong>
                   {editingId === comment.commentId ? (
                     <div className="flex gap-2 mt-1">
                       <Input
