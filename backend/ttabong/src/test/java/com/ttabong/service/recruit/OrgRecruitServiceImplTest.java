@@ -8,8 +8,8 @@ import com.ttabong.entity.recruit.Template;
 import com.ttabong.entity.recruit.TemplateGroup;
 import com.ttabong.repository.recruit.RecruitRepository;
 import com.ttabong.repository.recruit.TemplateRepository;
+import com.ttabong.util.CacheUtil;
 import com.ttabong.util.service.ImageService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -45,6 +45,8 @@ class OrgRecruitServiceImplTest {
     @Mock
     private ImageService imageService;
 
+    @Mock
+    private CacheUtil cacheUtil;
 
     @InjectMocks
     private OrgRecruitServiceImpl orgRecruitService;

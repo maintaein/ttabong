@@ -776,15 +776,19 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         Date activityDate = recruit.getActivityDate();
         BigDecimal activityEnd = recruit.getActivityEnd();
 
-        int hour = activityEnd.intValue();
-        int minutes = activityEnd.remainder(BigDecimal.ONE).multiply(BigDecimal.valueOf(100)).intValue();
-
         LocalDateTime activityDateTime = activityDate.toInstant()
                 .atZone(ZoneId.systemDefault())
                 .toLocalDateTime();
-        LocalDateTime activityEndTime = activityDateTime.withHour(hour).withMinute(minutes).withSecond(0);
+        LocalDateTime activityEndTime = activityDateTime
+                .withHour(activityEnd.intValue())
+                .withMinute(activityEnd.remainder(BigDecimal.ONE).multiply(BigDecimal.valueOf(100)).intValue())
+                .withSecond(0);
         LocalDateTime now = LocalDateTime.now();
+
         int remainingMinutes = (int) ChronoUnit.MINUTES.between(now, activityEndTime);
+
+        cacheUtil.eventScheduler(recruit.getId(), remainingMinutes);
+
         return remainingMinutes;
     }
 }
