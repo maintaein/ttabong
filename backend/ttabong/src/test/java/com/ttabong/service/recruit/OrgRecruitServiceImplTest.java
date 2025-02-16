@@ -10,6 +10,8 @@ import com.ttabong.repository.recruit.RecruitRepository;
 import com.ttabong.repository.recruit.TemplateRepository;
 import com.ttabong.util.CacheUtil;
 import com.ttabong.util.service.ImageService;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -146,34 +148,42 @@ class OrgRecruitServiceImplTest {
         return recruit;
     }
 
-    @Test
-    void testActivityEndTimeInFuture() {
-        Recruit recruit = createRecruitWithEndTime(new BigDecimal("23.59"), 0);
+    @Nested
+    @DisplayName("공고 시간 관련 테스트 그룹")
+    class ActivityTimeTest {
 
-        int remainingMinutes = orgRecruitService.setUpdateStatusSchedule(recruit);
+        @Test
+        @DisplayName("금일 완료 예정 공고 테스트")
+        void testActivityEndTimeInFuture() {
+            Recruit recruit = createRecruitWithEndTime(new BigDecimal("23.59"), 0);
 
-        assertTrue(remainingMinutes > 0);
-        System.out.println("✅ 테스트 통과: 활동 종료까지 남은 시간 = " + remainingMinutes + "분");
-    }
+            int remainingMinutes = orgRecruitService.setUpdateStatusSchedule(recruit);
 
-    @Test
-    void testActivityEndTimeInPast() {
-        Recruit recruit = createRecruitWithEndTime(new BigDecimal("00.00"), 0);
+            assertTrue(remainingMinutes > 0);
+            System.out.println("✅ 테스트 통과: 활동 종료까지 남은 시간 = " + remainingMinutes + "분");
+        }
 
-        int remainingMinutes = orgRecruitService.setUpdateStatusSchedule(recruit);
+        @Test
+        @DisplayName("이미 종료된 공고 테스트")
+        void testActivityEndTimeInPast() {
+            Recruit recruit = createRecruitWithEndTime(new BigDecimal("00.00"), 0);
 
-        assertTrue(remainingMinutes <= 0);
-        System.out.println("✅ 테스트 통과: 이미 종료된 활동, 남은 시간 = " + remainingMinutes + "분");
-    }
+            int remainingMinutes = orgRecruitService.setUpdateStatusSchedule(recruit);
 
-    @Test
-    void testActivityEndTimeTomorrow() {
-        Recruit recruit = createRecruitWithEndTime(new BigDecimal("23.59"), 1); // 내일 날짜, 10:00 종료
+            assertTrue(remainingMinutes <= 0);
+            System.out.println("✅ 테스트 통과: 이미 종료된 활동, 남은 시간 = " + remainingMinutes + "분");
+        }
 
-        int remainingMinutes = orgRecruitService.setUpdateStatusSchedule(recruit);
+        @Test
+        @DisplayName("익일 완료 예정 공고 테스트")
+        void testActivityEndTimeTomorrow() {
+            Recruit recruit = createRecruitWithEndTime(new BigDecimal("23.59"), 1); // 내일 날짜, 10:00 종료
 
-        // 🔥 내일 종료니까 현재 시간이 오늘 10:00이라면 남은 시간은 1440분 이상이어야 함
-        assertTrue(remainingMinutes > 1440);
-        System.out.println("✅ 테스트 통과: 내일 종료되는 활동, 남은 시간 = " + remainingMinutes + "분");
+            int remainingMinutes = orgRecruitService.setUpdateStatusSchedule(recruit);
+
+            // 🔥 내일 종료니까 현재 시간이 오늘 10:00이라면 남은 시간은 1440분 이상이어야 함
+            assertTrue(remainingMinutes > 1440);
+            System.out.println("✅ 테스트 통과: 내일 종료되는 활동, 남은 시간 = " + remainingMinutes + "분");
+        }
     }
 }
