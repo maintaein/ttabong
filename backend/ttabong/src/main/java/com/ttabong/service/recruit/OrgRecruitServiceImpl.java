@@ -54,110 +54,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         }
     }
 
-//    @Transactional(readOnly = true)
-//    public ReadAvailableRecruitsResponseDto readAvailableRecruits(Integer cursor, Integer limit, AuthDto authDto) {
-//
-//        try {
-//            checkOrgToken(authDto);
-//
-//            if (cursor == null || cursor == 0) {
-//                cursor = Integer.MAX_VALUE;
-//            }
-//            if (limit == null || limit == 0) {
-//                limit = 10;
-//            }
-//
-//            List<Template> templates = templateRepository.findAvailableTemplates(cursor, authDto.getUserId(), PageRequest.of(0, limit));
-//
-//            if (templates.isEmpty()) {
-//                throw new NotFoundException("활성화된 템플릿이 없습니다.");
-//            }
-//
-//            Map<Integer, List<Recruit>> recruitMap = templates.stream()
-//                .map(template -> {
-//                    try {
-//                        return recruitRepository.findByTemplateId(template.getId());
-//                    } catch (Exception e) {
-//                        throw new NotFoundException("해당 템플릿에 대한 모집 공고를 찾을 수 없습니다.");
-//                    }
-//                })
-//                .flatMap(List::stream)
-//                .collect(Collectors.groupingBy(recruit -> recruit.getTemplate().getId()));
-//
-//            Map<Integer, List<String>> imageMap = templates.stream()
-//                .collect(Collectors.toMap(
-//                    Template::getId,
-//                    template -> {
-//                        try {
-//                            return imageService.getImageUrls(template.getId(), true);
-//                        } catch (Exception e) {
-//                            return List.of();
-//                        }
-//                    }
-//            ));
-//
-//            List<ReadAvailableRecruitsResponseDto.TemplateDetail> templateDetails = templates.stream().map(template -> {
-//                ReadAvailableRecruitsResponseDto.Group groupInfo = template.getGroup() != null ?
-//                        new ReadAvailableRecruitsResponseDto.Group(
-//                                template.getGroup().getId(),
-//                                template.getGroup().getGroupName()
-//                        ) : new ReadAvailableRecruitsResponseDto.Group(1, "봉사");
-//
-//                List<Recruit> recruitEntities = recruitMap.getOrDefault(template.getId(), List.of());
-//                List<ReadAvailableRecruitsResponseDto.Recruit> recruits = recruitEntities.stream()
-//                        .map(recruit -> ReadAvailableRecruitsResponseDto.Recruit.builder()
-//                                .recruitId(recruit.getId())
-//                                .deadline(recruit.getDeadline() != null ?
-//                                        recruit.getDeadline().atZone(ZoneId.systemDefault()).toLocalDateTime()
-//                                        : LocalDateTime.now())
-//                                .activityDate(recruit.getActivityDate() != null ? recruit.getActivityDate() : new Date())
-//                                .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.ZERO)
-//                                .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.ZERO)
-//                                .maxVolunteer(recruit.getMaxVolunteer())
-//                                .participateVolCount(recruit.getParticipateVolCount())
-//                                .status(recruit.getStatus())
-//                                .updatedAt(recruit.getUpdatedAt() != null ?
-//                                        recruit.getUpdatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime()
-//                                        : LocalDateTime.now())
-//                                .createdAt(recruit.getCreatedAt() != null ?
-//                                        recruit.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime()
-//                                        : LocalDateTime.now())
-//                                .build())
-//                        .collect(Collectors.toList());
-//
-//                List<String> imageUrls = imageMap.getOrDefault(template.getId(), List.of());
-//                String thumbnailImageUrl = imageUrls.isEmpty() ? null : imageUrls.get(0);
-//
-//                return ReadAvailableRecruitsResponseDto.TemplateDetail.builder()
-//                        .template(ReadAvailableRecruitsResponseDto.Template.builder()
-//                                .templateId(template.getId())
-//                                .categoryId(template.getCategory() != null ? template.getCategory().getId() : null)
-//                                .title(template.getTitle())
-//                                .activityLocation(template.getActivityLocation())
-//                                .status(template.getStatus())
-//                                .imageUrl(thumbnailImageUrl)
-//                                .contactName(template.getContactName())
-//                                .contactPhone(template.getContactPhone())
-//                                .description(template.getDescription())
-//                                .createdAt(template.getCreatedAt() != null ?
-//                                        template.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime()
-//                                        : LocalDateTime.now())
-//                                .build())
-//                        .group(groupInfo)
-//                        .recruits(recruits)
-//                        .build();
-//            }).toList();
-//
-//            return ReadAvailableRecruitsResponseDto.builder()
-//                    .templates(templateDetails)
-//                    .build();
-//        } catch (NotFoundException e) {
-//            throw e;
-//        } catch (Exception e) {
-//            throw new RuntimeException("모집 정보를 불러오는 중 오류가 발생했습니다.", e);
-//        }
-//    }
-
     @Transactional(readOnly = true)
     public ReadAvailableRecruitsResponseDto readAvailableRecruits(Integer cursor, Integer limit, AuthDto authDto) {
         try {
@@ -207,8 +103,8 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                                         .orElse(null))
                                 .activityDate(Optional.ofNullable(recruit.getActivityDate())
                                         .orElse(new Date()))
-                                .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.ZERO)
-                                .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.ZERO)
+                                .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.valueOf(10.00))
+                                .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.valueOf(12.00))
                                 .maxVolunteer(recruit.getMaxVolunteer())
                                 .participateVolCount(recruit.getParticipateVolCount())
                                 .status(recruit.getStatus())
@@ -248,7 +144,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
             throw new RuntimeException("모집 정보를 불러오는 중 오류가 발생했습니다.", e);
         }
     }
-
 
     @Override
     @Transactional(readOnly = true)
@@ -673,8 +568,8 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .recruitId(recruit.getId())
                 .deadline(deadlineLocalDateTime)
                 .activityDate(activityDate)
-                .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.ZERO)
-                .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.ZERO)
+                .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.valueOf(10.00))
+                .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.valueOf(12.00))
                 .maxVolunteer(recruit.getMaxVolunteer())
                 .participateVolCount(recruit.getParticipateVolCount())
                 .status(recruit.getStatus())

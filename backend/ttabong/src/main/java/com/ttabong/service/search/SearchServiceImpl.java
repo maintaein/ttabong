@@ -8,14 +8,16 @@ import com.ttabong.util.DateTimeUtil;
 import com.ttabong.util.ImageUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -29,7 +31,7 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public RecruitResponseDto searchTemplates(RecruitRequestDto requestDto, Integer cursor, Integer limit) {
-        Pageable pageable = PageRequest.of(0, limit, Sort.by("id").ascending());
+        Instant currentDate = LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant();
 
         List<Recruit> recruits = recruitRepository.searchRecruits(
                 requestDto.getRecruitTitle(),
@@ -38,13 +40,17 @@ public class SearchServiceImpl implements SearchService {
                 requestDto.getStartDate(),
                 requestDto.getEndDate(),
                 cursor,
-                pageable
+                currentDate,
+                PageRequest.of(0, limit)
         );
 
-        List<RecruitResponseDto.TemplateDto> templates = recruits.stream()
-                .sorted(Comparator.comparing((Recruit r) -> r.getTemplate().getId()).reversed())
-                .map(recruit -> {
-                    var template = recruit.getTemplate();
+        Map<Integer, List<Recruit>> recruitMap = recruits.stream()
+                .collect(Collectors.groupingBy(r -> r.getTemplate().getId()));
+
+        List<RecruitResponseDto.TemplateDto> templates = recruitMap.entrySet().stream()
+                .map(entry -> {
+                    Recruit sampleRecruit = entry.getValue().get(0);
+                    var template = sampleRecruit.getTemplate();
                     var group = template.getGroup();
                     var org = template.getOrg();
 
@@ -61,27 +67,44 @@ public class SearchServiceImpl implements SearchService {
                             })
                             .orElse(null);
 
+                    List<RecruitResponseDto.RecruitDto> recruitDtos = entry.getValue().stream()
+                            .map(r -> RecruitResponseDto.RecruitDto.builder()
+                                    .recruitId(r.getId())
+                                    .activityDate(DateTimeUtil.convertToLocalDate(r.getActivityDate()))
+                                    .deadline(r.getDeadline())
+                                    .activityStart(r.getActivityStart())
+                                    .activityEnd(r.getActivityEnd())
+                                    .maxVolunteer(r.getMaxVolunteer())
+                                    .participateVolCount(r.getParticipateVolCount())
+                                    .status(r.getStatus())
+                                    .updatedAt(r.getUpdatedAt() != null ? DateTimeUtil.convertToLocalDateTime(r.getUpdatedAt()) : null)
+                                    .createdAt(r.getCreatedAt() != null ? DateTimeUtil.convertToLocalDateTime(r.getCreatedAt()) : null)
+                                    .build())
+                            .collect(Collectors.toList());
+
                     return RecruitResponseDto.TemplateDto.builder()
                             .templateId(template.getId())
                             .categoryId(template.getCategory() != null ? template.getCategory().getId() : null)
                             .title(template.getTitle())
                             .activityLocation(template.getActivityLocation())
-                            .status(recruit.getStatus())
-                            .imageId(imageUrl)
+                            .status(sampleRecruit.getStatus())
+                            .imageUrl(imageUrl)
                             .contactName(template.getContactName())
                             .contactPhone(template.getContactPhone())
                             .description(template.getDescription())
                             .createdAt(createdAt)
-                            .group(RecruitResponseDto.GroupDto.builder()
-                                    .groupId(group.getId())
-                                    .groupName(group.getGroupName())
-                                    .build())
                             .organization(RecruitResponseDto.OrganizationDto.builder()
                                     .orgId(org != null ? org.getId() : null)
                                     .orgName(org != null ? org.getOrgName() : null)
                                     .build())
+                            .group(RecruitResponseDto.GroupDto.builder()
+                                    .groupId(group.getId())
+                                    .groupName(group.getGroupName())
+                                    .build())
+                            .recruits(recruitDtos)
                             .build();
                 })
+                .sorted(Comparator.comparing(RecruitResponseDto.TemplateDto::getTemplateId).reversed())
                 .collect(Collectors.toList());
 
         Integer nextCursor = templates.isEmpty() ? null : templates.get(templates.size() - 1).getTemplateId();

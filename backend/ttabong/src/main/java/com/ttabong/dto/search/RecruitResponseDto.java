@@ -1,11 +1,13 @@
 package com.ttabong.dto.search;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -13,12 +15,13 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class RecruitResponseDto {
     private List<TemplateDto> templates;
-    private Integer nextCursor; // 다음 페이지 조회를 위한 cursor 값
+    private Integer nextCursor;
 
     @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
     @Builder
     public static class TemplateDto {
         private Integer templateId;
@@ -26,17 +29,19 @@ public class RecruitResponseDto {
         private String title;
         private String activityLocation;
         private String status;
-        private String imageId;
+        private String imageUrl;
         private String contactName;
         private String contactPhone;
         private String description;
         private LocalDateTime createdAt;
-
-        private GroupDto group;
         private OrganizationDto organization;
+        private GroupDto group;
+        private List<RecruitDto> recruits;
     }
 
     @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
     @Builder
     public static class GroupDto {
         private Integer groupId;
@@ -44,9 +49,28 @@ public class RecruitResponseDto {
     }
 
     @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
     @Builder
     public static class OrganizationDto {
         private Integer orgId;
         private String orgName;
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class RecruitDto {
+        private Integer recruitId;
+        private LocalDate activityDate;
+        private Instant deadline;
+        private BigDecimal activityStart;
+        private BigDecimal activityEnd;
+        private Integer maxVolunteer;
+        private Integer participateVolCount;
+        private String status;
+        private LocalDateTime updatedAt;
+        private LocalDateTime createdAt;
     }
 }

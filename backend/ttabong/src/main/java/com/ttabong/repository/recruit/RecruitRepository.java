@@ -75,7 +75,6 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
     @Query("SELECT r FROM Recruit r WHERE r.id = :recruitId AND r.isDeleted = false")
     Optional<Recruit> findByRecruitId(@Param("recruitId") Integer recruitId);
 
-    // 공고 하나씩 검색하기
     @Query("""
         SELECT r FROM Recruit r
         JOIN FETCH r.template t
@@ -86,7 +85,11 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
             AND (:status IS NULL OR r.status = :status)
             AND (:region IS NULL OR t.activityLocation LIKE %:region%)
             AND ((:startDate IS NULL OR :endDate IS NULL) OR (r.activityDate BETWEEN :startDate AND :endDate))
-            AND (:cursor IS NULL OR t.id > :cursor)
+            AND (:cursor IS NULL OR t.id < :cursor)
+            AND r.isDeleted = false
+            AND t.isDeleted = false
+            AND r.deadline >= :currentDate
+            AND r.status <> 'RECRUITMENT_CLOSED'
         ORDER BY t.id DESC, r.createdAt DESC
     """)
     List<Recruit> searchRecruits(
@@ -96,6 +99,7 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate,
             @Param("cursor") Integer cursor,
+            @Param("currentDate") Instant currentDate,
             Pageable pageable
     );
 
