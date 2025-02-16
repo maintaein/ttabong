@@ -9,6 +9,7 @@ import com.ttabong.entity.recruit.TemplateGroup;
 import com.ttabong.repository.recruit.RecruitRepository;
 import com.ttabong.repository.recruit.TemplateRepository;
 import com.ttabong.util.service.ImageService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -27,6 +28,7 @@ import java.util.Date;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,6 +44,7 @@ class OrgRecruitServiceImplTest {
 
     @Mock
     private ImageService imageService;
+
 
     @InjectMocks
     private OrgRecruitServiceImpl orgRecruitService;
@@ -128,5 +131,52 @@ class OrgRecruitServiceImplTest {
                 .description(template.getDescription())
                 .createdAt(LocalDateTime.ofInstant(template.getCreatedAt(), ZoneId.systemDefault()))
                 .build();
+    }
+
+
+    private Recruit createRecruitWithEndTime(BigDecimal activityEnd, int daysFromToday) {
+
+        LocalDateTime activityDate = LocalDateTime.now().plusDays(daysFromToday); // 오늘 날짜 + daysFromToday
+        Recruit recruit = Recruit.builder()
+                .activityDate(Date.from(activityDate.atZone(ZoneId.systemDefault()).toInstant()))
+                .activityEnd((activityEnd))
+                .build();
+        return recruit;
+    }
+
+    @Test
+    void testActivityEndTimeInFuture() {
+        // ✅ 현재 시간 + 2시간 후 종료
+        Recruit recruit = createRecruitWithEndTime(new BigDecimal("23.59"), 0); // 오늘 날짜, 18:30 종료
+
+        int remainingMinutes = orgRecruitService.setUpdateStatusSchedule(recruit);
+
+        // 🔥 18:30 종료니까 현재 시간이 16:30이라면 남은 시간은 120분 이상이어야 함
+        assertTrue(remainingMinutes > 0);
+        System.out.println("✅ 테스트 통과: 활동 종료까지 남은 시간 = " + remainingMinutes + "분");
+    }
+
+    @Test
+    void testActivityEndTimeInPast() {
+        // ✅ 현재 시간 - 1시간 전 종료
+        Recruit recruit = createRecruitWithEndTime(new BigDecimal("00.00"), 0); // 오늘 날짜, 12:00 종료
+
+        int remainingMinutes = orgRecruitService.setUpdateStatusSchedule(recruit);
+
+        // 🔥 종료 시간이 이미 지났으므로 0 이하
+        assertTrue(remainingMinutes <= 0);
+        System.out.println("✅ 테스트 통과: 이미 종료된 활동, 남은 시간 = " + remainingMinutes + "분");
+    }
+
+    @Test
+    void testActivityEndTimeTomorrow() {
+        // ✅ 내일 10:00 종료
+        Recruit recruit = createRecruitWithEndTime(new BigDecimal("23.59"), 1); // 내일 날짜, 10:00 종료
+
+        int remainingMinutes = orgRecruitService.setUpdateStatusSchedule(recruit);
+
+        // 🔥 내일 종료니까 현재 시간이 오늘 10:00이라면 남은 시간은 1440분 이상이어야 함
+        assertTrue(remainingMinutes > 1440);
+        System.out.println("✅ 테스트 통과: 내일 종료되는 활동, 남은 시간 = " + remainingMinutes + "분");
     }
 }

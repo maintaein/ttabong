@@ -9,6 +9,7 @@ import com.ttabong.exception.*;
 import com.ttabong.repository.recruit.*;
 import com.ttabong.repository.user.OrganizationRepository;
 import com.ttabong.repository.user.VolunteerRepository;
+import com.ttabong.util.CacheUtil;
 import com.ttabong.util.ImageUtil;
 import com.ttabong.util.service.ImageService;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +46,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     private final VolunteerRepository volunteerRepository;
     private final ImageService imageService;
     private final ImageUtil imageUtil;
+    private final CacheUtil cacheUtil;
 
     public void checkOrgToken(AuthDto authDto) {
         if (authDto == null || authDto.getUserId() == null) {
@@ -769,4 +772,19 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         }).collect(Collectors.toList());
     }
 
+    public int setUpdateStatusSchedule(Recruit recruit){
+        Date activityDate = recruit.getActivityDate();
+        BigDecimal activityEnd = recruit.getActivityEnd();
+
+        int hour = activityEnd.intValue();
+        int minutes = activityEnd.remainder(BigDecimal.ONE).multiply(BigDecimal.valueOf(100)).intValue();
+
+        LocalDateTime activityDateTime = activityDate.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
+        LocalDateTime activityEndTime = activityDateTime.withHour(hour).withMinute(minutes).withSecond(0);
+        LocalDateTime now = LocalDateTime.now();
+        int remainingMinutes = (int) ChronoUnit.MINUTES.between(now, activityEndTime);
+        return remainingMinutes;
+    }
 }
