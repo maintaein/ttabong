@@ -16,7 +16,7 @@ interface Review {
     orgId: number;
     orgName: string;
   };
-  images: string;  // 단일 이미지 문자열로 변경
+  images: string;  
 }
 
 interface Comment {
@@ -71,11 +71,12 @@ interface ReviewDetail {
 }
 
 interface UpdateReviewRequest {
+  cacheId: number;
   title: string;
   content: string;
   isPublic: boolean;
-  images: string[];        // 업로드에 사용된 presignedUrl 목록
-  imageCount: number;
+  presignedUrl: string[];  // 새로 업로드할 이미지의 presignedUrl
+  images: string[];        // 기존 이미지 URL
 }
 
 interface ReviewEditResponse {
@@ -164,7 +165,7 @@ interface ReviewListItem {
     orgId: number;
     orgName: string;
   };
-  images: string;  // 단일 이미지 파일명
+  images: string; 
 }
 
 interface ReviewsResponse {
@@ -177,7 +178,21 @@ interface ReviewEditRequest {
   title: string;
   content: string;
   isPublic: boolean;
-  images: string[];  // 업로드에 사용된 presignedUrl 목록
+  images: string[];  
+}
+
+interface PresignedUrlResponse {
+  imageUrls: string[];
+}
+
+interface CreateReviewRequest {
+  recruitId: number;
+  orgId: number;
+  title: string;
+  content: string;
+  isPublic: boolean;
+  uploadedImages: string[];
+  imageCount: number;
 }
 
 export type { 
@@ -192,5 +207,7 @@ export type {
   MyReview,
   ReviewsResponse,
   ReviewListItem,
-  ReviewEditRequest
+  ReviewEditRequest,
+  PresignedUrlResponse,
+  CreateReviewRequest
 };

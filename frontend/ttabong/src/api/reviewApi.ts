@@ -1,5 +1,5 @@
 import axiosInstance from './axiosInstance';
-import type { ReviewDetail, Comment, ReviewEditResponse, VisibilityResponse, RecruitReview, UpdateReviewRequest, CommentDeleteResponse, MyReview, ReviewsResponse } from '@/types/reviewType';
+import type { ReviewDetail, Comment, ReviewEditResponse, VisibilityResponse, RecruitReview, UpdateReviewRequest, CommentDeleteResponse, MyReview, ReviewsResponse, CreateReviewRequest, PresignedUrlResponse } from '@/types/reviewType';
 
 const REVIEWS_PER_PAGE = 9; // 한 번에 불러올 리뷰 수
 
@@ -66,6 +66,20 @@ export const reviewApi = {
   
   getMyReviews: async (): Promise<MyReview[]> => {
     const response = await axiosInstance.get('/reviews/mine');
+    return response.data;
+  },
+  
+  createReview: async (data: CreateReviewRequest): Promise<void> => {
+    await axiosInstance.post('/reviews/write', data);
+  },
+  
+  getPresignedUrls: async (): Promise<PresignedUrlResponse> => {
+    const response = await axiosInstance.get('/reviews/write');
+    return response.data.data;
+  },
+  
+  getReviewEditDetail: async (id: number): Promise<ReviewEditResponse> => {
+    const response = await axiosInstance.get(`/reviews/${id}/edit`);
     return response.data;
   }
 }; 
