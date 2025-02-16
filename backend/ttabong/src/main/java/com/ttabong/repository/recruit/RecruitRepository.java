@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -67,6 +68,30 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
 
     @Query("SELECT r FROM Recruit r WHERE r.id = :recruitId AND r.isDeleted = false")
     Optional<Recruit> findByRecruitIdOrg(@Param("recruitId") Integer recruitId);
+
+    @Query("""
+        SELECT r FROM Recruit r 
+        JOIN FETCH r.template t
+        JOIN FETCH t.org o
+        JOIN FETCH t.group g
+        WHERE 
+            (:searchKeyword IS NULL OR t.title LIKE %:searchKeyword% OR o.orgName LIKE %:searchKeyword%)
+            AND (:status IS NULL OR r.status = :status)
+            AND (:region IS NULL OR t.activityLocation LIKE %:region%)
+            AND ((:startDate IS NULL OR :endDate IS NULL) OR (r.activityDate BETWEEN :startDate AND :endDate))
+            AND (:cursor IS NULL OR t.id > :cursor)
+        ORDER BY t.id ASC
+        LIMIT :limit
+    """)
+    List<Recruit> searchRecruits(
+            @Param("searchKeyword") String searchKeyword,
+            @Param("status") String status,
+            @Param("region") String region,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("cursor") Long cursor,
+            @Param("limit") int limit
+    );
 
     // VolRecruit---------------------------------------------------------
 
