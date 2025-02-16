@@ -1,12 +1,19 @@
 package com.ttabong.dto.search;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class RecruitResponseDto {
     private List<TemplateDto> templates;
     private Integer nextCursor; // 다음 페이지 조회를 위한 cursor 값

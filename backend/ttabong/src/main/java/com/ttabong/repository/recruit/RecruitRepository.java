@@ -18,7 +18,12 @@ import java.util.Optional;
 @Repository
 public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
 
-    List<Recruit> findByTemplateId(Integer templateId);
+    @Query("SELECT r FROM Recruit r " +
+            "WHERE r.template.id = :templateId " +
+            "AND r.isDeleted = false " +
+            "AND r.status = 'RECRUITING' " +
+            "ORDER BY r.deadline ASC")
+    List<Recruit> findByTemplateId(@Param("templateId") Integer templateId);
 
     @Query("SELECT t.org.id FROM Recruit r JOIN r.template t WHERE r.id = :recruitId")
     Optional<Integer> findOrgIdByRecruitId(@Param("recruitId") Integer recruitId);
@@ -70,29 +75,28 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
     @Query("SELECT r FROM Recruit r WHERE r.id = :recruitId AND r.isDeleted = false")
     Optional<Recruit> findByRecruitId(@Param("recruitId") Integer recruitId);
 
-
+    // 공고 하나씩 검색하기
     @Query("""
-        SELECT r FROM Recruit r 
+        SELECT r FROM Recruit r
         JOIN FETCH r.template t
         JOIN FETCH t.org o
         JOIN FETCH t.group g
-        WHERE 
-            (:searchKeyword IS NULL OR t.title LIKE %:searchKeyword% OR o.orgName LIKE %:searchKeyword%)
+        WHERE
+            (:recruitTitle IS NULL OR t.title LIKE %:recruitTitle% OR o.orgName LIKE %:recruitTitle%)
             AND (:status IS NULL OR r.status = :status)
             AND (:region IS NULL OR t.activityLocation LIKE %:region%)
             AND ((:startDate IS NULL OR :endDate IS NULL) OR (r.activityDate BETWEEN :startDate AND :endDate))
             AND (:cursor IS NULL OR t.id > :cursor)
-        ORDER BY t.id ASC
-        LIMIT :limit
+        ORDER BY t.id DESC, r.createdAt DESC
     """)
     List<Recruit> searchRecruits(
-            @Param("searchKeyword") String searchKeyword,
+            @Param("recruitTitle") String recruitTitle,
             @Param("status") String status,
             @Param("region") String region,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate,
-            @Param("cursor") Long cursor,
-            @Param("limit") int limit
+            @Param("cursor") Integer cursor,
+            Pageable pageable
     );
 
     // VolRecruit---------------------------------------------------------

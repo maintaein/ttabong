@@ -16,8 +16,8 @@ public class SearchController {
 
     @GetMapping("/templates")
     public ResponseEntity<RecruitResponseDto> searchTemplates(
-            @RequestParam(required = false) Long cursor,
-            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(required = false) Integer cursor,
+            @RequestParam(defaultValue = "10") Integer limit,
             @RequestBody RecruitRequestDto request) {
 
         RecruitResponseDto responseDto = searchService.searchTemplates(request, cursor, limit);
