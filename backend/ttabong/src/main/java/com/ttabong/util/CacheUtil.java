@@ -40,4 +40,8 @@ public class CacheUtil {
         processedCacheIds.add(cacheId);
     }
 
+    public boolean eventScheduler(Integer Id){
+        redisTemplate.opsForValue().set("EVENT_COMPLETE: "+Id.toString(),"", 5, TimeUnit.SECONDS);
+        return true;
+    }
 }
