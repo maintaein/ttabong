@@ -58,7 +58,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
     @Transactional(readOnly = true)
     public ReadAvailableRecruitsResponseDto readAvailableRecruits(Integer cursor, Integer limit, AuthDto authDto) {
-
         try {
             checkOrgToken(authDto);
 
@@ -72,31 +71,23 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
             List<Template> templates = templateRepository.findAvailableTemplates(cursor, authDto.getUserId(), PageRequest.of(0, limit));
 
             if (templates.isEmpty()) {
-                throw new NotFoundException("활성화된 템플릿이 없습니다.");
+                return ReadAvailableRecruitsResponseDto.builder()
+                        .templates(List.of())
+                        .build();
             }
 
             Map<Integer, List<Recruit>> recruitMap = templates.stream()
-                .map(template -> {
-                    try {
-                        return recruitRepository.findByTemplateId(template.getId());
-                    } catch (Exception e) {
-                        throw new NotFoundException("해당 템플릿에 대한 모집 공고를 찾을 수 없습니다.");
-                    }
-                })
-                .flatMap(List::stream)
-                .collect(Collectors.groupingBy(recruit -> recruit.getTemplate().getId()));
-
-            Map<Integer, List<String>> imageMap = templates.stream()
-                .collect(Collectors.toMap(
-                    Template::getId,
-                    template -> {
-                        try {
-                            return imageService.getImageUrls(template.getId(), true);
-                        } catch (Exception e) {
-                            return List.of();
-                        }
-                    }
-            ));
+                    .collect(Collectors.toMap(
+                            Template::getId,
+                            template -> {
+                                try {
+                                    List<Recruit> recruits = recruitRepository.findByTemplateId(template.getId());
+                                    return recruits;
+                                } catch (Exception e) {
+                                    return List.of();
+                                }
+                            }
+                    ));
 
             List<ReadAvailableRecruitsResponseDto.TemplateDetail> templateDetails = templates.stream().map(template -> {
                 ReadAvailableRecruitsResponseDto.Group groupInfo = template.getGroup() != null ?
@@ -109,26 +100,24 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 List<ReadAvailableRecruitsResponseDto.Recruit> recruits = recruitEntities.stream()
                         .map(recruit -> ReadAvailableRecruitsResponseDto.Recruit.builder()
                                 .recruitId(recruit.getId())
-                                .deadline(recruit.getDeadline() != null ?
-                                        recruit.getDeadline().atZone(ZoneId.systemDefault()).toLocalDateTime()
-                                        : LocalDateTime.now())
-                                .activityDate(recruit.getActivityDate() != null ? recruit.getActivityDate() : new Date())
-                                .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.ZERO)
-                                .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.ZERO)
+                                .deadline(Optional.ofNullable(recruit.getDeadline())
+                                        .map(d -> d.atZone(ZoneId.systemDefault()).toLocalDateTime())
+                                        .orElse(null))
+                                .activityDate(Optional.ofNullable(recruit.getActivityDate())
+                                        .orElse(new Date()))
+                                .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.valueOf(10.00))
+                                .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.valueOf(12.00))
                                 .maxVolunteer(recruit.getMaxVolunteer())
                                 .participateVolCount(recruit.getParticipateVolCount())
                                 .status(recruit.getStatus())
-                                .updatedAt(recruit.getUpdatedAt() != null ?
-                                        recruit.getUpdatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime()
-                                        : LocalDateTime.now())
-                                .createdAt(recruit.getCreatedAt() != null ?
-                                        recruit.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime()
-                                        : LocalDateTime.now())
+                                .updatedAt(Optional.ofNullable(recruit.getUpdatedAt())
+                                        .map(d -> d.atZone(ZoneId.systemDefault()).toLocalDateTime())
+                                        .orElse(LocalDateTime.now()))
+                                .createdAt(Optional.ofNullable(recruit.getCreatedAt())
+                                        .map(d -> d.atZone(ZoneId.systemDefault()).toLocalDateTime())
+                                        .orElse(LocalDateTime.now()))
                                 .build())
                         .collect(Collectors.toList());
-
-                List<String> imageUrls = imageMap.getOrDefault(template.getId(), List.of());
-                String thumbnailImageUrl = imageUrls.isEmpty() ? null : imageUrls.get(0);
 
                 return ReadAvailableRecruitsResponseDto.TemplateDetail.builder()
                         .template(ReadAvailableRecruitsResponseDto.Template.builder()
@@ -137,13 +126,11 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                                 .title(template.getTitle())
                                 .activityLocation(template.getActivityLocation())
                                 .status(template.getStatus())
-                                .imageUrl(thumbnailImageUrl)
+                                .imageUrl(null)
                                 .contactName(template.getContactName())
                                 .contactPhone(template.getContactPhone())
                                 .description(template.getDescription())
-                                .createdAt(template.getCreatedAt() != null ?
-                                        template.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime()
-                                        : LocalDateTime.now())
+                                .createdAt(DateTimeUtil.convertToLocalDateTime(template.getCreatedAt()))
                                 .build())
                         .group(groupInfo)
                         .recruits(recruits)
@@ -583,8 +570,8 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .recruitId(recruit.getId())
                 .deadline(deadlineLocalDateTime)
                 .activityDate(activityDate)
-                .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.ZERO)
-                .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.ZERO)
+                .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.valueOf(10.00))
+                .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.valueOf(12.00))
                 .maxVolunteer(recruit.getMaxVolunteer())
                 .participateVolCount(recruit.getParticipateVolCount())
                 .status(recruit.getStatus())
