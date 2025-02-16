@@ -1,5 +1,6 @@
 package com.ttabong.test;
 
+import com.ttabong.config.LoggerConfig;
 import com.ttabong.entity.sns.Review;
 import com.ttabong.entity.user.User;
 import com.ttabong.test.dto.CreatePostRequestDto;
@@ -15,7 +16,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class TestService {
+public class TestService extends LoggerConfig {
 
     private final CacheUtil cacheUtil;
     private final ImageUtil imageUtil;
@@ -58,5 +59,13 @@ public class TestService {
     //imgId + _ + Img넘버 하면 이미지가 찾아짐
     public String getImgUrl(String imgId) throws Exception {
         return imageUtil.getPresignedDownloadUrl(imgId + "_" + 1 + ".webp");
+    }
+
+    public void addRedisTTL(Integer time) {
+        if(cacheUtil.eventScheduler(time)){
+            logger.info("cache Timeout " + time);
+        }else{
+            logger.info("cache Timeout fail" + time);
+        }
     }
 }
