@@ -53,4 +53,8 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
     // 해당 봉사자가 해당 공고를 신청했는지 확인
     @Query("SELECT a FROM Application a WHERE a.recruit.id = :recruitId AND a.volunteer.user.id = :userId AND a.isDeleted = FALSE")
     Optional<Application> findApplicationByRecruitAndUser(@Param("recruitId") Integer recruitId, @Param("userId") Integer userId);
+
+    List<Application> findByRecruitIdAndStatusIsApproved(int recruitId);
+
+    List<Application> findByRecruitIdAndStatus(int recruitId, String status);
 }

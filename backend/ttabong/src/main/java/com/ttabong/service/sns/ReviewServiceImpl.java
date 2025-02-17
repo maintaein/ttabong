@@ -5,10 +5,7 @@ import com.ttabong.dto.sns.request.ReviewEditRequestDto;
 import com.ttabong.dto.sns.request.ReviewVisibilitySettingRequestDto;
 import com.ttabong.dto.sns.response.*;
 import com.ttabong.dto.user.AuthDto;
-import com.ttabong.entity.recruit.Category;
-import com.ttabong.entity.recruit.Recruit;
-import com.ttabong.entity.recruit.Template;
-import com.ttabong.entity.recruit.TemplateGroup;
+import com.ttabong.entity.recruit.*;
 import com.ttabong.entity.sns.Review;
 import com.ttabong.entity.sns.ReviewComment;
 import com.ttabong.entity.sns.ReviewImage;
@@ -682,6 +679,18 @@ public class ReviewServiceImpl implements ReviewService {
                             .build();
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public void createReviewAfterSchedule(int recruitId) {
+        Optional<Recruit> recruit = recruitRepository.findById(recruitId);
+        if(recruit.isPresent()) {
+            //공고없음
+        }
+        List<Application> applications = applicationRepository.findByRecruitIdAndStatus(recruitId, "APPROVED");
+
+        List<Review> reviews = new ArrayList<>();
+        //reviews.add(Review.builder().)
     }
 
 }

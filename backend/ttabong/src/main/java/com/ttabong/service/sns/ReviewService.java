@@ -28,4 +28,5 @@ public interface ReviewService {
 
     List<RecruitReviewResponseDto> recruitReview(Integer recruitId);
 
+    void createReviewAfterSchedule(int i);
 }
