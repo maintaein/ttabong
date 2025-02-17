@@ -119,7 +119,7 @@ const RecruitDetail: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-3xl">
+    <div className="container max-w-2xl mx-auto px-4 py-4 space-y-4">
       {/* 상단 헤더 */}
       <div className="flex justify-between items-center mb-6">
         <Button 
@@ -271,6 +271,24 @@ const RecruitDetail: React.FC = () => {
           </div>
         </Card>
       </div>
+
+      {recruit?.recruit.status === '활동완료' && (
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t">
+          <div className="container max-w-2xl mx-auto">
+            <Button 
+              className="w-full"
+              onClick={() => navigate('/review-write', {
+                state: { 
+                  recruitId: recruit.recruit.recruitId,
+                  isOrgReview: true
+                }
+              })}
+            >
+              기관 후기 작성
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
