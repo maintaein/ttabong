@@ -164,4 +164,19 @@ export interface RecruitDetail {
     name: string;
     status: string;
   };
+}
+
+export interface APITemplate {
+  templateId: number;
+  groupId: number;
+  title: string;
+  description: string;
+  activityLocation: string;
+  categoryId: number;
+  status: string;
+  images: string[];
+  contactName: string;
+  contactPhone: string;
+  maxVolunteer: number;
+  createdAt: string;
 } 

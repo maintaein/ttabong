@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import type { APITemplate } from '@/types/template';
+import { type APITemplate, type Group } from '@/types/recruitType';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -132,57 +132,15 @@ const OrgMainPage: React.FC = () => {
     }
   };
 
-  const handleUseTemplate = (template: APITemplate, groupId: number) => {
+  const handleUseTemplate = async (template: APITemplate, group: Group) => {
+    console.log('서버에서 받은 템플릿 데이터:', template);
     navigate('/template-and-group-write', {
       state: { 
         isTemplateUse: true,
         templateId: template.templateId,
         template: {
-          // 그룹 정보
-          groupId: groupId,
-          
-          // 기본 정보
-          title: template.title,
-          description: template.description,
-          categoryId: template.categoryId,
-          status: template.status,
-          
-          // 활동 장소
-          locationType: template.activityLocation === '재택' ? '재택' : '주소',
-          address: template.activityLocation !== '재택' 
-            ? template.activityLocation.split(' ').slice(0, -1).join(' ')
-            : '',
-          detailAddress: template.activityLocation !== '재택'
-            ? template.activityLocation.split(' ').slice(-1)[0]
-            : '',
-          
-          // 연락처 정보
-          contactName: template.contactName,
-          contactPhone: {
-            areaCode: template.contactPhone.split('-')[0],
-            middle: template.contactPhone.split('-')[1],
-            last: template.contactPhone.split('-')[2]
-          },
-          
-          // 이미지
-          images: template.images || [],
-          
-          // 봉사 정보
-          volunteerCount: template.maxVolunteer || 10,
-          volunteerField: template.categoryId ? [template.categoryId] : [],
-          
-          // 시간 정보 (기본값 설정)
-          startDate: null,
-          endDate: null,
-          volunteerDate: null,
-          startTime: template.activityStart ? 
-            `${Math.floor(template.activityStart)}:${(template.activityStart % 1) * 60 || '00'}` : '',
-          endTime: template.activityEnd ? 
-            `${Math.floor(template.activityEnd)}:${(template.activityEnd % 1) * 60 || '00'}` : '',
-          
-          // 메타 정보
-          template_id: template.templateId,
-          created_at: template.createdAt.split('T')[0]
+          ...template,
+          groupId: group.groupId,
         }
       }
     });
@@ -238,7 +196,7 @@ const OrgMainPage: React.FC = () => {
                               className="w-4 h-4"
                             />
                           )}
-                          <div>
+                          <div onClick={() => handleUseTemplate(template, group)}>
                             <p className="font-medium text-gray-900">{template.title}</p>
                             <p className="text-sm text-gray-500 mt-1">{template.description}</p>
                           </div>
@@ -246,7 +204,7 @@ const OrgMainPage: React.FC = () => {
                         {!groupEdit.isEditing && (
                           <button
                             className="text-blue-500 hover:text-blue-700"
-                            onClick={() => handleUseTemplate(template, group.groupId)}
+                            onClick={() => handleUseTemplate(template, group)}
                           >
                             사용
                           </button>

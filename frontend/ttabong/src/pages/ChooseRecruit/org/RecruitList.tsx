@@ -3,7 +3,7 @@ import { RecruitCard } from './RecruitCard';
 import type { RecruitItem } from '@/types/recruit';
 
 interface RecruitListProps {
-  recruits: RecruitItem[];
+  recruits: RecruitItem[] | undefined;
   isEditing: boolean;
   selectedRecruits: number[];
   onSelectRecruit: (recruitId: number) => void;
@@ -15,6 +15,8 @@ export const RecruitList: React.FC<RecruitListProps> = ({
   selectedRecruits,
   onSelectRecruit 
 }) => {
+  if (!recruits) return null;
+
   if (recruits.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">

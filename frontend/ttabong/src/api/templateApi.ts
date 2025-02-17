@@ -1,5 +1,5 @@
 import axiosInstance from './axiosInstance';
-import type { CreateTemplateRequest } from '@/types/template';
+import type { CreateTemplateRequest, APIGroup, APITemplate } from '@/types/template';
 import axios from 'axios';
 
 // 응답 타입 정의 추가
@@ -22,27 +22,33 @@ interface CreateTemplateResponse {
   imageUrl: string;
 }
 
-interface APITemplate {
-  templateId: number;
-  groupId: number;
-  title: string;
-  description: string;
-  activityLocation: string;
-  contactName: string;
-  contactPhone: string;
-  images: string[];
-  imageUrl: string;
-  message: string;
-}
-
 export const templateApi = {
-  // 템플릿 목록 조회
-  getTemplates: async (cursor?: number, limit: number = 10) => {
-    const response = await axiosInstance.get(`/org/templates`, {
-      params: { cursor, limit }
+  // 템플릿 목록 조회 (이미지 없이)
+  getTemplates: async (cursor?: number) => {
+    const response = await axiosInstance.get('/org/templates', {
+      params: { cursor }
     });
-    console.log('템플릿 목록 응답:', response.data);  // 템플릿 목록 응답 확인
     return response.data;
+  },
+
+  // 템플릿 상세 조회 (이미지 포함)
+  getTemplateDetail: async (templateId: number) => {
+    try {
+      // 목록 API를 통해 템플릿 정보 가져오기
+      const response = await axiosInstance.get('/org/templates');
+      const template = response.data.groups
+        .flatMap((group: APIGroup) => group.templates)
+        .find((template: APITemplate) => template.templateId === templateId);
+        
+      if (!template) {
+        throw new Error('템플릿을 찾을 수 없습니다.');
+      }
+
+      return template;
+    } catch (error) {
+      console.error('템플릿 상세 조회 실패:', error);
+      throw error;
+    }
   },
 
   // Presigned URL 요청
@@ -136,17 +142,6 @@ export const templateApi = {
     }
   },
 
-  // 템플릿 상세 조회
-  getTemplate: async (templateId: number) => {
-    try {
-      const response = await axiosInstance.get<APITemplate>(`/org/templates/${templateId}`);
-      return response.data;
-    } catch (error) {
-      console.error('Template fetch error:', error);
-      throw error;
-    }
-  },
-
   // 템플릿 수정
   updateTemplate: async (templateId: number, data: CreateTemplateRequest) => {
     try {
@@ -163,5 +158,12 @@ export const templateApi = {
       console.error('Template update error:', error);
       throw error;
     }
+  },
+
+  // 이미지 URL 생성 함수 추가
+  getTemplateImageUrls: (templateId: number, imageCount: number) => {
+    return Array.from({ length: imageCount }, (_, index) => 
+      `http://ttabong.store:9000/ttabong-bucket/${templateId}_${index + 1}.webp`
+    );
   }
 };
