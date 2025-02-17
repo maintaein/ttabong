@@ -17,7 +17,7 @@ export interface Recruit {
   activityStart: number;
   activityEnd: number;
   deadline: string;
-  createdAt: string;
+  createdAt?: string;
 }
 
 export interface RecruitItem {

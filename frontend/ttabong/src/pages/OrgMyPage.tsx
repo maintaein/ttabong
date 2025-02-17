@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -7,45 +7,20 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Building2, ClipboardList, PlusCircle } from 'lucide-react';
 import { LogoutButton } from '@/components/LogoutButton';
-
-// 기관 데이터 타입 정의
-interface Organization {
-  businessRegNumber: string;
-  name: string;
-  representativeName: string;
-  address: string;
-  email: string;
-  createdAt: string;
-  avatarUrl?: string;
-}
+import { useUserStore } from '@/stores/userStore';
+import { useReviewStore } from '@/stores/reviewStore';
+import { formatDate } from '@/lib/dateUtils';
 
 const OrgMyPage: React.FC = () => {
   const navigate = useNavigate();
-  const [organization, setOrganization] = useState<Organization | null>(null);
-  const [isOrgLoading, setIsOrgLoading] = useState<boolean>(true);
-  const [error] = useState<string | null>(null);
+  const { userId, userName, userEmail, userType } = useUserStore();
+  const { myReviews, isLoading, error, fetchMyReviews } = useReviewStore();
 
   useEffect(() => {
-    // 데이터 가져오기 (임시 더미 데이터) - 로딩 시간을 500ms로 단축
-    const timer = setTimeout(() => {
-      setOrganization({
-        businessRegNumber: "123-45-67890",
-        name: "행복나눔 봉사센터",
-        representativeName: "김봉사",
-        address: "서울특별시 강남구 봉사로 123",
-        email: "contact@volunteer-center.org",
-        createdAt: "2023-05-10",
-        avatarUrl: "https://via.placeholder.com/150",
-      });
-      setIsOrgLoading(false);
-    }, 500);
-    
-    return () => clearTimeout(timer);
-  }, []);
+    fetchMyReviews();
+  }, [fetchMyReviews]);
 
-  if (isOrgLoading) return <div className="p-4 text-center">로딩 중...</div>;
-  if (error) return <div className="p-4 text-red-500">{error}</div>;
-  if (!organization) return null;
+  if (!userId) return null;
 
   return (
     <div className="h-screen overflow-y-auto">
@@ -54,13 +29,13 @@ const OrgMyPage: React.FC = () => {
           {/* 프로필 섹션 */}
           <div className="space-y-2 text-center">
             <Avatar className="h-24 w-24 mx-auto border-4 border-background shadow-lg">
-              <AvatarImage src={organization.avatarUrl} alt="기관 프로필" />
+              <AvatarImage alt="기관 프로필" />
               <AvatarFallback className="bg-primary/5">
                 <Building2 className="h-12 w-12 text-primary/70" />
               </AvatarFallback>
             </Avatar>
-            <h1 className="text-2xl font-semibold tracking-tight mt-4">{organization.name}</h1>
-            <p className="text-sm text-muted-foreground">{organization.email}</p>
+            <h1 className="text-2xl font-semibold tracking-tight mt-4">{userName || '기관명'}</h1>
+            <p className="text-sm text-muted-foreground">{userEmail || 'email@example.com'}</p>
             <Badge variant="secondary" className="mt-1">기관 회원</Badge>
           </div>
 
@@ -93,28 +68,63 @@ const OrgMyPage: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* 아름다운 갤러리 섹션 */}
+          {/* 작성 후기 섹션 */}
           <Card className="border shadow-sm">
             <CardContent className="p-4">
               <div className="flex justify-between items-center mb-3">
-                <h2 className="text-lg font-semibold tracking-tight">아름다운 갤러리</h2>
+                <h2 className="text-lg font-semibold tracking-tight">작성 후기</h2>
+                {myReviews.length > 0 && (
+                  <Badge variant="secondary">{myReviews.length}개</Badge>
+                )}
               </div>
               <ScrollArea className="h-[calc(100vh-480px)] min-h-[280px] -mx-2 px-2">
-                <div className="grid grid-cols-2 gap-2">
-                  {/* 갤러리 이미지들 */}
-                  {Array.from({ length: 6 }).map((_, index) => (
-                    <div 
-                      key={index}
-                      className="aspect-square rounded-md overflow-hidden"
-                    >
-                      <img 
-                        src={`/images/gallery-${index + 1}.jpg`} 
-                        alt={`갤러리 이미지 ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ))}
-                </div>
+                {isLoading ? (
+                  <div className="flex justify-center items-center h-[200px]">
+                    <p className="text-sm text-muted-foreground">로딩 중...</p>
+                  </div>
+                ) : myReviews.length === 0 ? (
+                  <div className="flex justify-center items-center h-[200px]">
+                    <p className="text-sm text-muted-foreground">작성된 후기가 없습니다.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-2">
+                    {myReviews.map((review) => (
+                      <Card 
+                        key={review.review.reviewId} 
+                        className="overflow-hidden hover:bg-secondary/40 active:bg-secondary/60 transition-colors cursor-pointer"
+                        onClick={() => navigate(`/review-find/${review.review.reviewId}`)}
+                      >
+                        <CardContent className="p-3">
+                          <div className="flex gap-3">
+                            {review.images && (
+                              <div className="relative w-[72px] h-[72px] rounded-md overflow-hidden flex-shrink-0">
+                                <img 
+                                  src={review.images} 
+                                  alt={review.review.title}
+                                  className="w-full h-full object-cover"
+                                  loading="lazy"
+                                />
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0 py-0.5">
+                              <h3 className="font-medium text-sm line-clamp-2 mb-1.5 leading-snug">
+                                {review.review.title}
+                              </h3>
+                              <div className="space-y-1">
+                                <p className="text-xs text-muted-foreground">
+                                  {review.group.groupName}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {formatDate(review.review.createdAt)}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </ScrollArea>
             </CardContent>
           </Card>

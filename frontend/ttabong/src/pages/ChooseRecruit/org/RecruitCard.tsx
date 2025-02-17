@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import type { RecruitItem } from '@/types/recruit';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
+import { formatDate, formatTimeRange, formatDeadline } from '@/lib/dateUtils';
 
 const STATUS_MAP = {
   'RECRUITING': { label: '모집중', className: 'bg-green-100 text-green-700' },
@@ -18,12 +19,6 @@ interface RecruitCardProps {
   isSelected: boolean;
   onSelect: () => void;
 }
-
-const formatTime = (time: number) => {
-  const hours = Math.floor(time);
-  const minutes = Math.round((time - hours) * 60);
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-};
 
 export const RecruitCard: React.FC<RecruitCardProps> = ({ 
   recruit, 
@@ -47,6 +42,7 @@ export const RecruitCard: React.FC<RecruitCardProps> = ({
           activityDate: recruitData.activityDate,
           activityStart: recruitData.activityStart,
           activityEnd: recruitData.activityEnd,
+          participateVolCount: recruitData.participateVolCount,
           maxVolunteer: recruitData.maxVolunteer,
           groupId: group.groupId,
           status: recruitData.status
@@ -64,6 +60,16 @@ export const RecruitCard: React.FC<RecruitCardProps> = ({
     navigate(`/recruits/${recruitData.recruitId}`, { state: { recruit } });
   };
 
+  const handleReviewClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate('/review-write', {
+      state: { 
+        recruitId: recruitData.recruitId,
+        isOrgReview: true
+      }
+    });
+  };
+
   return (
     <Card 
       className={cn(
@@ -72,43 +78,49 @@ export const RecruitCard: React.FC<RecruitCardProps> = ({
       )}
       onClick={handleClick}
     >
-      <div className="flex justify-between items-start">
-        {isEditing && (
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={onSelect}
-            className="mr-2"
-            onClick={(e) => e.stopPropagation()}
-          />
-        )}
-        <div className="space-y-2">
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">{group.groupName}</p>
-            <h3 className="font-semibold">{template.title}</h3>
+      <div className="flex flex-col space-y-4">
+        <div className="flex items-start justify-between">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-muted-foreground truncate">{group.groupName}</p>
+            <h3 className="font-semibold line-clamp-2">{template.title}</h3>
           </div>
-          <div className="space-y-1">
-            <p className="text-sm">
-              활동일: {recruitData.activityDate} {formatTime(recruitData.activityStart)}~{formatTime(recruitData.activityEnd)}
-            </p>
-            <p className="text-sm">
-              신청현황: {recruitData.participateVolCount}/{recruitData.maxVolunteer}명
-            </p>
-            <p className="text-sm text-muted-foreground">
-              마감일: {new Date(recruitData.deadline).toLocaleDateString()}
-            </p>
+          <Badge 
+            variant="secondary"
+            className={cn(
+              "ml-2 shrink-0",
+              STATUS_MAP[recruitData.status as keyof typeof STATUS_MAP]?.className || ''
+            )}
+          >
+            {STATUS_MAP[recruitData.status as keyof typeof STATUS_MAP]?.label || recruitData.status}
+          </Badge>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 text-sm">
+          <div>
+            <span className="text-muted-foreground">활동일시</span>
+            <p>{formatDate(recruitData.activityDate)}</p>
+            <p>{formatTimeRange(recruitData.activityStart, recruitData.activityEnd)}</p>
+          </div>
+          <div>
+            <span className="text-muted-foreground">신청현황</span>
+            <p>{recruitData.participateVolCount ?? 0}/{recruitData.maxVolunteer}명</p>
+          </div>
+          <div className="col-span-2">
+            <span className="text-muted-foreground">마감일</span>
+            <p>{formatDeadline(recruitData.deadline)}</p>
           </div>
         </div>
-        <Badge 
-          variant="secondary"
-          className={cn(
-            "ml-2",
-            STATUS_MAP[recruitData.status as keyof typeof STATUS_MAP]?.className || ''
+
+        <div className="flex justify-end gap-2">
+          {isEditing && (
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={onSelect}
+              className="h-4 w-4 mt-2"
+              onClick={(e) => e.stopPropagation()}
+            />
           )}
-        >
-          {STATUS_MAP[recruitData.status as keyof typeof STATUS_MAP]?.label || recruitData.status}
-        </Badge>
-        <div className="flex gap-2">
           {!isEditing && (
             <Button
               variant="outline"
@@ -116,6 +128,14 @@ export const RecruitCard: React.FC<RecruitCardProps> = ({
               onClick={handleEditClick}
             >
               수정
+            </Button>
+          )}
+          {recruitData.status === 'ACTIVITY_COMPLETED' && !isEditing && (
+            <Button
+              size="sm"
+              onClick={handleReviewClick}
+            >
+              후기 작성
             </Button>
           )}
         </div>

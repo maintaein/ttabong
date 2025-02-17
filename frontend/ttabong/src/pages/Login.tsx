@@ -68,11 +68,25 @@ export default function Login() {
       navigate('/main');
     } catch (error) {
       const apiError = error as ApiError;
-      toast({
-        variant: "destructive",
-        title: "로그인 실패",
-        description: apiError.message,
-      });
+      try {
+        const redirectData = JSON.parse(apiError.message);
+        if (redirectData.path && redirectData.state) {
+          toast({
+            variant: "destructive",
+            title: "로그인 실패",
+            description: redirectData.message,
+          });
+          navigate(redirectData.path, { state: redirectData.state });
+          return;
+        }
+      } catch {
+        // JSON 파싱 실패 시 일반 에러 처리
+        toast({
+          variant: "destructive",
+          title: "로그인 실패",
+          description: apiError.message,
+        });
+      }
       form.setError('root', { message: apiError.message });
     }
   };

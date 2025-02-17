@@ -6,14 +6,14 @@ import { toast } from 'react-hot-toast';
 import { recruitApi } from "@/api/recruitApi";
 
 const STATUS_MAP = {
-  '모집중': 'RECRUITING',
-  '모집마감': 'CLOSED',
-  '활동완료': 'COMPLETED'
+  'RECRUITING': { label: '모집중', className: 'bg-green-100 text-green-700' },
+  'RECRUITMENT_CLOSED': { label: '모집마감', className: 'bg-yellow-100 text-yellow-700' },
+  'ACTIVITY_COMPLETED': { label: '활동완료', className: 'bg-blue-100 text-blue-700' }
 } as const;
 
 export const OrgView: React.FC = () => {
   const { recruits, isLoading, error, fetchRecruits } = useRecruitStore();
-  const [selectedStatus, setSelectedStatus] = useState<string>('모집중');
+  const [selectedStatus, setSelectedStatus] = useState<string>('RECRUITING');
   const [isEditing, setIsEditing] = useState(false);
   const [selectedRecruits, setSelectedRecruits] = useState<number[]>([]);
 
@@ -22,7 +22,7 @@ export const OrgView: React.FC = () => {
   }, [fetchRecruits]);
 
   const filteredRecruits = recruits.filter(item => 
-    item.recruit.status === STATUS_MAP[selectedStatus as keyof typeof STATUS_MAP]
+    item.recruit.status === selectedStatus
   );
 
   const handleDeleteSelected = async () => {
@@ -43,61 +43,69 @@ export const OrgView: React.FC = () => {
     }
   };
 
+  const handleSelectRecruit = (recruitId: number) => {
+    setSelectedRecruits(prev => 
+      prev.includes(recruitId)
+        ? prev.filter(id => id !== recruitId)
+        : [...prev, recruitId]
+    );
+  };
+
   if (isLoading) return <div className="flex justify-center items-center h-[50vh]">로딩 중...</div>;
   if (error) return <div className="flex justify-center items-center h-[50vh] text-destructive">{error}</div>;
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold">봉사 공고 목록</h1>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setIsEditing(!isEditing);
-              setSelectedRecruits([]);
-            }}
-          >
-            {isEditing ? '완료' : '편집'}
-          </Button>
-          {isEditing && (
+    <div className="container max-w-2xl mx-auto px-4 py-4">
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <h1 className="text-xl font-semibold">봉사 공고 목록</h1>
+          <div className="flex gap-2">
             <Button
-              variant="destructive"
-              onClick={handleDeleteSelected}
-              disabled={selectedRecruits.length === 0}
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setIsEditing(!isEditing);
+                setSelectedRecruits([]);
+              }}
             >
-              선택 삭제
+              {isEditing ? '완료' : '편집'}
             </Button>
-          )}
+            {isEditing && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleDeleteSelected}
+                disabled={selectedRecruits.length === 0}
+              >
+                선택 삭제
+              </Button>
+            )}
+          </div>
         </div>
-        <div className="space-x-2">
-          {['모집중', '모집마감', '활동완료'].map(status => (
-            <button
-              key={status}
-              onClick={() => setSelectedStatus(status)}
-              className={`px-4 py-2 rounded ${
-                selectedStatus === status 
-                  ? 'bg-blue-500 text-white' 
-                  : 'bg-gray-100'
-              }`}
+
+        <div className="flex gap-2 overflow-x-auto pb-2">
+          {Object.entries(STATUS_MAP).map(([key, value]) => (
+            <Button
+              key={key}
+              variant={selectedStatus === key ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedStatus(key)}
+              className="whitespace-nowrap"
             >
-              {status}
-            </button>
+              {value.label}
+            </Button>
           ))}
         </div>
       </div>
-      <RecruitList 
-        recruits={filteredRecruits}
-        isEditing={isEditing}
-        selectedRecruits={selectedRecruits}
-        onSelectRecruit={(recruitId) => {
-          setSelectedRecruits(prev => 
-            prev.includes(recruitId)
-              ? prev.filter(id => id !== recruitId)
-              : [...prev, recruitId]
-          );
-        }}
-      />
+
+      <div className="mt-4">
+        <RecruitList 
+          recruits={filteredRecruits}
+          isEditing={isEditing}
+          selectedRecruits={selectedRecruits}
+          onSelectRecruit={handleSelectRecruit}
+        />
+      </div>
     </div>
   );
 }; 
