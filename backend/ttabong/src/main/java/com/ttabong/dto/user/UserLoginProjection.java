@@ -1,6 +1,8 @@
 package com.ttabong.dto.user;
 
 public interface UserLoginProjection {
-    Long getId();
+    Integer getId();
     String getPassword();
+    String getName();
+    String getEmail();
 }

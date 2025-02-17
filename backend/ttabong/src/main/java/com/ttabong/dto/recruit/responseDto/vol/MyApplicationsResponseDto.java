@@ -1,59 +1,34 @@
 package com.ttabong.dto.recruit.responseDto.vol;
 
+import com.ttabong.entity.recruit.Application;
 import lombok.*;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class MyApplicationsResponseDto {
-
     private Integer applicationId;
     private String status;
-    private boolean evaluationDone;
-    private LocalDateTime createdAt;
-    private Template template;
-    private Group group;
-    private Recruit recruit;
+    private Boolean evaluationDone;
+    private Instant createdAt;
+    private TemplateDto template;
+    private GroupDto group;
+    private RecruitDto recruit;
 
-    @Getter
-    @Setter
-    @Builder
-    public static class Template {
-        private Integer templateId;
-        private String title;
-        private String activityLocation;
-        private String status;
-        private String imageId;
-        private String contactName;
-        private String contactPhone;
-        private String description;
-        private LocalDateTime createdAt;
-    }
-
-    @Getter
-    @Setter
-    @Builder
-    public static class Group {
-        private Integer groupId;
-        private String groupName;
-    }
-
-    @Getter
-    @Setter
-    @Builder
-    public static class Recruit {
-        private Integer recruitId;
-        private LocalDateTime deadline;
-        private LocalDate activityDate;
-        private double activityStart;
-        private double activityEnd;
-        private Integer maxVolunteer;
-        private Integer participateVolCount;
-        private String status;
-        private LocalDateTime createdAt;
+    public static MyApplicationsResponseDto from(Application application) {
+        return MyApplicationsResponseDto.builder()
+                .applicationId(application.getId())
+                .status(application.getStatus())
+                .evaluationDone(application.getEvaluationDone())
+                .createdAt(application.getCreatedAt())
+                .template(TemplateDto.from(application.getRecruit().getTemplate()))
+                .group(GroupDto.from(application.getRecruit().getTemplate().getGroup()))
+                .recruit(RecruitDto.from(application.getRecruit()))
+                .build();
     }
 }

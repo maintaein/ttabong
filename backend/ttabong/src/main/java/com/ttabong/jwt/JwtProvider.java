@@ -67,7 +67,6 @@ public class JwtProvider {
         return new AuthDto(claims.get("userId", Integer.class), claims.get("userType", String.class));
     }
 
-    // ✅ userType이 "volunteer"인지 검증하는 메서드 추가
     public boolean isVolunteer(String token) {
         Claims claims = getClaims(token);
         String userType = claims.get("userType", String.class);

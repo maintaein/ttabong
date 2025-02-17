@@ -1,9 +1,6 @@
 package com.ttabong.service.user;
 
-import com.ttabong.dto.user.LoginRequest;
-import com.ttabong.dto.user.UserLoginProjection;
-import com.ttabong.dto.user.VolunteerRegisterRequest;
-import com.ttabong.dto.user.OrganizationRegisterRequest;
+import com.ttabong.dto.user.*;
 import com.ttabong.dto.user.VolunteerRegisterRequest;
 import com.ttabong.entity.user.Organization;
 import com.ttabong.entity.user.User;
@@ -39,19 +36,25 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public long login(LoginRequest loginRequest) {
-        Optional<UserLoginProjection> userOpt = userRepository.findByEmailAndIsDeletedFalse(loginRequest.getEmail());
+    public UserLoginResponseDto login(LoginRequest loginRequest) {
+        UserLoginProjection user = userRepository.findByEmailAndIsDeletedFalse(loginRequest.getEmail());
 
-        if (userOpt.isEmpty()) {
-            throw new RuntimeException("User not found");
+        if (user == null) {
+            return null; // 혹은 Optional<UserLoginResponseDto>로 감싸서 반환 가능
         }
         UserLoginProjection user = userOpt.get(); // 아이디와 비밀번호만 가져오도록 프로젝션추가
 
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid password");
+            return null;
         }
-        return user.getId();
+
+        return UserLoginResponseDto.builder()
+                .userId(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .build();
     }
+
 
     @Override
     public void registerVolunteer(VolunteerRegisterRequest request) {

@@ -1,9 +1,6 @@
 package com.ttabong.dto.recruit.responseDto.org;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,6 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode
 public class ReadAvailableRecruitsResponseDto {
     private List<TemplateDetail> templates;
 
@@ -21,6 +19,7 @@ public class ReadAvailableRecruitsResponseDto {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
+    @EqualsAndHashCode
     public static class TemplateDetail {
         private Template template;
         private Group group;

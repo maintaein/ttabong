@@ -2,10 +2,11 @@ package com.ttabong.service.user;
 
 import com.ttabong.dto.user.LoginRequest;
 import com.ttabong.dto.user.OrganizationRegisterRequest;
+import com.ttabong.dto.user.UserLoginResponseDto;
 import com.ttabong.dto.user.VolunteerRegisterRequest;
 
 public interface UserService {
-    long login(LoginRequest loginRequest);
+    UserLoginResponseDto login(LoginRequest loginRequest);
 
     void registerVolunteer(VolunteerRegisterRequest request);
 

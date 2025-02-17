@@ -8,10 +8,11 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Repository
 public interface VolunteerRepository extends JpaRepository<Volunteer, Integer> {
 
-    // 기관의 공고 _ 봉사자 관리 부분
     @Transactional
     @Modifying
     @Query("UPDATE Volunteer v SET v.recommendedCount = v.recommendedCount + 1 WHERE v.id = :volunteerId")
@@ -23,4 +24,6 @@ public interface VolunteerRepository extends JpaRepository<Volunteer, Integer> {
     void incrementNotRecommendation(@Param("volunteerId") Integer volunteerId);
 
     // 봉사자 쿼리메소드 적기
+    // userId로 volunteer(봉사자) 정보 가져오기
+    Optional<Volunteer> findByUserId(@Param("userId") Integer userId);
 }

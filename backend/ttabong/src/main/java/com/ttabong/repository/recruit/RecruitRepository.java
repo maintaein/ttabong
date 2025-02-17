@@ -1,9 +1,7 @@
 package com.ttabong.repository.recruit;
 
-import com.ttabong.entity.recruit.Application;
 import com.ttabong.entity.recruit.Recruit;
-import com.ttabong.entity.recruit.Template;
-import com.ttabong.entity.recruit.VolunteerReaction;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -19,17 +17,36 @@ import java.util.Optional;
 @Repository
 public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
 
-    List<Recruit> findByTemplateId(Integer templateId);
+    @Query("SELECT r FROM Recruit r " +
+            "WHERE r.template.id = :templateId " +
+            "AND r.isDeleted = false " +
+            "AND r.status = 'RECRUITING' " +
+            "ORDER BY r.deadline ASC")
+    List<Recruit> findByTemplateId(@Param("templateId") Integer templateId);
 
-    @Query("SELECT r.template.id FROM Recruit r WHERE r.id = :recruitId")
-    Integer findTemplateIdByRecruitId(Integer recruitId);
+    @Query("SELECT t.org.id FROM Recruit r JOIN r.template t WHERE r.id = :recruitId")
+    Optional<Integer> findOrgIdByRecruitId(@Param("recruitId") Integer recruitId);
 
-    @Query("SELECT r FROM Recruit r WHERE (:cursor IS NULL OR r.id < :cursor) ORDER BY r.id DESC LIMIT :limit")
-    List<Recruit> findAvailableRecruits(@Param("cursor") Integer cursor, @Param("limit") Integer limit);
+    @Query("SELECT r FROM Recruit r " +
+            "JOIN FETCH r.template t " +
+            "JOIN FETCH t.org o " +
+            "WHERE (:cursor IS NULL OR r.id < :cursor) " +
+            "AND o.user.id = :userId " +
+            "AND r.isDeleted = false " +
+            "ORDER BY r.id DESC")
+    List<Recruit> findAvailableRecruits(@Param("cursor") Integer cursor, @Param("userId") Integer userId,  Pageable pageable);
 
     @Modifying
-    @Query("UPDATE Recruit r SET r.isDeleted = true WHERE r.id IN :deleteIds")
-    void markAsDeleted(@Param("deleteIds") List<Integer> deleteIds);
+    @Query("UPDATE Recruit r " +
+            "SET r.isDeleted = true " +
+            "WHERE r.id IN :deleteIds " +
+            "AND EXISTS ( " +
+            "    SELECT t FROM Template t " +
+            "    WHERE t.id = r.template.id " +
+            "    AND t.org.user.id = :userId " +
+            ") " +
+            "AND r.isDeleted = false")
+    int markAsDeleted(@Param("deleteIds") List<Integer> deleteIds, @Param("userId") Integer userId);
 
     @Modifying
     @Query("UPDATE Recruit r " +
@@ -54,25 +71,43 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
     void closeRecruit(@Param("closeId") Integer closeId);
 
 
-    // VolRecruit---------------------------------------------------------
-
-    // 특정 모집 공고 ID로 조회 (isDeleted = false 조건 포함)
     @Query("SELECT r FROM Recruit r WHERE r.id = :recruitId AND r.isDeleted = false")
     Optional<Recruit> findByRecruitId(@Param("recruitId") Integer recruitId);
 
-    // 특정 봉사자(userId)와 모집 공고(recruitId)로 신청 기록 조회 (isDeleted = false 조건 포함)
-    @Query("SELECT a FROM Application a WHERE a.volunteer.id = :userId AND a.recruit.id = :recruitId AND a.isDeleted = false")
-    Optional<Application> findByVolunteerAndRecruit(@Param("userId") int userId, @Param("recruitId") int recruitId);
+    @Query("""
+        SELECT r FROM Recruit r
+        JOIN FETCH r.template t
+        JOIN FETCH t.org o
+        JOIN FETCH t.group g
+        WHERE
+            (:templateTitle IS NULL OR t.title LIKE %:templateTitle%)
+            AND (:organizationName IS NULL OR o.orgName LIKE %:organizationName%)
+            AND (:status IS NULL OR r.status = :status)
+            AND ((:startDate IS NULL OR :endDate IS NULL) OR (r.activityDate BETWEEN :startDate AND :endDate))
+            AND (:region IS NULL OR t.activityLocation LIKE %:region%)
+            AND (:cursor IS NULL OR t.id > :cursor)
+            AND r.isDeleted = false
+            AND t.isDeleted = false
+        ORDER BY t.id DESC, r.createdAt DESC
+    """)
+    List<Recruit> searchRecruits(
+            @Param("templateTitle") String templateTitle,
+            @Param("organizationName") String organizationName,
+            @Param("status") String status,
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate,
+            @Param("region") String region,
+            @Param("cursor") Integer cursor,
+            Pageable pageable
+    );
 
-    // 특정 봉사자(userId)가 신청한 모집 공고 목록 조회 (isDeleted = false 조건 포함)
-    @Query("SELECT a FROM Application a WHERE a.volunteer.id = :userId AND a.isDeleted = false ORDER BY a.createdAt DESC")
-    List<Application> findApplicationsByVolunteer(@Param("userId") int userId);
+    // VolRecruit---------------------------------------------------------
 
-    // 특정 봉사자(userId)가 좋아요한 모집 공고 리스트 조회 (isDeleted = false 조건 포함)
-    @Query("SELECT vr FROM VolunteerReaction vr WHERE vr.volunteer.id = :userId AND vr.isLike = true AND vr.isDeleted = false")
-    List<VolunteerReaction> findLikedTemplatesByVolunteer(@Param("userId") int userId);
+    // 특정 모집 공고 조회
+    Optional<Recruit> findByIdAndIsDeletedFalse(Integer recruitId);
 
 
 
-
+    @Query("SELECT t.group.id FROM Recruit r JOIN r.template t WHERE r.id = :recruitId")
+    Optional<Integer> findGroupIdByRecruitId(@Param("recruitId") Integer recruitId);
 }
