@@ -9,4 +9,6 @@ import java.util.Optional;
 @Repository
 public interface OrganizationRepository extends JpaRepository<Organization, Integer> {
     Optional<Organization> findByUserId(Integer userId);
+    boolean existsByUserId(Integer userId);
+
 }

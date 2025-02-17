@@ -1,6 +1,7 @@
 package com.ttabong.repository.recruit;
 
 import com.ttabong.entity.recruit.Template;
+import io.lettuce.core.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -81,6 +82,6 @@ public interface TemplateRepository extends JpaRepository<Template, Integer> {
     List<Template> findTemplatesAfterCursor(Integer cursor, Integer limit);
 
 
-
+    Optional<Template> findByIdAndIsDeletedFalse(Integer id);
 
 }

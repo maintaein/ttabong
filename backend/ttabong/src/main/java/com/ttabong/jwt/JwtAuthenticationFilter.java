@@ -15,6 +15,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -65,11 +67,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private void handleJwtException(HttpServletResponse response, String message, int statusCode) throws IOException {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setStatus(statusCode);
+        response.setCharacterEncoding("UTF-8");
 
         Map<String, Object> errorResponse = new HashMap<>();
         errorResponse.put("status", statusCode);
         errorResponse.put("message", message);
-        errorResponse.put("timestamp", System.currentTimeMillis());
+        errorResponse.put("timestamp", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
 
         response.getWriter().write(new ObjectMapper().writeValueAsString(errorResponse));
     }

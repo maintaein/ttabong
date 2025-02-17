@@ -41,4 +41,5 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
     @Query("SELECT a FROM Application a WHERE a.recruit.id = :recruitId AND a.volunteer.user.id = :userId AND a.isDeleted = FALSE")
     Optional<Application> findApplicationByRecruitAndUser(@Param("recruitId") Integer recruitId, @Param("userId") Integer userId);
 
+    Optional<Application> findByIdAndIsDeletedFalse(Integer applicationId);
 }
