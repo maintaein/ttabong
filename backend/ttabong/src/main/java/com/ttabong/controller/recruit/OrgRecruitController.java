@@ -5,6 +5,7 @@ import com.ttabong.dto.recruit.requestDto.org.*;
 import com.ttabong.dto.recruit.responseDto.org.*;
 import com.ttabong.dto.user.AuthDto;
 import com.ttabong.service.recruit.OrgRecruitService;
+import com.ttabong.servicejpa.recruit.OrgRecruitServiceJpa;
 import com.ttabong.util.service.CacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +22,7 @@ import java.util.List;
 @Slf4j
 public class OrgRecruitController extends LoggerConfig {
 
-    private final OrgRecruitService orgRecruitService;
+    private final OrgRecruitServiceJpa orgRecruitService;
     private final CacheService cacheService;
 
     @GetMapping("/templates/available")
@@ -92,7 +93,7 @@ public class OrgRecruitController extends LoggerConfig {
 
         return ResponseEntity.ok().body(response);
     }
-
+    /*
     @PatchMapping("/templates")
     public ResponseEntity<UpdateTemplateResponse> updateTemplate(
             @RequestBody UpdateTemplateRequestDto updateTemplateDto,
@@ -102,7 +103,7 @@ public class OrgRecruitController extends LoggerConfig {
         UpdateTemplateResponse response = orgRecruitService.updateTemplate(updateTemplateDto, authDto);
 
         return ResponseEntity.ok().body(response);
-    }
+    }*/
 
     @PatchMapping("/templates/delete")
     public ResponseEntity<DeleteTemplatesResponseDto> deleteTemplates(

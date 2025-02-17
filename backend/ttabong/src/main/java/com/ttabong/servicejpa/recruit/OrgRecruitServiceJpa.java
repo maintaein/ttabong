@@ -6,7 +6,7 @@ import com.ttabong.dto.user.AuthDto;
 
 import java.util.List;
 
-public interface OrgRecruitService {
+public interface OrgRecruitServiceJpa {
 
     ReadAvailableRecruitsResponseDto readAvailableRecruits(Integer cursor, Integer limit, AuthDto authDto);
 
@@ -27,7 +27,6 @@ public interface OrgRecruitService {
     DeleteGroupResponseDto deleteGroup(DeleteGroupDto deleteGroupDto, AuthDto authDto);
 
     ReadTemplatesResponseDto readTemplates(Integer cursor, Integer limit, AuthDto authDto);
-
 
     CreateGroupResponseDto createGroup(CreateGroupRequestDto createGroupDto, AuthDto authDto);
 

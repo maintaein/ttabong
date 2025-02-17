@@ -12,39 +12,20 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.awt.print.Pageable;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 public interface ApplicationRepositoryJpa extends JpaRepository<Application, Integer> {
 
     @EntityGraph(attributePaths = {"Volunteer.User"})
-    List<Application> findByRecruit(Recruit recruit);
+    List<Application> findByRecruitId(Integer recruitId);
 
-    //@Modifying 더티체킹으로 구현
-    //@Transactional
-    //@Query("UPDATE Application a SET a.status = :status WHERE a.id = :applicationId")
-    //Application updateApplicationStatusById(@Param("applicationId") Integer applicationId, @Param("status") String status);
+    @EntityGraph(attributePaths = {"Volunteer.User"})
+    Optional<Application> findById(Integer id);
 
-    @Query("SELECT a FROM Application a WHERE a.recruit.id = :recruitId AND a.volunteer.id = :volunteerId")
-    Optional<Application> findByRecruitIdAndVolunteerId(@Param("recruitId") Integer recruitId, @Param("volunteerId") Integer volunteerId);
-
-    @Modifying
-    @Transactional
-    @Query("UPDATE Application a SET a.evaluationDone = true WHERE a.id = :applicationId")
-    void markEvaluationAsDone(@Param("applicationId") Integer applicationId);
-
-    // review part
-
-    boolean existsByVolunteerUserIdAndRecruitIdAndIsDeletedFalse(Integer userId, Integer recruitId);
-
-    // for VolRecruit -------------------------------------------
-    // 사용자가 신청한 모집 공고 목록 조회
-//    @Query("SELECT a FROM Application a WHERE a.volunteer.user.id = :userId AND a.id > :cursor AND a.isDeleted = FALSE ORDER BY a.createdAt DESC")
-//    List<Application> findApplicationsByUserId(@Param("userId") Integer userId, @Param("cursor") Integer cursor, @Param("limit") Integer limit);
-
-    List<Application>  findByVolunteerUserIdAndIdGreaterThanAndIsDeletedFalseOrderByCreatedAtDesc(Integer userId, Integer cursor, Pageable pageable);
-
-    // 해당 봉사자가 해당 공고를 신청했는지 확인
-    @Query("SELECT a FROM Application a WHERE a.recruit.id = :recruitId AND a.volunteer.user.id = :userId AND a.isDeleted = FALSE")
-    Optional<Application> findByRecruitAndUser(@Param("recruitId") Integer recruitId, @Param("userId") Integer userId);
+    default Map<Integer, Application> findByRecruitIdMap(Integer recruitId){
+        return findByRecruitId(recruitId).stream().collect(Collectors.toMap(application -> application.getVolunteer().getId(), application -> application));
+    }
 }

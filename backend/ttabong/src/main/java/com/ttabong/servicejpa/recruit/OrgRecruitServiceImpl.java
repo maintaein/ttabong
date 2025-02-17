@@ -16,7 +16,6 @@ import com.ttabong.util.ImageUtil;
 import com.ttabong.util.service.ImageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,16 +26,14 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 @Slf4j
-public class OrgRecruitServiceImpl implements OrgRecruitService {
+public class OrgRecruitServiceImpl implements OrgRecruitServiceJpa {
     private final RecruitRepositoryJpa recruitRepository;
     private final TemplateRepositoryJpa templateRepository;
     private final TemplateGroupRepositoryJpa templateGroupRepository;
@@ -526,54 +523,53 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         checkOrgToken(authDto);
 
-        Organization org = organizationRepository.findByUserId(authDto.getUserId())
-                .orElseThrow(() -> new ForbiddenException("해당 기관을 찾을 수 없습니다."));
-
-        Integer recruitOrgId = recruitRepository.findOrgIdByRecruitId(recruitId)
-                .orElseThrow(() -> new NotFoundException("해당 모집 공고를 찾을 수 없습니다."));
-
-        if (!org.getId().equals(recruitOrgId)) {
-            throw new ForbiddenException("이 모집 공고의 신청 내역을 조회할 권한이 없습니다.");
+        Optional<Recruit> recruit = recruitRepository.findByRecruitId(recruitId);
+        if(recruit.isEmpty()) {
+            //해당공고 없음
+        }
+        if(!recruit.get().getTemplate().getOrg().getId().equals(authDto.getUserId())) {
+            //공고권한 없음
+            return null;
         }
 
-        List<Application> applications = applicationRepository.findByRecruitIdWithUser(recruitId);
+        List<Application> applications = applicationRepository.findByRecruitId(recruitId);
 
         List<ReadApplicationsResponseDto.ApplicationDetail> applicationDetails = applications.stream()
-                .map(application -> {
-                    String profileImagePath = application.getVolunteer().getUser().getProfileImage();
+            .map(application -> {
+                String profileImagePath = application.getVolunteer().getUser().getProfileImage();
 
-                    String profileImageUrl;
-                    try {
-                        profileImageUrl = (profileImagePath != null) ? imageUtil.getPresignedDownloadUrl(profileImagePath) : null;
-                    } catch (Exception e) {
-                        throw new ImageProcessException("프로필 이미지 URL 생성 중 오류 발생", e);
-                    }
+                String profileImageUrl;
+                try {
+                    profileImageUrl = (profileImagePath != null) ? imageUtil.getPresignedDownloadUrl(profileImagePath) : imageUtil.getPresignedDownloadUrl("0");
+                } catch (Exception e) {
+                    throw new ImageProcessException("프로필 이미지 URL 생성 중 오류 발생", e);
+                }
 
-                    return ReadApplicationsResponseDto.ApplicationDetail.builder()
-                            .user(ReadApplicationsResponseDto.User.builder()
-                                    .userId(application.getVolunteer().getUser().getId())
-                                    .email(application.getVolunteer().getUser().getEmail())
-                                    .name(application.getVolunteer().getUser().getName())
-                                    .profileImage(profileImageUrl)
-                                    .build())
-                            .volunteer(ReadApplicationsResponseDto.Volunteer.builder()
-                                    .volunteerId(application.getVolunteer().getId())
-                                    .recommendedCount(application.getVolunteer().getRecommendedCount())
-                                    .totalVolunteerHours(
-                                            application.getVolunteer().getUser().getTotalVolunteerHours() != null
-                                                    ? application.getVolunteer().getUser().getTotalVolunteerHours().intValue()
-                                                    : 0
-                                    )
-                                    .build())
-                            .application(ReadApplicationsResponseDto.Application.builder()
-                                    .applicationId(application.getId())
-                                    .recruitId(application.getRecruit().getId())
-                                    .status(application.getStatus())
-                                    .createdAt(application.getCreatedAt() != null
-                                            ? LocalDateTime.ofInstant(application.getCreatedAt(), ZoneId.systemDefault())
-                                            : LocalDateTime.now())
-                                    .build())
-                            .build();
+                return ReadApplicationsResponseDto.ApplicationDetail.builder()
+                    .user(ReadApplicationsResponseDto.User.builder()
+                        .userId(application.getVolunteer().getUser().getId())
+                        .email(application.getVolunteer().getUser().getEmail())
+                        .name(application.getVolunteer().getUser().getName())
+                        .profileImage(profileImageUrl)
+                        .build())
+                    .volunteer(ReadApplicationsResponseDto.Volunteer.builder()
+                        .volunteerId(application.getVolunteer().getId())
+                        .recommendedCount(application.getVolunteer().getRecommendedCount())
+                        .totalVolunteerHours(
+                        application.getVolunteer().getUser().getTotalVolunteerHours() != null
+                                ? application.getVolunteer().getUser().getTotalVolunteerHours().intValue()
+                                : 0
+                        )
+                        .build())
+                    .application(ReadApplicationsResponseDto.Application.builder()
+                        .applicationId(application.getId())
+                        .recruitId(application.getRecruit().getId())
+                        .status(application.getStatus())
+                        .createdAt(application.getCreatedAt() != null
+                                ? LocalDateTime.ofInstant(application.getCreatedAt(), ZoneId.systemDefault())
+                                : LocalDateTime.now())
+                        .build())
+                    .build();
                 })
                 .collect(Collectors.toList());
 
@@ -593,21 +589,29 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         Integer volunteerId = updateApplicationDto.getVolunteerId();
         Boolean accept = updateApplicationDto.getAccept();
         String status = accept ? "APPROVED" : "REJECTED";
-
-        applicationRepository.findByRecruitIdAndVolunteerId(recruitId, volunteerId)
-                .orElseThrow(() -> new NotFoundException("관련 데이터 없음"));
-
-        Organization org = organizationRepository.findByUserId(authDto.getUserId())
-                .orElseThrow(() -> new ForbiddenException("해당 기관을 찾을 수 없습니다."));
-
-        Integer recruitOrgId = applicationRepository.findOrgIdByApplicationId(applicationId)
-                .orElseThrow(() -> new NotFoundException("해당 신청 내역을 찾을 수 없습니다."));
-
-        if (!org.getId().equals(recruitOrgId)) {
-            throw new ForbiddenException("해당 모집 공고의 신청 상태를 변경할 권한이 없습니다.");
+        
+        Optional<Recruit> recruit = recruitRepository.findByRecruitId(recruitId);
+        
+        if(recruit.isEmpty()) {
+            //없는공고
+            log.info("해당 공고 {} 를 찾을 수 없습니다", recruitId);
         }
+        if(!recruit.get().getTemplate().getOrg().getId().equals(authDto.getUserId())){
+            //권한없음
+            log.info("해당 공고에 대한 권한이 없습니다");
+        }
+        Optional<Application> application = applicationRepository.findById(updateApplicationDto.getApplicationId());
 
-        applicationRepository.updateApplicationStatus(applicationId, status);
+        if(application.isEmpty()) {
+            log.info("신청기록이 존재하지 않습니다");
+        }
+        if(!(application.get().getId()==updateApplicationDto.getApplicationId())){
+            log.info("신청번호와과 동일하지 않습니다");
+        }
+        if(!(application.get().getVolunteer().getId()==updateApplicationDto.getVolunteerId())){
+            log.info("신청자와 신청내역의 봉사자가 일치하지 않습니다");
+        }
+        application.get().updateStatus(status);
 
         return UpdateApplicationsResponseDto.builder()
                 .message("신청 상태 변경 완료")
@@ -627,7 +631,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
             AuthDto authDto) {
 
         checkOrgToken(authDto);
-
+        /*
         Organization org = organizationRepository.findByUserId(authDto.getUserId())
                 .orElseThrow(() -> new ForbiddenException("해당 기관을 찾을 수 없습니다."));
 
@@ -637,30 +641,25 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         if (!org.getId().equals(recruitOrgId)) {
             throw new ForbiddenException("이 모집 공고의 신청자를 평가할 권한이 없습니다.");
         }
+        */
+        Map<Integer, Application> applicationMap = applicationRepository.findByRecruitIdMap(recruitId);
 
-        return evaluateApplicationDtoList.stream().map(dto -> {
-            Integer volunteerId = dto.getVolunteerId();
-            String recommendationStatus = dto.getRecommendationStatus();
-
-            Application application = applicationRepository.findByRecruitIdAndVolunteerId(recruitId, volunteerId)
-                    .filter(a -> !a.getEvaluationDone())
-                    .orElseThrow(() -> new NotFoundException("해당 봉사자가 신청하지 않았거나 이미 평가 완료되었습니다. volunteerId: " + volunteerId));
-
-            Integer applicationId = application.getId();
-
-            if ("RECOMMEND".equalsIgnoreCase(recommendationStatus)) {
-                volunteerRepository.incrementRecommendation(volunteerId);
-            } else if ("NOTRECOMMEND".equalsIgnoreCase(recommendationStatus)) {
-                volunteerRepository.incrementNotRecommendation(volunteerId);
+        return evaluateApplicationDtoList.stream().filter(evluateApplicationDto ->{
+                return !applicationMap.get(evluateApplicationDto.getVolunteerId()).getEvaluationDone();
+            }).map(evaluateApplicationDto ->{
+            Application app = applicationMap.get(evaluateApplicationDto.getVolunteerId());
+            app.setStatus(evaluateApplicationDto.getStatus());
+            if(evaluateApplicationDto.getRecommendationStatus().equals("RECOMMEND")){
+                app.getVolunteer().incrementRecommendedCount();
+            }else if(evaluateApplicationDto.getRecommendationStatus().equals("NOTRECOMMEND")){
+                app.getVolunteer().incrementNotRecommendedCount();
             }
-
-            applicationRepository.markEvaluationAsDone(applicationId);
-
             return EvaluateApplicationsResponseDto.builder()
-                    .volunteerId(volunteerId)
-                    .recommendationStatus(recommendationStatus)
+                    .volunteerId(evaluateApplicationDto.getVolunteerId())
+                    .recommendationStatus(evaluateApplicationDto.getRecommendationStatus())
                     .build();
-        }).collect(Collectors.toList());
+        }).toList();
+
     }
     public int getMinutesToDeadlineEvent(Recruit recruit) {
         LocalDateTime recruitDeadline = recruit.getDeadline()

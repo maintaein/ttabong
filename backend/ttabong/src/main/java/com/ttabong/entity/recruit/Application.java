@@ -45,4 +45,7 @@ public class Application {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
+    public void updateStatus(String status) {
+        this.status = status;
+    }
 }

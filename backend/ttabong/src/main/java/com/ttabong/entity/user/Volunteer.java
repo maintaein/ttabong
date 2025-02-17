@@ -59,4 +59,11 @@ public class Volunteer {
     @OneToMany(mappedBy = "volunteer")
     private Set<VolunteerReaction> volunteerReactions = new LinkedHashSet<>();
 
+    public void incrementRecommendedCount() {
+        this.recommendedCount++;
+    }
+    public void incrementNotRecommendedCount() {
+        this.notRecommendedCount++;
+    }
+
 }

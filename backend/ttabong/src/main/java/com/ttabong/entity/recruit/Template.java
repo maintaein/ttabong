@@ -76,6 +76,9 @@ public class Template {
     @JoinColumn(name = "template_id", referencedColumnName = "template_id", insertable = false, updatable = false)
     private ReviewImage thumbnailImage;
 
+    @OneToMany(mappedBy = "template", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<ReviewImage> images;
+
     public Template(Integer id) {
         this.id = id;
     }
