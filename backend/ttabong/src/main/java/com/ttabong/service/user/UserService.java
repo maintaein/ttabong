@@ -8,9 +8,9 @@ import com.ttabong.dto.user.VolunteerRegisterRequest;
 public interface UserService {
     UserLoginResponseDto login(LoginRequest loginRequest);
 
-    String registerVolunteer(VolunteerRegisterRequest request);
+    void registerVolunteer(VolunteerRegisterRequest request);
 
-    String registerOrganization(OrganizationRegisterRequest request);
+    void registerOrganization(OrganizationRegisterRequest request);
 
     boolean checkEmail(String email, String type);
 }

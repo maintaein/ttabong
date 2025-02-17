@@ -1,19 +1,20 @@
 package com.ttabong.util.service;
 
 import com.ttabong.entity.recruit.Template;
-import com.ttabong.entity.sns.Review;
 import com.ttabong.entity.sns.ReviewImage;
+import com.ttabong.exception.ImageProcessException;
+import com.ttabong.exception.NotFoundException;
 import com.ttabong.repository.recruit.TemplateRepository;
 import com.ttabong.repository.sns.ReviewImageRepository;
 import com.ttabong.repository.sns.ReviewRepository;
 import com.ttabong.util.CacheUtil;
 import com.ttabong.util.ImageUtil;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -29,56 +30,35 @@ public class ImageServiceImpl implements ImageService{
     private final CacheUtil cacheUtil;
     private final ImageUtil imageUtil;
 
-    // 미리 슬롯 10개 받아두기
     @Override
-    @Transactional
-    public void initializeReviewImages(Integer entityId, boolean isTemplate) {
-        for (int i = 0; i < 10; i++) {
-            ReviewImage.ReviewImageBuilder imageBuilder = ReviewImage.builder()
-                    .imageUrl(null)
+    public List<String> uploadTemplateImages(Integer templateId, List<String> uploadedImages) {
+        List<String> objectPaths = new ArrayList<>();
+
+        List<ReviewImage> imageEntities = new ArrayList<>();
+        for (int i = 0; i < uploadedImages.size(); i++) {
+            final String objectPath = cacheUtil.findObjectPath(uploadedImages.get(i));
+            if (objectPath == null) {
+                throw new ImageProcessException("유효하지 않은 presigned URL입니다.");
+            }
+
+            objectPaths.add(objectPath);
+
+            Template template = templateRepository.findById(templateId)
+                    .orElseThrow(() -> new NotFoundException("해당 템플릿이 존재하지 않습니다."));
+
+            imageEntities.add(ReviewImage.builder()
+                    .template(template)
+                    .imageUrl(objectPath)
                     .isThumbnail(i == 0)
                     .isDeleted(false)
-                    .createdAt(Instant.now());
-
-            if (isTemplate) {
-                Template template = templateRepository.findById(entityId)
-                        .orElseThrow(() -> new EntityNotFoundException("해당 템플릿이 존재하지 않습니다."));
-                imageBuilder.template(template);
-            } else {
-                Review review = reviewRepository.findById(entityId)
-                        .orElseThrow(() -> new EntityNotFoundException("해당 후기가 존재하지 않습니다."));
-
-                Template template = review.getRecruit().getTemplate();
-                imageBuilder.review(review);
-                imageBuilder.template(template);
-            }
-
-            reviewImageRepository.save(imageBuilder.build());
-        }
-    }
-
-
-    @Transactional
-    public void updateReviewImages(Integer templateId, List<String> presignedUrls) {
-        List<ReviewImage> reviewImages = reviewImageRepository.findByTemplateId(templateId);
-
-        for (int i = 0; i < presignedUrls.size(); i++) {
-            if (i >= reviewImages.size()) break;
-
-            String objectPath = cacheUtil.findObjectPath(presignedUrls.get(i));
-
-            if (objectPath == null) {
-                continue;
-            }
-
-            reviewImages.get(i).setImageUrl(objectPath);
-            reviewImages.get(i).setIsDeleted(false);
-            reviewImages.get(i).setThumbnail(i == 0);
+                    .createdAt(Instant.now())
+                    .build());
         }
 
-        reviewImageRepository.saveAll(reviewImages);
-    }
+        reviewImageRepository.saveAll(imageEntities);
 
+        return objectPaths;
+    }
 
     @Override
     @Transactional

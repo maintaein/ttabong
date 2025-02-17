@@ -2,6 +2,11 @@ import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Home, Search, PlusCircle, Eye, User } from 'lucide-react';
 import { useUserStore } from '@/stores/userStore';
+import { cn } from '@/lib/utils';
+
+interface NavBarProps {
+  className?: string;
+}
 
 const NavItem = ({ to, icon: Icon }: { to: string; icon: React.ComponentType<{ className?: string }> }) => {
   return (
@@ -17,7 +22,7 @@ const NavItem = ({ to, icon: Icon }: { to: string; icon: React.ComponentType<{ c
   );
 };
 
-const NavBar = () => {
+const NavBar: React.FC<NavBarProps> = ({ className }) => {
   const location = useLocation();
   const { userType } = useUserStore();
   const isLoginPage = location.pathname === '/login';
@@ -27,7 +32,7 @@ const NavBar = () => {
   const recruitPath = userType === 'volunteer' ? '/recruit' : '/add-recruit';
 
   return (
-    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[600px] min-w-[320px] bg-background border-t border-border h-14 z-50">
+    <nav className={cn("fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[600px] min-w-[320px] bg-background border-t border-border h-14 z-50", className)}>
       <div className="flex justify-around h-full py-2">
         <NavItem to="/main" icon={Home} />
         <NavItem to="/recruit-find" icon={Search} />
