@@ -40,8 +40,20 @@ public class CacheUtil {
         processedCacheIds.add(cacheId);
     }
 
-    public boolean eventScheduler(Integer Id, Integer time){
-        redisTemplate.opsForValue().set("EVENT_COMPLETE: "+Id.toString(),"", time, TimeUnit.MINUTES);
+    public boolean addCompleteEventScheduler(Integer Id, Integer time){
+        redisTemplate.opsForValue().set("EVENT_COMPLETE: "+Id.toString(),"", time, TimeUnit.SECONDS);
+        return true;
+    }
+    public boolean addDeadlineEventScheduler(Integer Id, Integer time){
+        redisTemplate.opsForValue().set("DEADLINE_PASS: "+Id.toString(),"", time, TimeUnit.SECONDS);
+        return true;
+    }
+    public boolean removeEventSchedule(Integer Id){
+        redisTemplate.opsForValue().getAndDelete("EVENT_COMPLETE: "+Id.toString());
+        return true;
+    }
+    public boolean removeDeadlineSchedule(Integer Id){
+        redisTemplate.opsForValue().getAndDelete("DEADLINE_PASS: "+Id.toString());
         return true;
     }
 }
