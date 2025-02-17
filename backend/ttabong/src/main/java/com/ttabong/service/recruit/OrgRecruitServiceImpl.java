@@ -10,8 +10,11 @@ import com.ttabong.repository.recruit.*;
 import com.ttabong.repository.user.OrganizationRepository;
 import com.ttabong.repository.user.VolunteerRepository;
 import com.ttabong.util.CacheUtil;
+import com.ttabong.util.DateTimeUtil;
 import com.ttabong.util.ImageUtil;
 import com.ttabong.util.service.ImageService;
+import io.minio.MinioClient;
+import io.minio.StatObjectArgs;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -25,10 +28,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -47,6 +47,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     private final ImageService imageService;
     private final ImageUtil imageUtil;
     private final CacheUtil cacheUtil;
+    private final MinioClient minioClient;
 
     public void checkOrgToken(AuthDto authDto) {
         if (authDto == null || authDto.getUserId() == null) {
@@ -430,6 +431,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build();
     }
 
+
     @Override
     public CreateTemplateResponseDto createTemplate(CreateTemplateRequestDto createTemplateDto, AuthDto authDto) {
 
@@ -460,23 +462,51 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .createdAt(Instant.now())
                 .build());
 
-        imageService.initializeReviewImages(savedTemplate.getId(), true);
-
+        List<String> uploadedPaths = new ArrayList<>();
         if (createTemplateDto.getImages() != null && !createTemplateDto.getImages().isEmpty()) {
-            imageService.updateReviewImages(savedTemplate.getId(), createTemplateDto.getImages());
+            uploadedPaths = imageService.uploadTemplateImages(savedTemplate.getId(), createTemplateDto.getImages());
         }
 
-        imageService.updateThumbnailImage(savedTemplate.getId(), true);
+        List<String> verifiedPaths = new ArrayList<>();
+        for (String imagePath : uploadedPaths) {
+            try {
+                minioClient.statObject(
+                        StatObjectArgs.builder()
+                                .bucket("ttabong-bucket")
+                                .object(imagePath)
+                                .build()
+                );
+                verifiedPaths.add(imagePath);
+            } catch (Exception e) {
+                throw new ImageProcessException("MinIO에 이미지 저장 실패(해당 파일 없음): " + imagePath, e);
+            }
+        }
 
-        List<String> imageUrls = imageService.getImageUrls(savedTemplate.getId(), true);
+        if (!verifiedPaths.isEmpty()) {
+            imageService.updateThumbnailImage(savedTemplate.getId(), true);
+        }
+
+        List<String> presignedUrls = verifiedPaths.stream()
+                .map(imagePath -> {
+                    try {
+                        return imageUtil.getPresignedDownloadUrl(imagePath);
+                    } catch (Exception e) {
+                        System.err.println("Presigned URL 생성 실패: " + imagePath);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
 
         return CreateTemplateResponseDto.builder()
                 .message("템플릿 생성 성공")
                 .templateId(savedTemplate.getId())
-                .imageUrl(imageUrls.stream().findFirst().orElse(null))
-                .images(imageUrls)
+                .imageUrl(presignedUrls.stream().findFirst().orElse(null))
+                .images(presignedUrls)
                 .build();
     }
+
 
     // TODO: 봉사 그룹의 디폴트 이름을 봉사 그룹 개수를 세어서 만들어보자(중복되지 않도록)
     @Override
