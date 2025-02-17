@@ -3,8 +3,6 @@ package com.ttabong.dto.user;
 import com.ttabong.entity.user.Organization;
 import lombok.*;
 
-import java.time.LocalDateTime;
-
 @Getter
 @Setter
 @NoArgsConstructor

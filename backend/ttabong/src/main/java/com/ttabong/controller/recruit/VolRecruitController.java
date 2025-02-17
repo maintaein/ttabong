@@ -5,15 +5,14 @@ import com.ttabong.dto.recruit.requestDto.vol.ApplyRecruitRequestDto;
 import com.ttabong.dto.recruit.requestDto.vol.DeleteLikesRequestDto;
 import com.ttabong.dto.recruit.requestDto.vol.LikeOnRecruitRequestDto;
 import com.ttabong.dto.recruit.responseDto.vol.*;
+import com.ttabong.dto.user.AuthDto;
 import com.ttabong.entity.recruit.Application;
 import com.ttabong.service.recruit.VolRecruitService;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import com.ttabong.dto.user.AuthDto;
 
 import java.util.List;
 import java.util.Map;
@@ -82,7 +81,6 @@ public class VolRecruitController extends LoggerConfig {
 
         return ResponseEntity.ok().body(responseDto);
     }
-
 
 
     // 5. 신청한 공고 목록 조회

@@ -1,7 +1,5 @@
 package com.ttabong.controller.user;
 
-import com.ttabong.dto.user.*;
-import com.ttabong.entity.user.User;
 import com.ttabong.config.LoggerConfig;
 import com.ttabong.dto.user.*;
 import com.ttabong.jwt.JwtProvider;

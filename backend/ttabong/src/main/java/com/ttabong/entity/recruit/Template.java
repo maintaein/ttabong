@@ -1,9 +1,11 @@
 package com.ttabong.entity.recruit;
 
+import com.ttabong.dto.recruit.requestDto.org.UpdateTemplateRequestDto;
 import com.ttabong.entity.sns.ReviewImage;
 import com.ttabong.entity.user.Organization;
 import jakarta.persistence.*;
 import lombok.*;
+import org.apache.catalina.Group;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -11,6 +13,7 @@ import org.hibernate.annotations.OnDeleteAction;
 import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Entity
@@ -77,7 +80,12 @@ public class Template {
         this.id = id;
     }
 
-    @OneToMany(mappedBy = "template", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<ReviewImage> images;
+    public void deleteTemplate() {
+        this.isDeleted = true;
+    }
+
+    public static Template updateTemplate(Template oldTemplate, UpdateTemplateRequestDto dto, TemplateGroup group, Organization org, Category category) {
+        return null;
+    }
 
 }

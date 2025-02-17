@@ -39,5 +39,7 @@ public class TemplateGroup {
     public void markDeleted() {
         this.isDeleted = true;
     }
-
+    public void updateName(String name){
+        this.groupName = name;
+    }
 }

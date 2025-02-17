@@ -10,9 +10,8 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 public class RedisExpirationListener extends KeyExpirationEventMessageListener {
 
 
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
-
     private final OrgRecruitService orgRecruitService;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public RedisExpirationListener(RedisMessageListenerContainer listenerContainer, OrgRecruitService orgRecruitService) {
         super(listenerContainer);
@@ -23,9 +22,12 @@ public class RedisExpirationListener extends KeyExpirationEventMessageListener {
     public void onMessage(Message message, byte[] pattern) {
 
         String[] expireMessage = message.toString().split(" ");
-        if(expireMessage[0].equals("EVENT_COMPLETE:")) {
-            logger.info(message.toString() + "번 공고 활동 완료");
-            orgRecruitService.updateScheduledStatus(Integer.parseInt(expireMessage[1]));
+        if (expireMessage[0].equals("EVENT_COMPLETE:")) {
+            logger.info("{}번 공고 활동 완료", message);
+            orgRecruitService.updateCompleteRecruitStatus(Integer.parseInt(expireMessage[1]));
+        }else if (expireMessage[0].equals("DEADLINE_PASS:")) {
+            logger.info("{}번 공고 모집 마감", message);
+            orgRecruitService.updateDeadlineRecruitStatus(Integer.parseInt(expireMessage[1]));
         }
     }
 }

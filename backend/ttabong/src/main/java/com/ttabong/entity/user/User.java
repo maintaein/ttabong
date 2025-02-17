@@ -44,7 +44,7 @@ public class User {
     private Boolean isDeleted;
 
     @ColumnDefault("CURRENT_TIMESTAMP")
-    @Column(name = "created_at", nullable = false, insertable=false, updatable=false)
+    @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private Instant createdAt;
 
     @OneToMany(mappedBy = "user")

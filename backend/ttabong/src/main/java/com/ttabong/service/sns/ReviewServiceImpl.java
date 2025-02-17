@@ -146,7 +146,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
 
-    public void uploadImagesToMinio(List<String> uploadedImages, List<ReviewImage> imageSlots , AuthDto authDto) {
+    public void uploadImagesToMinio(List<String> uploadedImages, List<ReviewImage> imageSlots, AuthDto authDto) {
 
         checkToken(authDto);
 
@@ -415,7 +415,6 @@ public class ReviewServiceImpl implements ReviewService {
                 LocalDateTime.now()
         );
     }
-
 
 
     @Override

@@ -13,7 +13,7 @@ import java.util.List;
 @Builder
 public class ReviewCreateResponseDto {
     private String message;
-//    private Integer reviewId;
+    //    private Integer reviewId;
 //    private Integer writerId;
     private List<String> uploadedImages;
 }

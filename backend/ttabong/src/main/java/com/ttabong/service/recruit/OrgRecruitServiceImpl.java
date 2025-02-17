@@ -285,7 +285,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
             throw new UnauthorizedException("해당 공고를 마감할 권한이 없습니다.");
         }
         recruitRepository.closeRecruit(recruitId);
-        updateCloseRecruitStatus(recruitId);
+        updateDeadlineRecruitStatus(recruitId);
         cacheUtil.removeDeadlineSchedule(recruitId);
 
         return CloseRecruitResponseDto.builder()
@@ -767,21 +767,24 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         }).collect(Collectors.toList());
     }
 
-    //미완성
-    public void updateCloseRecruitStatus(int recruitId) {
-        recruitRepository.save(
-                Recruit.builder()
-                        .id(recruitId)
-                        .status("RECRUITMENT_CLOSED")
-                        .build());
-    }
-
-    public void updateCompleteRecruitStatus(int recruitId) {
-        recruitRepository.save(
+    @Override
+    public Boolean updateCompleteRecruitStatus(int recruitId) {
+        Recruit activityCompleted = recruitRepository.save(
                 Recruit.builder()
                         .id(recruitId)
                         .status("ACTIVITY_COMPLETED")
                         .build());
+        return true;
+    }
+
+    @Override
+    public Boolean updateDeadlineRecruitStatus(int recruitId) {
+        Recruit deadLinePass = recruitRepository.save(
+                Recruit.builder()
+                        .id(recruitId)
+                        .status("RECRUITMENT_CLOSED")
+                        .build());
+        return true;
     }
 
     public int getMinutesToDeadlineEvent(Recruit recruit) {
