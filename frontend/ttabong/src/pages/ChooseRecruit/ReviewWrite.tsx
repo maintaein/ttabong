@@ -149,11 +149,19 @@ export default function ReviewWrite() {
       }
       
       navigate(-1);
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error:', error); // 에러 객체 확인용 로그
+      
+      const axiosMessage = error.message || '';
+      const serverMessage = error.response?.data?.message;
+      const errorMessage = serverMessage 
+        ? `${axiosMessage}\n${serverMessage}`
+        : axiosMessage || (isEdit ? "리뷰 수정에 실패했습니다." : "리뷰 등록에 실패했습니다.");
+
       toast({
         variant: "destructive",
-        title: "오류",
-        description: isEdit ? "리뷰 수정에 실패했습니다." : "리뷰 등록에 실패했습니다."
+        title: `오류 (${error.response?.status || 500})`,
+        description: errorMessage
       });
     }
   };
