@@ -104,6 +104,8 @@ export interface LoginResponse {
   status: number;
   message: string;
   accessToken: string;
+  name: string;
+  email: string;
 }
 
 export interface JwtPayload {

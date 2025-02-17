@@ -4,7 +4,7 @@ import type {
   CreateRecruitRequest, 
   UpdateRecruitRequest,
   GetApplicationsParams,
-  RecruitResponse
+  RecruitDetail
 } from '@/types/recruitType';
 
 export const recruitApi = {
@@ -45,17 +45,12 @@ export const recruitApi = {
     return response.data;
   },
 
-  getRecruitDetail: async (recruitId: number) => {
-    const response = await axiosInstance.get(`/org/recruits/${recruitId}`);
+  getRecruitDetail: async (recruitId: number): Promise<RecruitDetail> => {
+    const response = await axiosInstance.get(`/vol/recruits/${recruitId}`);
     return response.data;
   },
 
-  getRecruits: async (cursor?: number, limit?: number) => {
-    const params = new URLSearchParams();
-    if (cursor) params.append('cursor', cursor.toString());
-    if (limit) params.append('limit', limit.toString());
-    
-    const response = await axiosInstance.get<RecruitResponse>(`/org/recruits?${params}`);
-    return response.data;
+  cancelApplication: async (applicationId: number): Promise<void> => {
+    await axiosInstance.patch(`/vol/applications/${applicationId}`);
   }
 }; 
