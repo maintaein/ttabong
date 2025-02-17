@@ -242,7 +242,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 ? new java.sql.Date(requestDto.getActivityDate().getTime())
                 : new java.sql.Date(System.currentTimeMillis());
 
-        recruitRepository.updateRecruit(
+        Recruit recruit = recruitRepository.updateRecruit(
                 recruitId,
                 deadlineInstant,
                 activityDate,
@@ -250,6 +250,9 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 requestDto.getActivityEnd() != null ? requestDto.getActivityEnd() : BigDecimal.valueOf(12.00),
                 requestDto.getMaxVolunteer()
         );
+
+        cacheUtil.addCompleteEventScheduler(recruitId, getMinutesToCompleteEvent(recruit));
+        cacheUtil.addDeadlineEventScheduler(recruitId, getMinutesToDeadlineEvent(recruit));
 
         return UpdateRecruitsResponseDto.builder()
                 .message("공고 수정 완료")
@@ -281,8 +284,9 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         if (!recruitOrgId.equals(userOrgId)) {
             throw new UnauthorizedException("해당 공고를 마감할 권한이 없습니다.");
         }
-
         recruitRepository.closeRecruit(recruitId);
+        updateCloseRecruitStatus(recruitId);
+        cacheUtil.removeDeadlineSchedule(recruitId);
 
         return CloseRecruitResponseDto.builder()
                 .message("공고 마감 완료")
@@ -540,6 +544,9 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .updatedAt(Instant.now())
                 .build());
 
+        cacheUtil.addDeadlineEventScheduler(recruit.getId(), getMinutesToDeadlineEvent(recruit));
+        cacheUtil.addCompleteEventScheduler(recruit.getId(), getMinutesToCompleteEvent(recruit));
+
         return CreateRecruitResponseDto.builder()
                 .message("공고 생성 완료")
                 .recruitId(recruit.getId())
@@ -759,28 +766,49 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                     .build();
         }).collect(Collectors.toList());
     }
-    //미완성
-    public void updateScheduledStatus(int i) {
 
+    //미완성
+    public void updateCloseRecruitStatus(int recruitId) {
+        recruitRepository.save(
+                Recruit.builder()
+                        .id(recruitId)
+                        .status("RECRUITMENT_CLOSED")
+                        .build());
     }
 
-    public int setUpdateStatusSchedule(Recruit recruit){
+    public void updateCompleteRecruitStatus(int recruitId) {
+        recruitRepository.save(
+                Recruit.builder()
+                        .id(recruitId)
+                        .status("ACTIVITY_COMPLETED")
+                        .build());
+    }
+
+    public int getMinutesToDeadlineEvent(Recruit recruit) {
+        LocalDateTime recruitDeadline = recruit.getDeadline()
+                .atZone(ZoneId.of("Asia/Seoul"))
+                .toLocalDateTime()
+                .plusDays(1)
+                .truncatedTo(ChronoUnit.DAYS);
+        LocalDateTime now = LocalDateTime.now();
+        return (int) ChronoUnit.MINUTES.between(now, recruitDeadline);
+    }
+
+    public int getMinutesToCompleteEvent(Recruit recruit) {
         Date activityDate = recruit.getActivityDate();
         BigDecimal activityEnd = recruit.getActivityEnd();
 
         LocalDateTime activityDateTime = activityDate.toInstant()
-                .atZone(ZoneId.systemDefault())
+                .atZone(ZoneId.of("Asia/Seoul"))
                 .toLocalDateTime();
+
         LocalDateTime activityEndTime = activityDateTime
                 .withHour(activityEnd.intValue())
                 .withMinute(activityEnd.remainder(BigDecimal.ONE).multiply(BigDecimal.valueOf(100)).intValue())
                 .withSecond(0);
+
         LocalDateTime now = LocalDateTime.now();
 
-        int remainingMinutes = (int) ChronoUnit.MINUTES.between(now, activityEndTime);
-
-        cacheUtil.eventScheduler(recruit.getId(), remainingMinutes);
-
-        return remainingMinutes;
+        return (int) ChronoUnit.MINUTES.between(now, activityEndTime);
     }
 }
