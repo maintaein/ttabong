@@ -288,7 +288,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .getId();
 
         if (!recruitOrgId.equals(userOrgId)) {
-            throw new UnauthorizedException("해당 공고를 마감할 권한이 없습니다.");
+            throw new ForbiddenException("해당 공고를 마감할 권한이 없습니다.");
         }
 
         recruitRepository.closeRecruit(recruitId);
@@ -381,11 +381,15 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         Integer groupId = deleteGroupDto.getGroupId();
 
-        TemplateGroup groupToDelete = templateGroupRepository.findByIdAndIsDeletedFalse(groupId)
-                .orElseThrow(() -> new NotFoundException("해당 그룹을 찾을 수 없거나 이미 삭제되었습니다."));
+        TemplateGroup groupToDelete = templateGroupRepository.findById(groupId)
+                .orElseThrow(() -> new NotFoundException("해당 그룹을 찾을 수 없습니다. groupId: " + groupId));
+
+        if (Boolean.TRUE.equals(groupToDelete.getIsDeleted())) {
+            throw new NotFoundException("해당 그룹은 이미 삭제되었습니다. groupId: " + groupId);
+        }
 
         if (!groupToDelete.getOrg().getId().equals(userOrg.getId())) {
-            throw new UnauthorizedException("이 그룹을 삭제할 권한이 없습니다.");
+            throw new ForbiddenException("해당 그룹을 삭제할 권한이 없습니다. groupId: " + groupId);
         }
 
         groupToDelete.markDeleted();
@@ -397,7 +401,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .orgId(userOrg.getId())
                 .build();
     }
-
 
     @Override
     @Transactional(readOnly = true)
@@ -733,7 +736,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .orElseThrow(() -> new NotFoundException("관련 데이터 없음"));
 
         Organization org = organizationRepository.findByUserId(authDto.getUserId())
-                .orElseThrow(() -> new ForbiddenException("해당 기관을 찾을 수 없습니다."));
+                .orElseThrow(() -> new NotFoundException("해당 기관을 찾을 수 없습니다."));
 
         Integer recruitOrgId = applicationRepository.findOrgIdByApplicationId(applicationId)
                 .orElseThrow(() -> new NotFoundException("해당 신청 내역을 찾을 수 없습니다."));
