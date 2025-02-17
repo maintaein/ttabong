@@ -486,11 +486,24 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
             imageService.updateThumbnailImage(savedTemplate.getId(), true);
         }
 
+        List<String> presignedUrls = verifiedPaths.stream()
+                .map(imagePath -> {
+                    try {
+                        return imageUtil.getPresignedDownloadUrl(imagePath);
+                    } catch (Exception e) {
+                        System.err.println("Presigned URL 생성 실패: " + imagePath);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+
         return CreateTemplateResponseDto.builder()
                 .message("템플릿 생성 성공")
                 .templateId(savedTemplate.getId())
-                .imageUrl(verifiedPaths.stream().findFirst().orElse(null))
-                .images(verifiedPaths)
+                .imageUrl(presignedUrls.stream().findFirst().orElse(null))
+                .images(presignedUrls)
                 .build();
     }
 
