@@ -23,10 +23,7 @@ import com.ttabong.repository.user.OrganizationRepository;
 import com.ttabong.repository.user.UserRepository;
 import com.ttabong.util.CacheUtil;
 import com.ttabong.util.ImageUtil;
-import io.minio.CopyObjectArgs;
-import io.minio.CopySource;
-import io.minio.MinioClient;
-import io.minio.RemoveObjectArgs;
+import io.minio.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -62,6 +59,89 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     // TODO: 기관이 후기 생성시, 봉사자가 해당 공고에 관해 쓴 후기들에 대해서 parentid값 설정 필요
+//    @Override
+//    public ReviewCreateResponseDto createReview(AuthDto authDto, ReviewCreateRequestDto requestDto) {
+//
+//        checkToken(authDto);
+//
+//        final User writer = userRepository.findById(authDto.getUserId())
+//                .orElseThrow(() -> new NotFoundException("작성자 없음"));
+//
+//        final Recruit recruit = recruitRepository.findById(requestDto.getRecruitId())
+//                .orElseThrow(() -> new NotFoundException("해당 공고 없음"));
+//
+//        final Template template = recruit.getTemplate();
+//        final Integer groupId = template.getGroup().getId();
+//
+//        boolean alreadyReviewed = reviewRepository.existsByWriterAndRecruit(writer.getId(), recruit.getId());
+//        if (alreadyReviewed) {
+//            throw new ConflictException("이미 해당 모집 공고에 대한 후기를 작성하였습니다.");
+//        }
+//
+//        Organization organization;
+//        Review parentReview = null;
+//
+//        if (organizationRepository.existsByUserId(authDto.getUserId())) {
+//            organization = organizationRepository.findByUserId(authDto.getUserId())
+//                    .orElseThrow(() -> new NotFoundException("기관 정보 없음"));
+//
+//            if (!template.getOrg().getUser().getId().equals(authDto.getUserId())) {
+//                throw new ForbiddenException("해당 기관의 리뷰만 작성할 수 있습니다.");
+//            }
+//
+//        } else {
+//            boolean isApplicant = applicationRepository.existsByVolunteerUserIdAndRecruitId(writer.getId(), recruit.getId());
+//            if (!isApplicant) {
+//                throw new ForbiddenException("해당 봉사 모집 공고에 참여한 사용자만 리뷰를 작성할 수 있습니다.");
+//            }
+//
+//            organization = template.getOrg();
+//
+//            parentReview = reviewRepository.findFirstByOrgWriterAndRecruit(recruit.getId())
+//                    .orElse(null);
+//        }
+//
+//        final Review review = Review.builder()
+//                .recruit(recruit)
+//                .org(organization)
+//                .writer(writer)
+//                .groupId(groupId)
+//                .title(requestDto.getTitle())
+//                .content(requestDto.getContent())
+//                .isPublic(requestDto.getIsPublic())
+//                .imgCount(requestDto.getImageCount())
+//                .createdAt(Instant.now())
+//                .updatedAt(Instant.now())
+//                .parentReview(parentReview)
+//                .isDeleted(false)
+//                .build();
+//
+//        reviewRepository.save(review);
+//
+//        List<ReviewImage> imageSlots = IntStream.range(0, requestDto.getImageCount())
+//                .mapToObj(i -> ReviewImage.builder()
+//                        .review(review)
+//                        .template(template)
+//                        .imageUrl(null)
+//                        .isThumbnail(i == 0)
+//                        .isDeleted(false)
+//                        .createdAt(Instant.now())
+//                        .build())
+//                .collect(Collectors.toList());
+//
+//        for (int i = 0; i < imageSlots.size() - 1; i++) {
+//            imageSlots.get(i).setNextImage(imageSlots.get(i + 1));
+//        }
+//
+//        reviewImageRepository.saveAll(imageSlots);
+//        uploadImagesToMinio(requestDto.getUploadedImages(), imageSlots, authDto);
+//
+//        return ReviewCreateResponseDto.builder()
+//                .message("리뷰가 생성되었습니다.")
+//                .uploadedImages(requestDto.getUploadedImages())
+//                .build();
+//    }
+
     @Override
     public ReviewCreateResponseDto createReview(AuthDto authDto, ReviewCreateRequestDto requestDto) {
 
@@ -89,9 +169,8 @@ public class ReviewServiceImpl implements ReviewService {
                     .orElseThrow(() -> new NotFoundException("기관 정보 없음"));
 
             if (!template.getOrg().getUser().getId().equals(authDto.getUserId())) {
-                throw new ForbiddenException("해당 기관의 리뷰만 작성할 수 있습니다.");
+                throw new ForbiddenException("해당 기관의 리뷰만 작성할 수 없습니다.");
             }
-
         } else {
             boolean isApplicant = applicationRepository.existsByVolunteerUserIdAndRecruitId(writer.getId(), recruit.getId());
             if (!isApplicant) {
@@ -99,9 +178,7 @@ public class ReviewServiceImpl implements ReviewService {
             }
 
             organization = template.getOrg();
-
-            parentReview = reviewRepository.findFirstByOrgWriterAndRecruit(recruit.getId())
-                    .orElse(null);
+            parentReview = reviewRepository.findFirstByOrgWriterAndRecruit(recruit.getId()).orElse(null);
         }
 
         final Review review = Review.builder()
@@ -121,47 +198,55 @@ public class ReviewServiceImpl implements ReviewService {
 
         reviewRepository.save(review);
 
-        List<ReviewImage> imageSlots = IntStream.range(0, requestDto.getImageCount())
+        List<String> uploadedPaths = uploadImagesToMinio(requestDto.getUploadedImages());
+
+        List<String> verifiedPaths = new ArrayList<>();
+        for (String imagePath : uploadedPaths) {
+            try {
+                minioClient.statObject(
+                        StatObjectArgs.builder()
+                                .bucket("ttabong-bucket")
+                                .object(imagePath)
+                                .build()
+                );
+                verifiedPaths.add(imagePath);
+            } catch (Exception e) {
+                throw new ImageProcessException("MinIO에 이미지 저장 실패: " + imagePath, e);
+            }
+        }
+
+        List<ReviewImage> imageSlots = IntStream.range(0, verifiedPaths.size())
                 .mapToObj(i -> ReviewImage.builder()
                         .review(review)
                         .template(template)
-                        .imageUrl(null)
+                        .imageUrl(verifiedPaths.get(i))
                         .isThumbnail(i == 0)
                         .isDeleted(false)
                         .createdAt(Instant.now())
                         .build())
                 .collect(Collectors.toList());
 
-        for (int i = 0; i < imageSlots.size() - 1; i++) {
-            imageSlots.get(i).setNextImage(imageSlots.get(i + 1));
-        }
-
         reviewImageRepository.saveAll(imageSlots);
-        uploadImagesToMinio(requestDto.getUploadedImages(), imageSlots, authDto);
 
         return ReviewCreateResponseDto.builder()
                 .message("리뷰가 생성되었습니다.")
-                .uploadedImages(requestDto.getUploadedImages())
+                .uploadedImages(verifiedPaths)
                 .build();
     }
 
+    public List<String> uploadImagesToMinio(List<String> uploadedImages) {
 
-    public void uploadImagesToMinio(List<String> uploadedImages, List<ReviewImage> imageSlots , AuthDto authDto) {
+        List<String> uploadedPaths = new ArrayList<>();
 
-        checkToken(authDto);
-
-        IntStream.range(0, uploadedImages.size()).forEach(i -> {
-            final String objectPath = cacheUtil.findObjectPath(uploadedImages.get(i));
+        for (String presignedUrl : uploadedImages) {
+            final String objectPath = cacheUtil.findObjectPath(presignedUrl);
             if (objectPath == null) {
-                throw new ImageProcessException("유효하지 않은  presigned URL입니다.");
+                throw new ImageProcessException("유효하지 않은 presigned URL입니다.");
             }
+            uploadedPaths.add(objectPath);
+        }
 
-            // 기존 슬롯 업데이트 (Presigned URL이 아니라, objectPath를 저장)
-            ReviewImage imageSlot = imageSlots.get(i);
-            imageSlot.setImageUrl(objectPath);
-            imageSlot.setThumbnail(i == 0);
-            reviewImageRepository.save(imageSlot);
-        });
+        return uploadedPaths;
     }
 
 
@@ -309,6 +394,17 @@ public class ReviewServiceImpl implements ReviewService {
                                 .object(newObjectPath)
                                 .build()
                 );
+
+                try {
+                    minioClient.statObject(
+                            StatObjectArgs.builder()
+                                    .bucket("ttabong-bucket")
+                                    .object(newObjectPath)
+                                    .build()
+                    );
+                } catch (Exception e) {
+                    throw new ImageProcessException("MinIO에서 저장된 파일을 찾을 수 없음: " + newObjectPath, e);
+                }
 
                 minioClient.removeObject(
                         RemoveObjectArgs.builder()
