@@ -1,7 +1,7 @@
 package com.ttabong.config;
 
 import com.ttabong.handler.RedisExpirationListener;
-import com.ttabong.service.recruit.OrgRecruitService;
+import com.ttabong.servicejpa.recruit.OrgRecruitService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-@Service
+//@Service
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;

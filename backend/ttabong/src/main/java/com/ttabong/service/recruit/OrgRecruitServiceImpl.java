@@ -9,6 +9,7 @@ import com.ttabong.exception.*;
 import com.ttabong.repository.recruit.*;
 import com.ttabong.repository.user.OrganizationRepository;
 import com.ttabong.repository.user.VolunteerRepository;
+import com.ttabong.servicejpa.recruit.OrgRecruitService;
 import com.ttabong.util.CacheUtil;
 import com.ttabong.util.DateTimeUtil;
 import com.ttabong.util.ImageUtil;
@@ -18,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Service
+//@Service
 @RequiredArgsConstructor
 @Transactional
 @Slf4j
@@ -285,7 +285,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
             throw new UnauthorizedException("해당 공고를 마감할 권한이 없습니다.");
         }
         recruitRepository.closeRecruit(recruitId);
-        updateDeadlineRecruitStatus(recruitId);
         cacheUtil.removeDeadlineSchedule(recruitId);
 
         return CloseRecruitResponseDto.builder()
@@ -435,7 +434,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build();
     }
 
-    @Override
+    //@Override
     public CreateTemplateResponseDto createTemplate(CreateTemplateRequestDto createTemplateDto, AuthDto authDto) {
 
         checkOrgToken(authDto);
@@ -768,23 +767,23 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     }
 
     @Override
-    public Boolean updateCompleteRecruitStatus(int recruitId) {
+    public void updateCompleteRecruitStatus(int recruitId) {
         Recruit activityCompleted = recruitRepository.save(
                 Recruit.builder()
                         .id(recruitId)
                         .status("ACTIVITY_COMPLETED")
                         .build());
-        return true;
+        return;
     }
 
     @Override
-    public Boolean updateDeadlineRecruitStatus(int recruitId) {
+    public void updateDeadlineRecruitStatus(int recruitId) {
         Recruit deadLinePass = recruitRepository.save(
                 Recruit.builder()
                         .id(recruitId)
                         .status("RECRUITMENT_CLOSED")
                         .build());
-        return true;
+        return;
     }
 
     public int getMinutesToDeadlineEvent(Recruit recruit) {

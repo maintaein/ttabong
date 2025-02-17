@@ -6,7 +6,7 @@ import com.ttabong.dto.user.AuthDto;
 
 import java.util.List;
 
-public interface OrgRecruitService {
+public interface OrgRecruitServiceNone {
 
     ReadAvailableRecruitsResponseDto readAvailableRecruits(Integer cursor, Integer limit, AuthDto authDto);
 

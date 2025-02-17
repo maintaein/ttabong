@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Service
+//@Service
 public class VolRecruitServiceImpl implements VolRecruitService {
     private final RecruitRepository recruitRepository;
     private final TemplateRepository templateRepository;

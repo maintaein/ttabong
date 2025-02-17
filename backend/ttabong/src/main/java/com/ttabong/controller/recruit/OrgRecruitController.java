@@ -4,12 +4,10 @@ import com.ttabong.config.LoggerConfig;
 import com.ttabong.dto.recruit.requestDto.org.*;
 import com.ttabong.dto.recruit.responseDto.org.*;
 import com.ttabong.dto.user.AuthDto;
-import com.ttabong.service.recruit.OrgRecruitService;
-import com.ttabong.servicejpa.recruit.OrgRecruitServiceJpa;
+import com.ttabong.servicejpa.recruit.OrgRecruitService;
 import com.ttabong.util.service.CacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +20,7 @@ import java.util.List;
 @Slf4j
 public class OrgRecruitController extends LoggerConfig {
 
-    private final OrgRecruitServiceJpa orgRecruitService;
+    private final OrgRecruitService orgRecruitService;
     private final CacheService cacheService;
 
     @GetMapping("/templates/available")
@@ -93,7 +91,7 @@ public class OrgRecruitController extends LoggerConfig {
 
         return ResponseEntity.ok().body(response);
     }
-    /*
+
     @PatchMapping("/templates")
     public ResponseEntity<UpdateTemplateResponse> updateTemplate(
             @RequestBody UpdateTemplateRequestDto updateTemplateDto,
@@ -103,7 +101,7 @@ public class OrgRecruitController extends LoggerConfig {
         UpdateTemplateResponse response = orgRecruitService.updateTemplate(updateTemplateDto, authDto);
 
         return ResponseEntity.ok().body(response);
-    }*/
+    }
 
     @PatchMapping("/templates/delete")
     public ResponseEntity<DeleteTemplatesResponseDto> deleteTemplates(
@@ -139,6 +137,7 @@ public class OrgRecruitController extends LoggerConfig {
         return ResponseEntity.ok().body(responseDto);
     }
 
+    /*
     @PostMapping(value = "/templates", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CreateTemplateResponseDto> createTemplate(
             @RequestBody CreateTemplateRequestDto createTemplateDto,
@@ -149,7 +148,7 @@ public class OrgRecruitController extends LoggerConfig {
 
         return ResponseEntity.ok().body(response);
     }
-
+    */
     @GetMapping("/templates/presigned")
     public ResponseEntity<CreateTemplateResponseDto> generatePresignedUrls(@AuthenticationPrincipal AuthDto authDto) {
 

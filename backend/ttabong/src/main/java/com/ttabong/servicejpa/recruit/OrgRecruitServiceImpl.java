@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional
 @Slf4j
-public class OrgRecruitServiceImpl implements OrgRecruitServiceJpa {
+public class OrgRecruitServiceImpl implements OrgRecruitService {
     private final RecruitRepositoryJpa recruitRepository;
     private final TemplateRepositoryJpa templateRepository;
     private final TemplateGroupRepositoryJpa templateGroupRepository;
@@ -278,7 +278,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitServiceJpa {
     }
 
     @Override
-    public UpdateTemplateResponse createTemplate(UpdateTemplateRequestDto updateTemplateDto, AuthDto authDto) {
+    public UpdateTemplateResponse updateTemplate(UpdateTemplateRequestDto updateTemplateDto, AuthDto authDto) {
 
         checkOrgToken(authDto);
         Optional<Template> template = templateRepository.findTemplateById(updateTemplateDto.getTemplateId());
@@ -388,7 +388,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitServiceJpa {
             return null;
         }
         Optional<TemplateGroup> group = templateGroupRepository
-                .findByOrgIdAndByGroupNameAndIsDeletedFalse(authDto.getUserId(), createGroupDto.getGroupName());
+                .findByOrgIdAndGroupNameAndIsDeletedFalse(authDto.getUserId(), createGroupDto.getGroupName());
         if(group.isPresent()){
             return null;
         }
@@ -661,6 +661,25 @@ public class OrgRecruitServiceImpl implements OrgRecruitServiceJpa {
         }).toList();
 
     }
+
+    @Override
+    public void updateCompleteRecruitStatus(int recruitId) {
+        Recruit activityCompleted = recruitRepository.save(
+                Recruit.builder()
+                        .id(recruitId)
+                        .status("ACTIVITY_COMPLETED")
+                        .build());
+    }
+
+    @Override
+    public void updateDeadlineRecruitStatus(int recruitId) {
+        Recruit deadLinePass = recruitRepository.save(
+                Recruit.builder()
+                        .id(recruitId)
+                        .status("RECRUITMENT_CLOSED")
+                        .build());
+    }
+
     public int getMinutesToDeadlineEvent(Recruit recruit) {
         LocalDateTime recruitDeadline = recruit.getDeadline()
                 .atZone(ZoneId.of("Asia/Seoul"))

@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 
-@Service
+//@Service
 @RequiredArgsConstructor
 @Transactional
 public class CommentServiceImpl implements CommentService {
