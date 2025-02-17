@@ -13,7 +13,6 @@ import java.util.Optional;
 @Repository
 public interface VolunteerRepository extends JpaRepository<Volunteer, Integer> {
 
-    // 기관의 공고 _ 봉사자 관리 부분
     @Transactional
     @Modifying
     @Query("UPDATE Volunteer v SET v.recommendedCount = v.recommendedCount + 1 WHERE v.id = :volunteerId")

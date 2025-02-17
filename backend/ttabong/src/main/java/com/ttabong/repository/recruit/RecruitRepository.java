@@ -1,8 +1,6 @@
 package com.ttabong.repository.recruit;
 
-import com.ttabong.entity.recruit.Application;
 import com.ttabong.entity.recruit.Recruit;
-import com.ttabong.entity.recruit.VolunteerReaction;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -19,9 +17,14 @@ import java.util.Optional;
 @Repository
 public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
 
-    List<Recruit> findByTemplateId(Integer templateId);
+    @Query("SELECT r FROM Recruit r " +
+            "WHERE r.template.id = :templateId " +
+            "AND r.isDeleted = false " +
+            "AND r.status = 'RECRUITING' " +
+            "ORDER BY r.deadline ASC")
+    List<Recruit> findByTemplateId(@Param("templateId") Integer templateId);
 
-    @Query("SELECT t.org.id FROM Recruit r JOIN r.template t WHERE r.id = :recruitId")
+    @Query("SELECT t.org.id FROM Recruit r JOIN r.template t WHERE r.id = :recruitId AND r.isDeleted=false")
     Optional<Integer> findOrgIdByRecruitId(@Param("recruitId") Integer recruitId);
 
     @Query("SELECT r FROM Recruit r " +
@@ -67,8 +70,36 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
     @Query("UPDATE Recruit r SET r.status = 'RECRUITMENT_CLOSED' WHERE r.id = :closeId")
     void closeRecruit(@Param("closeId") Integer closeId);
 
+
     @Query("SELECT r FROM Recruit r WHERE r.id = :recruitId AND r.isDeleted = false")
-    Optional<Recruit> findByRecruitIdOrg(@Param("recruitId") Integer recruitId);
+    Optional<Recruit> findByRecruitId(@Param("recruitId") Integer recruitId);
+
+    @Query("""
+        SELECT r FROM Recruit r
+        JOIN FETCH r.template t
+        JOIN FETCH t.org o
+        JOIN FETCH t.group g
+        WHERE
+            (:templateTitle IS NULL OR t.title LIKE %:templateTitle%)
+            AND (:organizationName IS NULL OR o.orgName LIKE %:organizationName%)
+            AND (:status IS NULL OR r.status = :status)
+            AND ((:startDate IS NULL OR :endDate IS NULL) OR (r.activityDate BETWEEN :startDate AND :endDate))
+            AND (:region IS NULL OR t.activityLocation LIKE %:region%)
+            AND (:cursor IS NULL OR t.id > :cursor)
+            AND r.isDeleted = false
+            AND t.isDeleted = false
+        ORDER BY t.id DESC, r.createdAt DESC
+    """)
+    List<Recruit> searchRecruits(
+            @Param("templateTitle") String templateTitle,
+            @Param("organizationName") String organizationName,
+            @Param("status") String status,
+            @Param("startDate") Date startDate,
+            @Param("endDate") Date endDate,
+            @Param("region") String region,
+            @Param("cursor") Integer cursor,
+            Pageable pageable
+    );
 
     // VolRecruit---------------------------------------------------------
 

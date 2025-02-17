@@ -1,31 +1,43 @@
 import axiosInstance from './axiosInstance';
-import { ApiResponse } from './axiosInstance';
-import { 
+import type { 
   LoginRequest, 
   LoginResponse,
   VolunteerRegisterRequest,
-  OrganizationRegisterRequest 
+  OrganizationRegisterRequest,
+  GetLikedTemplatesParams,
+  GetLikedTemplatesResponse
 } from '@/types/userType';
 
 export const userApi = {
-  login: async (data: LoginRequest): Promise<ApiResponse<LoginResponse>> => {
+  login: async (data: LoginRequest): Promise<LoginResponse> => {
     const response = await axiosInstance.post('/user/login', data);
+    console.log('API response:', response.data);  // 응답 데이터 로깅
     return response.data;
+  },
+
+  registerVolunteer: async (data: VolunteerRegisterRequest): Promise<void> => {
+    await axiosInstance.post('/volunteer/register', data);
   },
 
   logout: async () => {
-    await axiosInstance.post('/user/logout', {}, {
-      withCredentials: true
-    });
+    localStorage.removeItem('access_token');
   },
 
-  registerVolunteer: async (data: VolunteerRegisterRequest): Promise<ApiResponse<void>> => {
-    const response = await axiosInstance.post('/volunteer/register', data);
-    return response.data;
+  registerOrganization: async (data: OrganizationRegisterRequest): Promise<void> => {
+    await axiosInstance.post('/org/register', data);
   },
 
-  registerOrganization: async (data: OrganizationRegisterRequest): Promise<ApiResponse<void>> => {
-    const response = await axiosInstance.post('/org/register', data);
+  getLikedTemplates: async (params?: GetLikedTemplatesParams): Promise<GetLikedTemplatesResponse> => {
+    const { cursor = 0, limit = 10 } = params || {};
+    const queryParams = new URLSearchParams();
+    
+    queryParams.append('cursor', cursor.toString());
+    queryParams.append('limit', limit.toString());
+    
+    const queryString = queryParams.toString();
+    const url = `/vol/volunteer-reactions/likes?${queryString}`;
+    
+    const response = await axiosInstance.get(url);
     return response.data;
-  }
+  },
 }; 

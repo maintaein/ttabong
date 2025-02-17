@@ -1,17 +1,30 @@
 import React from "react";
-import { Bell } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
-export const TopBar: React.FC = () => {
+interface TopBarProps {
+  showNav?: boolean;
+}
+
+export const TopBar: React.FC<TopBarProps> = ({ showNav = true }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showBackDialog, setShowBackDialog] = useState(false);
 
+  // 메인 네비게이션 경로 목록
+  const mainNavPaths = [
+    '/main',
+    '/recruit-find',
+    '/recruit',
+    '/add-recruit',
+    '/review-find',
+    '/mypage'
+  ];
+
+  const isMainNavPath = mainNavPaths.includes(location.pathname);
   const handleBackClick = () => {
-    // 템플릿 작성 페이지일 때만 다이얼로그 표시
     if (location.pathname === "/template-and-group-write") {
       setShowBackDialog(true);
     } else {
@@ -19,42 +32,55 @@ export const TopBar: React.FC = () => {
     }
   };
 
-  const handleConfirmBack = () => {
-    setShowBackDialog(false);
-    navigate("/template-and-group");
-  };
+  if (!showNav) {
+    return (
+      <div className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="flex h-14 items-center justify-center px-4">
+          <img 
+            src="/assets/logo_color_only.svg" 
+            alt="로고" 
+            className="h-8 w-auto"
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
       <div className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex h-14 items-center justify-between px-4">
           <div className="flex items-center gap-2">
-            <button onClick={handleBackClick} className="p-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-6 h-6"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15.75 19.5L8.25 12l7.5-7.5"
-                />
-              </svg>
-            </button>
+            {!isMainNavPath && (
+              <button onClick={handleBackClick} className="p-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-6 h-6"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15.75 19.5L8.25 12l7.5-7.5"
+                  />
+                </svg>
+              </button>
+            )}
           </div>
 
-          <Button variant="ghost" size="icon" className="text-foreground">
-            <Bell className="h-5 w-5" />
-            <span className="sr-only">Notifications</span>
-          </Button>
+          <img 
+            src="/assets/logo_color_only.svg" 
+            alt="로고" 
+            className="h-8 w-auto absolute left-1/2 -translate-x-1/2"
+          />
+
+          <div className="w-14" /> {/* 레이아웃 균형을 위한 빈 공간 */}
         </div>
       </div>
 
-      {/* 뒤로가기 확인 다이얼로그 */}
       <Dialog open={showBackDialog} onOpenChange={setShowBackDialog}>
         <DialogContent>
           <DialogHeader>
@@ -73,7 +99,10 @@ export const TopBar: React.FC = () => {
             </Button>
             <Button
               variant="destructive"
-              onClick={handleConfirmBack}
+              onClick={() => {
+                setShowBackDialog(false);
+                navigate('/template-and-group');
+              }}
             >
               예
             </Button>

@@ -1,7 +1,6 @@
 package com.ttabong.repository.recruit;
 
 import com.ttabong.entity.recruit.Application;
-import com.ttabong.entity.user.Volunteer;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -15,19 +14,32 @@ import java.util.Optional;
 @Repository
 public interface ApplicationRepository extends JpaRepository<Application, Integer> {
 
-    @Query("SELECT a FROM Application a " +
-            "JOIN FETCH a.volunteer v " +
-            "JOIN FETCH v.user u " +
-            "WHERE a.recruit.id = :recruitId")
+    @Query("SELECT a FROM Application a JOIN FETCH a.volunteer v JOIN FETCH v.user u WHERE a.recruit.id = :recruitId")
     List<Application> findByRecruitIdWithUser(@Param("recruitId") Integer recruitId);
 
-    @Transactional
-    @Modifying
+    @Modifying @Transactional
     @Query("UPDATE Application a SET a.status = :status WHERE a.id = :applicationId")
     void updateApplicationStatus(@Param("applicationId") Integer applicationId, @Param("status") String status);
 
-    @Query("SELECT r.template.org.id FROM Application a JOIN a.recruit r JOIN r.template t WHERE a.id = :applicationId")
+    @Query("SELECT r.template.org.id FROM Application a JOIN a.recruit r JOIN r.template t WHERE a.id = :applicationId AND a.isDeleted = false")
     Optional<Integer> findOrgIdByApplicationId(@Param("applicationId") Integer applicationId);
+
+    @Query("SELECT a FROM Application a WHERE a.recruit.id = :recruitId AND a.volunteer.id = :volunteerId")
+    Optional<Application> findByRecruitIdAndVolunteerId(@Param("recruitId") Integer recruitId, @Param("volunteerId") Integer volunteerId);
+
+    @Modifying @Transactional
+    @Query("UPDATE Application a SET a.evaluationDone = true WHERE a.id = :applicationId")
+    void markEvaluationAsDone(@Param("applicationId") Integer applicationId);
+
+    // review part
+    @Query("""
+        SELECT COUNT(a) > 0 FROM Application a
+        WHERE a.volunteer.user.id = :userId
+        AND a.recruit.id = :recruitId
+        AND a.isDeleted = false
+    """)
+    boolean existsByVolunteerUserIdAndRecruitId(@Param("userId") Integer userId,
+                                                @Param("recruitId") Integer recruitId);
 
     // for VolRecruit -------------------------------------------
     // 사용자가 신청한 모집 공고 목록 조회

@@ -1,53 +1,139 @@
-import React, { useState } from "react";
-import TinderCard from "react-tinder-card";
+import React, { useEffect, useState } from "react";
+import { useSprings, animated, to as interpolate } from "@react-spring/web";
+import { useDrag } from "react-use-gesture";
+import axiosInstance from '@/api/axiosInstance';
 
-const volunteerPosts = [
-  {
-    id: 1,
-    title: "환경 정화 봉사",
-    description: "공원에서 쓰레기를 줍고 자연을 보호하는 활동입니다.",
-    location: "서울, 한강공원",
-    date: "2025-02-15",
-    image: "https://d2u3dcdbebyaiu.cloudfront.net/uploads/atch_img/749/ad58fe995cb9198412288b21bc63e1c9_res.jpeg",
-  },
-  {
-    id: 2,
-    title: "노인 돌봄 봉사",
-    description: "어르신들과 함께 시간을 보내고 도움을 제공합니다.",
-    location: "부산, 행복한 요양원",
-    date: "2025-03-10",
-    image: "https://i.ytimg.com/vi/KErDjspnCNA/maxresdefault.jpg",
-  },
-];
+// API 응답 데이터 타입 정의
+type RecruitData = {
+  template: {
+    templateId: number;
+    title: string;
+    activityLocation: string;
+    status: string;
+    imageId?: string;
+    description: string;
+    createdAt: string;
+  };
+  group: {
+    groupId: number;
+    groupName: string;
+  };
+  organization: {
+    orgId: number;
+    orgName: string;
+  };
+};
+
+// 카드에 표시할 데이터 타입
+type VolunteerPost = {
+  id: number;
+  title: string;
+  location: string;
+  date: string;
+  description: string;
+  image?: string | null;
+};
+
+const to = (i: number) => ({
+  x: 0,
+  y: i * -4,
+  scale: 1,
+  rot: 0,
+  delay: i * 100,
+});
+
+const from = () => ({ x: 0, rot: 0, scale: 1.2, y: 1000 });
 
 const MainPage: React.FC = () => {
-  const [posts] = useState(volunteerPosts);
+  const [volunteerPosts, setVolunteerPosts] = useState<VolunteerPost[]>([]);
+  const [gone] = useState(new Set());
 
-  const swiped = (direction: string, postTitle: string) => {
-    console.log(`${postTitle} was swiped ${direction}`);
-  };
+  useEffect(() => {
+    const fetchRecruits = async () => {
+      try {
+        const response = await axiosInstance.get('/vol/templates', {
+          params: {
+            cursor: 0,
+            limit: 20
+          }
+        });
+        
+        const formattedData: VolunteerPost[] = response.data.templates.map((item: RecruitData, index: number) => ({
+          id: item.template.templateId,
+          title: item.template.title,
+          location: item.group.groupName,
+          date: item.template.createdAt.split('T')[0],
+          description: `${item.organization.orgName} | ${item.template.description}`,
+          image: item.template.imageId || `https://source.unsplash.com/400x300/?volunteer&sig=${index}`,
+        }));
+
+        setVolunteerPosts(formattedData);
+      } catch (error) {
+        console.error("Error fetching recruit data:", error);
+      }
+    };
+
+    fetchRecruits();
+  }, []);
+
+  const [springs, api] = useSprings(volunteerPosts.length, (i) => ({
+    ...to(i),
+    from: from(),
+  }));
+
+  const bind = useDrag(({ args: [index], down, movement: [mx], velocity }) => {
+    const trigger = velocity > 0.2;
+    if (!down && trigger) gone.add(index);
+    api.start((i) => {
+      if (index !== i) return;
+      const isGone = gone.has(index);
+      const x = isGone ? (mx > 0 ? 1000 : -1000) : down ? mx : 0;
+      const rot = mx / 100;
+      const scale = down ? 1.1 : 1;
+      return { x, rot, scale, config: { friction: 50, tension: down ? 800 : isGone ? 200 : 500 } };
+    });
+
+    if (!down && gone.size === volunteerPosts.length) {
+      setTimeout(() => {
+        gone.clear();
+        api.start((i) => to(i));
+      }, 600);
+    }
+  });
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
-      <h1 className="text-3xl font-bold mb-6">봉사 공고 스와이프</h1>
-      <div className="relative w-[500px] h-[900px]">
-        {posts.map((post) => (
-          <TinderCard
-            key={post.id}
-            onSwipe={(dir: string) => swiped(dir, post.title)}
-            preventSwipe={["up", "down"]}
-            className="absolute w-full h-full"
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-112px)] bg-background relative">
+      <div className="w-full max-w-[600px] h-[calc(100vh-180px)] relative">
+        {springs.map(({ x, y, rot, scale }, i) => (
+          <animated.div
+            key={volunteerPosts[i]?.id}
+            className="absolute w-[90vw] max-w-[400px] h-[70vh] max-h-[600px] bg-white shadow-xl rounded-2xl overflow-hidden"
+            style={{
+              left: "50%",
+              top: "50%",
+              transform: interpolate(
+                [x, y, rot, scale],
+                (x, y, rot, scale) =>
+                  `translate3d(calc(${x}px - 50%), calc(${y}px - 50%), 0) rotate(${rot}deg) scale(${scale})`
+              ),
+            }}
+            {...bind(i)}
           >
-            <div className="bg-white shadow-lg rounded-2xl overflow-hidden w-full h-full flex flex-col">
-              <img src={post.image} alt={post.title} className="w-full h-2/3 object-cover" />
-              <div className="p-4 flex flex-col justify-between flex-1">
-                <h2 className="text-xl font-semibold">{post.title}</h2>
-                <p className="text-gray-600 text-sm">{post.description}</p>
-                <p className="text-gray-500 text-sm">📍 {post.location}</p>
-                <p className="text-gray-500 text-sm">📅 {post.date}</p>
-              </div>
+            {volunteerPosts[i]?.image && (
+              <img
+                src={volunteerPosts[i]?.image}
+                alt={volunteerPosts[i]?.title}
+                className="w-full h-[60%] object-cover"
+              />
+            )}
+            <div className="p-6">
+              <h2 className="text-xl font-bold mb-2">{volunteerPosts[i]?.title}</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                {volunteerPosts[i]?.location} | {volunteerPosts[i]?.date}
+              </p>
+              <p className="text-sm text-foreground">{volunteerPosts[i]?.description}</p>
             </div>
-          </TinderCard>
+          </animated.div>
         ))}
       </div>
     </div>

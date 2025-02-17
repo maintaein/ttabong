@@ -9,7 +9,12 @@ import com.ttabong.exception.*;
 import com.ttabong.repository.recruit.*;
 import com.ttabong.repository.user.OrganizationRepository;
 import com.ttabong.repository.user.VolunteerRepository;
+import com.ttabong.util.CacheUtil;
+import com.ttabong.util.DateTimeUtil;
+import com.ttabong.util.ImageUtil;
 import com.ttabong.util.service.ImageService;
+import io.minio.MinioClient;
+import io.minio.StatObjectArgs;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -22,10 +27,8 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,13 +45,14 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     private final ApplicationRepository applicationRepository;
     private final VolunteerRepository volunteerRepository;
     private final ImageService imageService;
+    private final ImageUtil imageUtil;
+    private final CacheUtil cacheUtil;
+    private final MinioClient minioClient;
 
     public void checkOrgToken(AuthDto authDto) {
         if (authDto == null || authDto.getUserId() == null) {
             throw new UnauthorizedException("로그인이 필요합니다.");
-        }
-
-        else if (!"organization".equalsIgnoreCase(authDto.getUserType())) {
+        } else if (!"organization".equalsIgnoreCase(authDto.getUserType())) {
             throw new ForbiddenException("기관 계정으로 로그인을 해야 합니다.");
         }
     }
@@ -56,35 +60,32 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     @Transactional(readOnly = true)
     public ReadAvailableRecruitsResponseDto readAvailableRecruits(Integer cursor, Integer limit, AuthDto authDto) {
 
-        try {
-            checkOrgToken(authDto);
+        checkOrgToken(authDto);
 
-            if (cursor == null || cursor == 0) { cursor = Integer.MAX_VALUE; }
-            if (limit == null || limit == 0) { limit=10; }
+        try {
+
+            if (cursor == null || cursor == 0) {
+                cursor = Integer.MAX_VALUE;
+            }
+            if (limit == null || limit == 0) {
+                limit = 10;
+            }
 
             List<Template> templates = templateRepository.findAvailableTemplates(cursor, authDto.getUserId(), PageRequest.of(0, limit));
 
             if (templates.isEmpty()) {
-                throw new NotFoundException("활성화된 템플릿이 없습니다.");
+                return ReadAvailableRecruitsResponseDto.builder()
+                        .templates(List.of())
+                        .build();
             }
 
             Map<Integer, List<Recruit>> recruitMap = templates.stream()
-                    .map(template -> {
-                        try {
-                            return recruitRepository.findByTemplateId(template.getId());
-                        } catch (Exception e) {
-                            throw new NotFoundException("해당 템플릿에 대한 모집 공고를 찾을 수 없습니다.");
-                        }
-                    })
-                    .flatMap(List::stream)
-                    .collect(Collectors.groupingBy(recruit -> recruit.getTemplate().getId()));
-
-            Map<Integer, List<String>> imageMap = templates.stream()
                     .collect(Collectors.toMap(
                             Template::getId,
                             template -> {
                                 try {
-                                    return imageService.getImageUrls(template.getId(), true);
+                                    List<Recruit> recruits = recruitRepository.findByTemplateId(template.getId());
+                                    return recruits;
                                 } catch (Exception e) {
                                     return List.of();
                                 }
@@ -102,26 +103,24 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 List<ReadAvailableRecruitsResponseDto.Recruit> recruits = recruitEntities.stream()
                         .map(recruit -> ReadAvailableRecruitsResponseDto.Recruit.builder()
                                 .recruitId(recruit.getId())
-                                .deadline(recruit.getDeadline() != null ?
-                                        recruit.getDeadline().atZone(ZoneId.systemDefault()).toLocalDateTime()
-                                        : LocalDateTime.now())
-                                .activityDate(recruit.getActivityDate() != null ? recruit.getActivityDate() : new Date())
-                                .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.ZERO)
-                                .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.ZERO)
+                                .deadline(Optional.ofNullable(recruit.getDeadline())
+                                        .map(d -> d.atZone(ZoneId.systemDefault()).toLocalDateTime())
+                                        .orElse(null))
+                                .activityDate(Optional.ofNullable(recruit.getActivityDate())
+                                        .orElse(new Date()))
+                                .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.valueOf(10.00))
+                                .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.valueOf(12.00))
                                 .maxVolunteer(recruit.getMaxVolunteer())
                                 .participateVolCount(recruit.getParticipateVolCount())
                                 .status(recruit.getStatus())
-                                .updatedAt(recruit.getUpdatedAt() != null ?
-                                        recruit.getUpdatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime()
-                                        : LocalDateTime.now())
-                                .createdAt(recruit.getCreatedAt() != null ?
-                                        recruit.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime()
-                                        : LocalDateTime.now())
+                                .updatedAt(Optional.ofNullable(recruit.getUpdatedAt())
+                                        .map(d -> d.atZone(ZoneId.systemDefault()).toLocalDateTime())
+                                        .orElse(LocalDateTime.now()))
+                                .createdAt(Optional.ofNullable(recruit.getCreatedAt())
+                                        .map(d -> d.atZone(ZoneId.systemDefault()).toLocalDateTime())
+                                        .orElse(LocalDateTime.now()))
                                 .build())
                         .collect(Collectors.toList());
-
-                List<String> imageUrls = imageMap.getOrDefault(template.getId(), List.of());
-                String thumbnailImageUrl = imageUrls.isEmpty() ? null : imageUrls.get(0);
 
                 return ReadAvailableRecruitsResponseDto.TemplateDetail.builder()
                         .template(ReadAvailableRecruitsResponseDto.Template.builder()
@@ -130,13 +129,11 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                                 .title(template.getTitle())
                                 .activityLocation(template.getActivityLocation())
                                 .status(template.getStatus())
-                                .imageUrl(thumbnailImageUrl)
+                                .imageUrl(null)
                                 .contactName(template.getContactName())
                                 .contactPhone(template.getContactPhone())
                                 .description(template.getDescription())
-                                .createdAt(template.getCreatedAt() != null ?
-                                        template.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDateTime()
-                                        : LocalDateTime.now())
+                                .createdAt(DateTimeUtil.convertToLocalDateTime(template.getCreatedAt()))
                                 .build())
                         .group(groupInfo)
                         .recruits(recruits)
@@ -149,10 +146,9 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         } catch (NotFoundException e) {
             throw e;
         } catch (Exception e) {
-            throw new RuntimeException("모집 정보를 불러오는 중 오류가 발생했습니다.", e);
+            throw new IllegalStateException("토큰이 올바르지 않습니다", e);
         }
     }
-
 
     @Override
     @Transactional(readOnly = true)
@@ -160,7 +156,9 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         checkOrgToken(authDto);
 
-        if (cursor == null) { cursor = Integer.MAX_VALUE; }
+        if (cursor == null) {
+            cursor = Integer.MAX_VALUE;
+        }
 
         Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "id"));
 
@@ -192,8 +190,8 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                     .maxVolunteer(recruit.getMaxVolunteer())
                     .participateVolCount(recruit.getParticipateVolCount())
                     .activityDate(recruit.getActivityDate() != null ? recruit.getActivityDate() : new Date())
-                    .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.ZERO)
-                    .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.ZERO)
+                    .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.valueOf(10.00))
+                    .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.valueOf(12.00))
                     .deadline(recruit.getDeadline() != null ?
                             recruit.getDeadline().atZone(ZoneId.systemDefault()).toLocalDateTime()
                             : LocalDateTime.now())
@@ -214,7 +212,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build();
     }
 
-
     @Override
     public DeleteRecruitsResponseDto deleteRecruits(DeleteRecruitsRequestDto deleteRecruitDto, AuthDto authDto) {
 
@@ -234,11 +231,17 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build();
     }
 
-
     @Override
     public UpdateRecruitsResponseDto updateRecruit(Integer recruitId, UpdateRecruitsRequestDto requestDto, AuthDto authDto) {
 
         checkOrgToken(authDto);
+
+        Recruit recruit = recruitRepository.findByIdAndIsDeletedFalse(recruitId)
+                .orElseThrow(() -> new NotFoundException("해당 공고가 존재하지 않습니다. recruitId: " + recruitId));
+
+        if (Boolean.TRUE.equals(recruit.getIsDeleted())) {
+            throw new NotFoundException("해당 공고는 삭제되었습니다. recruitId: " + recruitId);
+        }
 
         Instant deadlineInstant = requestDto.getDeadline() != null
                 ? requestDto.getDeadline().atZone(ZoneId.systemDefault()).toInstant()
@@ -261,7 +264,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .message("공고 수정 완료")
                 .recruitId(recruitId)
                 .build();
-
     }
 
 
@@ -286,7 +288,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .getId();
 
         if (!recruitOrgId.equals(userOrgId)) {
-            throw new UnauthorizedException("해당 공고를 마감할 권한이 없습니다.");
+            throw new ForbiddenException("해당 공고를 마감할 권한이 없습니다.");
         }
 
         recruitRepository.closeRecruit(recruitId);
@@ -297,7 +299,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build();
     }
 
-
     @Override
     public UpdateGroupResponseDto updateGroup(UpdateGroupRequestDto updateGroupDto, AuthDto authDto) {
 
@@ -305,7 +306,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         Organization userOrg = organizationRepository.findByUserId(authDto.getUserId())
                 .orElseThrow(() -> new NotFoundException("해당 사용자의 기관 정보를 찾을 수 없습니다."));
-        TemplateGroup templateGroup = templateGroupRepository.findById(updateGroupDto.getGroupId())
+        TemplateGroup templateGroup = templateGroupRepository.findByIdAndIsDeletedFalse(updateGroupDto.getGroupId())
                 .orElseThrow(() -> new NotFoundException("해당 그룹을 찾을 수 없습니다."));
 
         if (!templateGroup.getOrg().getId().equals(userOrg.getId())) {
@@ -320,7 +321,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .orgId(userOrg.getId())
                 .build();
     }
-
 
     @Override
     public UpdateTemplateResponse updateTemplate(UpdateTemplateRequestDto updateTemplateDto, AuthDto authDto) {
@@ -348,7 +348,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build();
     }
 
-
     @Override
     public DeleteTemplatesResponseDto deleteTemplates(DeleteTemplatesRequestDto deleteTemplatesDto, AuthDto authDto) {
 
@@ -372,24 +371,29 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build();
     }
 
-
     @Override
     public DeleteGroupResponseDto deleteGroup(DeleteGroupDto deleteGroupDto, AuthDto authDto) {
 
         checkOrgToken(authDto);
 
         Organization userOrg = organizationRepository.findByUserId(authDto.getUserId())
-                .orElseThrow(() -> new NotFoundException("없는 기관입니다."));
+                .orElseThrow(() -> new NotFoundException("해당 기관이 없습니다."));
 
         Integer groupId = deleteGroupDto.getGroupId();
-        TemplateGroup groupToDelete = templateGroupRepository.findById(groupId)
-                .orElseThrow(() -> new NotFoundException("해당 그룹을 찾을 수 없습니다."));
 
-        if (!groupToDelete.getOrg().getId().equals(userOrg.getId())) {
-            throw new UnauthorizedException("이 그룹을 삭제할 권한이 없습니다.");
+        TemplateGroup groupToDelete = templateGroupRepository.findById(groupId)
+                .orElseThrow(() -> new NotFoundException("해당 그룹을 찾을 수 없습니다. groupId: " + groupId));
+
+        if (Boolean.TRUE.equals(groupToDelete.getIsDeleted())) {
+            throw new NotFoundException("해당 그룹은 이미 삭제되었습니다. groupId: " + groupId);
         }
 
-        templateGroupRepository.deleteGroupByIdAndOrg(groupId, userOrg.getId());
+        if (!groupToDelete.getOrg().getId().equals(userOrg.getId())) {
+            throw new ForbiddenException("해당 그룹을 삭제할 권한이 없습니다. groupId: " + groupId);
+        }
+
+        groupToDelete.markDeleted();
+        templateGroupRepository.save(groupToDelete);
 
         return DeleteGroupResponseDto.builder()
                 .message("삭제 성공")
@@ -397,7 +401,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .orgId(userOrg.getId())
                 .build();
     }
-
 
     @Override
     @Transactional(readOnly = true)
@@ -413,7 +416,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                         .templates(
                                 templateRepository.findTemplatesByGroupId(group.getId()).stream()
                                         .map(template -> {
-                                            // 모든 이미지 프리사인드url 가져오기 (널값 제외)
                                             List<String> imageUrls = imageService.getImageUrls(template.getId(), true);
 
                                             return ReadTemplatesResponseDto.TemplateDto.builder()
@@ -441,18 +443,19 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build();
     }
 
+
     @Override
     public CreateTemplateResponseDto createTemplate(CreateTemplateRequestDto createTemplateDto, AuthDto authDto) {
 
         checkOrgToken(authDto);
 
         if (createTemplateDto.getImageCount() != null && createTemplateDto.getImageCount() > 10) {
-            throw new BadRequestException("최대 개수를 초과했습니다. 최대 " + 10 + "개까지 업로드할 수 있습니다.");
+            throw new ImageProcessException("최대 개수를 초과했습니다. 최대 " + 10 + "개까지 업로드할 수 있습니다.");
         }
 
         Organization organization = organizationRepository.findByUserId(authDto.getUserId())
                 .orElseThrow(() -> new NotFoundException("해당 유저의 기관 정보 없음"));
-        TemplateGroup group = templateGroupRepository.findById(createTemplateDto.getGroupId())
+        TemplateGroup group = templateGroupRepository.findByIdAndIsDeletedFalse(createTemplateDto.getGroupId())
                 .orElseThrow(() -> new NotFoundException("해당 그룹 없음"));
         Category category = categoryRepository.findById(createTemplateDto.getCategoryId())
                 .orElseThrow(() -> new NotFoundException("해당 카테고리 없음"));
@@ -471,23 +474,51 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .createdAt(Instant.now())
                 .build());
 
-        imageService.initializeReviewImages(savedTemplate.getId(), true);
-
+        List<String> uploadedPaths = new ArrayList<>();
         if (createTemplateDto.getImages() != null && !createTemplateDto.getImages().isEmpty()) {
-            imageService.updateReviewImages(savedTemplate.getId(), createTemplateDto.getImages());
+            uploadedPaths = imageService.uploadTemplateImages(savedTemplate.getId(), createTemplateDto.getImages());
         }
 
-        imageService.updateThumbnailImage(savedTemplate.getId(), true);
+        List<String> verifiedPaths = new ArrayList<>();
+        for (String imagePath : uploadedPaths) {
+            try {
+                minioClient.statObject(
+                        StatObjectArgs.builder()
+                                .bucket("ttabong-bucket")
+                                .object(imagePath)
+                                .build()
+                );
+                verifiedPaths.add(imagePath);
+            } catch (Exception e) {
+                throw new ImageProcessException("MinIO에 이미지 저장 실패(해당 파일 없음): " + imagePath, e);
+            }
+        }
 
-        List<String> imageUrls = imageService.getImageUrls(savedTemplate.getId(), true);
+        if (!verifiedPaths.isEmpty()) {
+            imageService.updateThumbnailImage(savedTemplate.getId(), true);
+        }
+
+        List<String> presignedUrls = verifiedPaths.stream()
+                .map(imagePath -> {
+                    try {
+                        return imageUtil.getPresignedDownloadUrl(imagePath);
+                    } catch (Exception e) {
+                        System.err.println("Presigned URL 생성 실패: " + imagePath);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
 
         return CreateTemplateResponseDto.builder()
                 .message("템플릿 생성 성공")
                 .templateId(savedTemplate.getId())
-                .imageUrl(imageUrls.stream().findFirst().orElse(null))
-                .images(imageUrls)
+                .imageUrl(presignedUrls.stream().findFirst().orElse(null))
+                .images(presignedUrls)
                 .build();
     }
+
 
     // TODO: 봉사 그룹의 디폴트 이름을 봉사 그룹 개수를 세어서 만들어보자(중복되지 않도록)
     @Override
@@ -517,7 +548,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .groupId(savedGroup.getId())
                 .build();
     }
-
 
     @Override
     public CreateRecruitResponseDto createRecruit(CreateRecruitRequestDto createRecruitDto, AuthDto authDto) {
@@ -557,12 +587,11 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build();
     }
 
-
     @Override
     @Transactional(readOnly = true)
     public ReadRecruitResponseDto readRecruit(Integer recruitId, AuthDto authDto) {
 
-        Recruit recruit = recruitRepository.findByRecruitIdOrg(recruitId)
+        Recruit recruit = recruitRepository.findByRecruitId(recruitId)
                 .orElseThrow(() -> new NotFoundException("해당 공고가 없거나 삭제되었습니다."));
 
         LocalDateTime deadlineLocalDateTime = recruit.getDeadline() != null
@@ -583,8 +612,8 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .recruitId(recruit.getId())
                 .deadline(deadlineLocalDateTime)
                 .activityDate(activityDate)
-                .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.ZERO)
-                .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.ZERO)
+                .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.valueOf(10.00))
+                .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.valueOf(12.00))
                 .maxVolunteer(recruit.getMaxVolunteer())
                 .participateVolCount(recruit.getParticipateVolCount())
                 .status(recruit.getStatus())
@@ -629,7 +658,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build();
     }
 
-
     @Override
     @Transactional(readOnly = true)
     public ReadApplicationsResponseDto readApplications(Integer recruitId, AuthDto authDto) {
@@ -649,31 +677,42 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         List<Application> applications = applicationRepository.findByRecruitIdWithUser(recruitId);
 
         List<ReadApplicationsResponseDto.ApplicationDetail> applicationDetails = applications.stream()
-                .map(application -> ReadApplicationsResponseDto.ApplicationDetail.builder()
-                        .user(ReadApplicationsResponseDto.User.builder()
-                                .userId(application.getVolunteer().getUser().getId())
-                                .email(application.getVolunteer().getUser().getEmail())
-                                .name(application.getVolunteer().getUser().getName())
-                                .profileImage(application.getVolunteer().getUser().getProfileImage())
-                                .build())
-                        .volunteer(ReadApplicationsResponseDto.Volunteer.builder()
-                                .volunteerId(application.getVolunteer().getId())
-                                .recommendedCount(application.getVolunteer().getRecommendedCount())
-                                .totalVolunteerHours(
-                                        application.getVolunteer().getUser().getTotalVolunteerHours() != null
-                                                ? application.getVolunteer().getUser().getTotalVolunteerHours().intValue()
-                                                : 0
-                                )
-                                .build())
-                        .application(ReadApplicationsResponseDto.Application.builder()
-                                .applicationId(application.getId())
-                                .recruitId(application.getRecruit().getId())
-                                .status(application.getStatus())
-                                .createdAt(application.getCreatedAt() != null
-                                        ? LocalDateTime.ofInstant(application.getCreatedAt(), ZoneId.systemDefault())
-                                        : LocalDateTime.now())
-                                .build())
-                        .build())
+                .map(application -> {
+                    String profileImagePath = application.getVolunteer().getUser().getProfileImage();
+
+                    String profileImageUrl;
+                    try {
+                        profileImageUrl = (profileImagePath != null) ? imageUtil.getPresignedDownloadUrl(profileImagePath) : null;
+                    } catch (Exception e) {
+                        throw new ImageProcessException("프로필 이미지 URL 생성 중 오류 발생", e);
+                    }
+
+                    return ReadApplicationsResponseDto.ApplicationDetail.builder()
+                            .user(ReadApplicationsResponseDto.User.builder()
+                                    .userId(application.getVolunteer().getUser().getId())
+                                    .email(application.getVolunteer().getUser().getEmail())
+                                    .name(application.getVolunteer().getUser().getName())
+                                    .profileImage(profileImageUrl)
+                                    .build())
+                            .volunteer(ReadApplicationsResponseDto.Volunteer.builder()
+                                    .volunteerId(application.getVolunteer().getId())
+                                    .recommendedCount(application.getVolunteer().getRecommendedCount())
+                                    .totalVolunteerHours(
+                                            application.getVolunteer().getUser().getTotalVolunteerHours() != null
+                                                    ? application.getVolunteer().getUser().getTotalVolunteerHours().intValue()
+                                                    : 0
+                                    )
+                                    .build())
+                            .application(ReadApplicationsResponseDto.Application.builder()
+                                    .applicationId(application.getId())
+                                    .recruitId(application.getRecruit().getId())
+                                    .status(application.getStatus())
+                                    .createdAt(application.getCreatedAt() != null
+                                            ? LocalDateTime.ofInstant(application.getCreatedAt(), ZoneId.systemDefault())
+                                            : LocalDateTime.now())
+                                    .build())
+                            .build();
+                })
                 .collect(Collectors.toList());
 
         return ReadApplicationsResponseDto.builder()
@@ -682,7 +721,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build();
     }
 
-
     @Override
     public UpdateApplicationsResponseDto updateStatuses(UpdateApplicationsRequestDto updateApplicationDto, AuthDto authDto) {
 
@@ -690,11 +728,15 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         Integer applicationId = updateApplicationDto.getApplicationId();
         Integer recruitId = updateApplicationDto.getRecruitId();
+        Integer volunteerId = updateApplicationDto.getVolunteerId();
         Boolean accept = updateApplicationDto.getAccept();
         String status = accept ? "APPROVED" : "REJECTED";
 
+        applicationRepository.findByRecruitIdAndVolunteerId(recruitId, volunteerId)
+                .orElseThrow(() -> new NotFoundException("관련 데이터 없음"));
+
         Organization org = organizationRepository.findByUserId(authDto.getUserId())
-                .orElseThrow(() -> new ForbiddenException("해당 기관을 찾을 수 없습니다."));
+                .orElseThrow(() -> new NotFoundException("해당 기관을 찾을 수 없습니다."));
 
         Integer recruitOrgId = applicationRepository.findOrgIdByApplicationId(applicationId)
                 .orElseThrow(() -> new NotFoundException("해당 신청 내역을 찾을 수 없습니다."));
@@ -715,7 +757,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                         .build())
                 .build();
     }
-
 
     @Override
     public List<EvaluateApplicationsResponseDto> evaluateApplicants(
@@ -739,11 +780,19 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
             Integer volunteerId = dto.getVolunteerId();
             String recommendationStatus = dto.getRecommendationStatus();
 
+            Application application = applicationRepository.findByRecruitIdAndVolunteerId(recruitId, volunteerId)
+                    .filter(a -> !a.getEvaluationDone())
+                    .orElseThrow(() -> new NotFoundException("해당 봉사자가 신청하지 않았거나 이미 평가 완료되었습니다. volunteerId: " + volunteerId));
+
+            Integer applicationId = application.getId();
+
             if ("RECOMMEND".equalsIgnoreCase(recommendationStatus)) {
                 volunteerRepository.incrementRecommendation(volunteerId);
             } else if ("NOTRECOMMEND".equalsIgnoreCase(recommendationStatus)) {
                 volunteerRepository.incrementNotRecommendation(volunteerId);
             }
+
+            applicationRepository.markEvaluationAsDone(applicationId);
 
             return EvaluateApplicationsResponseDto.builder()
                     .volunteerId(volunteerId)
@@ -752,4 +801,23 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         }).collect(Collectors.toList());
     }
 
+    public int setUpdateStatusSchedule(Recruit recruit){
+        Date activityDate = recruit.getActivityDate();
+        BigDecimal activityEnd = recruit.getActivityEnd();
+
+        LocalDateTime activityDateTime = activityDate.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
+        LocalDateTime activityEndTime = activityDateTime
+                .withHour(activityEnd.intValue())
+                .withMinute(activityEnd.remainder(BigDecimal.ONE).multiply(BigDecimal.valueOf(100)).intValue())
+                .withSecond(0);
+        LocalDateTime now = LocalDateTime.now();
+
+        int remainingMinutes = (int) ChronoUnit.MINUTES.between(now, activityEndTime);
+
+        cacheUtil.eventScheduler(recruit.getId(), remainingMinutes);
+
+        return remainingMinutes;
+    }
 }

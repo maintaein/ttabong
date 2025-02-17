@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import type { OrgRecruit } from '@/types/recruitType';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { recruitApi } from "@/api/recruitApi";
 import { useNavigate } from 'react-router-dom';
 
@@ -27,16 +27,24 @@ const formatTime = (time: number) => {
 };
 
 export const RecruitCard: React.FC<RecruitCardProps> = ({ recruit, onDelete }) => {
+  const { toast } = useToast();
   const navigate = useNavigate();
 
   const handleDelete = async () => {
     try {
       await recruitApi.deleteRecruit(recruit.recruit.recruitId);
-      toast.success("공고가 삭제되었습니다.");
+      toast({
+        title: "공고 삭제",
+        description: "공고가 삭제되었습니다.",
+      });
       onDelete();
     } catch (error) {
       console.error("공고 삭제 오류:", error);
-      toast.error("공고 삭제에 실패했습니다.");
+      toast({
+        title: "오류",
+        description: "공고 삭제에 실패했습니다.",
+        variant: "destructive",
+      });
     }
   };
 

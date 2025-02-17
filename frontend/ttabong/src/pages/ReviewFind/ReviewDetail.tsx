@@ -2,6 +2,7 @@ import React from 'react';
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useReviewStore } from '@/stores/reviewStore';
+import { useUserStore } from '@/stores/userStore';
 import { ReviewHeader } from './components/ReviewHeader';
 import { ReviewGallery } from './components/ReviewGallery';
 import { ReviewContent } from './components/ReviewContent';
@@ -17,7 +18,18 @@ import { MoreVertical } from 'lucide-react';
 
 export default function ReviewDetail() {
   const { reviewId } = useParams();
-  const { reviewDetail, isLoading, error, fetchReviewDetail, addComment, deleteReview } = useReviewStore();
+  const { 
+    reviewDetail, 
+    isLoading, 
+    error, 
+    fetchReviewDetail, 
+    addComment, 
+    deleteReview, 
+    updateVisibility,
+    updateComment,
+    deleteComment 
+  } = useReviewStore();
+  const { userId } = useUserStore();
 
   const [commentContent, setCommentContent] = useState('');
   const navigate = useNavigate();
@@ -32,7 +44,7 @@ export default function ReviewDetail() {
 
   const isOrganization = !reviewDetail.orgReviewId && Boolean(reviewDetail.recruit?.recruitId);
 
-  const isOwner = true;
+  const isOwner = Number(userId) === reviewDetail.writer.writerId;
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +54,14 @@ export default function ReviewDetail() {
   };
 
   const handleEdit = () => {
-    navigate(`/review-write/${reviewDetail?.reviewId}`);
+    navigate(`/review-write`, { 
+      state: { 
+        reviewId: reviewDetail.reviewId,
+        recruitId: reviewDetail.recruit.recruitId,
+        orgId: reviewDetail.organization.orgId,
+        isEdit: true
+      } 
+    });
   };
 
   const handleDelete = async () => {
@@ -51,6 +70,21 @@ export default function ReviewDetail() {
     if (window.confirm('정말 삭제하시겠습니까?')) {
       await deleteReview(reviewDetail.reviewId);
       navigate(-1);
+    }
+  };
+
+  const handleVisibilityToggle = async () => {
+    if (!reviewDetail?.reviewId) return;
+    await updateVisibility(reviewDetail.reviewId, reviewDetail.isPublic);
+  };
+
+  const handleUpdateComment = async (commentId: number, content: string) => {
+    await updateComment(commentId, content);
+  };
+
+  const handleDeleteComment = async (commentId: number) => {
+    if (window.confirm('댓글을 삭제하시겠습니까?')) {
+      await deleteComment(commentId);
     }
   };
 
@@ -70,6 +104,9 @@ export default function ReviewDetail() {
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={handleEdit}>
                 수정하기
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleVisibilityToggle}>
+                {reviewDetail.isPublic ? '비공개로 전환' : '공개로 전환'}
               </DropdownMenuItem>
               <DropdownMenuItem 
                 onClick={handleDelete}
@@ -127,8 +164,11 @@ export default function ReviewDetail() {
       <ReviewComments
         comments={reviewDetail.comments}
         commentContent={commentContent}
+        userId={Number(userId)}
         onCommentChange={(e) => setCommentContent(e.target.value)}
         onSubmit={handleSubmitComment}
+        onUpdateComment={handleUpdateComment}
+        onDeleteComment={handleDeleteComment}
       />
     </div>
   );
