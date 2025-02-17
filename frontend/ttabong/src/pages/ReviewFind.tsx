@@ -2,8 +2,6 @@ import React from 'react';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useReviewStore } from '@/stores/reviewStore';
-import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
 import { ReviewGalleryGrid } from '@/pages/ReviewFind/components/ReviewGalleryGrid';
 import { PageLayout } from '@/layout/PageLayout';
 import { PageLoading } from '@/components/Loading';
@@ -26,14 +24,6 @@ const ReviewFind: React.FC = () => {
   return (
     <PageLayout>
       <div className="container mx-auto px-4 pt-6">
-        <div className="mb-6 relative max-w-md mx-auto">
-          <Input
-            type="search"
-            placeholder="리뷰 검색..."
-            className="pl-10"
-          />
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        </div>
         <ReviewGalleryGrid 
           reviews={reviews} 
           onReviewClick={handleReviewClick}

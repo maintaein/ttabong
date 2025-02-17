@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import type { RecruitItem } from '@/types/recruit';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
-import { formatTime, formatDate, formatTimeRange, formatDeadline } from '@/lib/dateUtils';
+import { formatDate, formatTimeRange, formatDeadline } from '@/lib/dateUtils';
 
 const STATUS_MAP = {
   'RECRUITING': { label: '모집중', className: 'bg-green-100 text-green-700' },
@@ -42,6 +42,7 @@ export const RecruitCard: React.FC<RecruitCardProps> = ({
           activityDate: recruitData.activityDate,
           activityStart: recruitData.activityStart,
           activityEnd: recruitData.activityEnd,
+          participateVolCount: recruitData.participateVolCount,
           maxVolunteer: recruitData.maxVolunteer,
           groupId: group.groupId,
           status: recruitData.status
@@ -102,7 +103,7 @@ export const RecruitCard: React.FC<RecruitCardProps> = ({
           </div>
           <div>
             <span className="text-muted-foreground">신청현황</span>
-            <p>{recruitData.participateVolCount}/{recruitData.maxVolunteer}명</p>
+            <p>{recruitData.participateVolCount ?? 0}/{recruitData.maxVolunteer}명</p>
           </div>
           <div className="col-span-2">
             <span className="text-muted-foreground">마감일</span>
