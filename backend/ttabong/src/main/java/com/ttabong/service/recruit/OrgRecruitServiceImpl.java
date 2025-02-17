@@ -59,8 +59,10 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
     @Transactional(readOnly = true)
     public ReadAvailableRecruitsResponseDto readAvailableRecruits(Integer cursor, Integer limit, AuthDto authDto) {
+
+        checkOrgToken(authDto);
+
         try {
-            checkOrgToken(authDto);
 
             if (cursor == null || cursor == 0) {
                 cursor = Integer.MAX_VALUE;
@@ -144,7 +146,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         } catch (NotFoundException e) {
             throw e;
         } catch (Exception e) {
-            throw new RuntimeException("모집 정보를 불러오는 중 오류가 발생했습니다.", e);
+            throw new IllegalStateException("토큰이 올바르지 않습니다", e);
         }
     }
 
@@ -234,6 +236,13 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         checkOrgToken(authDto);
 
+        Recruit recruit = recruitRepository.findByIdAndIsDeletedFalse(recruitId)
+                .orElseThrow(() -> new NotFoundException("해당 공고가 존재하지 않습니다. recruitId: " + recruitId));
+
+        if (Boolean.TRUE.equals(recruit.getIsDeleted())) {
+            throw new NotFoundException("해당 공고는 삭제되었습니다. recruitId: " + recruitId);
+        }
+
         Instant deadlineInstant = requestDto.getDeadline() != null
                 ? requestDto.getDeadline().atZone(ZoneId.systemDefault()).toInstant()
                 : Instant.now();
@@ -255,8 +264,8 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .message("공고 수정 완료")
                 .recruitId(recruitId)
                 .build();
-
     }
+
 
     @Override
     public CloseRecruitResponseDto closeRecruit(CloseRecruitRequestDto closeRecruitDto, AuthDto authDto) {
