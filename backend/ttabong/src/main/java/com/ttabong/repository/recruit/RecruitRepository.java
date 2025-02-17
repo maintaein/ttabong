@@ -24,7 +24,7 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
             "ORDER BY r.deadline ASC")
     List<Recruit> findByTemplateId(@Param("templateId") Integer templateId);
 
-    @Query("SELECT t.org.id FROM Recruit r JOIN r.template t WHERE r.id = :recruitId")
+    @Query("SELECT t.org.id FROM Recruit r JOIN r.template t WHERE r.id = :recruitId AND r.isDeleted=false")
     Optional<Integer> findOrgIdByRecruitId(@Param("recruitId") Integer recruitId);
 
     @Query("SELECT r FROM Recruit r " +

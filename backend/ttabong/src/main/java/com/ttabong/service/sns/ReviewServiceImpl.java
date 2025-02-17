@@ -430,11 +430,14 @@ public class ReviewServiceImpl implements ReviewService {
         );
     }
 
-
-
     @Override
     @Transactional(readOnly = true)
     public List<AllReviewPreviewResponseDto> readAllReviews(Integer cursor, Integer limit) {
+
+        if (limit == null || limit <= 0) {
+            throw new IllegalArgumentException("limit 값은 1 이상이어야 합니다.");
+        }
+
         List<Review> reviews = reviewRepository.findAllReviews(cursor, PageRequest.of(0, limit));
 
         return reviews.stream()
@@ -443,38 +446,49 @@ public class ReviewServiceImpl implements ReviewService {
                             .findThumbnailImageByReviewId(review.getId(), PageRequest.of(0, 1))
                             .stream().findFirst().orElse(null);
 
-                    String thumbnailUrl;
-                    try {
-                        thumbnailUrl = (objectPath != null) ? imageUtil.getPresignedDownloadUrl(objectPath) : null;
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
+                    String thumbnailUrl = null;
+                    if (objectPath != null) {
+                        try {
+                            thumbnailUrl = imageUtil.getPresignedDownloadUrl(objectPath);
+                        } catch (Exception e) {
+                            System.err.println("ThumbnailUrl 호출 실패: " + e.getMessage());
+                        }
                     }
 
                     return AllReviewPreviewResponseDto.builder()
                             .review(AllReviewPreviewResponseDto.ReviewDto.builder()
                                     .reviewId(review.getId())
-                                    .recruitId(review.getRecruit() != null ? review.getRecruit().getId() : null)
+                                    .recruitId(Optional.ofNullable(review.getRecruit()).map(Recruit::getId).orElse(null))
                                     .title(review.getTitle())
                                     .content(review.getContent())
                                     .isDeleted(review.getIsDeleted())
-                                    .updatedAt(review.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime()) // Instant → LocalDateTime 변환
-                                    .createdAt(review.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime()) // Instant → LocalDateTime 변환
+                                    .updatedAt(Optional.ofNullable(review.getUpdatedAt())
+                                            .map(updatedAt -> updatedAt.atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                                            .orElse(LocalDateTime.now()))
+                                    .createdAt(Optional.ofNullable(review.getCreatedAt())
+                                            .map(createdAt -> createdAt.atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                                            .orElse(LocalDateTime.now()))
                                     .build())
-                            .writer(review.getWriter() != null ? AllReviewPreviewResponseDto.WriterDto.builder()
-                                    .writerId(review.getWriter().getId())
-                                    .name(review.getWriter().getName())
-                                    .build() : null)
-                            .group(review.getRecruit() != null && review.getRecruit().getTemplate() != null &&
-                                    review.getRecruit().getTemplate().getGroup() != null ?
-                                    AllReviewPreviewResponseDto.GroupDto.builder()
-                                            .groupId(review.getRecruit().getTemplate().getGroup().getId())
-                                            .groupName(review.getRecruit().getTemplate().getGroup().getGroupName())
-                                            .build()
-                                    : null)
-                            .organization(AllReviewPreviewResponseDto.OrganizationDto.builder()
-                                    .orgId(review.getOrg().getId())
-                                    .orgName(review.getOrg().getOrgName())
-                                    .build())
+                            .writer(Optional.ofNullable(review.getWriter())
+                                    .map(writer -> AllReviewPreviewResponseDto.WriterDto.builder()
+                                            .writerId(writer.getId())
+                                            .name(writer.getName())
+                                            .build())
+                                    .orElse(null))
+                            .group(Optional.ofNullable(review.getRecruit())
+                                    .map(recruit -> recruit.getTemplate())
+                                    .map(template -> template.getGroup())
+                                    .map(group -> AllReviewPreviewResponseDto.GroupDto.builder()
+                                            .groupId(group.getId())
+                                            .groupName(group.getGroupName())
+                                            .build())
+                                    .orElse(null))
+                            .organization(Optional.ofNullable(review.getOrg())
+                                    .map(org -> AllReviewPreviewResponseDto.OrganizationDto.builder()
+                                            .orgId(org.getId())
+                                            .orgName(org.getOrgName())
+                                            .build())
+                                    .orElse(null))
                             .images(thumbnailUrl)
                             .build();
                 })
@@ -641,6 +655,9 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     @Transactional(readOnly = true)
     public List<RecruitReviewResponseDto> recruitReview(Integer recruitId) {
+
+        recruitRepository.findByIdAndIsDeletedFalse(recruitId)
+                .orElseThrow(() -> new NotFoundException("해당 모집 공고를 찾을 수 없습니다. recruitId: " + recruitId));
 
         List<Review> reviews = reviewRepository.findByRecruitIdAndIsDeletedFalse(recruitId);
 

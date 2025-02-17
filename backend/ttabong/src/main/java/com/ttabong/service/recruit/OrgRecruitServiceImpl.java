@@ -59,8 +59,10 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
     @Transactional(readOnly = true)
     public ReadAvailableRecruitsResponseDto readAvailableRecruits(Integer cursor, Integer limit, AuthDto authDto) {
+
+        checkOrgToken(authDto);
+
         try {
-            checkOrgToken(authDto);
 
             if (cursor == null || cursor == 0) {
                 cursor = Integer.MAX_VALUE;
@@ -144,7 +146,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         } catch (NotFoundException e) {
             throw e;
         } catch (Exception e) {
-            throw new RuntimeException("모집 정보를 불러오는 중 오류가 발생했습니다.", e);
+            throw new IllegalStateException("토큰이 올바르지 않습니다", e);
         }
     }
 
@@ -234,6 +236,13 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         checkOrgToken(authDto);
 
+        Recruit recruit = recruitRepository.findByIdAndIsDeletedFalse(recruitId)
+                .orElseThrow(() -> new NotFoundException("해당 공고가 존재하지 않습니다. recruitId: " + recruitId));
+
+        if (Boolean.TRUE.equals(recruit.getIsDeleted())) {
+            throw new NotFoundException("해당 공고는 삭제되었습니다. recruitId: " + recruitId);
+        }
+
         Instant deadlineInstant = requestDto.getDeadline() != null
                 ? requestDto.getDeadline().atZone(ZoneId.systemDefault()).toInstant()
                 : Instant.now();
@@ -255,8 +264,8 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .message("공고 수정 완료")
                 .recruitId(recruitId)
                 .build();
-
     }
+
 
     @Override
     public CloseRecruitResponseDto closeRecruit(CloseRecruitRequestDto closeRecruitDto, AuthDto authDto) {
@@ -279,7 +288,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .getId();
 
         if (!recruitOrgId.equals(userOrgId)) {
-            throw new UnauthorizedException("해당 공고를 마감할 권한이 없습니다.");
+            throw new ForbiddenException("해당 공고를 마감할 권한이 없습니다.");
         }
 
         recruitRepository.closeRecruit(recruitId);
@@ -372,11 +381,15 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         Integer groupId = deleteGroupDto.getGroupId();
 
-        TemplateGroup groupToDelete = templateGroupRepository.findByIdAndIsDeletedFalse(groupId)
-                .orElseThrow(() -> new NotFoundException("해당 그룹을 찾을 수 없거나 이미 삭제되었습니다."));
+        TemplateGroup groupToDelete = templateGroupRepository.findById(groupId)
+                .orElseThrow(() -> new NotFoundException("해당 그룹을 찾을 수 없습니다. groupId: " + groupId));
+
+        if (Boolean.TRUE.equals(groupToDelete.getIsDeleted())) {
+            throw new NotFoundException("해당 그룹은 이미 삭제되었습니다. groupId: " + groupId);
+        }
 
         if (!groupToDelete.getOrg().getId().equals(userOrg.getId())) {
-            throw new UnauthorizedException("이 그룹을 삭제할 권한이 없습니다.");
+            throw new ForbiddenException("해당 그룹을 삭제할 권한이 없습니다. groupId: " + groupId);
         }
 
         groupToDelete.markDeleted();
@@ -388,7 +401,6 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .orgId(userOrg.getId())
                 .build();
     }
-
 
     @Override
     @Transactional(readOnly = true)
@@ -724,7 +736,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .orElseThrow(() -> new NotFoundException("관련 데이터 없음"));
 
         Organization org = organizationRepository.findByUserId(authDto.getUserId())
-                .orElseThrow(() -> new ForbiddenException("해당 기관을 찾을 수 없습니다."));
+                .orElseThrow(() -> new NotFoundException("해당 기관을 찾을 수 없습니다."));
 
         Integer recruitOrgId = applicationRepository.findOrgIdByApplicationId(applicationId)
                 .orElseThrow(() -> new NotFoundException("해당 신청 내역을 찾을 수 없습니다."));
