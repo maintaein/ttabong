@@ -13,6 +13,7 @@ interface RecruitItem {
     activityEnd: number;
     maxVolunteer: number;
     participateVolCount: number;
+    createdAt: string;
   };
   group: {
     groupId: number;
