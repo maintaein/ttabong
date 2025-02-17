@@ -15,6 +15,7 @@ import { templateApi } from '@/api/templateApi';
 import { recruitApi } from '@/api/recruitApi';
 import { transformTemplateData } from '@/types/template';
 import { useToast } from "@/hooks/use-toast";
+import { useImageStore } from '@/api/imageStore';
 
 const steps = [
   "공고 내용 입력(1/2)",
@@ -30,8 +31,9 @@ const TemplateAndGroupWrite: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { scrollToTop } = useScroll();
-  const { createTemplate: createTemplateApi } = useTemplateStore();
+  const { createTemplate: createTemplateApi, templateDetail, fetchTemplateDetail } = useTemplateStore();
   const { toast } = useToast();
+  const { addPreviewImages } = useImageStore();
 
   // 🔹 모든 step의 데이터를 하나의 state로 관리
   const [templateData, setTemplateData] = useState<TemplateFormData>({
@@ -72,18 +74,46 @@ const TemplateAndGroupWrite: React.FC = () => {
     }
   }, [isCompleted, navigate]);
 
-  // 초기 데이터 로드
   useEffect(() => {
-    // location.state가 있고 템플릿 사용 모드일 때
-    if (location.state?.isTemplateUse && location.state?.template) {
-      console.log('Template data received:', location.state.template); // 디버깅용
+    // 템플릿 사용 모드일 때만 데이터를 불러옴
+    if (location.state?.templateId && location.state?.isTemplateUse) {
+      fetchTemplateDetail(location.state.templateId);
+    }
+  }, [location.state?.templateId, location.state?.isTemplateUse, fetchTemplateDetail]);
+
+  useEffect(() => {
+    // 템플릿 사용 모드일 때만 데이터를 설정
+    if (templateDetail && location.state?.isTemplateUse) {
       setTemplateData(prev => ({
         ...prev,
-        ...location.state.template,
-        template_id: location.state.templateId
+        ...templateDetail,
+        contactPhone: {
+          areaCode: "010",
+          middle: templateDetail.contactPhone.split('-')[1] || '',
+          last: templateDetail.contactPhone.split('-')[2] || ''
+        },
+        images: templateDetail.images
       }));
     }
-  }, [location.state]);
+  }, [templateDetail, location.state?.isTemplateUse]);
+
+  useEffect(() => {
+    // 템플릿 사용 모드이고 이미지가 있는 경우
+    if (location.state?.isTemplateUse && location.state.template.images?.length > 0) {
+      // 이미지 URL을 File 객체로 변환하여 미리보기에 추가
+      const loadImages = async () => {
+        const imageFiles = await Promise.all(
+          location.state.template.images.map(async (url: string) => {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            return new File([blob], `image_${Date.now()}.webp`, { type: 'image/webp' });
+          })
+        );
+        addPreviewImages(imageFiles);
+      };
+      loadImages();
+    }
+  }, [location.state, addPreviewImages]);
 
   const timeToNumber = (time: string) => {
     const [hours, minutes] = time.split(':').map(Number);

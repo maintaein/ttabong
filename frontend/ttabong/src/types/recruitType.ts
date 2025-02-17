@@ -175,7 +175,6 @@ export interface APITemplate {
   categoryId: number;
   status: string;
   images: string[];
-  imageCount?: number;
   contactName: string;
   contactPhone: string;
   maxVolunteer: number;

@@ -4,8 +4,9 @@ import type {
   CreateRecruitRequest, 
   UpdateRecruitRequest,
   GetApplicationsParams,
-  RecruitDetail
 } from '@/types/recruitType';
+
+const RECRUITS_PER_PAGE = 10;  // 한 페이지당 공고 수
 
 export const recruitApi = {
   getMyApplications: async (params?: GetApplicationsParams): Promise<Application[]> => {
@@ -45,8 +46,21 @@ export const recruitApi = {
     return response.data;
   },
 
-  getRecruitDetail: async (recruitId: number): Promise<RecruitDetail> => {
-    const response = await axiosInstance.get(`/vol/recruits/${recruitId}`);
+  getRecruitList: async (cursor: number = 0) => {
+    const response = await axiosInstance.get(`/org/recruits?cursor=${cursor}&limit=${RECRUITS_PER_PAGE}`);
+    const recruits = response.data.recruits;
+    
+    return {
+      recruits,
+      hasMore: recruits.length === RECRUITS_PER_PAGE,
+      nextCursor: recruits.length ? recruits[recruits.length - 1].recruit.recruitId : null
+    };
+  },
+
+  getRecruitDetail: async (recruitId: number) => {
+    console.log('API 호출:', `/org/recruits/${recruitId}`);
+    const response = await axiosInstance.get(`/org/recruits/${recruitId}`);
+    console.log('API 응답:', response.data);
     return response.data;
   },
 

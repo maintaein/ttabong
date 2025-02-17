@@ -3,11 +3,11 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import type { OrgRecruit } from '@/types/recruitType';
 import { recruitApi } from '@/api/recruitApi';
 import { useToast } from "@/hooks/use-toast";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRecruitStore } from '@/stores/recruitStore';
 
 const formatTime = (time: number) => {
   const hours = Math.floor(time);
@@ -19,9 +19,9 @@ const RecruitDetail: React.FC = () => {
   const navigate = useNavigate();
   const { recruitId } = useParams();
   const location = useLocation();
-  const [recruit, setRecruit] = useState<OrgRecruit | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [currentImageIndex] = useState(0);
+  const { recruitDetail, isLoading, error, fetchRecruitDetail } = useRecruitStore();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [[page, direction], setPage] = useState([0, 0]);
   const { toast } = useToast();
 
   const slideVariants = {
@@ -46,8 +46,6 @@ const RecruitDetail: React.FC = () => {
     return Math.abs(offset) * velocity;
   };
 
-  const [[page, direction], setPage] = useState([0, 0]);
-
   const handlePrevImage = () => {
     setPage([page - 1, -1]);
   };
@@ -57,11 +55,16 @@ const RecruitDetail: React.FC = () => {
   };
 
   useEffect(() => {
+    if (recruitId) {
+      fetchRecruitDetail(parseInt(recruitId));
+    }
+  }, [recruitId, fetchRecruitDetail]);
+
+  useEffect(() => {
     const fetchRecruitDetail = async () => {
       try {
         if (location.state?.recruit) {
-          setRecruit(location.state.recruit);
-          setIsLoading(false);
+          setCurrentImageIndex(0);
           return;
         }
         
@@ -69,7 +72,7 @@ const RecruitDetail: React.FC = () => {
         if (!data || !data.recruit || !data.template || !data.group) {
           throw new Error('Invalid response data');
         }
-        setRecruit(data);
+        setCurrentImageIndex(0);
       } catch (error) {
         console.error('공고 상세 조회 실패:', error);
         toast({
@@ -77,8 +80,6 @@ const RecruitDetail: React.FC = () => {
           title: "오류",
           description: "공고 정보를 불러오는데 실패했습니다"
         });
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -87,36 +88,11 @@ const RecruitDetail: React.FC = () => {
     }
   }, [recruitId, location.state, toast]);
 
-  if (isLoading) {
-    return (
-      <div className="container mx-auto px-4 py-6 max-w-3xl">
-        <div className="flex justify-between items-center mb-6">
-          <Button variant="ghost" onClick={() => navigate(-1)}>
-            ← 뒤로가기
-          </Button>
-        </div>
-        <div>로딩 중...</div>
-      </div>
-    );
-  }
-  console.log(recruit);
-  console.log(recruit?.recruit?.status);
-  console.log(recruit?.template);
-  console.log(recruit?.group);
-  console.log(recruitId);
+  if (isLoading) return <div>로딩 중...</div>;
+  if (error) return <div>{error}</div>;
+  if (!recruitDetail) return null;
 
-  if (!recruit?.recruit?.status || !recruit?.template || !recruit?.group || !recruitId) {
-    return (
-      <div className="container mx-auto px-4 py-6 max-w-3xl">
-        <div className="flex justify-between items-center mb-6">
-          <Button variant="ghost" onClick={() => navigate(-1)}>
-            ← 뒤로가기
-          </Button>
-        </div>
-        <div>잘못된 접근입니다.</div>
-      </div>
-    );
-  }
+  const { template, recruit, organization } = recruitDetail;
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-3xl">
@@ -128,19 +104,19 @@ const RecruitDetail: React.FC = () => {
         >
           ← 뒤로가기
         </Button>
-        <Badge>{recruit.recruit.status}</Badge>
+        <Badge>{recruit.status}</Badge>
       </div>
 
       {/* 메인 컨텐츠 */}
       <div className="space-y-6">
         {/* 사진 영역 */}
-        {recruit.template.images && recruit.template.images.length > 0 ? (
+        {template.images && template.images.length > 0 ? (
           <Card className="p-6 overflow-hidden relative">
             <div className="relative h-[200px] overflow-hidden">
               <AnimatePresence initial={false} custom={direction}>
                 <motion.img
                   key={page}
-                  src={recruit.template.images[Math.abs(page % recruit.template.images.length)]}
+                  src={template.images[Math.abs(page % template.images.length)]}
                   custom={direction}
                   variants={slideVariants}
                   initial="enter"
@@ -165,7 +141,7 @@ const RecruitDetail: React.FC = () => {
                 />
               </AnimatePresence>
             </div>
-            {recruit.template.images.length > 1 && (
+            {template.images.length > 1 && (
               <>
                 <Button
                   variant="ghost"
@@ -184,7 +160,7 @@ const RecruitDetail: React.FC = () => {
                   <ChevronRight className="h-6 w-6" />
                 </Button>
                 <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2">
-                  {recruit.template.images.map((_, index) => (
+                  {template.images.map((_, index) => (
                     <div
                       key={index}
                       className={`h-2 w-2 rounded-full ${
@@ -206,26 +182,26 @@ const RecruitDetail: React.FC = () => {
 
         {/* 기본 정보 */}
         <Card className="p-6">
-          <h1 className="text-2xl font-bold mb-2">{recruit.template.title}</h1>
-          <p className="text-gray-600 mb-4">{recruit.group.groupName}</p>
+          <h1 className="text-2xl font-bold mb-2">{template.title}</h1>
+          <p className="text-gray-600 mb-4">{organization.name}</p>
           
           <div className="grid grid-cols-2 gap-6 text-sm">
             <div>
               <h3 className="font-semibold">봉사 일시</h3>
-              <p>{recruit.recruit.activityDate}</p>
-              <p>{formatTime(recruit.recruit.activityStart)} ~ {formatTime(recruit.recruit.activityEnd)}</p>
+              <p>{recruit.activityDate}</p>
+              <p>{formatTime(recruit.activityStart)} ~ {formatTime(recruit.activityEnd)}</p>
             </div>
             <div>
               <h3 className="font-semibold">모집 현황</h3>
-              <p>{recruit.recruit.participateVolCount} / {recruit.recruit.maxVolunteer}명</p>
+              <p>{recruit.participateVolCount} / {recruit.maxVolunteer}명</p>
             </div>
             <div>
               <h3 className="font-semibold">모집 마감일</h3>
-              <p>{new Date(recruit.recruit.deadline).toLocaleDateString()}</p>
+              <p>{new Date(recruit.deadline).toLocaleDateString()}</p>
             </div>
             <div>
               <h3 className="font-semibold">봉사 분야</h3>
-              <p>{recruit.template.volunteerField?.join(', ') || '미지정'}</p>
+              <p>{template.volunteerField?.join(', ') || '미지정'}</p>
             </div>
           </div>
         </Card>
@@ -235,20 +211,20 @@ const RecruitDetail: React.FC = () => {
           <div className="space-y-4">
             <div>
               <h3 className="font-semibold">봉사 내용</h3>
-              <p className="whitespace-pre-wrap mt-2 text-gray-600">{recruit.template.description}</p>
+              <p className="whitespace-pre-wrap mt-2 text-gray-600">{template.description}</p>
             </div>
             <div>
               <h3 className="font-semibold">봉사 장소</h3>
               <p className="mt-2 text-gray-600">
-                {recruit.template.activityLocation === '재택'
+                {template.activityLocation === '재택'
                   ? '재택 근무' 
-                  : recruit.template.activityLocation}
+                  : template.activityLocation}
               </p>
             </div>
             <div>
               <h3 className="font-semibold">봉사자 유형</h3>
               <div className="flex gap-2 flex-wrap mt-2">
-                {recruit.template.volunteerTypes?.map((type) => (
+                {template.volunteerTypes?.map((type) => (
                   <Badge key={type} variant="outline">{type}</Badge>
                 ))}
               </div>
@@ -262,11 +238,11 @@ const RecruitDetail: React.FC = () => {
           <div className="space-y-3">
             <div>
               <h3 className="font-semibold mb-1">담당자</h3>
-              <p className="text-gray-600">{recruit.template.contactName}</p>
+              <p className="text-gray-600">{template.contactName}</p>
             </div>
             <div>
               <h3 className="font-semibold mb-1">연락처</h3>
-              <p className="text-gray-600">{recruit.template.contactPhone}</p>
+              <p className="text-gray-600">{template.contactPhone}</p>
             </div>
           </div>
         </Card>

@@ -1,13 +1,15 @@
 import { create } from 'zustand';
 import { templateApi } from '@/api/templateApi';
-import type { APIGroup, CreateTemplateRequest } from '@/types/template';
+import type { APIGroup, CreateTemplateRequest, APITemplate } from '@/types/template';
 import { toast } from 'react-hot-toast';
 
 interface TemplateStore {
-  groups: APIGroup[];
+  groups: APIGroup[] | null;
+  templateDetail: APITemplate | null;
   isLoading: boolean;
   error: string | null;
   fetchTemplates: (cursor?: number) => Promise<void>;
+  fetchTemplateDetail: (templateId: number) => Promise<void>;
   createTemplate: (data: CreateTemplateRequest) => Promise<{ templateId: number }>;
   createGroup: (groupName: string) => Promise<{ groupId: number; groupName: string }>;
   deleteTemplate: (templateId: number) => Promise<void>;
@@ -17,7 +19,8 @@ interface TemplateStore {
 }
 
 export const useTemplateStore = create<TemplateStore>((set, get) => ({
-  groups: [],
+  groups: null,
+  templateDetail: null,
   isLoading: false,
   error: null,
 
@@ -29,6 +32,19 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
     } catch (error) {
       console.error('템플릿 목록 로드 실패:', error);
       set({ error: '템플릿 목록을 불러오는데 실패했습니다.' });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  fetchTemplateDetail: async (templateId: number) => {
+    set({ isLoading: true });
+    try {
+      const response = await templateApi.getTemplateDetail(templateId);
+      set({ templateDetail: response, error: null });
+    } catch (error) {
+      console.error('템플릿 상세 조회 실패:', error);
+      set({ error: '템플릿 상세 정보를 불러오는데 실패했습니다.' });
     } finally {
       set({ isLoading: false });
     }
@@ -95,12 +111,12 @@ export const useTemplateStore = create<TemplateStore>((set, get) => ({
 
       // 2. API 호출이 성공한 후에 로컬 상태 업데이트
       set(state => ({
-        groups: state.groups.map(group => ({
+        groups: state.groups?.map(group => ({
           ...group,
           templates: group.templates.filter(
             template => !templateIds.includes(template.templateId)
           )
-        }))
+        })) || []
       }));
     } catch (error) {
       // 실패 시 서버에서 최신 데이터 가져오기

@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { useUserStore } from '@/stores/userStore';
 import { Layout } from "@/layout/Layout";
 import TemplateAndGroupWrite from '@/pages/Me/TemplateAndGroupWrite';
+import RecruitDetail from '@/pages/ChooseRecruit/org/RecruitDetail';
 
 // Pages
 import Login from '@/pages/Login';
@@ -16,7 +17,6 @@ import ReviewDetail from '@/pages/ReviewFind/ReviewDetail';
 import ReviewDetailList from '@/pages/ReviewFind/ReviewDetailList';
 import MyPage from '@/pages/MyPage';
 import OrgMyPage from '@/pages/OrgMyPage';
-import RecruitDetail from '@/pages/ChooseRecruit/org/RecruitDetail';
 import ReviewWrite from '@/pages/ChooseRecruit/ReviewWrite';
 import SignUp from '@/pages/SignUp';
 import OrgSignUp from '@/pages/OrgSignUp';
@@ -150,6 +150,15 @@ const App: React.FC = () => {
                   <MyReviews />
                 </ProtectedRoute>
               } />
+
+              <Route 
+                path="/org/recruits/:recruitId" 
+                element={
+                  <ProtectedRoute>
+                    <RecruitDetail />
+                  </ProtectedRoute>
+                } 
+              />
             </Route>
           </Routes>
         </div>

@@ -134,52 +134,13 @@ const OrgMainPage: React.FC = () => {
 
   const handleUseTemplate = async (template: APITemplate, group: Group) => {
     console.log('서버에서 받은 템플릿 데이터:', template);
-
-    // 서버에서 이미지 개수 가져오기
-    const getImageCount = async () => {
-      try {
-        const response = await fetch(`http://ttabong.store:9000/ttabong-bucket/${template.templateId}_count`);
-        return parseInt(await response.text());
-      } catch (error) {
-        console.error('이미지 개수 가져오기 실패:', error);
-        return 0;
-      }
-    };
-
-    // 이미지 URL 구성
-    const imageCount = await getImageCount();
-    const constructedImages = Array.from({ length: imageCount }, (_, index) => 
-      `http://ttabong.store:9000/ttabong-bucket/${template.templateId}_${index + 1}.webp`
-    );
-
     navigate('/template-and-group-write', {
       state: { 
         isTemplateUse: true,
         templateId: template.templateId,
         template: {
+          ...template,
           groupId: group.groupId,
-          title: template.title,
-          description: template.description,
-          categoryId: template.categoryId,
-          status: template.status,
-          locationType: template.activityLocation === '재택' ? '재택' : '주소',
-          address: template.activityLocation !== '재택' 
-            ? template.activityLocation.split(' ').slice(0, -1).join(' ')
-            : '',
-          detailAddress: template.activityLocation !== '재택'
-            ? template.activityLocation.split(' ').slice(-1)[0]
-            : '',
-          contactName: template.contactName,
-          contactPhone: {
-            areaCode: template.contactPhone.split('-')[0],
-            middle: template.contactPhone.split('-')[1],
-            last: template.contactPhone.split('-')[2]
-          },
-          images: constructedImages, // 구성된 이미지 URL 배열 사용
-          volunteerCount: template.maxVolunteer || 10,
-          volunteerField: template.categoryId ? [template.categoryId] : [],
-          template_id: template.templateId,
-          created_at: template.createdAt.split('T')[0]
         }
       }
     });
@@ -235,7 +196,7 @@ const OrgMainPage: React.FC = () => {
                               className="w-4 h-4"
                             />
                           )}
-                          <div>
+                          <div onClick={() => handleUseTemplate(template, group)}>
                             <p className="font-medium text-gray-900">{template.title}</p>
                             <p className="text-sm text-gray-500 mt-1">{template.description}</p>
                           </div>
