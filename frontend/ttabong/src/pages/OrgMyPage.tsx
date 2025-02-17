@@ -47,7 +47,7 @@ const OrgMyPage: React.FC = () => {
                 <Button 
                   variant="outline" 
                   className="h-auto py-6 hover:bg-primary/5"
-                  onClick={() => navigate('/add-recruit')}
+                  onClick={() => navigate('/main')}
                 >
                   <div className="flex flex-col items-center gap-2">
                     <ClipboardList className="h-5 w-5 text-primary" />
@@ -57,7 +57,7 @@ const OrgMyPage: React.FC = () => {
                 <Button 
                   variant="outline" 
                   className="h-auto py-6 hover:bg-primary/5"
-                  onClick={() => navigate('/main')}
+                  onClick={() => navigate('/add-recruit')}
                 >
                   <div className="flex flex-col items-center gap-2">
                     <PlusCircle className="h-5 w-5 text-primary" />
