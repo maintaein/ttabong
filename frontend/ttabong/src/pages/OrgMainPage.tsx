@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import type { APITemplate } from '@/types/template';
+import { type APITemplate, type Group } from '@/types/recruitType';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -132,22 +132,36 @@ const OrgMainPage: React.FC = () => {
     }
   };
 
-  const handleUseTemplate = (template: APITemplate, groupId: number) => {
+  const handleUseTemplate = async (template: APITemplate, group: Group) => {
+    console.log('서버에서 받은 템플릿 데이터:', template);
+
+    // 서버에서 이미지 개수 가져오기
+    const getImageCount = async () => {
+      try {
+        const response = await fetch(`http://ttabong.store:9000/ttabong-bucket/${template.templateId}_count`);
+        return parseInt(await response.text());
+      } catch (error) {
+        console.error('이미지 개수 가져오기 실패:', error);
+        return 0;
+      }
+    };
+
+    // 이미지 URL 구성
+    const imageCount = await getImageCount();
+    const constructedImages = Array.from({ length: imageCount }, (_, index) => 
+      `http://ttabong.store:9000/ttabong-bucket/${template.templateId}_${index + 1}.webp`
+    );
+
     navigate('/template-and-group-write', {
       state: { 
         isTemplateUse: true,
         templateId: template.templateId,
         template: {
-          // 그룹 정보
-          groupId: groupId,
-          
-          // 기본 정보
+          groupId: group.groupId,
           title: template.title,
           description: template.description,
           categoryId: template.categoryId,
           status: template.status,
-          
-          // 활동 장소
           locationType: template.activityLocation === '재택' ? '재택' : '주소',
           address: template.activityLocation !== '재택' 
             ? template.activityLocation.split(' ').slice(0, -1).join(' ')
@@ -155,32 +169,15 @@ const OrgMainPage: React.FC = () => {
           detailAddress: template.activityLocation !== '재택'
             ? template.activityLocation.split(' ').slice(-1)[0]
             : '',
-          
-          // 연락처 정보
           contactName: template.contactName,
           contactPhone: {
             areaCode: template.contactPhone.split('-')[0],
             middle: template.contactPhone.split('-')[1],
             last: template.contactPhone.split('-')[2]
           },
-          
-          // 이미지
-          images: template.images || [],
-          
-          // 봉사 정보
+          images: constructedImages, // 구성된 이미지 URL 배열 사용
           volunteerCount: template.maxVolunteer || 10,
           volunteerField: template.categoryId ? [template.categoryId] : [],
-          
-          // 시간 정보 (기본값 설정)
-          startDate: null,
-          endDate: null,
-          volunteerDate: null,
-          startTime: template.activityStart ? 
-            `${Math.floor(template.activityStart)}:${(template.activityStart % 1) * 60 || '00'}` : '',
-          endTime: template.activityEnd ? 
-            `${Math.floor(template.activityEnd)}:${(template.activityEnd % 1) * 60 || '00'}` : '',
-          
-          // 메타 정보
           template_id: template.templateId,
           created_at: template.createdAt.split('T')[0]
         }
@@ -246,7 +243,7 @@ const OrgMainPage: React.FC = () => {
                         {!groupEdit.isEditing && (
                           <button
                             className="text-blue-500 hover:text-blue-700"
-                            onClick={() => handleUseTemplate(template, group.groupId)}
+                            onClick={() => handleUseTemplate(template, group)}
                           >
                             사용
                           </button>

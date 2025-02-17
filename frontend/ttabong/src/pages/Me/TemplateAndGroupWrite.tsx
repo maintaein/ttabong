@@ -153,8 +153,11 @@ const TemplateAndGroupWrite: React.FC = () => {
       }
 
       // 새로운 템플릿 생성인 경우
+      console.log('이미지 파일 목록:', imageFiles); // 업로드 전 이미지 파일 확인
+
       // 1. Presigned URL 요청
       const presignedUrls = await templateApi.getPresignedUrls(imageFiles.length);
+      console.log('받은 Presigned URLs:', presignedUrls); // presigned URL 확인
       
       // 2. 이미지 업로드
       const uploadedImageUrls = await Promise.all(
@@ -162,6 +165,7 @@ const TemplateAndGroupWrite: React.FC = () => {
           uploadImage(presignedUrls.images[index], image, index)
         )
       );
+      console.log('업로드된 이미지 URLs:', uploadedImageUrls); // 최종 업로드된 이미지 URL 확인
 
       // 3. 템플릿 데이터 준비
       const updatedTemplateData = {
@@ -169,9 +173,13 @@ const TemplateAndGroupWrite: React.FC = () => {
         images: uploadedImageUrls,
         imageCount: uploadedImageUrls.length
       };
+      console.log('최종 템플릿 데이터:', updatedTemplateData); // 최종 데이터 확인
 
       // 4. 템플릿 생성/수정
-      const apiData = transformTemplateData(updatedTemplateData);
+      const apiData = transformTemplateData({
+        ...updatedTemplateData,
+        images: uploadedImageUrls  // 업로드된 이미지 URL들을 서버에 함께 저장
+      });
       const response = await createTemplateApi(apiData);
       
       // 5. 공고 자동 생성
