@@ -57,7 +57,7 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
             "r.maxVolunteer = :maxVolunteer, " +
             "r.updatedAt = CURRENT_TIMESTAMP " +
             "WHERE r.id = :recruitId")
-    void updateRecruit(
+    Recruit updateRecruit(
             @Param("recruitId") Integer recruitId,
             @Param("deadline") Instant deadline,
             @Param("activityDate") Date activityDate,
@@ -68,7 +68,7 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
 
     @Modifying
     @Query("UPDATE Recruit r SET r.status = 'RECRUITMENT_CLOSED' WHERE r.id = :closeId")
-    void closeRecruit(@Param("closeId") Integer closeId);
+    Recruit closeRecruit(@Param("closeId") Integer closeId);
 
 
     @Query("SELECT r FROM Recruit r WHERE r.id = :recruitId AND r.isDeleted = false")
