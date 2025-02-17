@@ -39,6 +39,7 @@ interface RecruitStore {
   fetchRecruitDetail: (recruitId: number) => Promise<void>;
   setSelectedRecruitId: (id: number) => Promise<void>;
   resetSelectedRecruitId: () => void;
+  fetchRecruits: () => Promise<void>;
 }
 
 export const useRecruitStore = create<RecruitStore>((set) => ({
@@ -121,4 +122,16 @@ export const useRecruitStore = create<RecruitStore>((set) => ({
     return Promise.resolve();
   },
   resetSelectedRecruitId: () => set({ selectedRecruitId: null }),
+  fetchRecruits: async () => {
+    try {
+      set({ isLoading: true, error: null });
+      const response = await recruitApi.getOrgRecruits();
+      set({ recruits: response.recruits });
+    } catch (error) {
+      console.error('공고 목록을 불러오는데 실패했습니다:', error);
+      set({ error: '공고 목록을 불러오는데 실패했습니다.' });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
 })); 
