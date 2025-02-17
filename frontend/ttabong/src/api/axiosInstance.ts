@@ -41,7 +41,17 @@ axiosInstance.interceptors.response.use(
       message: error.response?.data?.message || '서버 오류가 발생했습니다.'
     };
 
-    // 에러 메시지 토스트로 표시
+    // 401 에러 처리
+    if (error.response?.status === 401) {
+      localStorage.removeItem('access_token');
+      toast.error('로그인이 필요합니다.', {
+        description: '로그인 페이지로 이동합니다.'
+      });
+      window.location.href = '/login';
+      return Promise.reject(apiError);
+    }
+
+    // 기타 에러 메시지 토스트로 표시
     toast.error('오류가 발생했습니다.', {
       description: apiError.message
     });
