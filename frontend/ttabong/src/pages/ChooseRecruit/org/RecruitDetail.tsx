@@ -248,14 +248,14 @@ const RecruitDetail: React.FC = () => {
         </Card>
       </div>
 
-      {recruit?.recruit.status === '활동완료' && (
+      {recruit.status === '활동완료' && (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t">
           <div className="container max-w-2xl mx-auto">
             <Button 
               className="w-full"
               onClick={() => navigate('/review-write', {
                 state: { 
-                  recruitId: recruit.recruit.recruitId,
+                  recruitId: recruit.recruitId,
                   isOrgReview: true
                 }
               })}

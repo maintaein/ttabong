@@ -13,8 +13,8 @@ import { formatDate } from '@/lib/dateUtils';
 
 const OrgMyPage: React.FC = () => {
   const navigate = useNavigate();
-  const { userId, userName, userEmail, userType } = useUserStore();
-  const { myReviews, isLoading, error, fetchMyReviews } = useReviewStore();
+  const { userId, userName, userEmail} = useUserStore();
+  const { myReviews, isLoading,fetchMyReviews } = useReviewStore();
 
   useEffect(() => {
     fetchMyReviews();

@@ -11,23 +11,19 @@ const STATUS_MAP = {
   'ACTIVITY_COMPLETED': { label: '활동완료', className: 'bg-blue-100 text-blue-700' }
 } as const;
 
-interface OrgViewProps {
-  onRecruitClick: (recruitId: number) => void;
-}
-
-export const OrgView: React.FC<OrgViewProps> = ({ onRecruitClick }) => {
-  const { recruitList, isLoading, error, fetchRecruitList } = useRecruitStore();
-  const [selectedStatus, setSelectedStatus] = useState<string>('모집중');
+export const OrgView: React.FC = () => {
+  const { recruits, isLoading, error, fetchRecruits } = useRecruitStore();
+  const [selectedStatus, setSelectedStatus] = useState<string>('RECRUITING');
   const [isEditing, setIsEditing] = useState(false);
   const [selectedRecruits, setSelectedRecruits] = useState<number[]>([]);
 
   useEffect(() => {
-    fetchRecruitList();
-  }, [fetchRecruitList]);
+    fetchRecruits();
+  }, [fetchRecruits]);
 
-  const filteredRecruits = recruitList?.filter(item => 
-    item.recruit.status === STATUS_MAP[selectedStatus as keyof typeof STATUS_MAP]
-  ) || [];
+  const filteredRecruits = recruits.filter(item => 
+    item.recruit.status === selectedStatus
+  );
 
   const handleDeleteSelected = async () => {
     if (selectedRecruits.length === 0) return;
@@ -40,7 +36,7 @@ export const OrgView: React.FC<OrgViewProps> = ({ onRecruitClick }) => {
       toast.success('선택한 공고가 삭제되었습니다.');
       setSelectedRecruits([]);
       setIsEditing(false);
-      fetchRecruitList(); // 목록 새로고침
+      fetchRecruits(); // 목록 새로고침
     } catch (error) {
       console.error('Delete error:', error); // 디버깅용
       toast.error('공고 삭제에 실패했습니다.');

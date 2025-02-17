@@ -58,7 +58,7 @@ const App: React.FC = () => {
             
             {/* 인증이 필요한 라우트 */}
             <Route element={<Layout />}>
-              <Route path="/main" element={
+              <Route path="/add-recruit" element={
                 <ProtectedRoute>
                   <UserTypeRoute 
                     volunteerComponent={MainPage}
@@ -121,7 +121,7 @@ const App: React.FC = () => {
                 </ProtectedRoute>
               } />
 
-              <Route path="/add-recruit" element={
+              <Route path="/main" element={
                 <ProtectedRoute>
                   <AddRecruit />
                 </ProtectedRoute>
