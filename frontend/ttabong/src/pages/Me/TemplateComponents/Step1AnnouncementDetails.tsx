@@ -4,37 +4,34 @@ import { Input } from "@/components/ui/input";
 import { TemplateFormData } from "@/types/template";
 
 interface Step1Props {
-  templateData: {
-    title: string;
-    description: string;
-    images: string[];
-  };
+  templateData: TemplateFormData;
   setTemplateData: React.Dispatch<React.SetStateAction<TemplateFormData>>;
+  imageFiles: File[];
+  setImageFiles: React.Dispatch<React.SetStateAction<File[]>>;
 }
 
-const Step1AnnouncementDetails: React.FC<Step1Props> = ({ templateData, setTemplateData }) => {
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = error => reject(error);
-    });
-  };
-
+const Step1AnnouncementDetails: React.FC<Step1Props> = ({ 
+  templateData, 
+  setTemplateData,
+  imageFiles,
+  setImageFiles 
+}) => {
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      const newImages = Array.from(event.target.files).slice(0, 10 - templateData.images.length);
-      const base64Images = await Promise.all(newImages.map(fileToBase64));
+      const newFiles = Array.from(event.target.files).slice(0, 10 - imageFiles.length);
+      setImageFiles(prev => [...prev, ...newFiles]);  // File 객체 저장
       
+      // URL 생성하여 미리보기용으로 사용
+      const imageUrls = newFiles.map(file => URL.createObjectURL(file));
       setTemplateData(prev => ({
         ...prev,
-        images: [...prev.images, ...base64Images]
+        images: [...prev.images, ...imageUrls]
       }));
     }
   };
 
   const removeImage = (index: number) => {
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
     setTemplateData(prev => ({
       ...prev,
       images: prev.images.filter((_, i) => i !== index)

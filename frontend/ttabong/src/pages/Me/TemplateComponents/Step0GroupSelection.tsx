@@ -210,13 +210,12 @@ const Step0GroupSelection: React.FC<StepProps> = ({ templateData, setTemplateDat
           {volunteerFields.map((field) => (
             <button
               key={field}
-              type="button"
               onClick={() => toggleField(field)}
-              className={`p-2 border rounded-md text-sm
-                ${templateData.volunteerField.includes(field)
-                  ? "bg-blue-500 text-white"
+              className={`px-3 py-1.5 rounded-full text-sm ${
+                templateData.volunteerField?.includes(field) || false
+                  ? "bg-primary text-white"
                   : "bg-gray-100"
-                }`}
+              }`}
             >
               {field}
             </button>

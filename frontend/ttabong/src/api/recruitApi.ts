@@ -32,9 +32,10 @@ export const recruitApi = {
     return response.data;
   },
 
-  deleteRecruit: async (recruitId: number) => {
+  deleteRecruit: async (recruitIds: number[]) => {
+    console.log('Sending delete request:', recruitIds); // 디버깅용
     const response = await axiosInstance.patch('/org/recruits/delete', {
-      deletedRecruits: recruitId
+      deletedRecruits: recruitIds
     });
     return response.data;
   },

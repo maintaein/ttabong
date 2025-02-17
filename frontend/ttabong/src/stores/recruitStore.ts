@@ -2,9 +2,32 @@ import { create } from 'zustand';
 import { recruitApi } from '@/api/recruitApi';
 import type { OrgRecruit, Application, RecruitDetail } from '@/types/recruitType';
 
+// RecruitItem 타입 추가
+interface RecruitItem {
+  recruit: {
+    recruitId: number;
+    status: string;
+    deadline: string;
+    activityDate: string;
+    activityStart: number;
+    activityEnd: number;
+    maxVolunteer: number;
+    participateVolCount: number;
+  };
+  group: {
+    groupId: number;
+    groupName: string;
+  };
+  template: {
+    templateId: number;
+    title: string;
+  };
+}
+
 interface RecruitStore {
   myRecruits: Application[] | null;
   orgRecruits: OrgRecruit[] | null;
+  recruits: RecruitItem[];
   isLoading: boolean;
   error: string | null;
   hasMore: boolean;
@@ -21,6 +44,7 @@ interface RecruitStore {
 export const useRecruitStore = create<RecruitStore>((set) => ({
   myRecruits: null,
   orgRecruits: null,
+  recruits: [],
   isLoading: false,
   error: null,
   hasMore: true,
