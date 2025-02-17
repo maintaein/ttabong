@@ -98,23 +98,94 @@ const OrgMainPage: React.FC = () => {
   // 선택된 템플릿 삭제
   const deleteSelectedTemplates = async () => {
     if (groupEdit.selectedTemplates.length === 0) {
-      toast.error('삭제할 템플릿을 선택해주세요.');
+      setTimeout(() => {
+        toast.error('삭제할 템플릿을 선택해주세요.');
+      }, 0);
       return;
     }
 
     try {
-      await deleteTemplates(groupEdit.selectedTemplates);
-      toast.success('선택한 템플릿이 삭제되었습니다.');
+      // 1. 편집 모드 종료
       setGroupEdit({
         isEditing: false,
         groupId: null,
         selectedTemplates: []
       });
-      fetchTemplates(); // 목록 새로고침
+
+      // 2. 템플릿 삭제 요청
+      await deleteTemplates(groupEdit.selectedTemplates);
+
+      // 4. 성공 메시지
+      setTimeout(() => {
+        toast.success('선택한 템플릿이 삭제되었습니다.');
+      }, 0);
     } catch (error) {
       console.error('템플릿 삭제 실패:', error);
-      toast.error('템플릿 삭제에 실패했습니다.');
+      setTimeout(() => {
+        toast.error('템플릿 삭제에 실패했습니다.');
+      }, 0);
+      
+      setGroupEdit(prev => ({
+        ...prev,
+        isEditing: true
+      }));
     }
+  };
+
+  const handleUseTemplate = (template: APITemplate, groupId: number) => {
+    navigate('/template-and-group-write', {
+      state: { 
+        isTemplateUse: true,
+        templateId: template.templateId,
+        template: {
+          // 그룹 정보
+          groupId: groupId,
+          
+          // 기본 정보
+          title: template.title,
+          description: template.description,
+          categoryId: template.categoryId,
+          status: template.status,
+          
+          // 활동 장소
+          locationType: template.activityLocation === '재택' ? '재택' : '주소',
+          address: template.activityLocation !== '재택' 
+            ? template.activityLocation.split(' ').slice(0, -1).join(' ')
+            : '',
+          detailAddress: template.activityLocation !== '재택'
+            ? template.activityLocation.split(' ').slice(-1)[0]
+            : '',
+          
+          // 연락처 정보
+          contactName: template.contactName,
+          contactPhone: {
+            areaCode: template.contactPhone.split('-')[0],
+            middle: template.contactPhone.split('-')[1],
+            last: template.contactPhone.split('-')[2]
+          },
+          
+          // 이미지
+          images: template.images || [],
+          
+          // 봉사 정보
+          volunteerCount: template.maxVolunteer || 10,
+          volunteerField: template.categoryId ? [template.categoryId] : [],
+          
+          // 시간 정보 (기본값 설정)
+          startDate: null,
+          endDate: null,
+          volunteerDate: null,
+          startTime: template.activityStart ? 
+            `${Math.floor(template.activityStart)}:${(template.activityStart % 1) * 60 || '00'}` : '',
+          endTime: template.activityEnd ? 
+            `${Math.floor(template.activityEnd)}:${(template.activityEnd % 1) * 60 || '00'}` : '',
+          
+          // 메타 정보
+          template_id: template.templateId,
+          created_at: template.createdAt.split('T')[0]
+        }
+      }
+    });
   };
 
   if (isLoading) return <div className="flex justify-center items-center h-[50vh]">로딩 중...</div>;
@@ -175,9 +246,7 @@ const OrgMainPage: React.FC = () => {
                         {!groupEdit.isEditing && (
                           <button
                             className="text-blue-500 hover:text-blue-700"
-                            onClick={() => navigate(`/template-and-group-write`, {
-                              state: { templateId: template.templateId }
-                            })}
+                            onClick={() => handleUseTemplate(template, group.groupId)}
                           >
                             사용
                           </button>

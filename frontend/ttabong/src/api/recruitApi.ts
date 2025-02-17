@@ -3,7 +3,8 @@ import type {
   Application, 
   CreateRecruitRequest, 
   UpdateRecruitRequest,
-  GetApplicationsParams 
+  GetApplicationsParams,
+  RecruitResponse
 } from '@/types/recruitType';
 
 export const recruitApi = {
@@ -31,9 +32,10 @@ export const recruitApi = {
     return response.data;
   },
 
-  deleteRecruit: async (recruitId: number) => {
+  deleteRecruit: async (recruitIds: number[]) => {
+    console.log('Sending delete request:', recruitIds); // 디버깅용
     const response = await axiosInstance.patch('/org/recruits/delete', {
-      deletedRecruits: recruitId
+      deletedRecruits: recruitIds
     });
     return response.data;
   },
@@ -47,4 +49,13 @@ export const recruitApi = {
     const response = await axiosInstance.get(`/org/recruits/${recruitId}`);
     return response.data;
   },
+
+  getRecruits: async (cursor?: number, limit?: number) => {
+    const params = new URLSearchParams();
+    if (cursor) params.append('cursor', cursor.toString());
+    if (limit) params.append('limit', limit.toString());
+    
+    const response = await axiosInstance.get<RecruitResponse>(`/org/recruits?${params}`);
+    return response.data;
+  }
 }; 

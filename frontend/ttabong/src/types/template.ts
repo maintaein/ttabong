@@ -69,15 +69,18 @@ export interface DaumPostcodeData {
 // API 응답 타입
 export interface APITemplate {
   templateId: number;
-  orgId: number;
-  categoryId: number;
+  groupId: number;
   title: string;
+  description: string;
   activityLocation: string;
+  categoryId: number;
   status: string;
-  imageId: string;
+  images: string[];
   contactName: string;
   contactPhone: string;
-  description: string;
+  maxVolunteer: number;
+  activityStart: number;
+  activityEnd: number;
   createdAt: string;
 }
 
@@ -108,9 +111,9 @@ export interface CreateTemplateRequest {
 // 데이터 변환 유틸리티 함수
 export const transformTemplateData = (localData: TemplateFormData): CreateTemplateRequest => {
   return {
-    groupId: localData.groupId || 0,
-    orgId: 5,
-    categoryId: 3,
+    groupId: localData.groupId || 1,
+    orgId: 1,
+    categoryId: 2,
     title: localData.title,
     activityLocation: localData.locationType === '재택' ? '재택' : `${localData.address} ${localData.detailAddress}`.trim(),
     status: 'ALL',

@@ -13,57 +13,55 @@ interface TemplateStore {
   deleteTemplate: (templateId: number) => Promise<void>;
   deleteGroup: (groupId: number) => Promise<void>;
   deleteTemplates: (templateIds: number[]) => Promise<void>;
+  updateTemplate: (templateId: number, data: CreateTemplateRequest) => Promise<{ templateId: number }>;
 }
 
-export const useTemplateStore = create<TemplateStore>((set, get) => {
-  const { toast } = useToast();
-  return {
-    groups: [],
-    isLoading: false,
-    error: null,
+export const useTemplateStore = create<TemplateStore>((set, get) => ({
+  groups: [],
+  isLoading: false,
+  error: null,
 
-    fetchTemplates: async (cursor) => {
-      set({ isLoading: true });
-      try {
-        const response = await templateApi.getTemplates(cursor);
-        set({ groups: response.groups, error: null });
-      } catch (error) {
-        console.error('템플릿 목록 로드 실패:', error);
-        set({ error: '템플릿 목록을 불러오는데 실패했습니다.' });
-      } finally {
-        set({ isLoading: false });
-      }
-    },
-
-  createTemplate: async (data: CreateTemplateRequest) => {
+  fetchTemplates: async (cursor) => {
+    set({ isLoading: true });
     try {
-      console.log('Template creation request body:', JSON.stringify(data, null, 2));
-      const response = await templateApi.createTemplate(data);
-      return response;
+      const response = await templateApi.getTemplates(cursor);
+      set({ groups: response.groups, error: null });
     } catch (error) {
-      console.error('템플릿 생성 실패:', error);
-      throw error;
+      console.error('템플릿 목록 로드 실패:', error);
+      set({ error: '템플릿 목록을 불러오는데 실패했습니다.' });
+    } finally {
+      set({ isLoading: false });
     }
   },
 
-    createGroup: async (groupName: string) => {
-      try {
-        const response = await templateApi.createGroup(groupName);
-        get().fetchTemplates(); // 그룹 목록 새로고침
-        return {
-          groupId: response.groupId,
-          groupName
-        };
-      } catch (error) {
-        console.error('그룹 생성 실패:', error);
-        toast({
-          title: "오류",
-          description: "그룹 생성에 실패했습니다.",
-          variant: "destructive",
-        });
-        throw error;
-      }
-    },
+  createTemplate: async (templateData: CreateTemplateRequest) => {
+    set({ isLoading: true });
+    try {
+      const response = await templateApi.createTemplate(templateData);
+      return response;
+    } catch (error) {
+      console.error('템플릿 생성 실패:', error);
+      set({ error: '템플릿 생성에 실패했습니다.' });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  createGroup: async (groupName: string) => {
+    try {
+      const response = await templateApi.createGroup(groupName);
+      get().fetchTemplates(); // 그룹 목록 새로고침
+      return {
+        groupId: response.groupId,
+        groupName
+      };
+    } catch (error) {
+      console.error('그룹 생성 실패:', error);
+      toast.error('그룹 생성에 실패했습니다.');
+      throw error;
+    }
+  },
 
   deleteTemplate: async (templateId: number) => {
     try {
@@ -92,13 +90,35 @@ export const useTemplateStore = create<TemplateStore>((set, get) => {
 
   deleteTemplates: async (templateIds: number[]) => {
     try {
+      // 1. API 호출을 먼저 수행
       await templateApi.deleteTemplates(templateIds);
-      toast.success('템플릿이 삭제되었습니다.');
-      const response = await templateApi.getTemplates();
-      set({ groups: response.groups, error: null });
+
+      // 2. API 호출이 성공한 후에 로컬 상태 업데이트
+      set(state => ({
+        groups: state.groups.map(group => ({
+          ...group,
+          templates: group.templates.filter(
+            template => !templateIds.includes(template.templateId)
+          )
+        }))
+      }));
     } catch (error) {
-      console.error('템플릿 삭제 실패:', error);
-      toast.error('템플릿 삭제에 실패했습니다.');
+      // 실패 시 서버에서 최신 데이터 가져오기
+      const response = await templateApi.getTemplates();
+      set({ groups: response.groups });
+      throw error;
+    }
+  },
+
+  updateTemplate: async (templateId: number, data: CreateTemplateRequest) => {
+    try {
+      const response = await templateApi.updateTemplate(templateId, data);
+      // 성공 시 목록 새로고침
+      const templates = await templateApi.getTemplates();
+      set({ groups: templates.groups });
+      return response;
+    } catch (error) {
+      console.error('Template update error:', error);
       throw error;
     }
   }

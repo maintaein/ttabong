@@ -1,20 +1,24 @@
 import { create } from 'zustand';
 import { recruitApi } from '@/api/recruitApi';
 import type { OrgRecruit, Application } from '@/types/recruitType';
+import type { RecruitItem } from '@/types/recruit';
 
 interface RecruitStore {
   myRecruits: Application[] | null;
   orgRecruits: OrgRecruit[] | null;
+  recruits: RecruitItem[];
   isLoading: boolean;
   error: string | null;
   hasMore: boolean;
   fetchMyRecruits: (params?: { cursor?: number; limit?: number }) => Promise<void>;
   fetchOrgRecruits: () => Promise<void>;
+  fetchRecruits: (cursor?: number, limit?: number) => Promise<void>;
 }
 
 export const useRecruitStore = create<RecruitStore>((set, get) => ({
   myRecruits: null,
   orgRecruits: null,
+  recruits: [],
   isLoading: false,
   error: null,
   hasMore: true,
@@ -57,4 +61,17 @@ export const useRecruitStore = create<RecruitStore>((set, get) => ({
       set({ isLoading: false });
     }
   },
+  fetchRecruits: async (cursor?: number, limit?: number) => {
+    set({ isLoading: true });
+    try {
+      const response = await recruitApi.getRecruits(cursor, limit);
+      console.log('API Response:', response);  // 응답 데이터 확인
+      set({ recruits: response.recruits, error: null });
+    } catch (error) {
+      console.error('Fetch Error:', error);  // 에러 상세 확인
+      set({ error: '공고 목록을 불러오는데 실패했습니다.' });
+    } finally {
+      set({ isLoading: false });
+    }
+  }
 })); 

@@ -16,13 +16,6 @@ import { recruitApi } from '@/api/recruitApi';
 import { transformTemplateData } from '@/types/template';
 import { useToast } from "@/hooks/use-toast";
 
-const formatTime = (time: number) => {
-  const hours = Math.floor(time);
-  const minutes = Math.round((time - hours) * 60);
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-};
-import { useToast } from "@/hooks/use-toast";
-
 const steps = [
   "공고 내용 입력(1/2)",
   "공고 내용 입력(2/2)",
@@ -36,10 +29,8 @@ const TemplateAndGroupWrite: React.FC = () => {
   const [isCompleted, setIsCompleted] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const templateId = location.state?.templateId;
   const { scrollToTop } = useScroll();
   const { createTemplate: createTemplateApi } = useTemplateStore();
-  const { toast } = useToast();
   const { toast } = useToast();
 
   // 🔹 모든 step의 데이터를 하나의 state로 관리
@@ -83,128 +74,16 @@ const TemplateAndGroupWrite: React.FC = () => {
 
   // 초기 데이터 로드
   useEffect(() => {
-    if (isRecruitEdit && recruitData) {
-      const loadTemplateAndRecruit = async () => {
-        try {
-          const template = await templateApi.getTemplate(templateId);
-          
-          // 날짜 문자열을 UTC 기준으로 변환
-          const deadline = new Date(recruitData.deadline);
-          const activityDate = new Date(recruitData.activityDate);
-          
-          // 시간대 오프셋 조정
-          deadline.setMinutes(deadline.getMinutes() - deadline.getTimezoneOffset());
-          activityDate.setMinutes(activityDate.getMinutes() - activityDate.getTimezoneOffset());
-
-          setTemplateData({
-            ...templateData,
-            groupId: template.groupId,
-            title: template.title || "",
-            description: template.description || "",
-            images: template.images || [],
-            volunteerTypes: Array.isArray(template.volunteerTypes) 
-              ? template.volunteerTypes 
-              : (template.volunteerTypes?.split(", ") || []),
-            locationType: template.activityLocation === "재택" ? "재택" : "주소",
-            address: template.activityLocation !== "재택" 
-              ? template.activityLocation.split(" ").slice(0, -1).join(" ")
-              : "",
-            detailAddress: template.activityLocation !== "재택"
-              ? template.activityLocation.split(" ").slice(-1)[0]
-              : "",
-            contactName: template.contactName || "",
-            // contactPhone 처리 개선
-            contactPhone: template.contactPhone 
-              ? {
-                  areaCode: template.contactPhone.split("-")[0] || "010",
-                  middle: template.contactPhone.split("-")[1] || "",
-                  last: template.contactPhone.split("-")[2] || ""
-                }
-              : {
-                  areaCode: "010",
-                  middle: "",
-                  last: ""
-                },
-            volunteerField: Array.isArray(template.volunteerField)
-              ? template.volunteerField
-              : (template.volunteerField?.split(", ") || []),
-            startDate: new Date(),
-            endDate: deadline,
-            volunteerDate: activityDate,
-            startTime: formatTime(recruitData.activityStart),
-            endTime: formatTime(recruitData.activityEnd),
-            volunteerCount: recruitData.maxVolunteer
-          });
-        } catch (error) {
-          console.error('데이터 로드 실패:', error);
-          toast({
-            variant: "destructive",
-            title: "오류",
-            description: "데이터를 불러오는데 실패했습니다."
-          });
-        }
-      };
-      loadTemplateAndRecruit();
-    } else if (templateId) {
-    if (templateId) {
-      const loadTemplate = async () => {
-        try {
-          console.log('Loading template with ID:', templateId); // 디버깅용
-          const template = await templateApi.getTemplate(templateId);
-          
-          if (!template) {
-            throw new Error('Template not found');
-          }
-
-          setTemplateData({
-            ...templateData,
-            groupId: template.groupId,
-            title: template.title || "",
-            description: template.description || "",
-            images: template.images || [],
-            volunteerTypes: Array.isArray(template.volunteerTypes) 
-              ? template.volunteerTypes 
-              : template.volunteerTypes?.split(", ") || [],
-            volunteerCount: template.volunteerCount || 10,
-            locationType: template.activityLocation === "재택" ? "재택" : "주소",
-            address: template.activityLocation !== "재택" 
-              ? template.activityLocation.split(" ").slice(0, -1).join(" ")
-              : "",
-            detailAddress: template.activityLocation !== "재택"
-              ? template.activityLocation.split(" ").slice(-1)[0]
-              : "",
-            contactName: template.contactName || "",
-            contactPhone: {
-              areaCode: template.contactPhone?.split("-")[0] || "010",
-              middle: template.contactPhone?.split("-")[1] || "",
-              last: template.contactPhone?.split("-")[2] || ""
-            },
-            volunteerField: Array.isArray(template.volunteerField)
-              ? template.volunteerField
-              : template.volunteerField?.split(", ") || [],
-            startDate: template.startDate ? new Date(template.startDate) : null,
-            endDate: template.endDate ? new Date(template.endDate) : null,
-            volunteerDate: template.volunteerDate ? new Date(template.volunteerDate) : null,
-            startTime: template.startTime || "",
-            endTime: template.endTime || ""
-          });
-        } catch (error) {
-          console.error('템플릿 로드 실패:', error);
-          toast({
-            variant: "destructive",
-            title: "오류",
-            description: "템플릿을 불러오는데 실패했습니다."
-          });
-          toast({
-            variant: "destructive",
-            title: "오류",
-            description: "템플릿을 불러오는데 실패했습니다."
-          });
-        }
-      };
-      loadTemplate();
+    // location.state가 있고 템플릿 사용 모드일 때
+    if (location.state?.isTemplateUse && location.state?.template) {
+      console.log('Template data received:', location.state.template); // 디버깅용
+      setTemplateData(prev => ({
+        ...prev,
+        ...location.state.template,
+        template_id: location.state.templateId
+      }));
     }
-  }, [templateId]);
+  }, [location.state]);
 
   const timeToNumber = (time: string) => {
     const [hours, minutes] = time.split(':').map(Number);
@@ -251,20 +130,38 @@ const TemplateAndGroupWrite: React.FC = () => {
   // 템플릿 생성 및 저장 함수
   const createTemplate = async () => {
     try {
+      // 템플릿 사용 모드인 경우
+      if (location.state?.isTemplateUse) {
+        // 공고 직접 생성
+        if (templateData.volunteerDate && templateData.startTime && templateData.endTime) {
+          await recruitApi.createRecruit({
+            templateId: location.state.templateId,
+            deadline: templateData.endDate?.toISOString() || new Date().toISOString(),
+            activityDate: templateData.volunteerDate.toISOString().split('T')[0],
+            activityStart: timeToNumber(templateData.startTime),
+            activityEnd: timeToNumber(templateData.endTime),
+            maxVolunteer: templateData.volunteerCount
+          });
+
+          toast({
+            title: "성공",
+            description: "공고가 생성되었습니다."
+          });
+          setIsCompleted(true);
+          return;
+        }
+      }
+
+      // 새로운 템플릿 생성인 경우
       // 1. Presigned URL 요청
-      const presignedUrls = await templateApi.getPresignedUrls();
+      const presignedUrls = await templateApi.getPresignedUrls(imageFiles.length);
       
-      // 2. 이미지 업로드 - 실패 시 명확한 에러 처리 필요
+      // 2. 이미지 업로드
       const uploadedImageUrls = await Promise.all(
         imageFiles.map((image, index) => 
           uploadImage(presignedUrls.images[index], image, index)
         )
       );
-
-      // 업로드된 이미지 URL이 모두 있는지 확인
-      if (uploadedImageUrls.some(url => !url)) {
-        throw new Error('일부 이미지 업로드에 실패했습니다.');
-      }
 
       // 3. 템플릿 데이터 준비
       const updatedTemplateData = {
@@ -273,7 +170,7 @@ const TemplateAndGroupWrite: React.FC = () => {
         imageCount: uploadedImageUrls.length
       };
 
-      // 4. 템플릿 생성
+      // 4. 템플릿 생성/수정
       const apiData = transformTemplateData(updatedTemplateData);
       const response = await createTemplateApi(apiData);
       
@@ -285,51 +182,6 @@ const TemplateAndGroupWrite: React.FC = () => {
           activityDate: templateData.volunteerDate.toISOString().split('T')[0],
           activityStart: timeToNumber(templateData.startTime),
           activityEnd: timeToNumber(templateData.endTime),
-          maxVolunteer: templateData.volunteerCount,
-          images: templateData.images,
-          imageCount: templateData.images.length
-        });
-        toast({
-          title: "성공",
-          description: "공고가 수정되었습니다."
-        });
-      } else {
-        let newTemplateId;
-        if (templateId) {
-          // 템플릿 수정
-          const apiData = transformTemplateData(templateData);
-          await templateApi.updateTemplate(templateId, apiData);
-          newTemplateId = templateId;
-          toast({
-            title: "성공",
-            description: "공고가 생성되었습니다."
-          });
-        } else {
-          // 새 템플릿 생성
-          const response = await createTemplateApi(templateData);
-          newTemplateId = response.templateId;
-          toast({
-            title: "성공",
-            description: "템플릿과 공고가 생성되었습니다."
-          });
-        }
-
-        // 공고 자동 생성
-        const today = new Date();
-        const activityDate = templateData.volunteerDate;
-        
-        if (activityDate && templateData.startTime && templateData.endTime) {
-          await recruitApi.createRecruit({
-            templateId: newTemplateId,
-            deadline: templateData.endDate?.toISOString() || today.toISOString(),
-            activityDate: activityDate.toISOString().split('T')[0],
-            activityStart: timeToNumber(templateData.startTime),
-            activityEnd: timeToNumber(templateData.endTime),
-            maxVolunteer: templateData.volunteerCount
-          });
-        }
-      }
-
           maxVolunteer: templateData.volunteerCount
         });
       }
@@ -341,17 +193,11 @@ const TemplateAndGroupWrite: React.FC = () => {
       setIsCompleted(true);
 
     } catch (error) {
-      console.error('실패:', error);
+      console.error('생성 실패:', error);
       toast({
         variant: "destructive",
         title: "오류",
-        description: isRecruitEdit ? '공고 수정에 실패했습니다.' : '템플릿 생성에 실패했습니다.'
-      });
-      console.error('템플릿 생성 실패:', error);
-      toast({
-        variant: "destructive",
-        title: "오류",
-        description: error instanceof Error ? error.message : "템플릿 생성에 실패했습니다."
+        description: error instanceof Error ? error.message : "생성에 실패했습니다."
       });
     }
   };
@@ -393,11 +239,6 @@ const TemplateAndGroupWrite: React.FC = () => {
         title: "오류",
         description: error
       }));
-      errors.forEach(error => toast({
-        variant: "destructive",
-        title: "오류",
-        description: error
-      }));
       return false;
     }
     return true;
@@ -415,11 +256,6 @@ const TemplateAndGroupWrite: React.FC = () => {
     }
 
     if (errors.length > 0) {
-      errors.forEach(error => toast({
-        variant: "destructive",
-        title: "오류",
-        description: error
-      }));
       errors.forEach(error => toast({
         variant: "destructive",
         title: "오류",
@@ -446,11 +282,6 @@ const TemplateAndGroupWrite: React.FC = () => {
     }
 
     if (errors.length > 0) {
-      errors.forEach(error => toast({
-        variant: "destructive",
-        title: "오류",
-        description: error
-      }));
       errors.forEach(error => toast({
         variant: "destructive",
         title: "오류",
@@ -484,11 +315,6 @@ const TemplateAndGroupWrite: React.FC = () => {
         title: "오류",
         description: error
       }));
-      errors.forEach(error => toast({
-        variant: "destructive",
-        title: "오류",
-        description: error
-      }));
       return false;
     }
     return true;
@@ -513,11 +339,6 @@ const TemplateAndGroupWrite: React.FC = () => {
     }
 
     if (errors.length > 0) {
-      errors.forEach(error => toast({
-        variant: "destructive",
-        title: "오류",
-        description: error
-      }));
       errors.forEach(error => toast({
         variant: "destructive",
         title: "오류",

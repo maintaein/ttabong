@@ -22,6 +22,19 @@ interface CreateTemplateResponse {
   imageUrl: string;
 }
 
+interface APITemplate {
+  templateId: number;
+  groupId: number;
+  title: string;
+  description: string;
+  activityLocation: string;
+  contactName: string;
+  contactPhone: string;
+  images: string[];
+  imageUrl: string;
+  message: string;
+}
+
 export const templateApi = {
   // 템플릿 목록 조회
   getTemplates: async (cursor?: number, limit: number = 10) => {
@@ -33,9 +46,11 @@ export const templateApi = {
   },
 
   // Presigned URL 요청
-  getPresignedUrls: async () => {
+  getPresignedUrls: async (imageCount: number) => {
     try {
-      const response = await axiosInstance.get<PresignedUrlResponse>('/org/templates/presigned');
+      const response = await axiosInstance.get<PresignedUrlResponse>(
+        `/org/templates/presigned?count=${imageCount}`
+      );
       
       // 응답 데이터 유효성 검사
       if (!response.data || !Array.isArray(response.data.images)) {
@@ -124,31 +139,29 @@ export const templateApi = {
   // 템플릿 상세 조회
   getTemplate: async (templateId: number) => {
     try {
-      // 요청 전 로깅
-      console.log('Requesting template:', {
-        templateId,
-        token: localStorage.getItem('access_token')?.substring(0, 10) + '...',
-        url: `/org/templates/${templateId}`
-      });
-
-      const response = await axiosInstance.get(`/org/templates/${templateId}`);
+      const response = await axiosInstance.get<APITemplate>(`/org/templates/${templateId}`);
       return response.data;
-    } catch (error: any) {
-      // 자세한 에러 정보 로깅
-      console.error('Template fetch error:', {
-        templateId,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        message: error.message
-      });
+    } catch (error) {
+      console.error('Template fetch error:', error);
       throw error;
     }
   },
 
   // 템플릿 수정
   updateTemplate: async (templateId: number, data: CreateTemplateRequest) => {
-    const response = await axiosInstance.patch(`/org/templates/${templateId}`, data);
-    return response.data;
+    try {
+      const response = await axiosInstance.patch<{
+        message: string;
+        templateId: number;
+        orgId: number;
+      }>('/org/templates', {
+        templateId,
+        ...data
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Template update error:', error);
+      throw error;
+    }
   }
 };
