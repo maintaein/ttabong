@@ -31,6 +31,6 @@ public interface VolunteerReactionRepository extends JpaRepository<VolunteerReac
     @Modifying
     @Transactional
     @Query("UPDATE VolunteerReaction v SET v.isDeleted = TRUE WHERE v.id IN :reactionIds")
-    void softDeleteByIds(@Param("reactionIds") List<Integer> reactionIds);
+    int softDeleteByIds(@Param("reactionIds") List<Integer> reactionIds);
 
 }

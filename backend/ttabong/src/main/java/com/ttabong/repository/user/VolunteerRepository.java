@@ -25,5 +25,9 @@ public interface VolunteerRepository extends JpaRepository<Volunteer, Integer> {
 
     // 봉사자 쿼리메소드 적기
     // userId로 volunteer(봉사자) 정보 가져오기
-    Optional<Volunteer> findByUserId(@Param("userId") Integer userId);
+    @Query("SELECT v FROM Volunteer v WHERE v.user.id = :userId AND v.user.isDeleted = false")
+    Optional<Volunteer> findByUserIdAndUserIsDeletedFalse(@Param("userId") int userId);
+
+    boolean existsByUserId(Integer userId);
+
 }

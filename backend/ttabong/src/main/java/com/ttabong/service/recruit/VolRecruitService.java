@@ -10,7 +10,7 @@ import java.util.Optional;
 public interface VolRecruitService {
     ReadVolRecruitsListResponseDto getTemplates(Integer cursor, Integer limit);
 
-    Optional<ReadRecruitDetailResponseDto> getTemplateById(Integer templateId);
+    ReadRecruitDetailResponseDto getTemplateById(Integer templateId);
 
     Application applyRecruit(int userId, int recruitId);
 
