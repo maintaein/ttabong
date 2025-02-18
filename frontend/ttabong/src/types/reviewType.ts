@@ -165,7 +165,7 @@ interface ReviewListItem {
     orgId: number;
     orgName: string;
   };
-  images: string; 
+  images: string | null; // null일 경우 이미지 없음을 의미
 }
 
 interface ReviewsResponse {
