@@ -9,6 +9,7 @@ import com.ttabong.entity.recruit.TemplateGroup;
 import com.ttabong.entity.sns.Review;
 import com.ttabong.entity.user.Organization;
 import com.ttabong.entity.user.User;
+import com.ttabong.exception.ConflictException;
 import com.ttabong.exception.NotFoundException;
 import com.ttabong.repository.recruit.ApplicationRepository;
 import com.ttabong.repository.recruit.RecruitRepository;
@@ -133,10 +134,73 @@ class ReviewServiceImplTest {
         assertThrows(NotFoundException.class, () -> reviewService.createReview(volMockAuthDto, requestDto));
     }
 
-    
+    @Test
+    @DisplayName("후기 생성 _ 실패 : 모집 공고가 없는 경우")
+    void createReview_Fail_RecruitNotFound() {
+        // Given
+        User writer = User.builder()
+                .id(1)
+                .email("test@example.com")
+                .build();
+
+        ReviewCreateRequestDto requestDto = ReviewCreateRequestDto.builder()
+                .recruitId(1)
+                .title("제목")
+                .content("내용")
+                .isPublic(true)
+                .uploadedImages(List.of("image1.jpg"))
+                .build();
+
+        when(userRepository.findById(volMockAuthDto.getUserId())).thenReturn(Optional.of(writer));
+        when(recruitRepository.findById(requestDto.getRecruitId())).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThrows(NotFoundException.class, () -> reviewService.createReview(volMockAuthDto, requestDto));
+    }
 
 
+    @Test
+    @DisplayName("후기 생성 _ 실패 : 이미 해당 공고에 대해 리뷰를 작성한 경우")
+    void createReview_Fail_AlreadyReviewed() {
+        // Given
+        User writer = User.builder()
+                .id(1)
+                .email("test@example.com")
+                .build();
 
+        Organization organization = Organization.builder()
+                .id(2)
+                .build();
 
+        TemplateGroup templateGroup = TemplateGroup.builder()
+                .id(1)
+                .build();
+
+        Template template = Template.builder()
+                .id(1)
+                .group(templateGroup)
+                .org(organization)
+                .build();
+
+        Recruit recruit = Recruit.builder()
+                .id(1)
+                .template(template)
+                .build();
+
+        ReviewCreateRequestDto requestDto = ReviewCreateRequestDto.builder()
+                .recruitId(1)
+                .title("제목")
+                .content("내용")
+                .isPublic(true)
+                .uploadedImages(List.of("image1.jpg"))
+                .build();
+
+        when(userRepository.findById(volMockAuthDto.getUserId())).thenReturn(Optional.of(writer));
+        when(recruitRepository.findById(requestDto.getRecruitId())).thenReturn(Optional.of(recruit));
+        when(reviewRepository.existsByWriterAndRecruit(writer.getId(), recruit.getId())).thenReturn(true);
+
+        // When & Then
+        assertThrows(ConflictException.class, () -> reviewService.createReview(volMockAuthDto, requestDto));
+    }
 
 }
