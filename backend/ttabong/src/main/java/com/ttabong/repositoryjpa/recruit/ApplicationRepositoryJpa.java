@@ -19,10 +19,10 @@ import java.util.stream.Collectors;
 @Repository
 public interface ApplicationRepositoryJpa extends JpaRepository<Application, Integer> {
 
-    @EntityGraph(attributePaths = {"Volunteer.User"})
+    @EntityGraph(attributePaths = {"volunteer.user"})
     List<Application> findByRecruitId(Integer recruitId);
 
-    @EntityGraph(attributePaths = {"Volunteer.User"})
+    @EntityGraph(attributePaths = {"volunteer.user"})
     Optional<Application> findById(Integer id);
 
     default Map<Integer, Application> findByRecruitIdMap(Integer recruitId){
