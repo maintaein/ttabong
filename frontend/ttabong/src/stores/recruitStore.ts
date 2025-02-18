@@ -1,12 +1,18 @@
 import { create } from 'zustand';
 import { recruitApi } from '@/api/recruitApi';
-import type { OrgRecruit, Application } from '@/types/recruitType';
+import type { 
+  OrgRecruit, 
+  Application, 
+  RecruitDetail,
+  OrgRecruitStatus,
+  VolunteerApplicationStatus 
+} from '@/types/recruitType';
 
 // RecruitItem 타입 추가
 interface RecruitItem {
   recruit: {
     recruitId: number;
-    status: string;
+    status: OrgRecruitStatus;
     deadline: string;
     activityDate: string;
     activityStart: number;
@@ -38,34 +44,6 @@ interface RecruitListItem {  // 목록용 간단한 타입
   };
 }
 
-interface RecruitDetailType {
-  template: {
-    templateId: number;
-    title: string;
-    description: string;
-    activityLocation: string;
-    images: string[];
-    contactName: string;
-    contactPhone: string;
-    volunteerField: string[];
-    volunteerTypes: string[];
-  };
-  recruit: {
-    recruitId: number;
-    status: string;
-    activityDate: string;
-    activityStart: number;
-    activityEnd: number;
-    deadline: string;
-    maxVolunteer: number;
-    participateVolCount: number;
-  };
-  organization: {
-    orgId: number;
-    name: string;
-  };
-}
-
 interface RecruitStore {
   myRecruits: Application[] | null;
   orgRecruits: OrgRecruit[] | null;
@@ -73,7 +51,7 @@ interface RecruitStore {
   isLoading: boolean;
   error: string | null;
   hasMore: boolean;
-  recruitDetail: RecruitDetailType | null;
+  recruitDetail: RecruitDetail | null;
   selectedRecruitId: number | null;
   recruitList: RecruitListItem[] | null;
   nextCursor: number | null;
@@ -81,10 +59,11 @@ interface RecruitStore {
   fetchOrgRecruits: () => Promise<void>;
   cancelApplication: (applicationId: number) => Promise<void>;
   fetchRecruitList: (cursor?: number) => Promise<void>;
-  fetchRecruitDetail: (recruitId: number) => Promise<void>;
+  fetchRecruitDetail: (recruitId: number, userType?: string) => Promise<void>;
   setSelectedRecruitId: (id: number) => Promise<void>;
   resetSelectedRecruitId: () => void;
   fetchRecruits: () => Promise<void>;
+  applyRecruit: (recruitId: number) => Promise<void>;
   updateRecruitStatus: (recruitId: number, newStatus: string) => Promise<void>;
 }
 
@@ -116,9 +95,9 @@ export const useRecruitStore = create<RecruitStore>((set) => ({
           hasMore: response.length === (params?.limit || 10)
         });
       }
-    } catch (error) {
-      console.error('봉사내역을 불러오는데 실패했습니다:', error);
-      set({ error: '봉사내역을 불러오는데 실패했습니다.' });
+    } catch (error: any) {
+      console.error('봉사내역 조회 실패:', error);
+      set({ error: error.response?.data?.message || '봉사내역을 불러오는데 실패했습니다.' });
     } finally {
       set({ isLoading: false });
     }
@@ -139,16 +118,22 @@ export const useRecruitStore = create<RecruitStore>((set) => ({
     try {
       set({ isLoading: true, error: null });
       await recruitApi.cancelApplication(applicationId);
-      set((state) => ({
-        myRecruits: state.myRecruits?.map(recruit => 
-          recruit.applicationId === applicationId 
-            ? { ...recruit, status: 'AUTO_CANCEL' }
-            : recruit
-        ) || null
-      }));
+      const response = await recruitApi.getMyApplications();
+      set({ 
+        myRecruits: response.map(application => ({
+          ...application,
+          status: application.applicationId === applicationId 
+            ? 'AUTO_CANCEL' as VolunteerApplicationStatus
+            : application.status
+        })),
+        recruitDetail: null 
+
+        
+      });
     } catch (error) {
       console.error('봉사 신청 취소 실패:', error);
       set({ error: '봉사 신청 취소에 실패했습니다.' });
+      throw error;
     } finally {
       set({ isLoading: false });
     }
@@ -182,14 +167,14 @@ export const useRecruitStore = create<RecruitStore>((set) => ({
       set({ isLoading: false });
     }
   },
-  fetchRecruitDetail: async (recruitId) => {
+  fetchRecruitDetail: async (recruitId: number, userType = 'volunteer') => {
     set({ isLoading: true });
     try {
-      const response = await recruitApi.getRecruitDetail(recruitId);
+      const response = await recruitApi.getRecruitDetail(recruitId, userType);
       set({ recruitDetail: response, error: null });
-    } catch (error) {
+    } catch (error: any) {
       console.error('공고 상세 조회 실패:', error);
-      set({ error: '공고를 불러오는데 실패했습니다.' });
+      set({ error: error.response?.data?.message || '공고를 불러오는데 실패했습니다.' });
     } finally {
       set({ isLoading: false });
     }
@@ -204,9 +189,36 @@ export const useRecruitStore = create<RecruitStore>((set) => ({
       set({ isLoading: true, error: null });
       const response = await recruitApi.getOrgRecruits();
       set({ recruits: response.recruits });
-    } catch (error) {
-      console.error('공고 목록을 불러오는데 실패했습니다:', error);
-      set({ error: '공고 목록을 불러오는데 실패했습니다.' });
+    } catch (error: any) {
+      console.error('공고 목록 조회 실패:', error);
+      set({ error: error.response?.data?.message || '공고 목록을 불러오는데 실패했습니다.' });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+  applyRecruit: async (recruitId: number) => {
+    try {
+      set({ isLoading: true, error: null });
+      await recruitApi.applyRecruit(recruitId);
+      const response = await recruitApi.getRecruitDetail(recruitId, 'volunteer');
+      
+      const transformedData: RecruitDetail = {
+        ...response,
+        recruit: {
+          ...response.recruit,
+          status: response.recruit.status as OrgRecruitStatus
+        },
+        application: response.application ? {
+          applicationId: response.application.applicationId,
+          name: response.application.name,
+          status: response.application.status as VolunteerApplicationStatus
+        } : undefined
+      };
+      
+      set({ recruitDetail: transformedData });
+    } catch (error: any) {
+      console.error('봉사 신청 실패:', error);
+      throw error.response?.data?.message || '봉사 신청에 실패했습니다.';
     } finally {
       set({ isLoading: false });
     }
@@ -220,7 +232,7 @@ export const useRecruitStore = create<RecruitStore>((set) => ({
       set(state => ({
         recruits: state.recruits.map(item => 
           item.recruit.recruitId === recruitId 
-            ? { ...item, recruit: { ...item.recruit, status: newStatus } }
+            ? { ...item, recruit: { ...item.recruit, status: newStatus as OrgRecruitStatus } }
             : item
         )
       }));

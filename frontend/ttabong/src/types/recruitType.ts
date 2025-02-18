@@ -16,8 +16,12 @@ export interface Template {
   createdAt: string;
   group: Group;
   images?: string[];
+  volunteerTypes?: string[];
   volunteerField?: string[];
 }
+
+export type OrgRecruitStatus = 'RECRUITING' | 'RECRUITMENT_CLOSED' | 'ACTIVITY_COMPLETED';
+export type VolunteerApplicationStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'COMPLETED' | 'AUTO_CANCEL' | 'NO_SHOW';
 
 export interface Recruit {
   recruitId: number;
@@ -25,19 +29,19 @@ export interface Recruit {
   deadline: string;
   activityDate: string;
   activityTime: string;
+  activityStart: number;
+  activityEnd: number;
   maxVolunteer: number;
   participateVolCount: number;
-  status: 'RECRUITING' | 'CLOSED';
+  status: OrgRecruitStatus;
   isDeleted: boolean;
   updatedAt: string;
   createdAt: string;
 }
 
-export type ApplicationStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'COMPLETED' | 'AUTO_CANCEL' | 'NO_SHOW';
-
 export interface Application {
   applicationId: number;
-  status: ApplicationStatus;
+  status: VolunteerApplicationStatus;
   evaluationDone: boolean;
   createdAt: string;
   template: {
@@ -63,7 +67,7 @@ export interface Application {
     activityEnd: number;
     maxVolunteer: number;
     participateVolCount: number;
-    status: 'RECRUITING' | 'CLOSED';
+    status: OrgRecruitStatus;
     createdAt: string;
   };
 }
@@ -90,31 +94,16 @@ export interface UpdateRecruitRequest {
 }
 
 export interface OrgRecruit {
-  group: {
-    groupId: number;
-    groupName: string;
+  group: Group;
+  template: Template;
+  recruit: Recruit;
+  application?: {
+    applicationId: number;
+    status: VolunteerApplicationStatus;
   };
-  template: {
-    templateId: number;
-    title: string;
-    description: string;
-    activityLocation: string;
-    volunteerTypes: string[];
-    contactName: string;
-    contactPhone: string;
-    images?: string[];
-    volunteerField?: string[];
-  };
-  recruit: {
-    recruitId: number;
-    status: '모집중' | '모집마감' | '활동완료';
-    maxVolunteer: number;
-    participateVolCount: number;
-    activityDate: string;
-    activityStart: number;
-    activityEnd: number;
-    deadline: string;
-    createdAt: string;
+  organization: {
+    orgId: number;
+    name: string;
   };
 }
 
@@ -128,10 +117,7 @@ export interface GetApplicationsParams {
 }
 
 export interface RecruitDetail {
-  group: {
-    groupId: number;
-    groupName: string;
-  };
+  group: Group;
   template: {
     templateId: number;
     categoryId: number;
@@ -144,6 +130,8 @@ export interface RecruitDetail {
     contactPhone: string;
     description: string;
     createdAt: string;
+    volunteerTypes: string[];
+    volunteerField: string[];
   };
   recruit: {
     recruitId: number;
@@ -153,7 +141,7 @@ export interface RecruitDetail {
     activityEnd: number;
     maxVolunteer: number;
     participateVolCount: number;
-    status: string;
+    status: OrgRecruitStatus;
     updatedAt: string;
     createdAt: string;
   };
@@ -164,7 +152,7 @@ export interface RecruitDetail {
   application?: {
     applicationId: number;
     name: string;
-    status: string;
+    status: VolunteerApplicationStatus;
   };
 }
 

@@ -8,7 +8,7 @@ interface ReviewGalleryProps {
   isOrganization: boolean;
 }
 
-export function ReviewGallery({ images, isOrganization }: ReviewGalleryProps) {
+export function ReviewGallery({ images }: ReviewGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const handlePrevious = () => {
@@ -72,11 +72,6 @@ export function ReviewGallery({ images, isOrganization }: ReviewGalleryProps) {
         </>
       )}
       
-      {isOrganization && (
-        <div className="absolute top-4 left-4 bg-primary text-primary-foreground px-2 py-1 text-sm rounded">
-          기관 후기
-        </div>
-      )}
     </div>
   );
 } 
