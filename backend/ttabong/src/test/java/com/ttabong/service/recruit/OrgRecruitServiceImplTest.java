@@ -2,13 +2,14 @@ package com.ttabong.service.recruit;
 
 import com.ttabong.dto.user.AuthDto;
 import com.ttabong.entity.recruit.Recruit;
+import com.ttabong.entity.user.Organization;
+import com.ttabong.entity.user.User;
 import com.ttabong.repository.recruit.RecruitRepository;
 import com.ttabong.repository.recruit.TemplateRepository;
 import com.ttabong.util.CacheUtil;
 import com.ttabong.util.service.ImageService;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import net.datafaker.Faker;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -17,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -43,8 +45,38 @@ class OrgRecruitServiceImplTest {
     @InjectMocks
     private OrgRecruitServiceImpl orgRecruitService;
 
-    private final AuthDto mockAuthDto = new AuthDto(1, "organization");
+    private Faker faker;
+    private User mockUser;
+    private Organization mockOrganization;
 
+    @BeforeEach
+    void setUp() {
+        faker = new Faker();
+
+        mockUser = User.builder()
+                .id(1)
+                .email(faker.internet().emailAddress())
+                .name(faker.name().fullName())
+                .password(faker.internet().password())
+                .phone(faker.phoneNumber().cellPhone())
+                .profileImage(faker.internet().image())
+                .isDeleted(false)
+                .createdAt(Instant.from(LocalDateTime.now()))
+                .totalVolunteerHours(BigDecimal.ZERO)
+                .build();
+
+        mockOrganization = Organization.builder()
+                .id(faker.number().randomDigitNotZero())
+                .user(mockUser)
+                .businessRegNumber(faker.business().creditCardNumber()) // 가짜 사업자 번호
+                .orgName(faker.company().name())
+                .representativeName(faker.name().fullName())
+                .orgAddress(faker.address().fullAddress())
+                .build();
+
+    }
+
+    private final AuthDto mockAuthDto = new AuthDto(1, "organization");
 
     private Recruit createRecruitWithEndTime(BigDecimal activityEnd, int daysFromToday) {
 
@@ -58,6 +90,7 @@ class OrgRecruitServiceImplTest {
 
     @Nested
     @DisplayName("공고 시간 관련 테스트 그룹")
+    @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
     class ActivityTimeTest {
 
         @Test
@@ -93,5 +126,11 @@ class OrgRecruitServiceImplTest {
             assertTrue(remainingMinutes > 1440);
             System.out.println("✅ 테스트 통과: 내일 종료되는 활동, 남은 시간 = " + remainingMinutes + "분");
         }
+    }
+    @Nested
+    @DisplayName("공고 템플릿 CRUD")
+    @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+    class CreateTemplate{
+
     }
 }

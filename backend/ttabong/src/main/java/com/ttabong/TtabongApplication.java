@@ -8,10 +8,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 @SpringBootApplication
 @EnableConfigurationProperties(JwtProperties.class)
 public class TtabongApplication {
-
     public static void main(String[] args) {
 
         SpringApplication.run(TtabongApplication.class, args);
     }
-
 }
