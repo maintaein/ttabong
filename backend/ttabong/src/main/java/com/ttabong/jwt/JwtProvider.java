@@ -2,8 +2,10 @@ package com.ttabong.jwt;
 
 import com.ttabong.config.JwtProperties;
 import com.ttabong.dto.user.AuthDto;
+import com.ttabong.exception.JwtAuthenticationException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -51,6 +53,7 @@ public class JwtProvider {
                     .parseClaimsJws(token);
             return true;
         } catch (ExpiredJwtException e) {
+
             System.out.println("만료된 토큰입니다.");
         } catch (JwtException | IllegalArgumentException e) {
             System.out.println("유효하지 않은 토큰입니다.");
@@ -59,17 +62,18 @@ public class JwtProvider {
     }
 
     public Claims getClaims(String token) {
-        return Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token).getBody();
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(secretKey)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (JwtException e) {
+            return null;
+        }
+
     }
 
-    public AuthDto toAuthDto(String token) {
-        Claims claims = getClaims(token);
-        return new AuthDto(claims.get("userId", Integer.class), claims.get("userType", String.class));
-    }
 
-    public boolean isVolunteer(String token) {
-        Claims claims = getClaims(token);
-        String userType = claims.get("userType", String.class);
-        return "volunteer".equals(userType);
-    }
+
 }

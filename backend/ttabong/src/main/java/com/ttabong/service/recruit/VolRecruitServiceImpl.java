@@ -7,6 +7,8 @@ import com.ttabong.entity.recruit.Recruit;
 import com.ttabong.entity.recruit.Template;
 import com.ttabong.entity.recruit.VolunteerReaction;
 import com.ttabong.entity.user.Volunteer;
+import com.ttabong.exception.ConflictException;
+import com.ttabong.exception.NotFoundException;
 import com.ttabong.repository.recruit.ApplicationRepository;
 import com.ttabong.repository.recruit.RecruitRepository;
 import com.ttabong.repository.recruit.TemplateRepository;
@@ -63,19 +65,20 @@ public class VolRecruitServiceImpl implements VolRecruitService {
 
     // 2. 특정 모집 공고 상세 조회
     @Override
-    public Optional<ReadRecruitDetailResponseDto> getTemplateById(Integer templateId) {
-        return templateRepository.findById(templateId)
-                .map(ReadRecruitDetailResponseDto::from);
+    public ReadRecruitDetailResponseDto getTemplateById(Integer templateId) {
+        return templateRepository.findByIdAndIsDeletedFalse(templateId)
+                .map(ReadRecruitDetailResponseDto::from)
+                .orElseThrow(() -> new NotFoundException("해당 모집 공고를 찾을 수 없습니다."));
     }
 
     // 3. 모집 공고 신청
     @Override
     public Application applyRecruit(int userId, int recruitId) {
-        Volunteer volunteer = volunteerRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("봉사자를 찾을 수 없습니다."));
+        Volunteer volunteer = volunteerRepository.findByUserIdAndUserIsDeletedFalse(userId)
+                .orElseThrow(() -> new NotFoundException("봉사자를 찾을 수 없습니다."));
 
         Recruit recruit = recruitRepository.findByIdAndIsDeletedFalse(recruitId)
-                .orElseThrow(() -> new IllegalArgumentException("봉사 공고를 찾을 수 없습니다."));
+                .orElseThrow(() -> new NotFoundException("봉사 공고를 찾을 수 없습니다."));
 
         Application application = Application.builder()
                 .volunteer(volunteer)
@@ -92,11 +95,11 @@ public class VolRecruitServiceImpl implements VolRecruitService {
     // 4. 공고 신청 취소
     @Override
     public Application cancelRecruitApplication(Integer applicationId) {
-        Application application = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new IllegalArgumentException("신청 내역을 찾을 수 없습니다."));
+        Application application = applicationRepository.findByIdAndIsDeletedFalse(applicationId)
+                .orElseThrow(() -> new NotFoundException("신청 내역을 찾을 수 없습니다."));
 
         if (!"PENDING".equals(application.getStatus())) {
-            throw new IllegalStateException("신청 취소는 PENDING 상태에서만 가능합니다.");
+            throw new ConflictException("신청 취소는 PENDING 상태에서만 가능합니다.");
         }
 
         application.setIsDeleted(true);
@@ -118,11 +121,7 @@ public class VolRecruitServiceImpl implements VolRecruitService {
     @Override
     public Optional<MyApplicationDetailResponseDto> getRecruitDetail(Integer userId, Integer recruitId) {
         Recruit recruit = recruitRepository.findByIdAndIsDeletedFalse(recruitId)
-                .orElse(null);
-
-        if (recruit == null) {
-            return Optional.empty();
-        }
+                .orElseThrow(() -> new NotFoundException("해당 봉사 공고를 찾을 수 없습니다."));
 
         Optional<Application> application = applicationRepository.findApplicationByRecruitAndUser(recruitId, userId);
 
@@ -148,11 +147,11 @@ public class VolRecruitServiceImpl implements VolRecruitService {
     // 8. 특정 템플릿 "좋아요" 혹은 "싫어요"하기
     @Override
     public Integer saveReaction(Integer userId, Integer recruitId, Boolean isLike) {
-        Volunteer volunteer = volunteerRepository.findByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 사용자가 존재하지 않습니다."));
+        Volunteer volunteer = volunteerRepository.findByUserIdAndUserIsDeletedFalse(userId)
+                .orElseThrow(() -> new NotFoundException("봉사자를 찾을 수 없습니다."));
 
-        Recruit recruit = recruitRepository.findById(recruitId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 봉사공고가 존재하지 않습니다."));
+        Recruit recruit = recruitRepository.findByIdAndIsDeletedFalse(recruitId)
+                .orElseThrow(() -> new NotFoundException("해당 봉사공고가 존재하지 않습니다."));
 
         VolunteerReaction reaction = VolunteerReaction.builder()
                 .volunteer(volunteer)
@@ -170,9 +169,12 @@ public class VolRecruitServiceImpl implements VolRecruitService {
     @Override
     public void deleteReactions(List<Integer> reactionIds) {
         if (reactionIds == null || reactionIds.isEmpty()) {
-            throw new IllegalArgumentException("삭제할 좋아요 ID 목록이 비어 있습니다.");
+            throw new NotFoundException("삭제할 좋아요 ID 목록이 비어 있습니다.");
         }
-        reactionRepository.softDeleteByIds(reactionIds);
+        int updatedCount = reactionRepository.softDeleteByIds(reactionIds);
+        if (updatedCount == 0) {
+            throw new NotFoundException("해당 ID의 좋아요가 존재하지 않습니다.");
+        }
     }
 
 }

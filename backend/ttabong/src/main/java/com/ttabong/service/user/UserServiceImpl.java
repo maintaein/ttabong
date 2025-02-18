@@ -39,12 +39,23 @@ public class UserServiceImpl implements UserService {
     public UserLoginResponseDto login(LoginRequest loginRequest) {
         UserLoginProjection user = userRepository.findByEmailAndIsDeletedFalse(loginRequest.getEmail());
 
-        if (user == null) {
-            return null; // 혹은 Optional<UserLoginResponseDto>로 감싸서 반환 가능
+        //해당 계정이 있느냐?
+        if (user == null || !passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+            return null;
         }
-        UserLoginProjection user = userOpt.get(); // 아이디와 비밀번호만 가져오도록 프로젝션추가
 
-        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+        //계정 타입이 맞느냐?
+        if ("volunteer".equalsIgnoreCase(loginRequest.getUserType())) {
+            boolean isVolunteer = volunteerRepository.existsByUserId(user.getId());
+            if (!isVolunteer) {
+                return null;
+            }
+        } else if ("organization".equalsIgnoreCase(loginRequest.getUserType())) {
+            boolean isOrganization = organizationRepository.existsByUserId(user.getId());
+            if (!isOrganization) {
+                return null;
+            }
+        } else {
             return null;
         }
 
@@ -56,10 +67,11 @@ public class UserServiceImpl implements UserService {
     }
 
 
+
     @Override
-    public void registerVolunteer(VolunteerRegisterRequest request) {
+    public boolean registerVolunteer(VolunteerRegisterRequest request) {
         if (userRepository.existsByEmailAndIsDeletedFalse(request.getEmail())) {
-            throw new RuntimeException("이미 계정이 존재합니다.");
+            return false;
         }
 
         User user = User.builder()
@@ -86,12 +98,14 @@ public class UserServiceImpl implements UserService {
                 .notRecommendedCount(0)
                 .build();
         volunteerRepository.save(volunteer);
+
+        return true;
     }
 
     @Override
-    public void registerOrganization(OrganizationRegisterRequest request) {
+    public boolean registerOrganization(OrganizationRegisterRequest request) {
         if (userRepository.existsByEmailAndIsDeletedFalse(request.getEmail())) {
-            throw new RuntimeException("이미 계정이 존재합니다.");
+            return false;
         }
 
         User user = User.builder()
@@ -114,6 +128,8 @@ public class UserServiceImpl implements UserService {
                 .orgAddress(request.getOrgAddress())
                 .build();
         organizationRepository.save(organization);
+
+        return true;
     }
 
     @Override

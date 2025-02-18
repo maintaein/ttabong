@@ -44,9 +44,8 @@ public class VolRecruitController extends LoggerConfig {
     @GetMapping("/templates/{templateId}")
     public ResponseEntity<ReadRecruitDetailResponseDto> recruitsDetail(@PathVariable Integer templateId) {
         logger.info("2. 특정 모집 공고 상세 조회 <GET> \"//templates/{templateId}\"");
-        return volRecruitService.getTemplateById(templateId)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        ReadRecruitDetailResponseDto responseDto = volRecruitService.getTemplateById(templateId);
+        return ResponseEntity.ok(responseDto);
     }
 
     // 3. 모집 공고 신청
