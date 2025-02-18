@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Search, Bell } from "lucide-react";
+import { Bell } from "lucide-react";
 import axiosInstance from "../api/axiosInstance"; // axiosInstance 경로 확인 필요
 
 const RecruitFind: React.FC = () => {
