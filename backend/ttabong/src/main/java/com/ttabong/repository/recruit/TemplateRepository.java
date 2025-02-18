@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TemplateRepository extends JpaRepository<Template, Integer> {
@@ -62,5 +63,8 @@ public interface TemplateRepository extends JpaRepository<Template, Integer> {
     // 특정 cursor 이후의 모집 공고 조회
     @Query("SELECT t FROM Template t WHERE t.id > :cursor AND t.isDeleted = FALSE ORDER BY t.createdAt DESC LIMIT :limit")
     List<Template> findTemplatesAfterCursor(Integer cursor, Integer limit);
+
+
+    Optional<Template> findByIdAndIsDeletedFalse(Integer id);
 
 }

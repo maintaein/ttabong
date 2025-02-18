@@ -29,7 +29,7 @@ export default function ReviewDetail() {
     updateComment,
     deleteComment 
   } = useReviewStore();
-  const { userId } = useUserStore();
+  const { userId, userName } = useUserStore();
 
   const [commentContent, setCommentContent] = useState('');
   const navigate = useNavigate();
@@ -48,9 +48,18 @@ export default function ReviewDetail() {
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!commentContent.trim() || !reviewId) return;
-    await addComment(Number(reviewId), commentContent);
-    setCommentContent('');
+    if (!commentContent.trim() || !reviewId || !userId) return;
+    
+    try {
+      await addComment(Number(reviewId), {
+        content: commentContent,
+        writerId: Number(userId),
+        writerName: userName || '익명'
+      });
+      setCommentContent('');
+    } catch (error) {
+      console.error('댓글 작성 실패:', error);
+    }
   };
 
   const handleEdit = () => {

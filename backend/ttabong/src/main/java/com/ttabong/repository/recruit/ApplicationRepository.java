@@ -21,7 +21,7 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
     @Query("UPDATE Application a SET a.status = :status WHERE a.id = :applicationId")
     void updateApplicationStatus(@Param("applicationId") Integer applicationId, @Param("status") String status);
 
-    @Query("SELECT r.template.org.id FROM Application a JOIN a.recruit r JOIN r.template t WHERE a.id = :applicationId")
+    @Query("SELECT r.template.org.id FROM Application a JOIN a.recruit r JOIN r.template t WHERE a.id = :applicationId AND a.isDeleted = false")
     Optional<Integer> findOrgIdByApplicationId(@Param("applicationId") Integer applicationId);
 
     @Query("SELECT a FROM Application a WHERE a.recruit.id = :recruitId AND a.volunteer.id = :volunteerId")
@@ -53,4 +53,5 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
     @Query("SELECT a FROM Application a WHERE a.recruit.id = :recruitId AND a.volunteer.user.id = :userId AND a.isDeleted = FALSE")
     Optional<Application> findApplicationByRecruitAndUser(@Param("recruitId") Integer recruitId, @Param("userId") Integer userId);
 
+    Optional<Application> findByIdAndIsDeletedFalse(Integer applicationId);
 }

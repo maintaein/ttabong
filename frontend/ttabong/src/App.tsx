@@ -1,7 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from "@/hooks/theme-provider";
-import { Toaster } from "sonner";
+import { Toaster } from "@/components/ui/toaster";
 import { useUserStore } from '@/stores/userStore';
 import { Layout } from "@/layout/Layout";
 
@@ -21,6 +21,7 @@ import SignUp from '@/pages/SignUp';
 import OrgSignUp from '@/pages/OrgSignUp';
 import AddRecruit from '@/pages/AddRecruit';
 import ChooseRecruit from './pages/ChooseRecruit';
+import MyReviews from '@/pages/MyReviews';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { userId } = useUserStore();
@@ -120,6 +121,18 @@ const App: React.FC = () => {
               <Route path="/add-recruit" element={
                 <ProtectedRoute>
                   <AddRecruit />
+                </ProtectedRoute>
+              } />
+
+              <Route path="/volunteer-history" element={
+                <ProtectedRoute>
+                  <ChooseRecruit />
+                </ProtectedRoute>
+              } />
+
+              <Route path="/my-reviews" element={
+                <ProtectedRoute>
+                  <MyReviews />
                 </ProtectedRoute>
               } />
             </Route>
