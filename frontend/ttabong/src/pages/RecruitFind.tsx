@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Search, Bell } from "lucide-react";
 
-const API_URL = "https://your-api-endpoint.com"; // API 엔드포인트 변경 필요
+const API_URL = "https://ttabong.store"; // API 엔드포인트 변경 필요
 const API_HEADERS = {
   "Content-Type": "application/json",
   "Accept": "application/json",
