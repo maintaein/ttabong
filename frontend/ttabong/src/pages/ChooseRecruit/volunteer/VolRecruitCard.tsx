@@ -4,8 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { Application } from '@/types/recruitType';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
-import { useRecruitStore } from '@/stores/recruitStore';
+import { formatDate } from '@/lib/dateUtils';
 
 const STATUS_MAP = {
   PENDING: { label: '대기', className: 'bg-yellow-100 text-yellow-700' },
@@ -26,15 +25,6 @@ function formatTime(time: number): string {
   const hours = Math.floor(time);
   const minutes = Math.round((time - hours) * 60);
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-}
-
-function formatDate(date: string): string {
-  return new Date(date).toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    weekday: 'short'
-  });
 }
 
 export const RecruitCard: React.FC<RecruitCardProps> = ({ 

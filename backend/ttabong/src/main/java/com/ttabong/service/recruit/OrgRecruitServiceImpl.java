@@ -306,11 +306,19 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         Organization userOrg = organizationRepository.findByUserId(authDto.getUserId())
                 .orElseThrow(() -> new NotFoundException("해당 사용자의 기관 정보를 찾을 수 없습니다."));
+
         TemplateGroup templateGroup = templateGroupRepository.findByIdAndIsDeletedFalse(updateGroupDto.getGroupId())
                 .orElseThrow(() -> new NotFoundException("해당 그룹을 찾을 수 없습니다."));
 
         if (!templateGroup.getOrg().getId().equals(userOrg.getId())) {
             throw new UnauthorizedException("이 그룹을 수정할 권한이 없습니다.");
+        }
+
+        if (!templateGroup.getGroupName().equals(updateGroupDto.getGroupName())) {
+            boolean exists = templateGroupRepository.existsByOrgAndGroupNameAndIsDeletedFalse(userOrg, updateGroupDto.getGroupName());
+            if (exists) {
+                throw new NotFoundException("이미 존재하는 그룹명입니다: " + updateGroupDto.getGroupName());
+            }
         }
 
         templateGroupRepository.updateGroup(updateGroupDto.getGroupId(), userOrg.getId(), updateGroupDto.getGroupName());
@@ -321,6 +329,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .orgId(userOrg.getId())
                 .build();
     }
+
 
     @Override
     public UpdateTemplateResponse updateTemplate(UpdateTemplateRequestDto updateTemplateDto, AuthDto authDto) {
@@ -531,7 +540,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         String groupName = Optional.ofNullable(createGroupDto.getGroupName()).orElse("봉사");
 
-        if (templateGroupRepository.existsByOrgAndGroupName(org, groupName)) {
+        if (templateGroupRepository.existsByOrgAndGroupNameAndIsDeletedFalse(org, groupName)) {
             throw new ConflictException("이미 존재하는 그룹명입니다: " + groupName);
         }
 
