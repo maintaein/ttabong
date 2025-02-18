@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import type { Application } from '@/types/recruitType';
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/dateUtils';
+import { useNavigate } from 'react-router-dom';
 
 const STATUS_MAP = {
   PENDING: { label: '대기', className: 'bg-yellow-100 text-yellow-700' },
@@ -32,8 +33,13 @@ export const RecruitCard: React.FC<RecruitCardProps> = ({
   onReviewWrite, 
   onCancelClick 
 }) => {
+  const navigate = useNavigate();
   const isCompletedActivity = application.status === 'COMPLETED';
   const isPendingActivity = application.status === 'PENDING';
+
+  const handleCardClick = () => {
+    navigate(`/recruits/${application.recruit.recruitId}`);
+  };
 
   const handleReviewClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -48,6 +54,7 @@ export const RecruitCard: React.FC<RecruitCardProps> = ({
   return (
     <Card 
       className="p-4 hover:shadow-md transition-shadow cursor-pointer"
+      onClick={handleCardClick}
     >
       <div className="flex justify-between items-start">
         <div className="space-y-2">
