@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Search, Bell } from "lucide-react";
-
-const API_URL = "https://ttabong.store"; // API 엔드포인트 변경 필요
-const API_HEADERS = {
-  "Content-Type": "application/json",
-  "Accept": "application/json",
-  "Authorization": "Bearer YOUR_ACCESS_TOKEN", // 실제 API 토큰으로 변경 필요
-};
+import axiosInstance from "../api/axiosInstance"; // axiosInstance 경로 확인 필요
 
 const RecruitFind: React.FC = () => {
   const [posts, setPosts] = useState<any[]>([]);
@@ -19,25 +13,20 @@ const RecruitFind: React.FC = () => {
   const fetchPosts = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/volunteer/recruits`, {
-        method: "POST",
-        headers: API_HEADERS,
-        body: JSON.stringify({
-          templateTitle: searchQuery || null,
-          searchConditions: {
-            organizationName: null,
-            status: status,
-            activityDate: {
-              start: "2025-02-20",
-              end: "2025-02-28",
-            },
-            region: region,
+      const response = await axiosInstance.post("/volunteer/recruits", {
+        templateTitle: searchQuery || null,
+        searchConditions: {
+          organizationName: null,
+          status: status,
+          activityDate: {
+            start: "2025-02-20",
+            end: "2025-02-28",
           },
-        }),
+          region: region,
+        },
       });
 
-      const data = await response.json();
-      setPosts(data.templates || []);
+      setPosts(response.data.templates || []);
     } catch (error) {
       console.error("Error fetching posts:", error);
     }
