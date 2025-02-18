@@ -31,7 +31,7 @@ public class JwtProvider {
 
     public String createToken(String userId, String userType) {
         Claims claims = Jwts.claims();
-        claims.setSubject(userId.toString());
+        claims.setSubject(userId);
         claims.put("userType", userType); // 유저 타입 추가
 
         Date now = new Date();
