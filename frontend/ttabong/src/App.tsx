@@ -24,6 +24,7 @@ import AddRecruit from '@/pages/AddRecruit';
 import ChooseRecruit from './pages/ChooseRecruit';
 import OrgDetailPage from '@/pages/OrgDetailPage';
 import MyReviews from '@/pages/MyReviews';
+import RecruitManageVolunteers from '@/pages/MainPage/RecruitManageVolunteers';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { userId } = useUserStore();
@@ -158,6 +159,15 @@ const App: React.FC = () => {
                     <RecruitDetail />
                   </ProtectedRoute>
                 } 
+              />
+
+              <Route 
+                path="/recruit-manage/:recruitId" 
+                element={
+                  <ProtectedRoute>
+                    <RecruitManageVolunteers />
+                  </ProtectedRoute>
+                }
               />
             </Route>
           </Routes>

@@ -6,14 +6,15 @@ import { toast } from 'react-hot-toast';
 import { recruitApi } from "@/api/recruitApi";
 
 const STATUS_MAP = {
+  'ALL': { label: '전체', className: 'bg-gray-100 text-gray-700' },
   'RECRUITING': { label: '모집중', className: 'bg-green-100 text-green-700' },
   'RECRUITMENT_CLOSED': { label: '모집마감', className: 'bg-yellow-100 text-yellow-700' },
   'ACTIVITY_COMPLETED': { label: '활동완료', className: 'bg-blue-100 text-blue-700' }
 } as const;
 
 export const OrgView: React.FC = () => {
-  const { recruits, isLoading, error, fetchRecruits } = useRecruitStore();
-  const [selectedStatus, setSelectedStatus] = useState<string>('RECRUITING');
+  const { recruits, isLoading, error, fetchRecruits, updateRecruitStatus } = useRecruitStore();
+  const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [isEditing, setIsEditing] = useState(false);
   const [selectedRecruits, setSelectedRecruits] = useState<number[]>([]);
 
@@ -22,7 +23,7 @@ export const OrgView: React.FC = () => {
   }, [fetchRecruits]);
 
   const filteredRecruits = recruits.filter(item => 
-    item.recruit.status === selectedStatus
+    selectedStatus === 'ALL' ? true : item.recruit.status === selectedStatus
   );
 
   const handleDeleteSelected = async () => {
@@ -49,6 +50,16 @@ export const OrgView: React.FC = () => {
         ? prev.filter(id => id !== recruitId)
         : [...prev, recruitId]
     );
+  };
+
+  const handleStatusChange = async (recruitId: number, newStatus: string) => {
+    try {
+      await updateRecruitStatus(recruitId, newStatus);
+      toast.success('상태가 변경되었습니다.');
+    } catch (error) {
+      console.error('상태 변경 실패:', error);
+      toast.error('상태 변경에 실패했습니다.');
+    }
   };
 
   if (isLoading) return <div className="flex justify-center items-center h-[50vh]">로딩 중...</div>;
@@ -104,6 +115,7 @@ export const OrgView: React.FC = () => {
           isEditing={isEditing}
           selectedRecruits={selectedRecruits}
           onSelectRecruit={handleSelectRecruit}
+          onStatusChange={handleStatusChange}
         />
       </div>
     </div>

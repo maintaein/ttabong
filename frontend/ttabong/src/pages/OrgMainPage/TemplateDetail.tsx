@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTemplateStore } from '@/stores/templateStore';
 import { PageLayout } from '@/layout/PageLayout';
-import { Card } from '@/components/ui/card';
 import { PageLoading } from '@/components/Loading';
 
 const TemplateDetail: React.FC = () => {

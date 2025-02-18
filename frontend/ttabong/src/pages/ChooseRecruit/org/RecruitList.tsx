@@ -7,13 +7,15 @@ interface RecruitListProps {
   isEditing: boolean;
   selectedRecruits: number[];
   onSelectRecruit: (recruitId: number) => void;
+  onStatusChange: (recruitId: number, newStatus: string) => void;
 }
 
 export const RecruitList: React.FC<RecruitListProps> = ({ 
   recruits, 
   isEditing,
   selectedRecruits,
-  onSelectRecruit 
+  onSelectRecruit,
+  onStatusChange
 }) => {
   if (!recruits) return null;
 
@@ -34,6 +36,7 @@ export const RecruitList: React.FC<RecruitListProps> = ({
           isEditing={isEditing}
           isSelected={selectedRecruits.includes(item.recruit.recruitId)}
           onSelect={() => onSelectRecruit(item.recruit.recruitId)}
+          onStatusChange={(status) => onStatusChange(item.recruit.recruitId, status)}
         />
       ))}
     </div>

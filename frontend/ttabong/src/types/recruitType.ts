@@ -78,13 +78,15 @@ export interface CreateRecruitRequest {
 }
 
 export interface UpdateRecruitRequest {
-  deadline?: string;
-  activityDate?: string;
-  activityStart?: number;
-  activityEnd?: number;
-  maxVolunteer?: number;
-  images?: string[];
-  imageCount?: number;
+  recruitId: number;
+  deadline: string;
+  activityDate: string;
+  activityStart: number;
+  activityEnd: number;
+  maxVolunteer: number;
+  images: string[];
+  imageCount: number;
+  status?: string;
 }
 
 export interface OrgRecruit {

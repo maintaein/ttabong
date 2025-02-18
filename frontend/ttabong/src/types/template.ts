@@ -47,6 +47,7 @@ export interface TemplateFormData {
   startTime: string;
   endTime: string;
   volunteerField: string[];
+  activityLocation: string;
 }
 
 // 각 Step 컴포넌트의 Props 타입
@@ -115,13 +116,16 @@ export const transformTemplateData = (localData: TemplateFormData): CreateTempla
     orgId: 1,
     categoryId: 2,
     title: localData.title,
-    activityLocation: localData.locationType === '재택' ? '재택' : `${localData.address} ${localData.detailAddress}`.trim(),
-    status: 'ALL',
+    activityLocation: localData.activityLocation,
+    status: 'ACTIVE',
     images: localData.images,
     imageCount: localData.images.length,
     contactName: localData.contactName,
     contactPhone: `${localData.contactPhone.areaCode}-${localData.contactPhone.middle}-${localData.contactPhone.last}`,
-    description: localData.description
+    description: localData.description,
+    volunteerField: localData.volunteerField,
+    volunteerTypes: localData.volunteerTypes,
+    volunteerCount: localData.volunteerCount
   };
 };
 
