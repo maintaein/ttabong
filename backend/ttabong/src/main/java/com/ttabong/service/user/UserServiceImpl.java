@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -64,6 +65,7 @@ public class UserServiceImpl implements UserService {
                 .email(user.getEmail())
                 .build();
     }
+
 
 
     @Override

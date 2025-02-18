@@ -10,18 +10,18 @@ interface MainLayoutProps {
 
 export const MainLayout = ({ children }: MainLayoutProps) => {
   return (
-    <div className="h-screen grid grid-rows-[56px_1fr_56px]">
+    <div className="h-screen grid grid-rows-[56px_1fr_56px] pb-safe">
       <TopBar />
       
       <main className="overflow-hidden">
         <ScrollProvider>
-          <ScrollArea className="h-full">
+          <ScrollArea className="h-full pb-6">
             {children}
           </ScrollArea>
         </ScrollProvider>
       </main>
 
-      <NavBar />
+      <NavBar className="pb-safe" />
     </div>
   );
 }; 
