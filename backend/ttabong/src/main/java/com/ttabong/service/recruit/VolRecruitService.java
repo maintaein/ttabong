@@ -22,7 +22,7 @@ public interface VolRecruitService {
 
     Map<String, Object> getLikedTemplates(Integer userId, Integer cursor, Integer limit);
 
-    Integer saveReaction(Integer userId, Integer templateId, Boolean isLike);
+    List<Integer> saveReaction(Integer userId, Integer templateId, Boolean isLike);
 
     void deleteReactions(List<Integer> reactionIds);
 }
