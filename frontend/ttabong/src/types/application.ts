@@ -27,4 +27,16 @@ export interface ApplicationItem {
 export interface ApplicationsResponse {
   recruitId: number;
   applications: ApplicationItem[];
+}
+
+export interface UpdateApplicationStatusRequest {
+  recruitId: number;
+  volunteerId: number;
+  applicationId: number;
+  accept: boolean;
+}
+
+export interface UpdateApplicationStatusResponse {
+  message: string;
+  application: ApplicationDetail;
 } 

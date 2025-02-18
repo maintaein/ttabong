@@ -59,7 +59,8 @@ const TemplateAndGroupWrite: React.FC = () => {
     volunteerDate: null,
     startTime: "",
     endTime: "",
-    volunteerField: []
+    volunteerField: [],
+    activityLocation: ""
   });
 
   // 상태 추가
