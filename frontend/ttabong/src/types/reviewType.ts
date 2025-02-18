@@ -8,10 +8,6 @@ interface Review {
     updatedAt: string;
     createdAt: string;
   };
-  writer: {
-    writerId: number;
-    name: string;
-  };
   group: {
     groupId: number;
     groupName: string;
@@ -20,7 +16,7 @@ interface Review {
     orgId: number;
     orgName: string;
   };
-  images: string[];
+  images: string;  
 }
 
 interface Comment {
@@ -75,11 +71,12 @@ interface ReviewDetail {
 }
 
 interface UpdateReviewRequest {
+  cacheId: number;
   title: string;
   content: string;
   isPublic: boolean;
-  images: string[];        // 업로드에 사용된 presignedUrl 목록
-  imageCount: number;
+  presignedUrl: string[];  // 새로 업로드할 이미지의 presignedUrl
+  images: string[];        // 기존 이미지 URL
 }
 
 interface ReviewEditResponse {
@@ -121,12 +118,81 @@ interface RecruitReview {
     orgId: number;
     orgName: string;
   };
-  images: string[];
+  images: string;
 }
 
 interface CommentDeleteResponse {
   message: string;
   commentId: number;
+}
+
+interface MyReview {
+  review: {
+    reviewId: number;
+    recruitId: number;
+    title: string;
+    content: string;
+    isDeleted: boolean;
+    updatedAt: string;
+    createdAt: string;
+  };
+  group: {
+    groupId: number;
+    groupName: string;
+  };
+  organization: {
+    orgId: number;
+    orgName: string;
+  };
+  images?: string;
+}
+
+interface ReviewListItem {
+  review: {
+    reviewId: number;
+    recruitId: number;
+    title: string;
+    content: string;
+    isDeleted: boolean;
+    updatedAt: string;
+    createdAt: string;
+  };
+  group: {
+    groupId: number;
+    groupName: string;
+  };
+  organization: {
+    orgId: number;
+    orgName: string;
+  };
+  images: string; 
+}
+
+interface ReviewsResponse {
+  reviews: ReviewListItem[];
+  hasMore: boolean;
+  nextCursor: number | null;
+}
+
+interface ReviewEditRequest {
+  title: string;
+  content: string;
+  isPublic: boolean;
+  images: string[];  
+}
+
+interface PresignedUrlResponse {
+  imageUrls: string[];
+}
+
+interface CreateReviewRequest {
+  recruitId: number;
+  orgId: number;
+  title: string;
+  content: string;
+  isPublic: boolean;
+  uploadedImages: string[];
+  imageCount: number;
 }
 
 export type { 
@@ -137,5 +203,11 @@ export type {
   ReviewEditResponse, 
   VisibilityResponse, 
   RecruitReview,
-  CommentDeleteResponse 
+  CommentDeleteResponse,
+  MyReview,
+  ReviewsResponse,
+  ReviewListItem,
+  ReviewEditRequest,
+  PresignedUrlResponse,
+  CreateReviewRequest
 };
