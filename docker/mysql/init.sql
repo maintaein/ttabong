@@ -10,7 +10,7 @@ USE volunteer_service;
 DROP TABLE IF EXISTS User;
 CREATE TABLE User (
     user_id        INT AUTO_INCREMENT PRIMARY KEY COMMENT '유저 ID',
-    email          VARCHAR(80) NOT NULL UNIQUE COMMENT '유저 이메일 (로그인 ID)',
+    email          VARCHAR(80) NOT NULL COMMENT '유저 이메일 (로그인 ID)',
     name           VARCHAR(50)  NOT NULL COMMENT '유저 이름',
     password       VARCHAR(256) NOT NULL COMMENT '비밀번호(해시로 바꾸고 넣어야 함)',
     phone          VARCHAR(20)  NOT NULL COMMENT '전화번호',
