@@ -33,6 +33,11 @@ logs
 **/*.backup.*
 **/*.back.*
 
+# Build output 폴더 (빌드 결과물 제외)
+build/
+build/*
+build/index.html
+
 node_modules
 bower_components
 
