@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import type { ReviewListItem } from '@/types/reviewType';
+import { ImageOff } from 'lucide-react';
 
 interface ReviewGalleryGridProps {
   reviews: ReviewListItem[];
@@ -21,12 +22,16 @@ export const ReviewGalleryGrid: React.FC<ReviewGalleryGridProps> = ({ reviews = 
           onClick={() => onReviewClick(review.review.reviewId)}
         >
           <div className="aspect-video relative overflow-hidden">
-            {review.images && (
+            {review.images ? (
               <img
                 src={review.images}
                 alt={review.review.title}
                 className="object-cover w-full h-full"
               />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                <ImageOff className="w-8 h-8 text-gray-400" />
+              </div>
             )}
           </div>
           <div className="p-4">
