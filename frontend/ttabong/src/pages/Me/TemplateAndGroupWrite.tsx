@@ -115,10 +115,6 @@ const TemplateAndGroupWrite: React.FC = () => {
     }
   }, [location.state, addPreviewImages]);
 
-  const timeToNumber = (time: string) => {
-    const [hours, minutes] = time.split(':').map(Number);
-    return hours + (minutes / 60);
-  };
 
   const uploadImage = async (url: string, image: File, index: number, retries = 3): Promise<string> => {
     for (let attempt = 0; attempt < retries; attempt++) {
@@ -155,6 +151,11 @@ const TemplateAndGroupWrite: React.FC = () => {
       }
     }
     throw new Error(`이미지 업로드에 실패했습니다 (${index + 1}번째 이미지)`);
+  };
+
+  const timeToNumber = (time: string) => {
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours + (minutes / 60);
   };
 
   // 템플릿 생성 및 저장 함수

@@ -66,5 +66,12 @@ export const recruitApi = {
 
   cancelApplication: async (applicationId: number): Promise<void> => {
     await axiosInstance.patch(`/vol/applications/${applicationId}`);
+  },
+
+  updateRecruitStatus: async (recruitId: number, status: string) => {
+    const response = await axiosInstance.patch(`/org/recruits/${recruitId}/status`, {
+      status
+    });
+    return response.data;
   }
 }; 

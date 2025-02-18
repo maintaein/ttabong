@@ -85,6 +85,7 @@ interface RecruitStore {
   setSelectedRecruitId: (id: number) => Promise<void>;
   resetSelectedRecruitId: () => void;
   fetchRecruits: () => Promise<void>;
+  updateRecruitStatus: (recruitId: number, newStatus: string) => Promise<void>;
 }
 
 export const useRecruitStore = create<RecruitStore>((set) => ({
@@ -208,6 +209,24 @@ export const useRecruitStore = create<RecruitStore>((set) => ({
       set({ error: '공고 목록을 불러오는데 실패했습니다.' });
     } finally {
       set({ isLoading: false });
+    }
+  },
+  updateRecruitStatus: async (recruitId: number, newStatus: string) => {
+    try {
+      // 간단한 상태 변경 API 사용
+      await recruitApi.updateRecruitStatus(recruitId, newStatus);
+
+      // 로컬 상태 업데이트
+      set(state => ({
+        recruits: state.recruits.map(item => 
+          item.recruit.recruitId === recruitId 
+            ? { ...item, recruit: { ...item.recruit, status: newStatus } }
+            : item
+        )
+      }));
+    } catch (error) {
+      console.error('상태 업데이트 실패:', error);
+      throw error;
     }
   },
 })); 
