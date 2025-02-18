@@ -121,7 +121,10 @@ export const transformTemplateData = (localData: TemplateFormData): CreateTempla
     imageCount: localData.images.length,
     contactName: localData.contactName,
     contactPhone: `${localData.contactPhone.areaCode}-${localData.contactPhone.middle}-${localData.contactPhone.last}`,
-    description: localData.description
+    description: localData.description,
+    volunteerField: localData.volunteerField,
+    volunteerTypes: localData.volunteerTypes,
+    volunteerCount: localData.volunteerCount
   };
 };
 

@@ -33,11 +33,12 @@ export interface Recruit {
   createdAt: string;
 }
 
-export type ApplicationStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'COMPLETED' | 'AUTO_CANCEL' | 'NO_SHOW';
+export type VolunteerApplicationStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'COMPLETED' | 'AUTO_CANCEL' | 'NO_SHOW';
+export type OrgRecruitStatus = 'RECRUITING' | 'RECRUITMENT_CLOSED' | 'ACTIVITY_COMPLETED';
 
 export interface Application {
   applicationId: number;
-  status: ApplicationStatus;
+  status: VolunteerApplicationStatus;
   evaluationDone: boolean;
   createdAt: string;
   template: {
@@ -105,7 +106,7 @@ export interface OrgRecruit {
   };
   recruit: {
     recruitId: number;
-    status: '모집중' | '모집마감' | '활동완료';
+    status: OrgRecruitStatus;
     maxVolunteer: number;
     participateVolCount: number;
     activityDate: string;
@@ -113,6 +114,14 @@ export interface OrgRecruit {
     activityEnd: number;
     deadline: string;
     createdAt: string;
+  };
+  application?: {
+    applicationId: number;
+    status: VolunteerApplicationStatus;
+  };
+  organization: {
+    orgId: number;
+    name: string;
   };
 }
 
@@ -135,9 +144,9 @@ export interface RecruitDetail {
     categoryId: number;
     title: string;
     activityLocation: string;
-    status: 'ALL' | 'YOUTH';
+    status: 'ALL' | 'YOUTH' | 'ACTIVE';
     images: string[];
-    imageId: string;
+    imageId?: string;
     contactName: string;
     contactPhone: string;
     description: string;
@@ -151,17 +160,18 @@ export interface RecruitDetail {
     activityEnd: number;
     maxVolunteer: number;
     participateVolCount: number;
-    status: string;
+    status: OrgRecruitStatus | string;
     updatedAt: string;
     createdAt: string;
   };
   organization: {
     orgId: number;
     name: string;
+    orgName?: string;
   };
   application?: {
     applicationId: number;
-    name: string;
-    status: string;
+    name?: string;
+    status: VolunteerApplicationStatus | string;
   };
 } 

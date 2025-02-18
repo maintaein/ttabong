@@ -3,17 +3,25 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import type { OrgRecruit } from '@/types/recruitType';
+import type { OrgRecruit, OrgRecruitStatus, VolunteerApplicationStatus } from '@/types/recruitType';
 import { recruitApi } from '@/api/recruitApi';
 import { useToast } from "@/hooks/use-toast";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useUserStore } from '@/stores/userStore';
+import { useRecruitStore } from '@/stores/recruitStore';
 
 const formatTime = (time: number) => {
   const hours = Math.floor(time);
   const minutes = Math.round((time - hours) * 60);
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 };
+
+const STATUS_MAP = {
+  RECRUITING: '모집중',
+  RECRUITMENT_CLOSED: '모집마감',
+  ACTIVITY_COMPLETED: '활동완료'
+} as const;
 
 const RecruitDetail: React.FC = () => {
   const navigate = useNavigate();
@@ -22,6 +30,8 @@ const RecruitDetail: React.FC = () => {
   const [recruit, setRecruit] = useState<OrgRecruit | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentImageIndex] = useState(0);
+  const { userType } = useUserStore();
+  const { applyRecruit, cancelApplication } = useRecruitStore();
   const { toast } = useToast();
 
   const slideVariants = {
@@ -66,10 +76,30 @@ const RecruitDetail: React.FC = () => {
         }
         
         const data = await recruitApi.getRecruitDetail(Number(recruitId));
-        if (!data || !data.recruit || !data.template || !data.group) {
-          throw new Error('Invalid response data');
-        }
-        setRecruit(data);
+        const transformedData: OrgRecruit = {
+          group: data.group,
+          template: {
+            ...data.template,
+            volunteerTypes: [],
+            volunteerField: []
+          },
+          recruit: {
+            ...data.recruit,
+            status: data.recruit.status === '모집중' ? 'RECRUITING' : 
+                   data.recruit.status === '모집마감' ? 'RECRUITMENT_CLOSED' : 
+                   data.recruit.status as OrgRecruitStatus
+          },
+          application: data.application ? {
+            applicationId: data.application.applicationId,
+            status: data.application.status === '승인 대기' ? 'PENDING' :
+                    data.application.status as VolunteerApplicationStatus
+          } : undefined,
+          organization: {
+            orgId: data.organization.orgId,
+            name: data.organization.name || data.organization.orgName || ''
+          }
+        };
+        setRecruit(transformedData);
       } catch (error) {
         console.error('공고 상세 조회 실패:', error);
         toast({
@@ -86,6 +116,84 @@ const RecruitDetail: React.FC = () => {
       fetchRecruitDetail();
     }
   }, [recruitId, location.state, toast]);
+
+  const handleApply = async () => {
+    try {
+      if (!recruitId) return;
+      await applyRecruit(Number(recruitId));
+      const updatedDetail = useRecruitStore.getState().recruitDetail;
+      if (updatedDetail) {
+        const transformedData: OrgRecruit = {
+          ...updatedDetail,
+          template: {
+            ...updatedDetail.template,
+            volunteerTypes: [],
+            volunteerField: []
+          },
+          recruit: {
+            ...updatedDetail.recruit,
+            status: updatedDetail.recruit.status as OrgRecruitStatus
+          },
+          application: updatedDetail.application ? {
+            applicationId: updatedDetail.application.applicationId,
+            status: updatedDetail.application.status as VolunteerApplicationStatus
+          } : undefined
+        };
+        setRecruit(transformedData);
+      }
+      toast({
+        title: "신청 완료",
+        description: "봉사 신청이 완료되었습니다."
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "오류",
+        description: "봉사 신청에 실패했습니다."
+      });
+    }
+  };
+
+  const handleCancel = async () => {
+    try {
+      if (!recruit?.application?.applicationId || !recruitId) return;
+      await cancelApplication(recruit.application.applicationId);
+      
+      // 취소 후 상세 정보 다시 불러오기
+      const data = await recruitApi.getRecruitDetail(Number(recruitId));
+      const transformedData: OrgRecruit = {
+        group: data.group,
+        template: {
+          ...data.template,
+          volunteerTypes: [],
+          volunteerField: []
+        },
+        recruit: {
+          ...data.recruit,
+          status: data.recruit.status as OrgRecruitStatus
+        },
+        application: data.application ? {
+          applicationId: data.application.applicationId,
+          status: data.application.status as VolunteerApplicationStatus
+        } : undefined,
+        organization: data.organization
+      };
+      setRecruit(transformedData);
+      
+      toast({
+        title: "신청 취소",
+        description: "봉사 신청이 취소되었습니다."
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "오류",
+        description: "봉사 신청 취소에 실패했습니다."
+      });
+    }
+  };
+
+  const displayStatus = recruit?.recruit.status ? STATUS_MAP[recruit.recruit.status] : '';
 
   if (isLoading) {
     return (
@@ -128,7 +236,7 @@ const RecruitDetail: React.FC = () => {
         >
           ← 뒤로가기
         </Button>
-        <Badge>{recruit.recruit.status}</Badge>
+        <Badge>{displayStatus}</Badge>
       </div>
 
       {/* 메인 컨텐츠 */}
@@ -272,7 +380,36 @@ const RecruitDetail: React.FC = () => {
         </Card>
       </div>
 
-      {recruit?.recruit.status === '활동완료' && (
+      {userType === 'volunteer' && (
+        <div className="mt-6">
+          {recruit?.application?.status === 'PENDING' ? (
+            <Button 
+              variant="destructive" 
+              className="w-full"
+              onClick={handleCancel}
+            >
+              신청 취소하기
+            </Button>
+          ) : (
+            <Button 
+              className="w-full"
+              onClick={handleApply}
+              disabled={
+                recruit?.recruit.status !== 'RECRUITING' ||
+                recruit?.recruit.participateVolCount >= recruit?.recruit.maxVolunteer
+              }
+            >
+              {recruit?.recruit.status !== 'RECRUITING'
+                ? STATUS_MAP.RECRUITMENT_CLOSED
+                : recruit?.recruit.participateVolCount >= recruit?.recruit.maxVolunteer
+                  ? '정원 마감'
+                  : '신청하기'}
+            </Button>
+          )}
+        </div>
+      )}
+
+      {recruit?.recruit.status === 'ACTIVITY_COMPLETED' && (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t">
           <div className="container max-w-2xl mx-auto">
             <Button 

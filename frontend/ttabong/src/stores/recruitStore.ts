@@ -41,6 +41,7 @@ interface RecruitStore {
   setSelectedRecruitId: (id: number) => Promise<void>;
   resetSelectedRecruitId: () => void;
   fetchRecruits: () => Promise<void>;
+  applyRecruit: (recruitId: number) => Promise<void>;
 }
 
 export const useRecruitStore = create<RecruitStore>((set) => ({
@@ -92,16 +93,15 @@ export const useRecruitStore = create<RecruitStore>((set) => ({
     try {
       set({ isLoading: true, error: null });
       await recruitApi.cancelApplication(applicationId);
-      set((state) => ({
-        myRecruits: state.myRecruits?.map(recruit => 
-          recruit.applicationId === applicationId 
-            ? { ...recruit, status: 'AUTO_CANCEL' }
-            : recruit
-        ) || null
-      }));
+      const response = await recruitApi.getMyApplications();
+      set({ 
+        myRecruits: response,
+        recruitDetail: null 
+      });
     } catch (error) {
       console.error('봉사 신청 취소 실패:', error);
       set({ error: '봉사 신청 취소에 실패했습니다.' });
+      throw error;
     } finally {
       set({ isLoading: false });
     }
@@ -131,6 +131,33 @@ export const useRecruitStore = create<RecruitStore>((set) => ({
     } catch (error) {
       console.error('공고 목록을 불러오는데 실패했습니다:', error);
       set({ error: '공고 목록을 불러오는데 실패했습니다.' });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+  applyRecruit: async (recruitId: number) => {
+    try {
+      set({ isLoading: true, error: null });
+      await recruitApi.applyRecruit(recruitId);
+      const response = await recruitApi.getRecruitDetail(recruitId);
+      const transformedData = {
+        ...response,
+        recruit: {
+          ...response.recruit,
+          status: response.recruit.status === '모집중' ? 'RECRUITING' : 
+                 response.recruit.status === '모집마감' ? 'RECRUITMENT_CLOSED' : 
+                 response.recruit.status
+        },
+        application: response.application ? {
+          applicationId: response.application.applicationId,
+          status: response.application.status === '승인 대기' ? 'PENDING' :
+                  response.application.status
+        } : undefined
+      };
+      set({ recruitDetail: transformedData });
+    } catch (error) {
+      console.error('봉사 신청 실패:', error);
+      throw error;
     } finally {
       set({ isLoading: false });
     }

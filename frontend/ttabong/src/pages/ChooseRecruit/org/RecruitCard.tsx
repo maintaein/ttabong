@@ -57,7 +57,7 @@ export const RecruitCard: React.FC<RecruitCardProps> = ({
       onSelect();
       return;
     }
-    navigate(`/recruits/${recruitData.recruitId}`, { state: { recruit } });
+    navigate(`/recruits/${recruitData.recruitId}`);
   };
 
   const handleReviewClick = (e: React.MouseEvent) => {

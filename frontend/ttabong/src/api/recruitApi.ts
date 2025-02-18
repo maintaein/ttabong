@@ -50,7 +50,15 @@ export const recruitApi = {
     return response.data;
   },
 
-  cancelApplication: async (applicationId: number): Promise<void> => {
-    await axiosInstance.patch(`/vol/applications/${applicationId}`);
+  applyRecruit: async (recruitId: number) => {
+    const response = await axiosInstance.post('/vol/applications', {
+      recruitId
+    });
+    return response.data;
+  },
+
+  cancelApplication: async (applicationId: number) => {
+    const response = await axiosInstance.patch(`/vol/applications/${applicationId}`);
+    return response.data;
   }
 }; 

@@ -30,7 +30,7 @@ export function ReviewWriteForm({
   onContentChange,
   onPublicChange,
 }: ReviewWriteFormProps) {
-  const { register, formState: { errors } } = useForm({
+  const { formState: { errors } } = useForm({
     resolver: zodResolver(reviewSchema),
     defaultValues: {
       title,
