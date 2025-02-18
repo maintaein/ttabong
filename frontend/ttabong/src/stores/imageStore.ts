@@ -4,7 +4,6 @@ import { devtools } from 'zustand/middleware';
 
 interface ImageState {
   presignedUrls: string[];
-  lastFetchedAt: number | null;
   previewImages: { file: File; preview: string }[];
   uploadedUrls: string[];
   fetchPresignedUrls: () => Promise<void>;
@@ -18,27 +17,16 @@ export const useImageStore = create<ImageState>()(
   devtools(
     (set, get) => ({
       presignedUrls: [],
-      lastFetchedAt: null,
       previewImages: [],
       uploadedUrls: [],
 
       fetchPresignedUrls: async () => {
-        const { presignedUrls, lastFetchedAt } = get();
-        const now = Date.now();
-        
-        if (!lastFetchedAt || 
-            now - lastFetchedAt > 10 * 60 * 1000 || 
-            presignedUrls.length < 10) {
-          try {
-            const response = await imageApi.getPresignedUrls();
-            set({ 
-              presignedUrls: response.imageUrls,
-              lastFetchedAt: now
-            });
-          } catch (error) {
-            console.error('Presigned URLs 발급 실패:', error);
-            throw error;
-          }
+        try {
+          const response = await imageApi.getPresignedUrls();
+          set({ presignedUrls: response.imageUrls });
+        } catch (error) {
+          console.error('Presigned URLs 발급 실패:', error);
+          throw error;
         }
       },
 
@@ -101,7 +89,6 @@ export const useImageStore = create<ImageState>()(
         get().previewImages.forEach(({ preview }) => URL.revokeObjectURL(preview));
         set({
           presignedUrls: [],
-          lastFetchedAt: null,
           previewImages: [],
           uploadedUrls: []
         });

@@ -1,140 +1,173 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import type { OrgRecruit } from '@/types/recruitType';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { recruitApi } from "@/api/recruitApi";
+import type { RecruitItem } from '@/types/recruit';
 import { useNavigate } from 'react-router-dom';
+import { MoreVertical, Edit, Clock, CheckCircle, Users, FileEdit } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { formatDate, formatTimeRange } from '@/lib/dateUtils';
 
 const STATUS_MAP = {
-  '모집중': { label: '모집중', className: 'bg-green-100 text-green-700' },
-  '모집마감': { label: '모집마감', className: 'bg-yellow-100 text-yellow-700' },
-  '활동완료': { label: '활동완료', className: 'bg-blue-100 text-blue-700' },
+  'RECRUITING': { label: '모집중', className: 'bg-green-100 text-green-700' },
+  'RECRUITMENT_CLOSED': { label: '모집마감', className: 'bg-yellow-100 text-yellow-700' },
+  'ACTIVITY_COMPLETED': { label: '활동완료', className: 'bg-blue-100 text-blue-700' }
 } as const;
 
 interface RecruitCardProps {
-  recruit: OrgRecruit;
-  onDelete: () => void;
+  recruit: RecruitItem;
+  isEditing: boolean;
+  isSelected: boolean;
+  onSelect: () => void;
+  onStatusChange: (status: string) => void;
 }
 
-const formatTime = (time: number) => {
-  const hours = Math.floor(time);
-  const minutes = Math.round((time - hours) * 60);
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-};
-
-export const RecruitCard: React.FC<RecruitCardProps> = ({ recruit, onDelete }) => {
-  const { toast } = useToast();
+export const RecruitCard: React.FC<RecruitCardProps> = ({ 
+  recruit, 
+  isEditing,
+  isSelected,
+  onSelect,
+  onStatusChange
+}) => {
   const navigate = useNavigate();
-
-  const handleDelete = async () => {
-    try {
-      await recruitApi.deleteRecruit(recruit.recruit.recruitId);
-      toast({
-        title: "공고 삭제",
-        description: "공고가 삭제되었습니다.",
-      });
-      onDelete();
-    } catch (error) {
-      console.error("공고 삭제 오류:", error);
-      toast({
-        title: "오류",
-        description: "공고 삭제에 실패했습니다.",
-        variant: "destructive",
-      });
-    }
-  };
+  const { group, template, recruit: recruitData } = recruit;
 
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate('/template-and-group-write', {
+    navigate(`/org/recruits/${recruitData.recruitId}`, { state: { isEditing: true } });
+  };
+
+  const handleManageVolunteers = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/recruit-manage/${recruitData.recruitId}`);
+  };
+
+  const handleWriteReview = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate('/review-write', {
       state: { 
-        isRecruitEdit: true,
-        recruitId: recruit.recruit.recruitId,
-        templateId: recruit.template.templateId,
-        template: recruit.template,
-        recruitData: {
-          deadline: recruit.recruit.deadline,
-          activityDate: recruit.recruit.activityDate,
-          activityStart: recruit.recruit.activityStart,
-          activityEnd: recruit.recruit.activityEnd,
-          maxVolunteer: recruit.recruit.maxVolunteer,
-          groupId: recruit.group.groupId,
-          status: recruit.recruit.status
-        }
+        recruitId: recruitData.recruitId,
+        isOrgReview: true
       }
     });
   };
 
-  const handleClick = () => {
-    console.log('Navigating to detail with recruitId:', recruit.recruit.recruitId);
-    navigate(`/recruits/${recruit.recruit.recruitId}`, { 
-      state: { recruit } 
-    });
+  const handleCardClick = () => {
+    if (!isEditing) {
+      navigate(`/org/recruits/${recruitData.recruitId}`);
+    }
   };
 
   return (
     <Card 
-      className="p-4 hover:shadow-md transition-shadow cursor-pointer"
-      onClick={handleClick}
+      className={cn(
+        "p-4 hover:shadow-md transition-shadow cursor-pointer",
+        isSelected && "border-primary"
+      )}
+      onClick={handleCardClick}
     >
-      <div className="flex justify-between items-start">
-        <div className="space-y-2">
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">{recruit.group.groupName}</p>
-            <h3 className="font-semibold">{recruit.template.title}</h3>
+      <div className="flex flex-col space-y-4">
+        <div className="flex items-start justify-between">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-muted-foreground truncate">{group.groupName}</p>
+            <h3 className="font-semibold line-clamp-2">{template.title}</h3>
           </div>
-          <div className="space-y-1">
-            <p className="text-sm">
-              활동일: {recruit.recruit.activityDate} {formatTime(recruit.recruit.activityStart)}~{formatTime(recruit.recruit.activityEnd)}
-            </p>
-            <p className="text-sm">
-              신청현황: {recruit.recruit.participateVolCount}/{recruit.recruit.maxVolunteer}명
-            </p>
-            <p className="text-sm text-muted-foreground">
-              마감일: {new Date(recruit.recruit.deadline).toLocaleDateString()}
-            </p>
+
+          <div className="flex items-center gap-2">
+            <Badge 
+              variant="secondary"
+              className={cn(
+                STATUS_MAP[recruitData.status as keyof typeof STATUS_MAP]?.className
+              )}
+            >
+              {STATUS_MAP[recruitData.status as keyof typeof STATUS_MAP]?.label}
+            </Badge>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleEditClick}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  공고 수정
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => {
+                  e.stopPropagation();
+                  onStatusChange('RECRUITMENT_CLOSED');
+                }}>
+                  <Clock className="mr-2 h-4 w-4" />
+                  모집 마감
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => {
+                  e.stopPropagation();
+                  onStatusChange('ACTIVITY_COMPLETED');
+                }}>
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  활동 완료
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
-        <Badge 
-          variant="secondary"
-          className={cn(
-            "ml-2",
-            STATUS_MAP[recruit.recruit.status].className
-          )}
-        >
-          {STATUS_MAP[recruit.recruit.status].label}
-        </Badge>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleEditClick}
-          >
-            수정
-          </Button>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="sm" className="text-destructive">
-                삭제
+
+        <div className="grid grid-cols-2 gap-2 text-sm">
+          <div>
+            <span className="text-muted-foreground">활동일시</span>
+            <p>{formatDate(recruitData.activityDate)}</p>
+            <p>{formatTimeRange(recruitData.activityStart, recruitData.activityEnd)}</p>
+          </div>
+          <div>
+            <span className="text-muted-foreground">신청현황</span>
+            <p>{recruitData.participateVolCount}/{recruitData.maxVolunteer}명</p>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2">
+          {isEditing ? (
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={onSelect}
+              className="h-4 w-4"
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleManageVolunteers(e);
+                }}
+              >
+                <Users className="mr-2 h-4 w-4" />
+                지원자 관리
               </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>공고 삭제</AlertDialogTitle>
-                <AlertDialogDescription>
-                  이 공고를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>취소</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete}>삭제</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+
+              {recruitData.status === 'ACTIVITY_COMPLETED' && (
+                <Button
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleWriteReview(e);
+                  }}
+                >
+                  <FileEdit className="mr-2 h-4 w-4" />
+                  후기 작성
+                </Button>
+              )}
+            </>
+          )}
         </div>
       </div>
     </Card>

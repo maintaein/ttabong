@@ -4,8 +4,9 @@ import type {
   CreateRecruitRequest, 
   UpdateRecruitRequest,
   GetApplicationsParams,
-  RecruitDetail
 } from '@/types/recruitType';
+
+const RECRUITS_PER_PAGE = 10;  // 한 페이지당 공고 수
 
 export const recruitApi = {
   getMyApplications: async (params?: GetApplicationsParams): Promise<Application[]> => {
@@ -32,9 +33,10 @@ export const recruitApi = {
     return response.data;
   },
 
-  deleteRecruit: async (recruitId: number) => {
+  deleteRecruit: async (recruitIds: number[]) => {
+    console.log('Sending delete request:', recruitIds); // 디버깅용
     const response = await axiosInstance.patch('/org/recruits/delete', {
-      deletedRecruits: recruitId
+      deletedRecruits: recruitIds
     });
     return response.data;
   },
@@ -44,12 +46,32 @@ export const recruitApi = {
     return response.data;
   },
 
-  getRecruitDetail: async (recruitId: number): Promise<RecruitDetail> => {
-    const response = await axiosInstance.get(`/vol/recruits/${recruitId}`);
+  getRecruitList: async (cursor: number = 0) => {
+    const response = await axiosInstance.get(`/org/recruits?cursor=${cursor}&limit=${RECRUITS_PER_PAGE}`);
+    const recruits = response.data.recruits;
+    
+    return {
+      recruits,
+      hasMore: recruits.length === RECRUITS_PER_PAGE,
+      nextCursor: recruits.length ? recruits[recruits.length - 1].recruit.recruitId : null
+    };
+  },
+
+  getRecruitDetail: async (recruitId: number) => {
+    console.log('API 호출:', `/org/recruits/${recruitId}`);
+    const response = await axiosInstance.get(`/org/recruits/${recruitId}`);
+    console.log('API 응답:', response.data);
     return response.data;
   },
 
   cancelApplication: async (applicationId: number): Promise<void> => {
     await axiosInstance.patch(`/vol/applications/${applicationId}`);
+  },
+
+  updateRecruitStatus: async (recruitId: number, status: string) => {
+    const response = await axiosInstance.patch(`/org/recruits/${recruitId}/status`, {
+      status
+    });
+    return response.data;
   }
 }; 
