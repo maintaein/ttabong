@@ -15,7 +15,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
       
       <main className="overflow-hidden">
         <ScrollProvider>
-          <ScrollArea className="h-full pb-6">
+          <ScrollArea className="h-full">
             {children}
           </ScrollArea>
         </ScrollProvider>

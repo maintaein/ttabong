@@ -2,39 +2,50 @@ import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import type { RecruitDetail } from '@/types/recruitType';
+import { formatTimeRange, formatDate } from '@/lib/dateUtils';
 
 interface RecruitDetailCardProps {
-  recruitDetail: RecruitDetail;
+  recruitDetail: {
+    template: {
+      templateId: number;
+      title: string;
+      description: string;
+      activityLocation: string;
+      images: string[];
+      contactName: string;
+      contactPhone: string;
+      volunteerField: string[];
+      volunteerTypes: string[];
+    };
+    recruit: {
+      recruitId: number;
+      status: string;
+      activityDate: string;
+      activityStart: number;
+      activityEnd: number;
+      deadline: string;
+      maxVolunteer: number;
+      participateVolCount: number;
+    };
+    organization: {
+      orgId: number;
+      name: string;
+    };
+  };
 }
 
 export function RecruitDetailCard({ recruitDetail }: RecruitDetailCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-
-  function formatTime(time: number): string {
-    const hours = Math.floor(time);
-    const minutes = Math.round((time - hours) * 60);
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      weekday: 'short'
-    });
-  };
 
   return (
     <Card className="mx-4 mb-4">
       <div className="p-4">
         <div className="flex justify-between items-start">
           <div>
-            <p className="text-sm text-muted-foreground">{recruitDetail.group.groupName}</p>
+            <p className="text-sm text-muted-foreground">{recruitDetail.organization.name}</p>
             <h2 className="text-lg font-semibold mb-2">{recruitDetail.template.title}</h2>
             <p className="text-sm">📍 {recruitDetail.template.activityLocation}</p>
-            <p className="text-sm">⏰ {formatTime(recruitDetail.recruit.activityStart)}~{formatTime(recruitDetail.recruit.activityEnd)}</p>
+            <p className="text-sm">⏰ {formatTimeRange(recruitDetail.recruit.activityStart, recruitDetail.recruit.activityEnd)}</p>
             <p className="text-sm">👥 {recruitDetail.recruit.participateVolCount}/{recruitDetail.recruit.maxVolunteer}명</p>
           </div>
           <Button 

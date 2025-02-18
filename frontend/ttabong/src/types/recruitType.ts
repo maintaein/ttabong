@@ -78,13 +78,15 @@ export interface CreateRecruitRequest {
 }
 
 export interface UpdateRecruitRequest {
-  deadline?: string;
-  activityDate?: string;
-  activityStart?: number;
-  activityEnd?: number;
-  maxVolunteer?: number;
-  images?: string[];
-  imageCount?: number;
+  recruitId: number;
+  deadline: string;
+  activityDate: string;
+  activityStart: number;
+  activityEnd: number;
+  maxVolunteer: number;
+  images: string[];
+  imageCount: number;
+  status?: string;
 }
 
 export interface OrgRecruit {
@@ -164,4 +166,19 @@ export interface RecruitDetail {
     name: string;
     status: string;
   };
+}
+
+export interface APITemplate {
+  templateId: number;
+  groupId: number;
+  title: string;
+  description: string;
+  activityLocation: string;
+  categoryId: number;
+  status: string;
+  images: string[];
+  contactName: string;
+  contactPhone: string;
+  maxVolunteer: number;
+  createdAt: string;
 } 

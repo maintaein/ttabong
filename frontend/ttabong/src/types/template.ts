@@ -47,12 +47,15 @@ export interface TemplateFormData {
   startTime: string;
   endTime: string;
   volunteerField: string[];
+  activityLocation: string;
 }
 
 // 각 Step 컴포넌트의 Props 타입
 export interface StepProps {
   templateData: TemplateFormData;
   setTemplateData: React.Dispatch<React.SetStateAction<TemplateFormData>>;
+  imageFiles?: File[];
+  setImageFiles?: React.Dispatch<React.SetStateAction<File[]>>;
 }
 
 // Daum 우편번호 API 응답 타입 추가
@@ -67,15 +70,18 @@ export interface DaumPostcodeData {
 // API 응답 타입
 export interface APITemplate {
   templateId: number;
-  orgId: number;
-  categoryId: number;
+  groupId: number;
   title: string;
+  description: string;
   activityLocation: string;
+  categoryId: number;
   status: string;
-  imageId: string;
+  images: string[];
   contactName: string;
   contactPhone: string;
-  description: string;
+  maxVolunteer: number;
+  activityStart: number;
+  activityEnd: number;
   createdAt: string;
 }
 
@@ -106,12 +112,12 @@ export interface CreateTemplateRequest {
 // 데이터 변환 유틸리티 함수
 export const transformTemplateData = (localData: TemplateFormData): CreateTemplateRequest => {
   return {
-    groupId: localData.groupId || 0,
-    orgId: 5,
-    categoryId: 3,
+    groupId: localData.groupId || 1,
+    orgId: 1,
+    categoryId: 2,
     title: localData.title,
-    activityLocation: `${localData.address} ${localData.detailAddress}`.trim(),
-    status: "ALL",
+    activityLocation: localData.activityLocation,
+    status: 'ACTIVE',
     images: localData.images,
     imageCount: localData.images.length,
     contactName: localData.contactName,
@@ -119,7 +125,21 @@ export const transformTemplateData = (localData: TemplateFormData): CreateTempla
     description: localData.description,
     volunteerField: localData.volunteerField,
     volunteerTypes: localData.volunteerTypes,
-    volunteerCount: localData.volunteerCount,
+    volunteerCount: localData.volunteerCount
   };
 };
+
+export interface PresignedUrlResponse {
+  message: string;
+  templateId: number | null;
+  images: string[];
+  imageUrl: string | null;
+}
+
+export interface CreateTemplateResponse {
+  message: string;
+  templateId: number;
+  images: string[];
+  imageUrl: string;
+}
 

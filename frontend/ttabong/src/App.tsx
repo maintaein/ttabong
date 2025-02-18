@@ -4,6 +4,8 @@ import { ThemeProvider } from "@/hooks/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { useUserStore } from '@/stores/userStore';
 import { Layout } from "@/layout/Layout";
+import TemplateAndGroupWrite from '@/pages/Me/TemplateAndGroupWrite';
+import RecruitDetail from '@/pages/ChooseRecruit/org/RecruitDetail';
 
 // Pages
 import Login from '@/pages/Login';
@@ -15,13 +17,14 @@ import ReviewDetail from '@/pages/ReviewFind/ReviewDetail';
 import ReviewDetailList from '@/pages/ReviewFind/ReviewDetailList';
 import MyPage from '@/pages/MyPage';
 import OrgMyPage from '@/pages/OrgMyPage';
-import RecruitDetail from '@/pages/ChooseRecruit/org/RecruitDetail';
 import ReviewWrite from '@/pages/ChooseRecruit/ReviewWrite';
 import SignUp from '@/pages/SignUp';
 import OrgSignUp from '@/pages/OrgSignUp';
 import AddRecruit from '@/pages/AddRecruit';
 import ChooseRecruit from './pages/ChooseRecruit';
+import OrgDetailPage from '@/pages/OrgDetailPage';
 import MyReviews from '@/pages/MyReviews';
+import RecruitManageVolunteers from '@/pages/MainPage/RecruitManageVolunteers';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { userId } = useUserStore();
@@ -44,6 +47,7 @@ const App: React.FC = () => {
   return (
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <Toaster />
+      <Toaster />
       <div className="min-h-screen bg-zinc-100 dark:bg-zinc-900">
         <div className="mx-auto max-w-[600px] min-w-[320px] h-screen bg-background">
           <Routes>
@@ -55,7 +59,7 @@ const App: React.FC = () => {
             
             {/* 인증이 필요한 라우트 */}
             <Route element={<Layout />}>
-              <Route path="/main" element={
+              <Route path="/add-recruit" element={
                 <ProtectedRoute>
                   <UserTypeRoute 
                     volunteerComponent={MainPage}
@@ -118,9 +122,21 @@ const App: React.FC = () => {
                 </ProtectedRoute>
               } />
 
-              <Route path="/add-recruit" element={
+              <Route path="/main" element={
                 <ProtectedRoute>
                   <AddRecruit />
+                </ProtectedRoute>
+              } />
+
+              <Route path="/template-and-group-write" element={
+                <ProtectedRoute>
+                  <TemplateAndGroupWrite />
+                </ProtectedRoute>
+              } />
+
+              <Route path="/org-detail" element={
+                <ProtectedRoute>
+                  <OrgDetailPage />
                 </ProtectedRoute>
               } />
 
@@ -135,6 +151,24 @@ const App: React.FC = () => {
                   <MyReviews />
                 </ProtectedRoute>
               } />
+
+              <Route 
+                path="/org/recruits/:recruitId" 
+                element={
+                  <ProtectedRoute>
+                    <RecruitDetail />
+                  </ProtectedRoute>
+                } 
+              />
+
+              <Route 
+                path="/recruit-manage/:recruitId" 
+                element={
+                  <ProtectedRoute>
+                    <RecruitManageVolunteers />
+                  </ProtectedRoute>
+                }
+              />
             </Route>
           </Routes>
         </div>
