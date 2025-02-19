@@ -41,19 +41,31 @@ axiosInstance.interceptors.response.use(
       message: error.response?.data?.message || '서버 오류가 발생했습니다.'
     };
 
-    // 401 에러 처리
+    // 400, 403 에러 처리 (로그인 실패 등)
+    if (error.response?.status === 400 || error.response?.status === 403) {
+      const errorMessage = error.response.data.message;
+      return Promise.reject({
+        status: error.response.status,
+        message: errorMessage
+      });
+    }
+
+    // 401 에러 처리 (인증 실패)
     if (error.response?.status === 401) {
       localStorage.removeItem('access_token');
-      toast.error('로그인이 필요합니다.', {
-        description: error.response?.data?.message || '로그인 페이지로 이동합니다.'
-      });
-      setTimeout(() => {
-        window.location.href = '/login';
-      }, 1500); // 토스트 메시지를 볼 수 있도록 1.5초 지연
+      // 현재 페이지가 로그인 페이지가 아닐 때만 리다이렉션
+      if (!window.location.pathname.includes('/login')) {
+        toast.error('로그인이 필요합니다.', {
+          description: error.response.data.message || '로그인 페이지로 이동합니다.'
+        });
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 1500);
+      }
       return Promise.reject(apiError);
     }
 
-    // 서버 에러 메시지 우선 사용
+    // 기타 에러 처리
     toast.error('오류가 발생했습니다.', {
       description: error.response?.data?.message || apiError.message
     });
