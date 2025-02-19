@@ -7,6 +7,7 @@ import type {
   OrgRecruitStatus,
   VolunteerApplicationStatus 
 } from '@/types/recruitType';
+import { AxiosError } from 'axios';
 
 // RecruitItem 타입 추가
 interface RecruitItem {
@@ -65,6 +66,7 @@ interface RecruitStore {
   fetchRecruits: () => Promise<void>;
   applyRecruit: (recruitId: number) => Promise<void>;
   updateRecruitStatus: (recruitId: number, newStatus: string) => Promise<void>;
+  updateLocalRecruitStatus: (recruitId: number, newStatus: string) => void;
 }
 
 export const useRecruitStore = create<RecruitStore>((set) => ({
@@ -95,9 +97,14 @@ export const useRecruitStore = create<RecruitStore>((set) => ({
           hasMore: response.length === (params?.limit || 10)
         });
       }
-    } catch (error: any) {
-      console.error('봉사내역 조회 실패:', error);
-      set({ error: error.response?.data?.message || '봉사내역을 불러오는데 실패했습니다.' });
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        console.error('봉사내역 조회 실패:', error);
+        set({ error: error.response?.data?.message || '봉사내역을 불러오는데 실패했습니다.' });
+      } else {
+        console.error('봉사내역 조회 실패:', error);
+        set({ error: '봉사내역을 불러오는데 실패했습니다.' });
+      }
     } finally {
       set({ isLoading: false });
     }
@@ -172,9 +179,9 @@ export const useRecruitStore = create<RecruitStore>((set) => ({
     try {
       const response = await recruitApi.getRecruitDetail(recruitId, userType);
       set({ recruitDetail: response, error: null });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('공고 상세 조회 실패:', error);
-      set({ error: error.response?.data?.message || '공고를 불러오는데 실패했습니다.' });
+      set({ error: error instanceof AxiosError ? error.response?.data?.message || '공고를 불러오는데 실패했습니다.' : '공고를 불러오는데 실패했습니다.' });
     } finally {
       set({ isLoading: false });
     }
@@ -189,9 +196,9 @@ export const useRecruitStore = create<RecruitStore>((set) => ({
       set({ isLoading: true, error: null });
       const response = await recruitApi.getOrgRecruits();
       set({ recruits: response.recruits });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('공고 목록 조회 실패:', error);
-      set({ error: error.response?.data?.message || '공고 목록을 불러오는데 실패했습니다.' });
+      set({ error: error instanceof AxiosError ? error.response?.data?.message || '공고 목록을 불러오는데 실패했습니다.' : '공고 목록을 불러오는데 실패했습니다.' });
     } finally {
       set({ isLoading: false });
     }
@@ -216,9 +223,9 @@ export const useRecruitStore = create<RecruitStore>((set) => ({
       };
       
       set({ recruitDetail: transformedData });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('봉사 신청 실패:', error);
-      throw error.response?.data?.message || '봉사 신청에 실패했습니다.';
+      throw error instanceof AxiosError ? error.response?.data?.message || '봉사 신청에 실패했습니다.' : '봉사 신청에 실패했습니다.';
     } finally {
       set({ isLoading: false });
     }
@@ -241,4 +248,13 @@ export const useRecruitStore = create<RecruitStore>((set) => ({
       throw error;
     }
   },
+  updateLocalRecruitStatus: (recruitId: number, newStatus: string) => {
+    set(state => ({
+      recruits: state.recruits.map(item => 
+        item.recruit.recruitId === recruitId 
+          ? { ...item, recruit: { ...item.recruit, status: newStatus as OrgRecruitStatus } }
+          : item
+      )
+    }));
+  }
 })); 
