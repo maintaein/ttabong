@@ -10,12 +10,14 @@ export default [
     rules: {
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': ['warn', {
-        varsIgnorePattern: '^_',
+        varsIgnorePattern: '^(React|_)',
         argsIgnorePattern: '^_',
         ignoreRestSiblings: true
       }],
       'import/no-unused-modules': 'off',
-      '@typescript-eslint/no-unused-expressions': 'warn'
+      '@typescript-eslint/no-unused-expressions': 'warn',
+      'react/react-in-jsx-scope': 'off',
+      'react/jsx-uses-react': 'off'
     }
   },
   { languageOptions: { globals: globals.browser } },

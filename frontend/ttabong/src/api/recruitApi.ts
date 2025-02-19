@@ -35,7 +35,7 @@ export const recruitApi = {
   },
 
   deleteRecruit: async (recruitIds: number[]) => {
-    console.log('Sending delete request:', recruitIds); // 디버깅용
+    console.log('Sending delete request:', recruitIds);
     const response = await axiosInstance.patch('/org/recruits/delete', {
       deletedRecruits: recruitIds
     });
@@ -101,4 +101,13 @@ export const recruitApi = {
       throw error;
     }
   },
+
+  getTemplateDetail: async (templateId: number) => {
+    try {
+      const response = await axiosInstance.get(`/vol/templates/${templateId}`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data?.message || '템플릿 정보를 불러오는데 실패했습니다.';
+    }
+  }
 }; 

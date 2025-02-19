@@ -65,3 +65,9 @@ build/
 *.bin
 *.dll
 *.dmg
+
+# index.html 파일 제외
+index.html
+/index.html
+/public/index.html
+**/index.html
