@@ -18,10 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -74,11 +71,17 @@ public class VolRecruitServiceImpl implements VolRecruitService {
     // 3. 모집 공고 신청
     @Override
     public Application applyRecruit(int userId, int recruitId) {
+
+        if (applicationRepository.existsByVolunteerUserIdAndRecruitId(userId, recruitId)) {
+            throw new ConflictException("이미 신청한 모집 공고입니다.");
+        }
+
         Volunteer volunteer = volunteerRepository.findByUserIdAndUserIsDeletedFalse(userId)
                 .orElseThrow(() -> new NotFoundException("봉사자를 찾을 수 없습니다."));
 
         Recruit recruit = recruitRepository.findByIdAndIsDeletedFalse(recruitId)
                 .orElseThrow(() -> new NotFoundException("봉사 공고를 찾을 수 없습니다."));
+
 
         Application application = Application.builder()
                 .volunteer(volunteer)
@@ -146,22 +149,39 @@ public class VolRecruitServiceImpl implements VolRecruitService {
 
     // 8. 특정 템플릿 "좋아요" 혹은 "싫어요"하기
     @Override
-    public Integer saveReaction(Integer userId, Integer recruitId, Boolean isLike) {
+    public List<Integer> saveReaction(Integer userId, Integer templateId, Boolean isLike) {
         Volunteer volunteer = volunteerRepository.findByUserIdAndUserIsDeletedFalse(userId)
                 .orElseThrow(() -> new NotFoundException("봉사자를 찾을 수 없습니다."));
 
-        Recruit recruit = recruitRepository.findByIdAndIsDeletedFalse(recruitId)
-                .orElseThrow(() -> new NotFoundException("해당 봉사공고가 존재하지 않습니다."));
+        Template template = templateRepository.findByIdAndIsDeletedFalse(templateId)
+                .orElseThrow(() -> new NotFoundException("해당 템플릿이 존재하지 않습니다."));
 
-        VolunteerReaction reaction = VolunteerReaction.builder()
-                .volunteer(volunteer)
-                .recruit(recruit)
-                .isLike(isLike)
-                .isDeleted(false)
-                .createdAt(Instant.now())
-                .build();
+        List<Recruit> recruits = recruitRepository.findByTemplateAndIsDeletedFalse(template);
 
-        return reactionRepository.save(reaction).getId();
+        // 해당 템플릿을 참조하는 공고가 없으면 아무 작업도 하지 않음.
+        if (recruits.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        //기존에 리액션을 했었는가?
+        boolean exists = reactionRepository.existsByVolunteerAndRecruitTemplate(volunteer, template);
+        if (exists) { //그렇다면 소프트삭제
+            reactionRepository.softDeleteByVolunteerAndTemplate(volunteer, template);
+        }
+
+        List<VolunteerReaction> newReactions = recruits.stream()
+                .map(recruit -> VolunteerReaction.builder()
+                        .volunteer(volunteer)
+                        .recruit(recruit)
+                        .isLike(isLike)
+                        .isDeleted(false)
+                        .createdAt(Instant.now())
+                        .build())
+                .toList();
+
+        return reactionRepository.saveAll(newReactions).stream()
+                .map(VolunteerReaction::getId)
+                .toList();
     }
 
 

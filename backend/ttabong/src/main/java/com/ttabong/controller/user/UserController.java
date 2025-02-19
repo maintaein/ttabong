@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Set;
+
 @RestController
 @RequestMapping("") //자동 기본값이 /api
 public class UserController extends LoggerConfig {
@@ -28,12 +30,21 @@ public class UserController extends LoggerConfig {
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         logger.info("1. 유저로그인, <POST> \"/user/login\"");
 
+        if (!Set.of("volunteer", "organization").contains(loginRequest.getUserType())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new LoginResponse(400, "잘못된 회원 타입입니다.", null, null, null));
+        }
+
 
         UserLoginResponseDto loginResult = userService.login(loginRequest);
 
-        if (loginResult == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new LoginResponse(401, "이메일 또는 비밀번호가 일치하지 않습니다.", null, null, null));
+        if (loginResult.getStatus() != 200) {
+            return ResponseEntity.status(loginResult.getStatus())
+                    .body(new LoginResponse(
+                            loginResult.getStatus(),
+                            loginResult.getMessage(),
+                            null, null, null
+                    ));
         }
 
         String accessToken = jwtProvider.createToken(loginResult.getUserId().toString(), loginRequest.getUserType());
