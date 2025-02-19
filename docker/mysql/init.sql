@@ -330,12 +330,12 @@ UPDATE Review AS child
     JOIN (
     SELECT r1.review_id AS parent_id, r1.recruit_id, r1.org_id, r1.writer_id
     FROM Review r1
-    JOIN Organization o ON r1.org_id = o.org_id
-    WHERE r1.writer_id = o.user_id
+    JOIN Organization o ON r1.org_id = o.org_id AND r1.writer_id = o.user_id
     ) AS parent
 ON child.recruit_id = parent.recruit_id
     AND child.org_id = parent.org_id
-    AND child.review_id > parent.parent_id
+    AND child.writer_id <> parent.writer_id
+    AND (child.parent_review_id IS NULL OR child.parent_review_id <> parent.parent_id)
     SET child.parent_review_id = parent.parent_id;
 
 SET SQL_SAFE_UPDATES = 1;
