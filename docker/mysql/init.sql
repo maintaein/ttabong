@@ -362,7 +362,10 @@ INSERT INTO Application (volunteer_id, recruit_id, status, evaluation_done, is_d
 VALUES
     (1, 1, 'APPROVED', TRUE, FALSE, NOW(), NOW()),
     (1, 3, 'PENDING', FALSE, FALSE, NOW(), NOW()),
+    (1, 6, 'PENDING', FALSE, FALSE, NOW(), NOW()),
+    (2, 1, 'APPROVED', FALSE, FALSE, NOW(), NOW()),
     (2, 5, 'APPROVED', TRUE, FALSE, NOW(), NOW()),
+    (2, 4, 'APPROVED', TRUE, FALSE, NOW(), NOW()),
     (2, 7, 'REJECTED', FALSE, FALSE, NOW(), NOW()),
     (3, 2, 'COMPLETED', TRUE, FALSE, NOW(), NOW()),
     (3, 8, 'AUTO_CANCEL', FALSE, FALSE, NOW(), NOW());
