@@ -45,18 +45,20 @@ axiosInstance.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('access_token');
       toast.error('로그인이 필요합니다.', {
-        description: '로그인 페이지로 이동합니다.'
+        description: error.response?.data?.message || '로그인 페이지로 이동합니다.'
       });
-      window.location.href = '/login';
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 1500); // 토스트 메시지를 볼 수 있도록 1.5초 지연
       return Promise.reject(apiError);
     }
 
-    // 기타 에러 메시지 토스트로 표시
+    // 서버 에러 메시지 우선 사용
     toast.error('오류가 발생했습니다.', {
-      description: apiError.message
+      description: error.response?.data?.message || apiError.message
     });
 
-    throw apiError;
+    throw error.response?.data?.message || apiError.message;
   }
 );
 

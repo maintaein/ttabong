@@ -24,7 +24,7 @@ type RecruitData = {
   };
 };
 
-// 카드에 표시할 데이터 타입
+// 카드에 표시할 데이터 타입 
 type VolunteerPost = {
   id: number;
   title: string;
