@@ -66,6 +66,7 @@ interface RecruitStore {
   fetchRecruits: () => Promise<void>;
   applyRecruit: (recruitId: number) => Promise<void>;
   updateRecruitStatus: (recruitId: number, newStatus: string) => Promise<void>;
+  updateLocalRecruitStatus: (recruitId: number, newStatus: string) => void;
 }
 
 export const useRecruitStore = create<RecruitStore>((set) => ({
@@ -247,4 +248,13 @@ export const useRecruitStore = create<RecruitStore>((set) => ({
       throw error;
     }
   },
+  updateLocalRecruitStatus: (recruitId: number, newStatus: string) => {
+    set(state => ({
+      recruits: state.recruits.map(item => 
+        item.recruit.recruitId === recruitId 
+          ? { ...item, recruit: { ...item.recruit, status: newStatus as OrgRecruitStatus } }
+          : item
+      )
+    }));
+  }
 })); 

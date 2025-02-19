@@ -70,7 +70,7 @@ const TemplateAndGroupWrite: React.FC = () => {
   useEffect(() => {
     if (isCompleted) {
       setTimeout(() => {
-        navigate("/choose-recruit");
+        navigate("/main");
       }, 2000);
     }
   }, [isCompleted, navigate]);

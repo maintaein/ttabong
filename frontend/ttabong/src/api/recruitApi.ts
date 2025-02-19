@@ -6,6 +6,7 @@ import type {
   GetApplicationsParams,
 } from '@/types/recruitType';
 import { AxiosError } from 'axios';
+import axios from 'axios';
 
 const RECRUITS_PER_PAGE = 10;  // 한 페이지당 공고 수
 
@@ -90,5 +91,20 @@ export const recruitApi = {
       status
     });
     return response.data;
-  }
+  },
+
+  closeRecruit: async (recruitId: number) => {
+    try {
+      const response = await axiosInstance.patch(`/org/recruits/close`, {
+        recruitId
+      });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const message = error.response?.data?.message || '공고 마감에 실패했습니다.';
+        throw new Error(message);
+      }
+      throw error;
+    }
+  },
 }; 
