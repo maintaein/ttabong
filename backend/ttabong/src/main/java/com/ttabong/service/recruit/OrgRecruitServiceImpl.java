@@ -111,7 +111,9 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                                 .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.valueOf(10.00))
                                 .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.valueOf(12.00))
                                 .maxVolunteer(recruit.getMaxVolunteer())
-                                .participateVolCount(recruit.getParticipateVolCount())
+                                .participateVolCount(applicationRepository.countByRecruitIdAndStatusNotInAndIsDeletedFalse(
+                                        recruit.getId(), List.of("PENDING", "REJECTED")
+                                ))
                                 .status(recruit.getStatus())
                                 .updatedAt(Optional.ofNullable(recruit.getUpdatedAt())
                                         .map(d -> d.atZone(ZoneId.systemDefault()).toLocalDateTime())
@@ -188,7 +190,9 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                     .recruitId(recruit.getId())
                     .status(recruit.getStatus())
                     .maxVolunteer(recruit.getMaxVolunteer())
-                    .participateVolCount(recruit.getParticipateVolCount())
+                    .participateVolCount(applicationRepository.countByRecruitIdAndStatusNotInAndIsDeletedFalse(
+                            recruit.getId(), List.of("PENDING", "REJECTED")
+                    ))
                     .activityDate(recruit.getActivityDate() != null ? recruit.getActivityDate() : new Date())
                     .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.valueOf(10.00))
                     .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.valueOf(12.00))
@@ -306,11 +310,19 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         Organization userOrg = organizationRepository.findByUserId(authDto.getUserId())
                 .orElseThrow(() -> new NotFoundException("해당 사용자의 기관 정보를 찾을 수 없습니다."));
+
         TemplateGroup templateGroup = templateGroupRepository.findByIdAndIsDeletedFalse(updateGroupDto.getGroupId())
                 .orElseThrow(() -> new NotFoundException("해당 그룹을 찾을 수 없습니다."));
 
         if (!templateGroup.getOrg().getId().equals(userOrg.getId())) {
             throw new UnauthorizedException("이 그룹을 수정할 권한이 없습니다.");
+        }
+
+        if (!templateGroup.getGroupName().equals(updateGroupDto.getGroupName())) {
+            boolean exists = templateGroupRepository.existsByOrgAndGroupNameAndIsDeletedFalse(userOrg, updateGroupDto.getGroupName());
+            if (exists) {
+                throw new NotFoundException("이미 존재하는 그룹명입니다: " + updateGroupDto.getGroupName());
+            }
         }
 
         templateGroupRepository.updateGroup(updateGroupDto.getGroupId(), userOrg.getId(), updateGroupDto.getGroupName());
@@ -321,6 +333,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .orgId(userOrg.getId())
                 .build();
     }
+
 
     @Override
     public UpdateTemplateResponse updateTemplate(UpdateTemplateRequestDto updateTemplateDto, AuthDto authDto) {
@@ -531,7 +544,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         String groupName = Optional.ofNullable(createGroupDto.getGroupName()).orElse("봉사");
 
-        if (templateGroupRepository.existsByOrgAndGroupName(org, groupName)) {
+        if (templateGroupRepository.existsByOrgAndGroupNameAndIsDeletedFalse(org, groupName)) {
             throw new ConflictException("이미 존재하는 그룹명입니다: " + groupName);
         }
 
@@ -615,7 +628,9 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.valueOf(10.00))
                 .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.valueOf(12.00))
                 .maxVolunteer(recruit.getMaxVolunteer())
-                .participateVolCount(recruit.getParticipateVolCount())
+                .participateVolCount(applicationRepository.countByRecruitIdAndStatusNotInAndIsDeletedFalse(
+                        recruit.getId(), List.of("PENDING", "REJECTED")
+                ))
                 .status(recruit.getStatus())
                 .updatedAt(updatedAtLocalDateTime)
                 .createdAt(createdAtLocalDateTime)

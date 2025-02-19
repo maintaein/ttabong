@@ -10,7 +10,7 @@ USE volunteer_service;
 DROP TABLE IF EXISTS User;
 CREATE TABLE User (
     user_id        INT AUTO_INCREMENT PRIMARY KEY COMMENT '유저 ID',
-    email          VARCHAR(80) NOT NULL UNIQUE COMMENT '유저 이메일 (로그인 ID)',
+    email          VARCHAR(80) NOT NULL COMMENT '유저 이메일 (로그인 ID)',
     name           VARCHAR(50)  NOT NULL COMMENT '유저 이름',
     password       VARCHAR(256) NOT NULL COMMENT '비밀번호(해시로 바꾸고 넣어야 함)',
     phone          VARCHAR(20)  NOT NULL COMMENT '전화번호',
@@ -330,12 +330,12 @@ UPDATE Review AS child
     JOIN (
     SELECT r1.review_id AS parent_id, r1.recruit_id, r1.org_id, r1.writer_id
     FROM Review r1
-    JOIN Organization o ON r1.org_id = o.org_id
-    WHERE r1.writer_id = o.user_id
+    JOIN Organization o ON r1.org_id = o.org_id AND r1.writer_id = o.user_id
     ) AS parent
 ON child.recruit_id = parent.recruit_id
     AND child.org_id = parent.org_id
-    AND child.review_id > parent.parent_id
+    AND child.writer_id <> parent.writer_id
+    AND (child.parent_review_id IS NULL OR child.parent_review_id <> parent.parent_id)
     SET child.parent_review_id = parent.parent_id;
 
 SET SQL_SAFE_UPDATES = 1;
@@ -362,7 +362,10 @@ INSERT INTO Application (volunteer_id, recruit_id, status, evaluation_done, is_d
 VALUES
     (1, 1, 'APPROVED', TRUE, FALSE, NOW(), NOW()),
     (1, 3, 'PENDING', FALSE, FALSE, NOW(), NOW()),
+    (1, 6, 'PENDING', FALSE, FALSE, NOW(), NOW()),
+    (2, 1, 'APPROVED', FALSE, FALSE, NOW(), NOW()),
     (2, 5, 'APPROVED', TRUE, FALSE, NOW(), NOW()),
+    (2, 4, 'APPROVED', TRUE, FALSE, NOW(), NOW()),
     (2, 7, 'REJECTED', FALSE, FALSE, NOW(), NOW()),
     (3, 2, 'COMPLETED', TRUE, FALSE, NOW(), NOW()),
     (3, 8, 'AUTO_CANCEL', FALSE, FALSE, NOW(), NOW());

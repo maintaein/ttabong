@@ -13,6 +13,9 @@ export default function MyPage() {
   const navigate = useNavigate();
   const { 
     userId, 
+    userName,
+    userEmail,
+    userType,
     likedTemplates, 
     isLoadingLikes, 
     hasMoreLikes,
@@ -39,7 +42,6 @@ export default function MyPage() {
     <div className="h-screen overflow-y-auto">
       <div className="flex items-center justify-center p-4">
         <div className="w-full max-w-md space-y-6">
-          {/* 프로필 섹션 */}
           <div className="space-y-2 text-center">
             <Avatar className="h-24 w-24 mx-auto border-4 border-background shadow-lg">
               <AvatarImage src="/images/profile.jpg" alt="프로필 이미지" />
@@ -47,12 +49,17 @@ export default function MyPage() {
                 <User className="h-12 w-12 text-primary/70" />
               </AvatarFallback>
             </Avatar>
-            <h1 className="text-2xl font-semibold tracking-tight mt-4">김봉사</h1>
-            <p className="text-sm text-muted-foreground">volunteer@example.com</p>
-            <Badge variant="secondary" className="mt-1">개인 회원</Badge>
+            <h1 className="text-2xl font-semibold tracking-tight mt-4">
+              {userName || '사용자'}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {userEmail || 'email@example.com'}
+            </p>
+            <Badge variant="secondary" className="mt-1">
+              {userType === 'organization' ? '기관 회원' : '개인 회원'}
+            </Badge>
           </div>
 
-          {/* 활동 관리 섹션 */}
           <Card className="border shadow-sm">
             <CardContent className="p-6 space-y-4">
               <h2 className="text-lg font-semibold tracking-tight">활동 관리</h2>
@@ -81,7 +88,6 @@ export default function MyPage() {
             </CardContent>
           </Card>
 
-          {/* 관심있는 봉사 섹션 */}
           <Card className="border shadow-sm">
             <CardContent className="p-4">
               <div className="flex justify-between items-center mb-3">

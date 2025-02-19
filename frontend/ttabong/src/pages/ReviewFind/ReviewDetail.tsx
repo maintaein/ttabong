@@ -178,6 +178,7 @@ export default function ReviewDetail() {
         onSubmit={handleSubmitComment}
         onUpdateComment={handleUpdateComment}
         onDeleteComment={handleDeleteComment}
+        className="max-w-full break-words whitespace-pre-wrap"
       />
     </div>
   );

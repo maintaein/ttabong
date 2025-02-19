@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface ReviewCommentRepository extends JpaRepository<ReviewComment, Integer> {
     Optional<ReviewComment> findByIdAndIsDeletedFalse(Integer commentId);
+    Optional<ReviewComment> findByReviewIdAndIsDeletedFalseOrderByCreatedAt(Integer reviewId);
 }

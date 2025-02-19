@@ -10,12 +10,14 @@ import { useRecruitStore } from '@/stores/recruitStore';
 import { useImageStore } from '@/stores/imageStore';
 import { reviewApi } from '@/api/reviewApi';
 import { useToast } from '@/hooks/use-toast';
+import { useUserStore } from '@/stores/userStore';
 
 
 export default function ReviewWrite() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const { userType } = useUserStore();
   
   const { recruitDetail, fetchRecruitDetail, resetSelectedRecruitId, setSelectedRecruitId } = useRecruitStore();
   const { updateReview, createReview } = useReviewStore();
@@ -39,7 +41,7 @@ export default function ReviewWrite() {
 
     const init = async () => {
       try {
-        await fetchRecruitDetail(recruitId);
+        await fetchRecruitDetail(recruitId, userType || 'volunteer');
         await setSelectedRecruitId(recruitId);
         await fetchPresignedUrls();
       } catch (error) {
@@ -149,11 +151,19 @@ export default function ReviewWrite() {
       }
       
       navigate(-1);
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error:', error); // 에러 객체 확인용 로그
+      
+      const axiosMessage = error.message || '';
+      const serverMessage = error.response?.data?.message;
+      const errorMessage = serverMessage 
+        ? `${axiosMessage}\n${serverMessage}`
+        : axiosMessage || (isEdit ? "리뷰 수정에 실패했습니다." : "리뷰 등록에 실패했습니다.");
+
       toast({
         variant: "destructive",
-        title: "오류",
-        description: isEdit ? "리뷰 수정에 실패했습니다." : "리뷰 등록에 실패했습니다."
+        title: `오류 (${error.response?.status || 500})`,
+        description: errorMessage
       });
     }
   };

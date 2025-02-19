@@ -1,44 +1,47 @@
-import React, { useState } from "react";
-import { Search, Bell } from "lucide-react";
-
-
-const savedPosts = [
-  {
-    id: 1,
-    title: "아름다운가게 부산사상점 매장운영지원",
-    date: "2024.12.01 - 2025.02.28",
-    location: "부산광역시 사상구",
-    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTe1vASrp5p7O4DxHi0tYVh2laWXPo83zaE0g&s",
-  },
-  {
-    id: 2,
-    title: "아름다운가게 부산사상점 매장운영지원",
-    date: "2024.12.01 - 2025.02.28",
-    location: "부산광역시 사상구",
-    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTe1vASrp5p7O4DxHi0tYVh2laWXPo83zaE0g&s",
-  },
-  {
-    id: 2,
-    title: "아름다운가게 부산사상점 매장운영지원",
-    date: "2024.12.01 - 2025.02.28",
-    location: "부산광역시 사상구",
-    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTe1vASrp5p7O4DxHi0tYVh2laWXPo83zaE0g&s",
-  },
-  {
-    id: 2,
-    title: "아름다운가게 부산사상점 매장운영지원",
-    date: "2024.12.01 - 2025.02.28",
-    location: "부산광역시 사상구",
-    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTe1vASrp5p7O4DxHi0tYVh2laWXPo83zaE0g&s",
-  },
-];
+import React, { useState, useEffect } from "react";
+import { Bell } from "lucide-react";
+import axiosInstance from "../api/axiosInstance"; // axiosInstance 경로 확인 필요
 
 const RecruitFind: React.FC = () => {
-  const [posts, setPosts] = useState(savedPosts);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [region, setRegion] = useState<string>("서울"); // 기본 지역값
+  const [status, setStatus] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const removePost = (id: number) => {
-    setPosts(posts.filter((post) => post.id !== id));
+  // 🔹 API에서 공고 데이터 불러오기
+  const fetchPosts = async () => {
+    setLoading(true);
+    try {
+      const response = await axiosInstance.post("/volunteer/recruits", {
+        templateTitle: searchQuery || null,
+        searchConditions: {
+          organizationName: null,
+          status: status,
+          activityDate: {
+            start: "2025-02-20",
+            end: "2025-02-28",
+          },
+          region: region,
+        },
+      });
+
+      setPosts(response.data.templates || []);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+    }
+    setLoading(false);
   };
+
+  // 🔹 검색 버튼 클릭 시 데이터 불러오기
+  const handleSearch = () => {
+    fetchPosts();
+  };
+
+  // 🔹 최초 마운트 시 데이터 로딩
+  useEffect(() => {
+    fetchPosts();
+  }, []);
 
   return (
     <div className="bg-blue-200 min-h-screen flex justify-center p-4">
@@ -51,40 +54,66 @@ const RecruitFind: React.FC = () => {
           <Bell size={20} className="text-gray-500" />
         </div>
 
-
         {/* 검색창 */}
-        <div className="mt-3 relative">
+        <div className="mt-3 relative flex gap-2">
           <input
             type="text"
-            placeholder="검색"
-            className="w-full p-2 pl-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            placeholder="검색할 제목 입력"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1 p-2 pl-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
-          <div className="absolute left-3 top-3">
-            <Search size={16} className="text-gray-500" />
-          </div>
+          <select
+            value={region}
+            onChange={(e) => setRegion(e.target.value)}
+            className="border p-2 rounded-lg"
+          >
+            <option value="서울">서울</option>
+            <option value="부산">부산</option>
+            <option value="대구">대구</option>
+            <option value="광주">광주</option>
+          </select>
+          <select
+            value={status || ""}
+            onChange={(e) => setStatus(e.target.value || null)}
+            className="border p-2 rounded-lg"
+          >
+            <option value="">전체</option>
+            <option value="RECRUITING">모집 중</option>
+            <option value="RECRUITMENT_CLOSED">모집 마감</option>
+            <option value="ACTIVITY_COMPLETED">활동 완료</option>
+          </select>
+          <button
+            onClick={handleSearch}
+            className="bg-blue-500 text-white px-3 py-2 rounded-lg"
+          >
+            검색
+          </button>
         </div>
 
         {/* 봉사 공고 리스트 */}
         <div className="mt-4">
-          {posts.map((post) => (
-            <div key={post.id} className="bg-white shadow rounded-lg overflow-hidden mb-3">
-              <img src={post.image} alt={post.title} className="w-full h-40 object-cover" />
-              <div className="p-3">
-                <h2 className="text-lg font-bold">{post.title}</h2>
-                <p className="text-gray-500 text-sm">{post.date}</p>
-                <p className="text-gray-600 text-sm">📍 {post.location}</p>
-                <button
-                  onClick={() => removePost(post.id)}
-                  className="bg-gray-300 text-gray-700 text-xs px-3 py-1 rounded-full mt-2"
-                >
-                  삭제
-                </button>
+          {loading ? (
+            <p className="text-center">🔄 로딩 중...</p>
+          ) : posts.length > 0 ? (
+            posts.map((post) => (
+              <div key={post.templateId} className="bg-white shadow rounded-lg overflow-hidden mb-3">
+                <img src={post.imageUrl} alt={post.title} className="w-full h-40 object-cover" />
+                <div className="p-3">
+                  <h2 className="text-lg font-bold">{post.title}</h2>
+                  <p className="text-gray-500 text-sm">{post.activityLocation}</p>
+                  <p className="text-gray-600 text-sm">📍 {post.region}</p>
+                  <p className="text-gray-600 text-sm">상태: {post.status}</p>
+                  <p className="text-gray-600 text-sm">
+                    📅 {post.recruits.length > 0 ? post.recruits[0].activityDate : "일정 미정"}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="text-center text-gray-500">검색 결과가 없습니다.</p>
+          )}
         </div>
-
-    
       </div>
     </div>
   );
