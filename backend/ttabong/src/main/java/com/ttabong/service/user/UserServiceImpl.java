@@ -39,27 +39,31 @@ public class UserServiceImpl implements UserService {
     public UserLoginResponseDto login(LoginRequest loginRequest) {
         UserLoginProjection user = userRepository.findByEmailAndIsDeletedFalse(loginRequest.getEmail());
 
-        //해당 계정이 있느냐?
         if (user == null || !passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            return null;
+            return UserLoginResponseDto.builder()
+                    .status(401)
+                    .message("이메일 또는 비밀번호가 일치하지 않습니다.")
+                    .build();
         }
 
-        //계정 타입이 맞느냐?
+        boolean isUserTypeValid = false;
         if ("volunteer".equalsIgnoreCase(loginRequest.getUserType())) {
-            boolean isVolunteer = volunteerRepository.existsByUserId(user.getId());
-            if (!isVolunteer) {
-                return null;
-            }
+            isUserTypeValid = volunteerRepository.existsByUserIdAndUserIsDeletedFalse(user.getId());
         } else if ("organization".equalsIgnoreCase(loginRequest.getUserType())) {
-            boolean isOrganization = organizationRepository.existsByUserId(user.getId());
-            if (!isOrganization) {
-                return null;
-            }
-        } else {
-            return null;
+            isUserTypeValid = organizationRepository.existsByUserIdAndUserIsDeletedFalse(user.getId());
+        }
+
+        if (!isUserTypeValid) {
+            String userType = loginRequest.getUserType().equalsIgnoreCase("volunteer")? "봉사자" : "봉사기관";
+            return UserLoginResponseDto.builder()
+                    .status(403)
+                    .message("해당 계정은 " + userType + " 계정이 아닙니다.")
+                    .build();
         }
 
         return UserLoginResponseDto.builder()
+                .status(200)
+                .message("로그인 성공")
                 .userId(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())

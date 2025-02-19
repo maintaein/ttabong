@@ -35,6 +35,12 @@ public interface VolunteerReactionRepository extends JpaRepository<VolunteerReac
     @Query("UPDATE VolunteerReaction v SET v.isDeleted = TRUE WHERE v.id IN :reactionIds")
     int softDeleteByIds(@Param("reactionIds") List<Integer> reactionIds);
 
+    @Query("SELECT COUNT(vr) > 0 FROM VolunteerReaction vr " +
+            "JOIN vr.recruit r " +
+            "WHERE vr.volunteer = :volunteer " +
+            "AND r.template = :template " +
+            "AND vr.isDeleted = false " +
+            "AND r.isDeleted = false")
     boolean existsByVolunteerAndRecruitTemplate(Volunteer volunteer, Template template);
 
     //같은 템플릿에 대하여 새로 리액션을 할 시에 기존의 리액션 소프트삭제

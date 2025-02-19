@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class UserLoginResponseDto {
+    private int status;   // 들어갈 HTTP 상태 코드 3종류 : (200, 401, 403)
+    private String message;
     private Integer userId;
     private String name;
     private String email;
