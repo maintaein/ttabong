@@ -11,7 +11,7 @@ import RecruitDetail from '@/pages/ChooseRecruit/org/RecruitDetail';
 import Login from '@/pages/Login';
 import MainPage from '@/pages/MainPage';
 import OrgMainPage from '@/pages/OrgMainPage';
-import RecruitFind from '@/pages/RecruitFind';
+import RecruitFind from '@/pages/RecruitFind_new'
 import ReviewFind from '@/pages/ReviewFind';
 import ReviewDetail from '@/pages/ReviewFind/ReviewDetail';
 import ReviewDetailList from '@/pages/ReviewFind/ReviewDetailList';

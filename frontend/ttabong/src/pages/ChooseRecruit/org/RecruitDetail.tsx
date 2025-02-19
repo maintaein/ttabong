@@ -107,7 +107,8 @@ const RecruitDetail: React.FC = () => {
           },
           recruit: {
             ...data.recruit,
-            status: data.recruit.status as OrgRecruitStatus
+            status: data.recruit.status as OrgRecruitStatus,
+            participateVolCount: data.recruit.participateVolCount
           },
           application: data.application ? {
             applicationId: data.application.applicationId,
