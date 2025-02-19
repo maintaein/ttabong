@@ -5,7 +5,8 @@ import type {
   Application, 
   RecruitDetail,
   OrgRecruitStatus,
-  VolunteerApplicationStatus 
+  VolunteerApplicationStatus,
+  SearchTemplate
 } from '@/types/recruitType';
 import { AxiosError } from 'axios';
 
@@ -45,6 +46,21 @@ interface RecruitListItem {  // 목록용 간단한 타입
   };
 }
 
+interface SearchTemplatesParams {
+  cursor?: number;
+  limit?: number;
+  templateTitle?: string;
+  searchConditions?: {
+    organizationName?: string;
+    status?: string;
+    activityDate?: {
+      start: string;
+      end: string;
+    };
+    region?: string;
+  };
+}
+
 interface RecruitStore {
   myRecruits: Application[] | null;
   orgRecruits: OrgRecruit[] | null;
@@ -56,6 +72,9 @@ interface RecruitStore {
   selectedRecruitId: number | null;
   recruitList: RecruitListItem[] | null;
   nextCursor: number | null;
+  searchResults: SearchTemplate[];
+  searchNextCursor: number | null;
+  searchHasMore: boolean;
   fetchMyRecruits: (params?: { cursor?: number; limit?: number }) => Promise<void>;
   fetchOrgRecruits: () => Promise<void>;
   cancelApplication: (applicationId: number) => Promise<void>;
@@ -67,6 +86,8 @@ interface RecruitStore {
   applyRecruit: (recruitId: number) => Promise<void>;
   updateRecruitStatus: (recruitId: number, newStatus: string) => Promise<void>;
   updateLocalRecruitStatus: (recruitId: number, newStatus: string) => void;
+  searchTemplates: (params: SearchTemplatesParams) => Promise<void>;
+  clearSearchResults: () => void;
 }
 
 export const useRecruitStore = create<RecruitStore>((set) => ({
@@ -80,6 +101,9 @@ export const useRecruitStore = create<RecruitStore>((set) => ({
   selectedRecruitId: null,
   recruitList: null,
   nextCursor: null,
+  searchResults: [],
+  searchNextCursor: null,
+  searchHasMore: true,
 
   fetchMyRecruits: async (params) => {
     try {
@@ -134,8 +158,6 @@ export const useRecruitStore = create<RecruitStore>((set) => ({
             : application.status
         })),
         recruitDetail: null 
-
-        
       });
     } catch (error) {
       console.error('봉사 신청 취소 실패:', error);
@@ -256,5 +278,37 @@ export const useRecruitStore = create<RecruitStore>((set) => ({
           : item
       )
     }));
+  },
+  searchTemplates: async (params) => {
+    try {
+      set({ isLoading: true, error: null });
+      const response = await recruitApi.searchTemplates(params);
+      
+      if (params.cursor) {
+        set((state) => ({
+          searchResults: [...state.searchResults, ...response.templates],
+          searchNextCursor: response.nextCursor,
+          searchHasMore: response.templates.length === (params.limit || 10)
+        }));
+      } else {
+        set({
+          searchResults: response.templates,
+          searchNextCursor: response.nextCursor,
+          searchHasMore: response.templates.length === (params.limit || 10)
+        });
+      }
+    } catch (error) {
+      console.error('템플릿 검색 실패:', error);
+      set({ error: '검색에 실패했습니다.' });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+  clearSearchResults: () => {
+    set({
+      searchResults: [],
+      searchNextCursor: null,
+      searchHasMore: true
+    });
   }
 })); 

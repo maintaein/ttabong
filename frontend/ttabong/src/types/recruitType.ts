@@ -207,4 +207,44 @@ export interface TemplateDetail {
     status: OrgRecruitStatus;
     createdAt: string;
   }[];
+}
+
+// 검색 결과용 타입들
+export interface SearchTemplateRecruit {
+  recruitId: number;
+  activityDate: string;
+  deadline: string;
+  activityStart: number;
+  activityEnd: number;
+  maxVolunteer: number;
+  participateVolCount: number;
+  status: OrgRecruitStatus;
+  updatedAt: string;
+  createdAt: string;
+}
+
+export interface SearchTemplateOrganization {
+  orgId: number;
+  orgName: string;
+}
+
+export interface SearchTemplate {
+  templateId: number;
+  categoryId: number;
+  title: string;
+  activityLocation: string;
+  status: string;
+  imageUrl: string;
+  contactName: string;
+  contactPhone: string;
+  description: string;
+  createdAt: string;
+  organization: SearchTemplateOrganization;
+  group: Group;
+  recruits: SearchTemplateRecruit[];
+}
+
+export interface SearchTemplatesResponse {
+  templates: SearchTemplate[];
+  nextCursor: number | null;
 } 
