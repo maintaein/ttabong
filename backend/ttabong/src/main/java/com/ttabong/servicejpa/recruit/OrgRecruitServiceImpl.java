@@ -9,10 +9,7 @@ import com.ttabong.entity.recruit.Template;
 import com.ttabong.entity.recruit.TemplateGroup;
 import com.ttabong.entity.sns.ReviewImage;
 import com.ttabong.entity.user.Organization;
-import com.ttabong.exception.ForbiddenException;
-import com.ttabong.exception.ImageProcessException;
-import com.ttabong.exception.NotFoundException;
-import com.ttabong.exception.UnauthorizedException;
+import com.ttabong.exception.*;
 import com.ttabong.repositoryjpa.recruit.*;
 import com.ttabong.repositoryjpa.sns.ReviewImageRepositoryJpa;
 import com.ttabong.repositoryjpa.user.OrganizationRepositoryJpa;
@@ -227,12 +224,12 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         Optional<Recruit> recruit = Optional.ofNullable(recruitRepository.findRecruitByIdAndIsDeletedFalse(recruitId));
         if (recruit.isEmpty()) {
             log.info("{}번 공고를 찾을 수 없습니다", recruitId);
+            throw new NotFoundException("공고를 찾을 수 없습니다");
             //공고 못찾음 에러
-            return null;
         } else if (!recruit.get().getTemplate().getOrg().getId().equals(authDto.getUserId())) {
             log.info("{}번 공고에 대한 권한이 {}에게 없습니다", recruitId, authDto.getUserId());
+            throw new UnauthorizedException("공고에 대한 권한이 없습니다");
             //내 공고 아니여서 권한 없음
-            return null;
         } else {
             recruit.get().patchUpdate(requestDto);
             cacheUtil.addCompleteEventScheduler(recruitId, getMinutesToCompleteEvent(recruit.get()));
@@ -254,10 +251,10 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         if (recruit.isEmpty()) {
             log.info("{}번 공고를 찾을 수 없습니다", recruitId);
-            return null;
+            throw new NotFoundException("공고를 찾을 수 없습니다");
         } else if (!recruit.get().getTemplate().getOrg().getId().equals(authDto.getUserId())) {
             log.info("{}번 공고에 대한 권한이 {}에게 없습니다", recruitId, authDto.getUserId());
-            return null;
+            throw new UnauthorizedException("공고에 대한 권한이 없습니다");
             //내 공고 아니여서 권한이 없음
         } else {
             log.info("{}번 공고의 상태를 'CLOSED' 로 변경했습니다", recruitId);
@@ -278,11 +275,11 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         Optional<TemplateGroup> group = templateGroupRepository.findByIdAndIsDeletedFalse(updateGroupDto.getGroupId());
         if (group.isEmpty()) {
             log.info("{}번 템플릿 그룹를 찾을 수 없습니다", updateGroupDto.getGroupId());
-            return null;
+            throw new NotFoundException("템플릿 그룹을 찾을 수 없습니다");
         }
         if (!group.get().getOrg().getId().equals(authDto.getUserId())) {
             log.info("{}번 템플릿 그룹에 대한 권한이 {}에게 없습니다", updateGroupDto.getGroupId(), authDto.getUserId());
-            return null;
+            throw new UnauthorizedException("템플릿 그룹에 대한 권한이 없습니다");
         }
         group.get().updateName(updateGroupDto.getGroupName());
         return UpdateGroupResponseDto.builder()
@@ -298,6 +295,8 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         checkOrgToken(authDto);
         Optional<Template> template = templateRepository.findTemplateById(updateTemplateDto.getTemplateId());
         if (!template.get().getOrg().getId().equals(authDto.getUserId())) {
+            log.info("{}번 템플릿에 대한 {}유저의 권한이 없습니다", updateTemplateDto.getTemplateId(), authDto.getUserId());
+            throw new UnauthorizedException("템플릿에 대한 권한이 없습니다");
             //권한 없는 유저(내 템플릿 아님)
         }
         Template newTemplate =
@@ -331,7 +330,8 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         List<Template> templatesToDelete = templateRepository.findByIdInAndIsDeletedFalse(deleteTemplatesDto.getDeletedTemplates());
 
         if (templatesToDelete.isEmpty()) {
-            //throw new NotFoundException("삭제할 수 있는 템플릿이 없습니다.")
+            log.info("삭제할 수 있는 템플릿이 없습니다");
+            throw new NotFoundException("삭제할 수 있는 템플릿이 없습니다.");
             //나의 공고가 아님
         }
         templatesToDelete = templatesToDelete.stream().filter(template -> {
@@ -349,9 +349,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
     @Override
     public DeleteGroupResponseDto deleteGroup(DeleteGroupDto deleteGroupDto, AuthDto authDto) {
-
         checkOrgToken(authDto);
-
         Organization userOrg = organizationRepository.findByUserId(authDto.getUserId())
                 .orElseThrow(() -> new NotFoundException("해당 기관이 없습니다."));
 
@@ -359,10 +357,10 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         if (groupToDelete.isEmpty()) {
             //그룹이 없습니다
-            return null;
+            throw new NotFoundException("그룹이 없습니다");
         } else if (!groupToDelete.get().getOrg().getId().equals(authDto.getUserId())) {
+            throw new UnauthorizedException("그룹에 대한 권한이 없습니다");
             //내 그룹이 아니여서 그룹을 삭제할 수 없습니다.
-            return null;
         } else {
             groupToDelete.get().markDeleted();
             return DeleteGroupResponseDto.builder()
@@ -393,18 +391,18 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         checkOrgToken(authDto);
         if (createGroupDto.getGroupName().isBlank()) {
-            //빈 문자열
-            return null;
+            log.info("빈 문자열이 올 수 없습니다");
+            throw new BadRequestException("빈 문자열이 올 수 없습니다");
         }
         Optional<Organization> org = organizationRepository.findById(authDto.getUserId());
         if (org.isEmpty()) {
-            //유저가 잘못됨
-            return null;
+            log.info("기관정보를 찾지 못했습니다");
+            throw new NotFoundException("기관정보를 찾지 못했습니다");
         }
         Optional<TemplateGroup> group = templateGroupRepository
                 .findByOrgIdAndGroupNameAndIsDeletedFalse(authDto.getUserId(), createGroupDto.getGroupName());
-        if (group.isPresent()) {
-            return null;
+        if (group.isEmpty()) {
+            throw new NotFoundException("그룹정보를 찾지 못했습니다");
         }
         TemplateGroup templateGroup = templateGroupRepository.save(
                 TemplateGroup.builder().org(org.get())
@@ -433,10 +431,12 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         */
         Optional<Template> baseTemplate = templateRepository.findByIdAndIsDeletedFalse(createRecruitDto.getTemplateId());
         if (baseTemplate.isEmpty()) {
-            //템플릿이 없음
-            return null;
+            log.info("{}번 템플릿을 찾지 못했습니다", createRecruitDto.getTemplateId());
+            throw new NotFoundException("템플릿을 찾지 못했습니다");
         }
         if (baseTemplate.get().getOrg().getId().equals(authDto.getUserId())) {
+            log.info("{}번 템플릿에 대한 권한이 없습니다", createRecruitDto.getTemplateId());
+            throw new UnauthorizedException("템플릿에 대한 권한이 없습니다");
             //템플릿 권한이 없음
         }
         Recruit recruit = recruitRepository.save(
@@ -542,11 +542,12 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         Optional<Recruit> recruit = recruitRepository.findByRecruitId(recruitId);
         if (recruit.isEmpty()) {
-            //해당공고 없음
+            log.info("공고가 존재하지 않습니다");
+            throw new NotFoundException("해당 공고가 존재하지 않습니다");
         }
         if (!recruit.get().getTemplate().getOrg().getId().equals(authDto.getUserId())) {
-            //공고권한 없음
-            return null;
+            log.info("공고에 대한 권한이 없습니다");
+            throw new UnauthorizedException("공고에 대한 권한이 없습니다");
         }
 
         List<Application> applications = applicationRepository.findByRecruitId(recruitId);
@@ -611,23 +612,27 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         Optional<Recruit> recruit = recruitRepository.findByRecruitId(recruitId);
 
         if (recruit.isEmpty()) {
-            //없는공고
             log.info("해당 공고 {} 를 찾을 수 없습니다", recruitId);
+            throw new NotFoundException("해당 공고를 찾지 못했습니다");
         }
         if (!recruit.get().getTemplate().getOrg().getId().equals(authDto.getUserId())) {
             //권한없음
             log.info("해당 공고에 대한 권한이 없습니다");
+            throw new UnauthorizedException("해당 공고에 대한 권한이 없습니다");
         }
         Optional<Application> application = applicationRepository.findById(updateApplicationDto.getApplicationId());
 
         if (application.isEmpty()) {
             log.info("신청기록이 존재하지 않습니다");
+            throw new NotFoundException("신청기록이 존재하지 않습니다");
         }
         if (!(application.get().getId() == updateApplicationDto.getApplicationId())) {
             log.info("신청번호와과 동일하지 않습니다");
+            throw new BadRequestException("신청번호와 동일하지 않습니다");
         }
         if (!(application.get().getVolunteer().getId() == updateApplicationDto.getVolunteerId())) {
             log.info("신청자와 신청내역의 봉사자가 일치하지 않습니다");
+            throw new UnauthorizedException("신청내역과 봉사자 정보가 일치하지 않습니다");
         }
         application.get().updateStatus(status);
 

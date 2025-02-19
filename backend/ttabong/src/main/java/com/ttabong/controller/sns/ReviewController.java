@@ -106,15 +106,11 @@ public class ReviewController {
         if (authDto == null || authDto.getUserId() == null) {
             throw new SecurityException("로그인된 유저만 후기를 생성할 수 있습니다.");
         }
-
         List<String> presignedUrls = cacheService.generatePresignedUrlsForTemplate(authDto);
-
         CreateReviewPresignedUrlResponseDto response = CreateReviewPresignedUrlResponseDto.builder()
                 .imageUrls(presignedUrls)
                 .build();
-
         return ResponseEntity.ok().body(response);
-
     }
 
     // 8. 후기 작성 완료 /api/reviews/{reviewId}/write
@@ -124,9 +120,7 @@ public class ReviewController {
             @RequestBody @Valid ReviewCreateRequestDto requestDto) {
         log.info("8. 후기 작성 완료,<POST> /write");
         ReviewCreateResponseDto response = reviewService.createReview(authDto, requestDto);
-
         return ResponseEntity.ok(response);
-
     }
 
     // 9. 후기수정 시작 _ (presigneed)요청
@@ -138,9 +132,7 @@ public class ReviewController {
         ReviewEditStartResponseDto response = reviewService.startReviewEdit(reviewId, authDto);
 
         return ResponseEntity.ok(response);
-
     }
-
     // 10. 후기 수정 완료
     @PatchMapping("/{reviewId}/edit")
     public ResponseEntity<ReviewEditResponseDto> updateReview(
@@ -149,9 +141,6 @@ public class ReviewController {
             @AuthenticationPrincipal AuthDto authDto) {
         log.info("10. 후기 수정 완료,<PATCH> /{reviewId}/edit");
         ReviewEditResponseDto response = reviewService.updateReview(reviewId, requestDto, authDto);
-
         return ResponseEntity.ok(response);
-
     }
-
 }
