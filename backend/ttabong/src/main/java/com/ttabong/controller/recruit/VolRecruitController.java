@@ -32,8 +32,8 @@ public class VolRecruitController extends LoggerConfig {
     // 1. 모집 공고 리스트 조회
     @GetMapping("/templates")
     public ResponseEntity<ReadVolRecruitsListResponseDto> listRecruits(
-            @RequestParam(required = false) Integer cursor,
-            @RequestParam Integer limit) {
+            @RequestParam(defaultValue = "0") Integer cursor,
+            @RequestParam(defaultValue = "10") Integer limit) {
         logger.info("1. 모집 공고 리스트 조회 <GET> \"/templates\"");
 
         ReadVolRecruitsListResponseDto responseDto = volRecruitService.getTemplates(cursor, limit);
@@ -87,7 +87,8 @@ public class VolRecruitController extends LoggerConfig {
     // 5. 신청한 공고 목록 조회
     @GetMapping("/applications/recruits")
     public ResponseEntity<List<MyApplicationsResponseDto>> myApplications(
-            @RequestParam Integer cursor, @RequestParam Integer limit) {
+            @RequestParam(defaultValue = "0") Integer cursor,
+            @RequestParam(defaultValue = "10") Integer limit) {
         logger.info("5. 신청한 공고 목록 조회 <GET> \"/applications/recruits\"");
         AuthDto authDto = (AuthDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         int userId = authDto.getUserId();
@@ -111,7 +112,8 @@ public class VolRecruitController extends LoggerConfig {
     // 7. "좋아요"한 템플릿 목록 조회
     @GetMapping("/volunteer-reactions/likes")
     public ResponseEntity<Map<String, Object>> myLikesOnRecruits(
-            @RequestParam Integer cursor, @RequestParam Integer limit) {
+            @RequestParam(defaultValue = "0") Integer cursor,
+            @RequestParam(defaultValue = "10") Integer limit) {
         logger.info("7. \"좋아요\"한 템플릿 목록 조회 <GET> \"/volunteer-reactions/likes\"");
         AuthDto authDto = (AuthDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         int userId = authDto.getUserId();
@@ -127,10 +129,10 @@ public class VolRecruitController extends LoggerConfig {
         AuthDto authDto = (AuthDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         int userId = authDto.getUserId();
 
-        Integer reactionId = volRecruitService.saveReaction(userId, request.getTemplateId(), request.getIsLike());
+        List<Integer> reactionIds = volRecruitService.saveReaction(userId, request.getTemplateId(), request.getIsLike());
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new LikeOnRecruitResponseDto(reactionId, request.getIsLike()));
+                .body(new LikeOnRecruitResponseDto(reactionIds, request.getIsLike()));
     }
 
     // 9. "좋아요" 취소
