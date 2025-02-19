@@ -60,6 +60,7 @@ export default function OrgSignUp() {
   
   const form = useForm<OrgSignUpValues>({
     resolver: zodResolver(orgSignUpSchema),
+    mode: "onChange",
     defaultValues: {
       email: '',
       name: '',

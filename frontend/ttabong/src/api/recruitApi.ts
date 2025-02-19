@@ -62,15 +62,10 @@ export const recruitApi = {
   getRecruitDetail: async (recruitId: number, userType: string) => {
     try {
       const endpoint = userType === 'volunteer' ? 'vol' : 'org';
-      console.log('API 호출:', `/${endpoint}/recruits/${recruitId}`);
       const response = await axiosInstance.get(`/${endpoint}/recruits/${recruitId}`);
-      console.log('API 응답:', response.data);
       return response.data;
-    } catch (error: unknown) {
-      if (error instanceof AxiosError) {
-        throw error.response?.data || error;
-      }
-      throw error;
+    } catch (error: any) {
+      throw error.response?.data?.message || '공고를 불러오는데 실패했습니다.';
     }
   },
 
