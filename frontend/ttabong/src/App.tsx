@@ -125,7 +125,7 @@ const App: React.FC = () => {
                 <ProtectedRoute>
                   <UserTypeRoute 
                     volunteerComponent={MainPage}
-                    orgComponent={OrgMainPage}
+                    orgComponent={AddRecruit}
                   />
                 </ProtectedRoute>
               } />

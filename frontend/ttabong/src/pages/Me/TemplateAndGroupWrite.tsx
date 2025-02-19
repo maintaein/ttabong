@@ -117,47 +117,33 @@ const TemplateAndGroupWrite: React.FC = () => {
   }, [location.state, addPreviewImages]);
 
 
-  const uploadImage = async (url: string, image: File, index: number, retries = 3): Promise<string> => {
-    for (let attempt = 0; attempt < retries; attempt++) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60초
-
-        const response = await fetch(url, {
-          method: 'PUT',
-          body: image,
-          headers: {
-            'Content-Type': image.type || 'image/webp',
-            'x-amz-acl': 'public-read'  // MinIO 권한 설정
-          },
-          signal: controller.signal
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+  const uploadImage = async (url: string, image: File): Promise<string> => {
+    try {
+      const response = await fetch(url, {
+        method: 'PUT',
+        body: image,
+        headers: {
+          'Content-Type': image.type || 'image/webp'
         }
+      });
 
-        return url.split('?')[0];
-      } catch (error) {
-        console.error(`Upload attempt ${attempt + 1} failed for image ${index + 1}:`, error);
-        
-        if (attempt === retries - 1) {
-          throw new Error(`이미지 업로드에 실패했습니다 (${index + 1}번째 이미지)`);
-        }
-        
-        // 재시도 전 대기
-        await new Promise(resolve => setTimeout(resolve, 2000 * (attempt + 1)));
+      if (!response.ok) {
+        throw new Error(`Upload failed with status: ${response.status}`);
       }
+
+      // 전체 URL 반환 (쿼리 파라미터 유지)
+      return url;
+    } catch (error) {
+      console.error('Image upload error:', error);
+      throw error;
     }
-    throw new Error(`이미지 업로드에 실패했습니다 (${index + 1}번째 이미지)`);
   };
 
   const timeToNumber = (time: string) => {
     const [hours, minutes] = time.split(':').map(Number);
     return hours + (minutes / 60);
   };
+
 
   // 템플릿 생성 및 저장 함수
   const createTemplate = async () => {
@@ -194,7 +180,7 @@ const TemplateAndGroupWrite: React.FC = () => {
       // 2. 이미지 업로드
       const uploadedImageUrls = await Promise.all(
         imageFiles.map((image, index) => 
-          uploadImage(presignedUrls.images[index], image, index)
+          uploadImage(presignedUrls.images[index], image)
         )
       );
       console.log('업로드된 이미지 URLs:', uploadedImageUrls); // 최종 업로드된 이미지 URL 확인
@@ -202,16 +188,13 @@ const TemplateAndGroupWrite: React.FC = () => {
       // 3. 템플릿 데이터 준비
       const updatedTemplateData = {
         ...templateData,
-        images: uploadedImageUrls,
+        images: uploadedImageUrls,  // 원본 presigned URL 사용
         imageCount: uploadedImageUrls.length
       };
       console.log('최종 템플릿 데이터:', updatedTemplateData); // 최종 데이터 확인
 
       // 4. 템플릿 생성/수정
-      const apiData = transformTemplateData({
-        ...updatedTemplateData,
-        images: uploadedImageUrls  // 업로드된 이미지 URL들을 서버에 함께 저장
-      });
+      const apiData = transformTemplateData(updatedTemplateData);
       const response = await createTemplateApi(apiData);
       
       // 5. 공고 자동 생성

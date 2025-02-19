@@ -165,5 +165,10 @@ export const templateApi = {
     return Array.from({ length: imageCount }, (_, index) => 
       `http://ttabong.store:9000/ttabong-bucket/${templateId}_${index + 1}.webp`
     );
-  }
+  },
+
+  uploadImage: async (formData: FormData) => {
+    const response = await axiosInstance.post('/org/templates/image', formData);
+    return response.data;
+  },
 };

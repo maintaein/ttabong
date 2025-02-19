@@ -5,6 +5,7 @@ import type {
   UpdateRecruitRequest,
   GetApplicationsParams,
 } from '@/types/recruitType';
+import { AxiosError } from 'axios';
 
 const RECRUITS_PER_PAGE = 10;  // 한 페이지당 공고 수
 
@@ -64,8 +65,11 @@ export const recruitApi = {
       const response = await axiosInstance.get(`/${endpoint}/recruits/${recruitId}`);
       console.log('API 응답:', response.data);
       return response.data;
-    } catch (error: any) {
-      throw error.response?.data || error;
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        throw error.response?.data || error;
+      }
+      throw error;
     }
   },
 

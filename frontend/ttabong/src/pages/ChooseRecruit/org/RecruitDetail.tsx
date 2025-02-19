@@ -119,12 +119,12 @@ const RecruitDetail: React.FC = () => {
           }
         };
         setRecruit(transformedData);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('공고 상세 조회 실패:', error);
         toast({
           variant: "destructive",
           title: "오류",
-          description: error.message || "공고 정보를 불러오는데 실패했습니다"
+          description: error instanceof Error ? error.message : "공고 정보를 불러오는데 실패했습니다"
         });
       }
     };
@@ -211,11 +211,11 @@ const RecruitDetail: React.FC = () => {
         title: "신청 완료",
         description: "봉사 신청이 완료되었습니다."
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: "destructive",
         title: "오류",
-        description: error.message || "봉사 신청에 실패했습니다."
+        description: error instanceof Error ? error.message : "봉사 신청에 실패했습니다."
       });
     }
   };
@@ -252,7 +252,8 @@ const RecruitDetail: React.FC = () => {
         title: "취소 완료",
         description: "봉사 신청이 취소되었습니다."
       });
-    } catch (error) {
+    } catch (error: unknown) {
+      console.log(error);
       toast({
         variant: "destructive",
         title: "오류",
