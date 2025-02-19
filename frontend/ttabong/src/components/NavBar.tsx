@@ -2,27 +2,31 @@ import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Home, Search, PlusCircle, Eye, User } from 'lucide-react';
 import { useUserStore } from '@/stores/userStore';
-import { cn } from '@/lib/utils';
 
-interface NavBarProps {
-  className?: string;
+interface NavItemProps {
+  to: string;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
 }
 
-const NavItem = ({ to, icon: Icon }: { to: string; icon: React.ComponentType<{ className?: string }> }) => {
+const NavItem = ({ to, icon: Icon, label }: NavItemProps) => {
   return (
     <NavLink
       to={to}
       className={({ isActive }) => `
-        flex items-center justify-center h-full flex-1
+        flex flex-col items-center justify-center h-full flex-1
         ${isActive ? 'text-primary' : 'text-muted-foreground'}
       `}
     >
-      <Icon className="w-6 h-6" />
+      <Icon className="w-5 h-5 mb-0.5" />
+      <span className="text-xs font-medium leading-none">
+        {label}
+      </span>
     </NavLink>
   );
 };
 
-const NavBar: React.FC<NavBarProps> = ({ className }) => {
+const NavBar = () => {
   const location = useLocation();
   const { userType } = useUserStore();
   const isLoginPage = location.pathname === '/login';
@@ -30,15 +34,22 @@ const NavBar: React.FC<NavBarProps> = ({ className }) => {
   if (isLoginPage) return null;
 
   const recruitPath = userType === 'volunteer' ? '/recruit' : '/add-recruit';
+  const recruitLabel = userType === 'volunteer' ? '후기 작성' : '공고 등록';
 
   return (
-    <nav className={cn("fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[600px] min-w-[320px] bg-background border-t border-border h-14 z-50", className)}>
+    <nav className="
+      fixed bottom-0 left-1/2 -translate-x-1/2 
+      w-full max-w-[600px] min-w-[320px] 
+      bg-background border-t border-border
+      h-14
+      z-50
+    ">
       <div className="flex justify-around h-full py-2">
-        <NavItem to="/main" icon={Home} />
-        <NavItem to="/recruit-find" icon={Search} />
-        <NavItem to={recruitPath} icon={PlusCircle} />
-        <NavItem to="/review-find" icon={Eye} />
-        <NavItem to="/mypage" icon={User} />
+        <NavItem to="/main" icon={Home} label="홈" />
+        <NavItem to="/recruit-find" icon={Search} label="공고 검색" />
+        <NavItem to={recruitPath} icon={PlusCircle} label={recruitLabel} />
+        <NavItem to="/review-find" icon={Eye} label="후기 탐색" />
+        <NavItem to="/mypage" icon={User} label="마이페이지" />
       </div>
     </nav>
   );
