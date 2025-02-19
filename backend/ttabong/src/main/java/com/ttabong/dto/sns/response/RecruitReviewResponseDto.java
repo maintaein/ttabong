@@ -16,7 +16,7 @@ public class RecruitReviewResponseDto {
     private WriterDto writer;
     private GroupDto group;
     private OrganizationDto organization;
-//    private List<String> images;
+    //    private List<String> images;
     private String images;
 
     @Getter
@@ -38,7 +38,7 @@ public class RecruitReviewResponseDto {
     @AllArgsConstructor
     @Builder
     public static class WriterDto {
-//        private Integer writerId;
+        //        private Integer writerId;
         private String name;
     }
 

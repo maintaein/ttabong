@@ -62,9 +62,9 @@ public class TestService extends LoggerConfig {
     }
 
     public void addRedisTTL(Integer time) {
-        if(cacheUtil.eventScheduler(1, time)){
+        if (cacheUtil.addCompleteEventScheduler(1, time)) {
             logger.info("cache Timeout " + time);
-        }else{
+        } else {
             logger.info("cache Timeout fail" + time);
         }
     }

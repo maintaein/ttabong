@@ -16,7 +16,7 @@ public class AllReviewPreviewResponseDto {
     private WriterDto writer;
     private GroupDto group;
     private OrganizationDto organization;
-//    private List<String> images;
+    //    private List<String> images;
     private String images;
 
     @Getter

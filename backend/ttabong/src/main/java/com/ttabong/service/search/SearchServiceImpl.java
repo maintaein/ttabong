@@ -46,7 +46,9 @@ public class SearchServiceImpl implements SearchService {
             var org = template.getOrg();
 
             if (templateMap.containsKey(template.getId())) {
-                templateMap.get(template.getId()).getRecruits().add(
+                List<RecruitResponseDto.RecruitDto> existingRecruits = templateMap.get(template.getId()).getRecruits();
+
+                existingRecruits.add(
                         RecruitResponseDto.RecruitDto.builder()
                                 .recruitId(recruit.getId())
                                 .activityDate(recruit.getActivityDate())
@@ -60,6 +62,9 @@ public class SearchServiceImpl implements SearchService {
                                 .createdAt(DateTimeUtil.convertToLocalDateTime(recruit.getCreatedAt()))
                                 .build()
                 );
+
+                existingRecruits.sort((r1, r2) -> r2.getActivityDate().compareTo(r1.getActivityDate()));
+
             } else {
                 List<RecruitResponseDto.RecruitDto> recruitDtos = new ArrayList<>();
                 recruitDtos.add(
@@ -114,6 +119,14 @@ public class SearchServiceImpl implements SearchService {
         }
 
         List<RecruitResponseDto.TemplateDto> templates = new ArrayList<>(templateMap.values());
+
+        templates.forEach(t -> t.getRecruits().sort((r1, r2) -> r2.getActivityDate().compareTo(r1.getActivityDate())));
+
+        templates.sort((t1, t2) ->
+                t2.getRecruits().get(0).getActivityDate().compareTo(t1.getRecruits().get(0).getActivityDate())
+        );
+
+
         Integer nextCursor = templates.isEmpty() ? null : templates.get(templates.size() - 1).getTemplateId();
 
         return RecruitResponseDto.builder()
@@ -121,4 +134,5 @@ public class SearchServiceImpl implements SearchService {
                 .nextCursor(nextCursor)
                 .build();
     }
+
 }

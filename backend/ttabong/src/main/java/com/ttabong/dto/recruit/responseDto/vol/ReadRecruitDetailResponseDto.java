@@ -1,13 +1,12 @@
 package com.ttabong.dto.recruit.responseDto.vol;
 
 import com.ttabong.dto.user.OrganizationDto;
-import com.ttabong.entity.recruit.Recruit;
 import com.ttabong.entity.recruit.Template;
 import lombok.*;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
+
 @Getter
 @Setter
 @NoArgsConstructor

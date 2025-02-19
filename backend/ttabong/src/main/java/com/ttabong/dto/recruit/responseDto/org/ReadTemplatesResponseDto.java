@@ -1,5 +1,7 @@
 package com.ttabong.dto.recruit.responseDto.org;
 
+import com.ttabong.entity.recruit.Template;
+import com.ttabong.entity.recruit.TemplateGroup;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -41,5 +43,21 @@ public class ReadTemplatesResponseDto {
         private String contactPhone;
         private String description;
         private LocalDateTime createdAt;
+    }
+
+    public static TemplateDto createTemplateDto(Template template, TemplateGroup templateGroup, List<String> images) {
+        return TemplateDto.builder()
+                .templateId(template.getId())
+                .orgId(templateGroup.getId())
+                .categoryId(template.getCategory().getId())
+                .title(template.getTitle())
+                .activityLocation(template.getActivityLocation())
+                .status(template.getStatus())
+                .images(images)
+                .contactName(template.getContactName())
+                .contactPhone(template.getContactPhone())
+                .description(template.getDescription())
+                .createdAt(LocalDateTime.from(template.getCreatedAt()))
+                .build();
     }
 }

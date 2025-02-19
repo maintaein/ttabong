@@ -26,7 +26,7 @@ import java.time.Instant;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class CommentServiceImpl implements CommentService{
+public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
     private final ReviewRepository reviewRepository;
