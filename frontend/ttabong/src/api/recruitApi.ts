@@ -5,7 +5,6 @@ import type {
   UpdateRecruitRequest,
   GetApplicationsParams,
 } from '@/types/recruitType';
-import { AxiosError } from 'axios';
 import axios from 'axios';
 
 const RECRUITS_PER_PAGE = 10;  // 한 페이지당 공고 수
