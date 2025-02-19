@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage, devtools } from 'zustand/middleware';
 import type { ReviewListItem, ReviewDetail, UpdateReviewRequest, ReviewEditResponse, MyReview, CreateReviewRequest } from '@/types/reviewType';
 import { reviewApi } from '@/api/reviewApi';
+import { toast } from "@/hooks/use-toast";
 
 interface ReviewStore {
   reviews: ReviewListItem[];
@@ -246,9 +247,21 @@ export const useReviewStore = create<ReviewStore>()(
           try {
             const reviews = await reviewApi.getMyReviews();
             set({ myReviews: reviews, error: null });
-          } catch (error) {
-            console.error('내 리뷰 목록 불러오기 실패:', error);
-            set({ error: '리뷰 목록을 불러오는데 실패했습니다.' });
+          } catch (error: any) {
+            if (error.response?.status === 404) {
+              set({ myReviews: [], error: null });
+              toast({
+                title: "알림",
+                description: "아직 작성한 봉사후기가 없습니다."
+              });
+            } else {
+              set({ myReviews: [], error: '리뷰 목록을 불러오는데 실패했습니다.' });
+              toast({
+                variant: "destructive",
+                title: "오류",
+                description: "리뷰 목록을 불러오는데 실패했습니다."
+              });
+            }
           } finally {
             set({ isLoading: false });
           }
