@@ -72,7 +72,7 @@ public class MyApplicationDetailResponseDto {
                     .activityLocation(template.getActivityLocation())
                     .status(template.getStatus())
                     .images(template.getImages() != null
-                            ? template.getImages().stream().map(image -> image.getImageUrl()).collect(Collectors.toList())
+                            ?  template.getImages().stream().map(image -> image.getImageUrl()).collect(Collectors.toList())
                             : List.of())
                     .contactName(template.getContactName())
                     .contactPhone(template.getContactPhone())

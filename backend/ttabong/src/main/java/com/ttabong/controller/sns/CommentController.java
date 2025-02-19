@@ -8,14 +8,15 @@ import com.ttabong.dto.user.AuthDto;
 import com.ttabong.service.sns.CommentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
+@Slf4j
 @RestController
 @RequestMapping("/reviews/comments")
 @RequiredArgsConstructor
-public class CommentController extends LoggerConfig {
+public class CommentController {
 
     private final CommentService commentService;
 
@@ -25,7 +26,7 @@ public class CommentController extends LoggerConfig {
             @AuthenticationPrincipal AuthDto authDto,
             @PathVariable(name = "reviewId") Integer reviewId,
             @RequestBody @Valid CommentCreateAndUpdateRequestDto requestDto) {
-        logger.info("11. 댓글 작성 <POST> \"/{reviewId}\"");
+        log.info("11. 댓글 작성 <POST> \"/{reviewId}\"");
         CommentCreateAndUpdateResponseDto response = commentService.createComment(authDto, reviewId, requestDto);
 
         return ResponseEntity.ok(response);
@@ -37,7 +38,7 @@ public class CommentController extends LoggerConfig {
             @AuthenticationPrincipal AuthDto authDto,
             @PathVariable Integer commentId,
             @RequestBody @Valid CommentCreateAndUpdateRequestDto requestDto) {
-        logger.info("12. 댓글 수정 <PATCH> \"/{commentId}\"");
+        log.info("12. 댓글 수정 <PATCH> \"/{commentId}\"");
         CommentCreateAndUpdateResponseDto response = commentService.updateComment(authDto, commentId, requestDto);
 
         return ResponseEntity.ok(response);
@@ -48,7 +49,7 @@ public class CommentController extends LoggerConfig {
     public ResponseEntity<CommentDeleteResponseDto> deleteComment(
             @AuthenticationPrincipal AuthDto authDto,
             @PathVariable(name = "commentId") Integer commentId) {
-        logger.info("13. 댓글 삭제 <PATCH> \"/{commentId}/delete\"");
+        log.info("13. 댓글 삭제 <PATCH> \"/{commentId}/delete\"");
         CommentDeleteResponseDto response = commentService.deleteComment(authDto, commentId);
 
         return ResponseEntity.ok(response);

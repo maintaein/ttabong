@@ -11,5 +11,6 @@ import lombok.NoArgsConstructor;
 @Builder
 public class EvaluateApplicationsRequestDto {
     private Integer volunteerId;
+    private String status;
     private String recommendationStatus;
 }

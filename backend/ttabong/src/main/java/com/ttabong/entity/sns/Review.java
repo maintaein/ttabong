@@ -1,5 +1,6 @@
 package com.ttabong.entity.sns;
 
+import com.ttabong.entity.recruit.Application;
 import com.ttabong.entity.recruit.Recruit;
 import com.ttabong.entity.user.Organization;
 import com.ttabong.entity.user.User;
@@ -77,6 +78,39 @@ public class Review {
 
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<ReviewImage> reviewImages = new LinkedHashSet<>();
+
+    public static Review buildRecruitParentReview(Recruit recruit){
+        return Review.builder()
+                .groupId(recruit.getTemplate().getGroup().getId())
+                .recruit(recruit)
+                .org(recruit.getTemplate().getOrg())
+                .writer(recruit.getTemplate().getOrg().getUser())
+                .title("미작성: " + recruit.getTemplate().getTitle())
+                .content("")
+                .isDeleted(false)
+                .isPublic(true)
+                .imgCount(0)
+                .updatedAt(Instant.now())
+                .createdAt(Instant.now())
+                .build();
+    }
+
+    public static Review buildRecruitVolunteerReview(Recruit recruit, Application application, Review parentReview) {
+        return Review.builder()
+                .parentReview(parentReview)
+                .groupId(recruit.getTemplate().getGroup().getId())
+                .recruit(recruit)
+                .org(recruit.getTemplate().getOrg())
+                .writer(application.getVolunteer().getUser())
+                .title("미작성: " + recruit.getTemplate().getTitle())
+                .content("")
+                .isDeleted(false)
+                .isPublic(true)
+                .imgCount(0)
+                .updatedAt(Instant.now())
+                .createdAt(Instant.now())
+                .build();
+    }
 
     @PrePersist
     public void prePersist() {

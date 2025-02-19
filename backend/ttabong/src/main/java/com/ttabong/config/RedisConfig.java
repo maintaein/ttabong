@@ -1,6 +1,8 @@
 package com.ttabong.config;
 
 import com.ttabong.handler.RedisExpirationListener;
+import com.ttabong.service.sns.ReviewService;
+import com.ttabong.servicejpa.recruit.OrgRecruitService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,7 +13,6 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.PatternTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
-import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
@@ -56,11 +57,11 @@ public class RedisConfig {
 
     @Bean
     @Lazy
-    public RedisMessageListenerContainer keyExpirationListener(RedisConnectionFactory connectionFactory) {
+    public RedisMessageListenerContainer keyExpirationListener(RedisConnectionFactory connectionFactory, OrgRecruitService orgRecruitService, ReviewService reviewService) {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
         container.addMessageListener(
-                new RedisExpirationListener(container), // ✅ 직접 생성하여 순환 참조 방지
+                new RedisExpirationListener(container, orgRecruitService, reviewService),
                 new PatternTopic("__keyevent@0__:expired")
         );
         return container;

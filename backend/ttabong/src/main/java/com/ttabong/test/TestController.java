@@ -47,6 +47,7 @@ public class TestController extends LoggerConfig {
     @GetMapping("/redis/{time}")
     public ResponseEntity<?> getRedis(@PathVariable Integer time) throws Exception {
         testService.addRedisTTL(time);
+        testService.addRedisTTL(time + 10);
         return ResponseEntity.ok().build();
     }
 }

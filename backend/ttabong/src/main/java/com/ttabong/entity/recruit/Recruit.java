@@ -1,14 +1,17 @@
 package com.ttabong.entity.recruit;
 
+import com.ttabong.dto.recruit.requestDto.org.UpdateRecruitsRequestDto;
 import com.ttabong.entity.sns.Review;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -19,6 +22,7 @@ import java.util.Set;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Table(name = "Recruit")
+@DynamicUpdate
 public class Recruit {
 
     @Id
@@ -56,7 +60,7 @@ public class Recruit {
     private Integer participateVolCount;
 
     @Lob
-    @Column(name = "status", nullable = false, columnDefinition = "enum('RECRUITING','RECRUITMENT_CLOSED','ACTIVITY_COMPLETED') DEFAULT 'PENDING'")
+    @Column(name = "status", nullable = false, columnDefinition = "enum('RECRUITING','RECRUITMENT_CLOSED','ACTIVITY_COMPLETED') DEFAULT 'RECRUITING'")
     private String status;
 
     @ColumnDefault("0")
@@ -79,5 +83,19 @@ public class Recruit {
 
     @OneToMany(mappedBy = "recruit")
     private Set<VolunteerReaction> volunteerReactions = new LinkedHashSet<>();
-
+    public void updateStatusComplete(){this.status = "ACTIVITY_COMPLETED";}
+    public void updateStatusClosed(){this.status = "RECRUITMENT_CLOSED";}
+    public void updateDelete(){
+        this.isDeleted = true;
+    }
+    public void statusClose(){
+        this.status = "RECRUITMENT_CLOSED";
+    }
+    public void patchUpdate(UpdateRecruitsRequestDto dto){
+        if(dto.getDeadline() != null) this.deadline = dto.getDeadline().atZone(ZoneId.of("Asia/Seoul")).toInstant();
+        if(dto.getActivityDate() != null) this.activityDate = dto.getActivityDate();
+        if(dto.getActivityStart() != null) this.activityStart = dto.getActivityStart();
+        if(dto.getActivityEnd() != null) this.activityEnd = dto.getActivityEnd();
+        if(dto.getMaxVolunteer() != null) this.maxVolunteer = dto.getMaxVolunteer();
+    }
 }

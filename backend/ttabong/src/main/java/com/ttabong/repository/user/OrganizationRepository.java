@@ -10,8 +10,10 @@ import java.util.Optional;
 
 @Repository
 public interface OrganizationRepository extends JpaRepository<Organization, Integer> {
-    Optional<Organization> findByUserId(Integer userId);
+
     boolean existsByUserId(Integer userId);
+
+    Optional<Organization> findByUserId(Integer userId);
 
     @Query("SELECT COUNT(o) > 0 FROM Organization o JOIN o.user u WHERE u.id = :userId AND u.isDeleted = FALSE")
     boolean existsByUserIdAndUserIsDeletedFalse(Integer userId);
