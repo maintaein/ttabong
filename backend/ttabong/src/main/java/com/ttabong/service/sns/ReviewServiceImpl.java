@@ -22,6 +22,7 @@ import com.ttabong.util.CacheUtil;
 import com.ttabong.util.ImageUtil;
 import io.minio.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +35,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -715,12 +717,17 @@ public class ReviewServiceImpl implements ReviewService {
     public void createReviewAfterSchedule(int recruitId) {
         Optional<Recruit> recruit = recruitRepository.findById(recruitId);
         if(recruit.isPresent()) {
-            //공고없음
+            log.info("스케쥴러를 통해 리뷰를 생성하기 위한 공고가 없습니다");
+            throw new NotFoundException("해당하는 공고가 없습니다");
         }
         List<Application> applications = applicationRepository.findByRecruitIdAndStatus(recruitId, "APPROVED");
-
         List<Review> reviews = new ArrayList<>();
-        //reviews.add(Review.builder().)
+        Review parentReview = reviewRepository.save(Review.buildRecruitParentReview(recruit.get()));
+        //reviews.add(parentReview);
+        reviews.addAll(applications.stream().map(application ->{
+            return Review.buildRecruitVolunteerReview(recruit.get(), application, parentReview);
+        }).toList());
+        reviewRepository.saveAll(reviews);
     }
 
 }
