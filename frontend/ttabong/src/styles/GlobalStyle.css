@@ -3,6 +3,10 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+
   html {
     -webkit-tap-highlight-color: transparent;
   }
@@ -10,7 +14,6 @@
   /* 기본 폰트 설정 */
   * {
     @apply text-base leading-normal font-normal;
-    font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   }
 
   /* 헤딩 태그 */
