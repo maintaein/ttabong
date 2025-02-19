@@ -370,23 +370,23 @@ VALUES
     (3, 2, 'COMPLETED', TRUE, FALSE, NOW(), NOW()),
     (3, 8, 'AUTO_CANCEL', FALSE, FALSE, NOW(), NOW());
 
-INSERT INTO Review_image (review_id, image_url, is_deleted, is_thumbnail, created_at, next_image_id)
+INSERT INTO Review_image (review_id, template_id, image_url, is_deleted, is_thumbnail, created_at, next_image_id)
 VALUES
-    (1, '1_1.webp', FALSE, TRUE, NOW(), NULL), -- 노인 말벗
-    (2, '2_1.webp', FALSE, TRUE, NOW(), NULL),-- 취약계층 일손 봉사
-    (3, '3_1.webp', FALSE, TRUE, NOW(), NULL), -- 공원 플로깅
-    (4, '4_1.webp', FALSE, TRUE, NOW(), NULL),-- 해외아동 교육 봉사
-    (5, '5_1.webp', FALSE, TRUE, NOW(), NULL), -- 초등학생 학습 멘토링
-    (6, '6_1.webp', FALSE, TRUE, NOW(), NULL),-- 재난지역 청소 지원 봉사
-    (7, '7_1.webp', FALSE, TRUE, NOW(), NULL), -- 저소득층 아동 영어 교육
-    (7, '7_2.webp', FALSE, FALSE, NOW(), NULL),-- 연탄봉사
-    (7, '7_3.webp', FALSE, FALSE, NOW(), NULL),
-    (7, '7_4.webp', FALSE, FALSE, NOW(), NULL),
-    (7, '7_5.webp', FALSE, FALSE, NOW(), NULL),
-    (7, '7_6.webp', FALSE, FALSE, NOW(), NULL),
-    (7, '7_7.webp', FALSE, FALSE, NOW(), NULL),
-    (7, '7_8.webp', FALSE, FALSE, NOW(), NULL),
-    (7, '7_9.webp', FALSE, FALSE, NOW(), NULL);
+    (1, 1,'1_1.webp', FALSE, TRUE, NOW(), NULL), -- 노인 말벗
+    (2, 2,'2_1.webp', FALSE, TRUE, NOW(), NULL),-- 취약계층 일손 봉사
+    (3, 3,'3_1.webp', FALSE, TRUE, NOW(), NULL), -- 공원 플로깅
+    (4, 4,'4_1.webp', FALSE, TRUE, NOW(), NULL),-- 해외아동 교육 봉사
+    (5, 1,'5_1.webp', FALSE, TRUE, NOW(), NULL), -- 초등학생 학습 멘토링
+    (6, 4,'6_1.webp', FALSE, TRUE, NOW(), NULL),-- 재난지역 청소 지원 봉사
+    (7, 1, '7_1.webp', FALSE, TRUE, NOW(), NULL), -- 저소득층 아동 영어 교육
+    (7, 1, '7_2.webp', FALSE, FALSE, NOW(), NULL),-- 연탄봉사
+    (7, 1, '7_3.webp', FALSE, FALSE, NOW(), NULL),
+    (7, 1, '7_4.webp', FALSE, FALSE, NOW(), NULL),
+    (7, 1, '7_5.webp', FALSE, FALSE, NOW(), NULL),
+    (7, 1, '7_6.webp', FALSE, FALSE, NOW(), NULL),
+    (7, 1, '7_7.webp', FALSE, FALSE, NOW(), NULL),
+    (7, 1, '7_8.webp', FALSE, FALSE, NOW(), NULL),
+    (7, 1, '7_9.webp', FALSE, FALSE, NOW(), NULL);
 
 INSERT INTO Volunteer_reaction (volunteer_id, recruit_id, is_like, created_at)
 SELECT v.volunteer_id, r.recruit_id, CASE WHEN RAND() > 0.5 THEN TRUE ELSE FALSE END, NOW()
