@@ -30,11 +30,8 @@ const signUpSchema = z.object({
     .min(2, '이름은 2자 이상, 10자 이하 이어야 합니다')
     .regex(/^[가-힣a-zA-Z\s]+$/, '이름에는 한글과 영문만 입력 가능합니다'),
   password: z.string()
-    .min(8, '비밀번호는 8자 이상, 20자 이하여야 합니다')
-    .regex(
-      /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/,
-      '비밀번호는 영문과 숫자를 모두 포함해야 합니다'
-    ),
+    .min(8, '비밀번호는 8자 이상, 20자 이하여야 합니다'),
+    
   phone: z.string()
     .regex(/^\d{3}-\d{4}-\d{4}$/, '올바른 전화번호 형식이 아닙니다 (예: 010-1234-5678)'),
   preferredTime: z.string().optional(),
