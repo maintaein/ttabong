@@ -3,6 +3,7 @@ package com.ttabong.servicejpa.recruit;
 import com.ttabong.dto.recruit.requestDto.org.*;
 import com.ttabong.dto.recruit.responseDto.org.*;
 import com.ttabong.dto.user.AuthDto;
+import com.ttabong.entity.recruit.Recruit;
 
 import java.util.List;
 
@@ -45,4 +46,7 @@ public interface OrgRecruitService {
     void updateCompleteRecruitStatus(int recruitId);
 
     void updateDeadlineRecruitStatus(int recruitId);
+
+    int getMinutesToDeadlineEvent(Recruit recruit);
+    int getMinutesToCompleteEvent(Recruit recruit);
 }

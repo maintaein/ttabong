@@ -1,6 +1,5 @@
 package com.ttabong.controller.recruit;
 
-import com.ttabong.config.LoggerConfig;
 import com.ttabong.dto.recruit.requestDto.vol.ApplyRecruitRequestDto;
 import com.ttabong.dto.recruit.requestDto.vol.DeleteLikesRequestDto;
 import com.ttabong.dto.recruit.requestDto.vol.LikeOnRecruitRequestDto;
@@ -45,9 +44,9 @@ public class VolRecruitController {
     @GetMapping("/templates/{templateId}")
     public ResponseEntity<ReadRecruitDetailResponseDto> recruitsDetail(@PathVariable Integer templateId) {
         log.info("2. 특정 모집 공고 상세 조회 <GET> \"//templates/{templateId}\"");
-        return volRecruitService.getTemplateById(templateId)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        ReadRecruitDetailResponseDto responseDto = volRecruitService.getTemplateById(templateId);
+        return ResponseEntity.ok(responseDto);
+
     }
 
     // 3. 모집 공고 신청
@@ -128,10 +127,10 @@ public class VolRecruitController {
         AuthDto authDto = (AuthDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         int userId = authDto.getUserId();
 
-        Integer reactionId = volRecruitService.saveReaction(userId, request.getTemplateId(), request.getIsLike());
+        List<Integer> reactionIds = volRecruitService.saveReaction(userId, request.getTemplateId(), request.getIsLike());
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new LikeOnRecruitResponseDto(reactionId, request.getIsLike()));
+                .body(new LikeOnRecruitResponseDto(reactionIds, request.getIsLike()));
     }
 
     // 9. "좋아요" 취소
