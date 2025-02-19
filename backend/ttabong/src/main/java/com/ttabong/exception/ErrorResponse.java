@@ -2,6 +2,7 @@ package com.ttabong.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+
 import java.time.LocalDateTime;
 
 @Getter

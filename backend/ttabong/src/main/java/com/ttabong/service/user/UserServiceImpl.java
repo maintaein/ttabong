@@ -1,7 +1,6 @@
 package com.ttabong.service.user;
 
 import com.ttabong.dto.user.*;
-import com.ttabong.dto.user.VolunteerRegisterRequest;
 import com.ttabong.entity.user.Organization;
 import com.ttabong.entity.user.User;
 import com.ttabong.entity.user.Volunteer;

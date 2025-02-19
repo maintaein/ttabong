@@ -5,10 +5,7 @@ import com.ttabong.dto.sns.request.ReviewEditRequestDto;
 import com.ttabong.dto.sns.request.ReviewVisibilitySettingRequestDto;
 import com.ttabong.dto.sns.response.*;
 import com.ttabong.dto.user.AuthDto;
-import com.ttabong.entity.recruit.Category;
-import com.ttabong.entity.recruit.Recruit;
-import com.ttabong.entity.recruit.Template;
-import com.ttabong.entity.recruit.TemplateGroup;
+import com.ttabong.entity.recruit.*;
 import com.ttabong.entity.sns.Review;
 import com.ttabong.entity.sns.ReviewImage;
 import com.ttabong.entity.user.Organization;
@@ -25,6 +22,7 @@ import com.ttabong.util.CacheUtil;
 import com.ttabong.util.ImageUtil;
 import io.minio.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +35,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -89,6 +88,7 @@ public class ReviewServiceImpl implements ReviewService {
             if (!template.getOrg().getUser().getId().equals(authDto.getUserId())) {
                 throw new ForbiddenException("해당 기관의 리뷰만 작성할 수 없습니다.");
             }
+
         } else {
             boolean isApplicant = applicationRepository.existsByVolunteerUserIdAndRecruitId(writer.getId(), recruit.getId());
             if (!isApplicant) {
@@ -431,14 +431,11 @@ public class ReviewServiceImpl implements ReviewService {
         );
     }
 
+
+
     @Override
     @Transactional(readOnly = true)
     public List<AllReviewPreviewResponseDto> readAllReviews(Integer cursor, Integer limit) {
-
-        if (limit == null || limit <= 0) {
-            throw new IllegalArgumentException("limit 값은 1 이상이어야 합니다.");
-        }
-
         List<Review> reviews = reviewRepository.findAllReviews(cursor, PageRequest.of(0, limit));
 
         return reviews.stream()
@@ -447,13 +444,11 @@ public class ReviewServiceImpl implements ReviewService {
                             .findThumbnailImageByReviewId(review.getId(), PageRequest.of(0, 1))
                             .stream().findFirst().orElse(null);
 
-                    String thumbnailUrl = null;
-                    if (objectPath != null) {
-                        try {
-                            thumbnailUrl = imageUtil.getPresignedDownloadUrl(objectPath);
-                        } catch (Exception e) {
-                            System.err.println("ThumbnailUrl 호출 실패: " + e.getMessage());
-                        }
+                    String thumbnailUrl;
+                    try {
+                        thumbnailUrl = (objectPath != null) ? imageUtil.getPresignedDownloadUrl(objectPath) : null;
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
                     }
 
                     return AllReviewPreviewResponseDto.builder()
@@ -716,6 +711,24 @@ public class ReviewServiceImpl implements ReviewService {
                             .build();
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public void createReviewAfterSchedule(int recruitId) {
+        log.info("봉사가 끝나서 관련 게시글을 생성합니다");
+        Optional<Recruit> recruit = recruitRepository.findById(recruitId);
+        if(recruit.isEmpty()) {
+            log.info("스케쥴러를 통해 리뷰를 생성하기 위한 공고가 없습니다");
+            throw new NotFoundException("해당하는 공고가 없습니다");
+        }
+        List<Application> applications = applicationRepository.findByRecruitIdAndStatus(recruitId, "APPROVED");
+        List<Review> reviews = new ArrayList<>();
+        Review parentReview = reviewRepository.save(Review.buildRecruitParentReview(recruit.get()));
+        //reviews.add(parentReview);
+        reviews.addAll(applications.stream().map(application ->{
+            return Review.buildRecruitVolunteerReview(recruit.get(), application, parentReview);
+        }).toList());
+        reviewRepository.saveAll(reviews);
     }
 
 }

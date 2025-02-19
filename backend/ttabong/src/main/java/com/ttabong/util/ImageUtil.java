@@ -22,6 +22,27 @@ public class ImageUtil {
     @Value("${minio.bucket-name}")
     String bucketName;
 
+    public static String extractObjectPath(String presignedUrl) {
+        if (presignedUrl == null || presignedUrl.isEmpty()) {
+            return null;
+        }
+
+        try {
+            // URL에서 파일명 추출 (마지막 "/" 이후 문자열)
+            URI uri = new URI(presignedUrl);
+            String path = uri.getPath(); // 예: "/ttabong-bucket/review-images/1-1.webp"
+
+            // "/"로 split 후 마지막 요소 가져오기 (파일명)
+            String[] segments = path.split("/");
+            String filename = segments[segments.length - 1]; // "1-1.webp" 반환
+
+            return filename.replace("-", "_");
+
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("URL 파싱 오류: " + presignedUrl, e);
+        }
+    }
+
     public String getPresignedUploadUrl(String objectName) {
         try {
             return minioClient.getPresignedObjectUrl(
@@ -44,33 +65,11 @@ public class ImageUtil {
                             .bucket(bucketName)
                             .object(objectName)
                             .method(Method.GET)
-                            .expiry(10, TimeUnit.MINUTES) // 10분 동안 유효
+                            .expiry(24, TimeUnit.HOURS) // 10분 동안 유효
                             .build()
             );
         } catch (Exception e) {
             throw new ImageProcessException("Presigned URL 생성 실패: " + e.getMessage(), e);
-        }
-    }
-
-
-    public static String extractObjectPath(String presignedUrl) {
-        if (presignedUrl == null || presignedUrl.isEmpty()) {
-            return null;
-        }
-
-        try {
-            // URL에서 파일명 추출 (마지막 "/" 이후 문자열)
-            URI uri = new URI(presignedUrl);
-            String path = uri.getPath(); // 예: "/ttabong-bucket/review-images/1-1.webp"
-
-            // "/"로 split 후 마지막 요소 가져오기 (파일명)
-            String[] segments = path.split("/");
-            String filename = segments[segments.length - 1]; // "1-1.webp" 반환
-
-            return filename.replace("-", "_");
-
-        } catch (URISyntaxException e) {
-            throw new RuntimeException("URL 파싱 오류: " + presignedUrl, e);
         }
     }
 
@@ -100,7 +99,6 @@ public class ImageUtil {
             );
 
             System.out.println("MinIO 파일명 변경 성공: " + oldObjectName + " → " + newObjectName);
-
         } catch (Exception e) {
             throw new RuntimeException("MinIO에서 파일명 변경 실패: " + e.getMessage(), e);
         }
@@ -112,7 +110,7 @@ public class ImageUtil {
                         .bucket(bucketName)
                         .object(objectName)
                         .method(Method.DELETE)
-                        .expiry(10, TimeUnit.MINUTES) // 10분 동안 유효
+                        .expiry(24, TimeUnit.HOURS) // 10분 동안 유효
                         .build()
         );
     }
@@ -125,14 +123,12 @@ public class ImageUtil {
                             .object(objectName)
                             .build()
             );
-
             minioClient.removeObject(
                     RemoveObjectArgs.builder()
                             .bucket(bucketName)
                             .object(objectName)
                             .build()
             );
-
             System.out.println("✅ MinIO 파일 삭제 성공: " + objectName);
 
         } catch (ErrorResponseException e) {

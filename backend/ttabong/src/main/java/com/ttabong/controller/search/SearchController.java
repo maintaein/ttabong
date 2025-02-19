@@ -14,7 +14,7 @@ public class SearchController {
 
     private final SearchService searchService;
 
-    @GetMapping("/templates")
+    @PostMapping("/templates")
     public ResponseEntity<RecruitResponseDto> searchTemplates(
             @RequestParam(required = false) Integer cursor,
             @RequestParam(defaultValue = "10") Integer limit,
