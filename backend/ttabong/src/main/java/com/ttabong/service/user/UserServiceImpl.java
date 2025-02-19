@@ -47,9 +47,9 @@ public class UserServiceImpl implements UserService {
         }
 
         boolean isUserTypeValid = false;
-        if ("volunteer".equalsIgnoreCase(loginRequest.getUserType())) {
+        if ("volunteer".equals(loginRequest.getUserType())) {
             isUserTypeValid = volunteerRepository.existsByUserIdAndUserIsDeletedFalse(user.getId());
-        } else if ("organization".equalsIgnoreCase(loginRequest.getUserType())) {
+        } else if ("organization".equals(loginRequest.getUserType())) {
             isUserTypeValid = organizationRepository.existsByUserIdAndUserIsDeletedFalse(user.getId());
         }
 
