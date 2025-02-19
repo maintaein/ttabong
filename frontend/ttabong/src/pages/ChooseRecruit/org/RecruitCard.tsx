@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { RecruitItem } from '@/types/recruit';
 import { useNavigate } from 'react-router-dom';
-import { MoreVertical, Edit, Clock, CheckCircle, Users, FileEdit } from "lucide-react";
+import { MoreVertical, Edit, Clock, Users, FileEdit } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -106,13 +106,6 @@ export const RecruitCard: React.FC<RecruitCardProps> = ({
                 }}>
                   <Clock className="mr-2 h-4 w-4" />
                   모집 마감
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={(e) => {
-                  e.stopPropagation();
-                  onStatusChange('ACTIVITY_COMPLETED');
-                }}>
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  활동 완료
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

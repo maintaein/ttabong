@@ -104,9 +104,6 @@ export interface CreateTemplateRequest {
   contactName: string;
   contactPhone: string;
   description: string;
-  volunteerField: string[];
-  volunteerTypes: string[];
-  volunteerCount: number;
 }
 
 // 데이터 변환 유틸리티 함수
@@ -116,16 +113,15 @@ export const transformTemplateData = (localData: TemplateFormData): CreateTempla
     orgId: 1,
     categoryId: 2,
     title: localData.title,
-    activityLocation: localData.activityLocation,
-    status: 'ACTIVE',
+    activityLocation: localData.locationType === '재택' 
+      ? '재택' 
+      : `${localData.address} ${localData.detailAddress}`.trim(),
+    status: 'ALL',
     images: localData.images,
     imageCount: localData.images.length,
     contactName: localData.contactName,
     contactPhone: `${localData.contactPhone.areaCode}-${localData.contactPhone.middle}-${localData.contactPhone.last}`,
-    description: localData.description,
-    volunteerField: localData.volunteerField,
-    volunteerTypes: localData.volunteerTypes,
-    volunteerCount: localData.volunteerCount
+    description: localData.description
   };
 };
 

@@ -7,7 +7,8 @@ interface RecruitListProps {
   isEditing: boolean;
   selectedRecruits: number[];
   onSelectRecruit: (recruitId: number) => void;
-  onStatusChange: (recruitId: number, newStatus: string) => void;
+  onStatusChange: (recruitId: number, newStatus: string) => Promise<void>;
+  statusOptions: { value: string; label: string; }[];
 }
 
 export const RecruitList: React.FC<RecruitListProps> = ({ 
@@ -15,7 +16,7 @@ export const RecruitList: React.FC<RecruitListProps> = ({
   isEditing,
   selectedRecruits,
   onSelectRecruit,
-  onStatusChange
+  onStatusChange,
 }) => {
   if (!recruits) return null;
 
