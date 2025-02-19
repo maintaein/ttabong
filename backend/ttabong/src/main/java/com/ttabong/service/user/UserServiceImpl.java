@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -37,15 +38,31 @@ public class UserServiceImpl implements UserService {
     public UserLoginResponseDto login(LoginRequest loginRequest) {
         UserLoginProjection user = userRepository.findByEmailAndIsDeletedFalse(loginRequest.getEmail());
 
-        if (user == null) {
-            return null; // 혹은 Optional<UserLoginResponseDto>로 감싸서 반환 가능
+        if (user == null || !passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+            return UserLoginResponseDto.builder()
+                    .status(401)
+                    .message("이메일 또는 비밀번호가 일치하지 않습니다.")
+                    .build();
         }
 
-        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            return null;
+        boolean isUserTypeValid = false;
+        if ("volunteer".equals(loginRequest.getUserType())) {
+            isUserTypeValid = volunteerRepository.existsByUserIdAndUserIsDeletedFalse(user.getId());
+        } else if ("organization".equals(loginRequest.getUserType())) {
+            isUserTypeValid = organizationRepository.existsByUserIdAndUserIsDeletedFalse(user.getId());
+        }
+
+        if (!isUserTypeValid) {
+            String userType = loginRequest.getUserType().equalsIgnoreCase("volunteer")? "봉사자" : "봉사기관";
+            return UserLoginResponseDto.builder()
+                    .status(403)
+                    .message("해당 계정은 " + userType + " 계정이 아닙니다.")
+                    .build();
         }
 
         return UserLoginResponseDto.builder()
+                .status(200)
+                .message("로그인 성공")
                 .userId(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
@@ -53,10 +70,11 @@ public class UserServiceImpl implements UserService {
     }
 
 
+
     @Override
-    public String registerVolunteer(VolunteerRegisterRequest request) {
+    public boolean registerVolunteer(VolunteerRegisterRequest request) {
         if (userRepository.existsByEmailAndIsDeletedFalse(request.getEmail())) {
-            return "failed : user already exists";
+            return false;
         }
 
         User user = User.builder()
@@ -84,13 +102,13 @@ public class UserServiceImpl implements UserService {
                 .build();
         volunteerRepository.save(volunteer);
 
-        return "";
+        return true;
     }
 
     @Override
-    public String registerOrganization(OrganizationRegisterRequest request) {
+    public boolean registerOrganization(OrganizationRegisterRequest request) {
         if (userRepository.existsByEmailAndIsDeletedFalse(request.getEmail())) {
-            return "failed : user already exists";
+            return false;
         }
 
         User user = User.builder()
@@ -114,7 +132,7 @@ public class UserServiceImpl implements UserService {
                 .build();
         organizationRepository.save(organization);
 
-        return "";
+        return true;
     }
 
     @Override

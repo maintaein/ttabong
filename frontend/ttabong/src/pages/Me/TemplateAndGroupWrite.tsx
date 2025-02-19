@@ -15,12 +15,7 @@ import { templateApi } from '@/api/templateApi';
 import { recruitApi } from '@/api/recruitApi';
 import { transformTemplateData } from '@/types/template';
 import { useToast } from "@/hooks/use-toast";
-
-const formatTime = (time: number) => {
-  const hours = Math.floor(time);
-  const minutes = Math.round((time - hours) * 60);
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-};
+import { useImageStore } from '@/api/imageStore';
 
 const steps = [
   "공고 내용 입력(1/2)",
@@ -35,13 +30,10 @@ const TemplateAndGroupWrite: React.FC = () => {
   const [isCompleted, setIsCompleted] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const templateId = location.state?.templateId;
-  const isRecruitEdit = location.state?.isRecruitEdit;
-  const recruitId = location.state?.recruitId;
-  const recruitData = location.state?.recruitData;
   const { scrollToTop } = useScroll();
-  const { createTemplate: createTemplateApi } = useTemplateStore();
+  const { createTemplate: createTemplateApi, templateDetail, fetchTemplateDetail } = useTemplateStore();
   const { toast } = useToast();
+  const { addPreviewImages } = useImageStore();
 
   // 🔹 모든 step의 데이터를 하나의 state로 관리
   const [templateData, setTemplateData] = useState<TemplateFormData>({
@@ -67,11 +59,13 @@ const TemplateAndGroupWrite: React.FC = () => {
     volunteerDate: null,
     startTime: "",
     endTime: "",
-    volunteerField: []
+    volunteerField: [],
+    activityLocation: ""
   });
 
   // 상태 추가
   const [showImageDialog, setShowImageDialog] = useState(false);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
 
   useEffect(() => {
     if (isCompleted) {
@@ -81,118 +75,84 @@ const TemplateAndGroupWrite: React.FC = () => {
     }
   }, [isCompleted, navigate]);
 
-  // 초기 데이터 로드
   useEffect(() => {
-    if (isRecruitEdit && recruitData) {
-      const loadTemplateAndRecruit = async () => {
-        try {
-          const template = await templateApi.getTemplate(templateId);
-          
-          // 날짜 문자열을 UTC 기준으로 변환
-          const deadline = new Date(recruitData.deadline);
-          const activityDate = new Date(recruitData.activityDate);
-          
-          // 시간대 오프셋 조정
-          deadline.setMinutes(deadline.getMinutes() - deadline.getTimezoneOffset());
-          activityDate.setMinutes(activityDate.getMinutes() - activityDate.getTimezoneOffset());
-
-          setTemplateData({
-            ...templateData,
-            groupId: template.groupId,
-            title: template.title || "",
-            description: template.description || "",
-            images: template.images || [],
-            volunteerTypes: Array.isArray(template.volunteerTypes) 
-              ? template.volunteerTypes 
-              : (template.volunteerTypes?.split(", ") || []),
-            locationType: template.activityLocation === "재택" ? "재택" : "주소",
-            address: template.activityLocation !== "재택" 
-              ? template.activityLocation.split(" ").slice(0, -1).join(" ")
-              : "",
-            detailAddress: template.activityLocation !== "재택"
-              ? template.activityLocation.split(" ").slice(-1)[0]
-              : "",
-            contactName: template.contactName || "",
-            // contactPhone 처리 개선
-            contactPhone: template.contactPhone 
-              ? {
-                  areaCode: template.contactPhone.split("-")[0] || "010",
-                  middle: template.contactPhone.split("-")[1] || "",
-                  last: template.contactPhone.split("-")[2] || ""
-                }
-              : {
-                  areaCode: "010",
-                  middle: "",
-                  last: ""
-                },
-            volunteerField: Array.isArray(template.volunteerField)
-              ? template.volunteerField
-              : (template.volunteerField?.split(", ") || []),
-            startDate: new Date(),
-            endDate: deadline,
-            volunteerDate: activityDate,
-            startTime: formatTime(recruitData.activityStart),
-            endTime: formatTime(recruitData.activityEnd),
-            volunteerCount: recruitData.maxVolunteer
-          });
-        } catch (error) {
-          console.error('데이터 로드 실패:', error);
-          toast({
-            variant: "destructive",
-            title: "오류",
-            description: "데이터를 불러오는데 실패했습니다."
-          });
-        }
-      };
-      loadTemplateAndRecruit();
-    } else if (templateId) {
-      const loadTemplate = async () => {
-        try {
-          const template = await templateApi.getTemplate(templateId);
-          setTemplateData({
-            ...templateData,
-            groupId: template.groupId,
-            title: template.title || "",
-            description: template.description || "",
-            images: template.images || [],
-            volunteerTypes: Array.isArray(template.volunteerTypes) 
-              ? template.volunteerTypes 
-              : template.volunteerTypes?.split(", ") || [],
-            volunteerCount: template.volunteerCount || 10,
-            locationType: template.activityLocation === "재택" ? "재택" : "주소",
-            address: template.activityLocation !== "재택" 
-              ? template.activityLocation.split(" ").slice(0, -1).join(" ")
-              : "",
-            detailAddress: template.activityLocation !== "재택"
-              ? template.activityLocation.split(" ").slice(-1)[0]
-              : "",
-            contactName: template.contactName || "",
-            contactPhone: {
-              areaCode: template.contactPhone?.split("-")[0] || "010",
-              middle: template.contactPhone?.split("-")[1] || "",
-              last: template.contactPhone?.split("-")[2] || ""
-            },
-            volunteerField: Array.isArray(template.volunteerField)
-              ? template.volunteerField
-              : template.volunteerField?.split(", ") || [],
-            startDate: template.startDate ? new Date(template.startDate) : null,
-            endDate: template.endDate ? new Date(template.endDate) : null,
-            volunteerDate: template.volunteerDate ? new Date(template.volunteerDate) : null,
-            startTime: template.startTime || "",
-            endTime: template.endTime || ""
-          });
-        } catch (error) {
-          console.error('템플릿 로드 실패:', error);
-          toast({
-            variant: "destructive",
-            title: "오류",
-            description: "템플릿을 불러오는데 실패했습니다."
-          });
-        }
-      };
-      loadTemplate();
+    // 템플릿 사용 모드일 때만 데이터를 불러옴
+    if (location.state?.templateId && location.state?.isTemplateUse) {
+      fetchTemplateDetail(location.state.templateId);
     }
-  }, [templateId, isRecruitEdit, recruitData]);
+  }, [location.state?.templateId, location.state?.isTemplateUse, fetchTemplateDetail]);
+
+  useEffect(() => {
+    // 템플릿 사용 모드일 때만 데이터를 설정
+    if (templateDetail && location.state?.isTemplateUse) {
+      setTemplateData(prev => ({
+        ...prev,
+        ...templateDetail,
+        contactPhone: {
+          areaCode: "010",
+          middle: templateDetail.contactPhone.split('-')[1] || '',
+          last: templateDetail.contactPhone.split('-')[2] || ''
+        },
+        images: templateDetail.images
+      }));
+    }
+  }, [templateDetail, location.state?.isTemplateUse]);
+
+  useEffect(() => {
+    // 템플릿 사용 모드이고 이미지가 있는 경우
+    if (location.state?.isTemplateUse && location.state.template.images?.length > 0) {
+      // 이미지 URL을 File 객체로 변환하여 미리보기에 추가
+      const loadImages = async () => {
+        const imageFiles = await Promise.all(
+          location.state.template.images.map(async (url: string) => {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            return new File([blob], `image_${Date.now()}.webp`, { type: 'image/webp' });
+          })
+        );
+        addPreviewImages(imageFiles);
+      };
+      loadImages();
+    }
+  }, [location.state, addPreviewImages]);
+
+
+  const uploadImage = async (url: string, image: File, index: number, retries = 3): Promise<string> => {
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60초
+
+        const response = await fetch(url, {
+          method: 'PUT',
+          body: image,
+          headers: {
+            'Content-Type': image.type || 'image/webp',
+            'x-amz-acl': 'public-read'  // MinIO 권한 설정
+          },
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return url.split('?')[0];
+      } catch (error) {
+        console.error(`Upload attempt ${attempt + 1} failed for image ${index + 1}:`, error);
+        
+        if (attempt === retries - 1) {
+          throw new Error(`이미지 업로드에 실패했습니다 (${index + 1}번째 이미지)`);
+        }
+        
+        // 재시도 전 대기
+        await new Promise(resolve => setTimeout(resolve, 2000 * (attempt + 1)));
+      }
+    }
+    throw new Error(`이미지 업로드에 실패했습니다 (${index + 1}번째 이미지)`);
+  };
 
   const timeToNumber = (time: string) => {
     const [hours, minutes] = time.split(':').map(Number);
@@ -202,69 +162,82 @@ const TemplateAndGroupWrite: React.FC = () => {
   // 템플릿 생성 및 저장 함수
   const createTemplate = async () => {
     try {
-      if (isRecruitEdit) {
-        // 공고만 수정하는 경우
-        await recruitApi.updateRecruit(recruitId, {
-          deadline: templateData.endDate?.toISOString(),
-          activityDate: templateData.volunteerDate?.toISOString().split('T')[0],
-          activityStart: timeToNumber(templateData.startTime),
-          activityEnd: timeToNumber(templateData.endTime),
-          maxVolunteer: templateData.volunteerCount,
-          images: templateData.images,
-          imageCount: templateData.images.length
-        });
-        toast({
-          title: "성공",
-          description: "공고가 수정되었습니다."
-        });
-      } else {
-        let newTemplateId;
-        if (templateId) {
-          // 템플릿 수정
-          const apiData = transformTemplateData(templateData);
-          await templateApi.updateTemplate(templateId, apiData);
-          newTemplateId = templateId;
-          toast({
-            title: "성공",
-            description: "공고가 생성되었습니다."
-          });
-        } else {
-          // 새 템플릿 생성
-          const response = await createTemplateApi(templateData);
-          newTemplateId = response.templateId;
-          toast({
-            title: "성공",
-            description: "템플릿과 공고가 생성되었습니다."
-          });
-        }
-
-        // 공고 자동 생성
-        const today = new Date();
-        const activityDate = templateData.volunteerDate;
-        
-        if (activityDate && templateData.startTime && templateData.endTime) {
+      // 템플릿 사용 모드인 경우
+      if (location.state?.isTemplateUse) {
+        // 공고 직접 생성
+        if (templateData.volunteerDate && templateData.startTime && templateData.endTime) {
           await recruitApi.createRecruit({
-            templateId: newTemplateId,
-            deadline: templateData.endDate?.toISOString() || today.toISOString(),
-            activityDate: activityDate.toISOString().split('T')[0],
+            templateId: location.state.templateId,
+            deadline: templateData.endDate?.toISOString() || new Date().toISOString(),
+            activityDate: templateData.volunteerDate.toISOString().split('T')[0],
             activityStart: timeToNumber(templateData.startTime),
             activityEnd: timeToNumber(templateData.endTime),
             maxVolunteer: templateData.volunteerCount
           });
+
+          toast({
+            title: "성공",
+            description: "공고가 생성되었습니다."
+          });
+          setIsCompleted(true);
+          return;
         }
       }
 
+      // 새로운 템플릿 생성인 경우
+      console.log('이미지 파일 목록:', imageFiles); // 업로드 전 이미지 파일 확인
+
+      // 1. Presigned URL 요청
+      const presignedUrls = await templateApi.getPresignedUrls(imageFiles.length);
+      console.log('받은 Presigned URLs:', presignedUrls); // presigned URL 확인
+      
+      // 2. 이미지 업로드
+      const uploadedImageUrls = await Promise.all(
+        imageFiles.map((image, index) => 
+          uploadImage(presignedUrls.images[index], image, index)
+        )
+      );
+      console.log('업로드된 이미지 URLs:', uploadedImageUrls); // 최종 업로드된 이미지 URL 확인
+
+      // 3. 템플릿 데이터 준비
+      const updatedTemplateData = {
+        ...templateData,
+        images: uploadedImageUrls,
+        imageCount: uploadedImageUrls.length
+      };
+      console.log('최종 템플릿 데이터:', updatedTemplateData); // 최종 데이터 확인
+
+      // 4. 템플릿 생성/수정
+      const apiData = transformTemplateData({
+        ...updatedTemplateData,
+        images: uploadedImageUrls  // 업로드된 이미지 URL들을 서버에 함께 저장
+      });
+      const response = await createTemplateApi(apiData);
+      
+      // 5. 공고 자동 생성
+      if (templateData.volunteerDate && templateData.startTime && templateData.endTime) {
+        await recruitApi.createRecruit({
+          templateId: response.templateId,
+          deadline: templateData.endDate?.toISOString() || new Date().toISOString(),
+          activityDate: templateData.volunteerDate.toISOString().split('T')[0],
+          activityStart: timeToNumber(templateData.startTime),
+          activityEnd: timeToNumber(templateData.endTime),
+          maxVolunteer: templateData.volunteerCount
+        });
+      }
+
+      toast({
+        title: "성공",
+        description: "템플릿과 공고가 생성되었습니다."
+      });
       setIsCompleted(true);
-      setTimeout(() => {
-        navigate('/choose-recruit');
-      }, 2000);
 
     } catch (error) {
-      console.error('실패:', error);
+      console.error('생성 실패:', error);
       toast({
         variant: "destructive",
         title: "오류",
-        description: isRecruitEdit ? '공고 수정에 실패했습니다.' : '템플릿 생성에 실패했습니다.'
+        description: error instanceof Error ? error.message : "생성에 실패했습니다."
       });
     }
   };
@@ -484,7 +457,14 @@ const TemplateAndGroupWrite: React.FC = () => {
             ) : (
               <>
                 {step === 0 && <Step0GroupSelection templateData={templateData} setTemplateData={setTemplateData} />}
-                {step === 1 && <Step1AnnouncementDetails templateData={templateData} setTemplateData={setTemplateData} />}
+                {step === 1 && (
+                  <Step1AnnouncementDetails 
+                    templateData={templateData} 
+                    setTemplateData={setTemplateData}
+                    imageFiles={imageFiles}
+                    setImageFiles={setImageFiles}
+                  />
+                )}
                 {step === 2 && <Step2RecruitmentConditions templateData={templateData} setTemplateData={setTemplateData} />}
                 {step === 3 && <Step3VolunteerLocation templateData={templateData} setTemplateData={setTemplateData} />}
                 {step === 4 && <Step4ContactInfo templateData={templateData} setTemplateData={setTemplateData} />}

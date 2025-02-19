@@ -33,13 +33,28 @@ export interface Recruit {
   createdAt: string;
 }
 
+export type ApplicationStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'COMPLETED' | 'AUTO_CANCEL' | 'NO_SHOW';
+
 export interface Application {
   applicationId: number;
-  status: 'PENDING' | 'APPROVED' | 'COMPLETED' | 'REJECTED';
+  status: ApplicationStatus;
   evaluationDone: boolean;
   createdAt: string;
-  template: Template;
-  group: Group;
+  template: {
+    templateId: number;
+    title: string;
+    activityLocation: string;
+    status: 'ALL' | 'YOUTH';
+    imageId: string;
+    contactName: string;
+    contactPhone: string;
+    description: string;
+    createdAt: string;
+  };
+  group: {
+    groupId: number;
+    groupName: string;
+  };
   recruit: {
     recruitId: number;
     deadline: string;
@@ -63,13 +78,15 @@ export interface CreateRecruitRequest {
 }
 
 export interface UpdateRecruitRequest {
-  deadline?: string;
-  activityDate?: string;
-  activityStart?: number;
-  activityEnd?: number;
-  maxVolunteer?: number;
-  images?: string[];
-  imageCount?: number;
+  recruitId: number;
+  deadline: string;
+  activityDate: string;
+  activityStart: number;
+  activityEnd: number;
+  maxVolunteer: number;
+  images: string[];
+  imageCount: number;
+  status?: string;
 }
 
 export interface OrgRecruit {
@@ -108,4 +125,60 @@ export interface OrgRecruitsResponse {
 export interface GetApplicationsParams {
   cursor?: number;
   limit?: number;
+}
+
+export interface RecruitDetail {
+  group: {
+    groupId: number;
+    groupName: string;
+  };
+  template: {
+    templateId: number;
+    categoryId: number;
+    title: string;
+    activityLocation: string;
+    status: 'ALL' | 'YOUTH';
+    images: string[];
+    imageId: string;
+    contactName: string;
+    contactPhone: string;
+    description: string;
+    createdAt: string;
+  };
+  recruit: {
+    recruitId: number;
+    deadline: string;
+    activityDate: string;
+    activityStart: number;
+    activityEnd: number;
+    maxVolunteer: number;
+    participateVolCount: number;
+    status: string;
+    updatedAt: string;
+    createdAt: string;
+  };
+  organization: {
+    orgId: number;
+    name: string;
+  };
+  application?: {
+    applicationId: number;
+    name: string;
+    status: string;
+  };
+}
+
+export interface APITemplate {
+  templateId: number;
+  groupId: number;
+  title: string;
+  description: string;
+  activityLocation: string;
+  categoryId: number;
+  status: string;
+  images: string[];
+  contactName: string;
+  contactPhone: string;
+  maxVolunteer: number;
+  createdAt: string;
 } 

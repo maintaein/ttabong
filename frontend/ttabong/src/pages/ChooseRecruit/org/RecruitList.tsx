@@ -1,20 +1,42 @@
 import React from 'react';
 import { RecruitCard } from './RecruitCard';
-import type { OrgRecruit } from '@/types/recruitType';
+import type { RecruitItem } from '@/types/recruit';
 
 interface RecruitListProps {
-  recruits: OrgRecruit[];
-  onDelete: () => void;
+  recruits: RecruitItem[] | undefined;
+  isEditing: boolean;
+  selectedRecruits: number[];
+  onSelectRecruit: (recruitId: number) => void;
+  onStatusChange: (recruitId: number, newStatus: string) => void;
 }
 
-export const RecruitList: React.FC<RecruitListProps> = ({ recruits, onDelete }) => {
+export const RecruitList: React.FC<RecruitListProps> = ({ 
+  recruits, 
+  isEditing,
+  selectedRecruits,
+  onSelectRecruit,
+  onStatusChange
+}) => {
+  if (!recruits) return null;
+
+  if (recruits.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        해당하는 공고가 없습니다
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-4">
-      {recruits.map((recruit) => (
-        <RecruitCard 
-          key={recruit.recruit.recruitId}
-          recruit={recruit}
-          onDelete={onDelete}
+    <div className="grid gap-4">
+      {recruits.map((item) => (
+        <RecruitCard
+          key={item.recruit.recruitId}
+          recruit={item}
+          isEditing={isEditing}
+          isSelected={selectedRecruits.includes(item.recruit.recruitId)}
+          onSelect={() => onSelectRecruit(item.recruit.recruitId)}
+          onStatusChange={(status) => onStatusChange(item.recruit.recruitId, status)}
         />
       ))}
     </div>

@@ -14,6 +14,8 @@ import java.util.Optional;
 @Repository
 public interface ApplicationRepository extends JpaRepository<Application, Integer> {
 
+    int countByRecruitIdAndStatusNotInAndIsDeletedFalse(Integer recruitId, List<String> status);
+
     @Query("SELECT a FROM Application a JOIN FETCH a.volunteer v JOIN FETCH v.user u WHERE a.recruit.id = :recruitId")
     List<Application> findByRecruitIdWithUser(@Param("recruitId") Integer recruitId);
 
@@ -22,7 +24,7 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
     @Query("UPDATE Application a SET a.status = :status WHERE a.id = :applicationId")
     void updateApplicationStatus(@Param("applicationId") Integer applicationId, @Param("status") String status);
 
-    @Query("SELECT r.template.org.id FROM Application a JOIN a.recruit r JOIN r.template t WHERE a.id = :applicationId")
+    @Query("SELECT r.template.org.id FROM Application a JOIN a.recruit r JOIN r.template t WHERE a.id = :applicationId AND a.isDeleted = false")
     Optional<Integer> findOrgIdByApplicationId(@Param("applicationId") Integer applicationId);
 
     @Query("SELECT a FROM Application a WHERE a.recruit.id = :recruitId AND a.volunteer.id = :volunteerId")
@@ -42,6 +44,7 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
             """)
     boolean existsByVolunteerUserIdAndRecruitId(@Param("userId") Integer userId,
                                                 @Param("recruitId") Integer recruitId);
+
     // for VolRecruit -------------------------------------------
     // 사용자가 신청한 모집 공고 목록 조회
 //    @Query("SELECT a FROM Application a WHERE a.volunteer.user.id = :userId AND a.id > :cursor AND a.isDeleted = FALSE ORDER BY a.createdAt DESC")
@@ -56,4 +59,5 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
 
 
     List<Application> findByRecruitIdAndStatus(int recruitId, String status);
+    Optional<Application> findByIdAndIsDeletedFalse(Integer applicationId);
 }

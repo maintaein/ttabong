@@ -1,38 +1,75 @@
-import React from 'react';
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ReviewWriteHeader } from './components/ReviewWriteHeader';
 import { ReviewWriteImages } from './components/ReviewWriteImages';
 import { ReviewWriteForm } from './components/ReviewWriteForm';
+import { RecruitDetailCard } from './components/RecruitDetailCard';
 import { useReviewStore } from '@/stores/reviewStore';
+import { useRecruitStore } from '@/stores/recruitStore';
+import { useImageStore } from '@/stores/imageStore';
 import { reviewApi } from '@/api/reviewApi';
 import { useToast } from '@/hooks/use-toast';
+
 
 export default function ReviewWrite() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { orgId, resetReviewInfo } = useReviewStore();
-  const { updateReview } = useReviewStore();
+  const { toast } = useToast();
   
-  // location.state에서 수정 관련 정보 가져오기
-  const isEdit = Boolean(location.state?.isEdit);
-  const editReviewId = location.state?.reviewId;
+  const { recruitDetail, fetchRecruitDetail, resetSelectedRecruitId, setSelectedRecruitId } = useRecruitStore();
+  const { updateReview, createReview } = useReviewStore();
+  const { fetchPresignedUrls, reset: resetImageStore } = useImageStore();
   
   const [images, setImages] = useState<string[]>([]);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isPublic, setIsPublic] = useState(true);
-  const { toast } = useToast();
+  
+  const isEdit = Boolean(location.state?.isEdit);
+  const editReviewId = location.state?.reviewId;
+
+  useEffect(() => {
+    const recruitId = location.state?.recruitId;
+    
+    if (!recruitId) {
+      navigate('/volunteer-history');
+      return;
+    }
+
+    const init = async () => {
+      try {
+        await fetchRecruitDetail(recruitId);
+        await setSelectedRecruitId(recruitId);
+        await fetchPresignedUrls();
+      } catch (error) {
+        console.error('초기화 실패:', error);
+        toast({
+          variant: "destructive",
+          title: "오류",
+          description: "초기화에 실패했습니다. 다시 시도해주세요."
+        });
+        navigate('/volunteer-history');
+      }
+    };
+
+    init();
+
+    // cleanup
+    return () => {
+      resetSelectedRecruitId();
+      resetImageStore();
+    };
+  }, []);
 
   useEffect(() => {
     if (isEdit && editReviewId) {
       const loadReview = async () => {
         try {
-          const review = await reviewApi.getReviewDetail(Number(editReviewId));
+          const review = await reviewApi.getReviewEditDetail(Number(editReviewId));
           setTitle(review.title);
           setContent(review.content);
-          setImages(review.images || []);
+          setImages(review.getImages || []);
           setIsPublic(review.isPublic);
         } catch (error) {
           toast({
@@ -47,23 +84,16 @@ export default function ReviewWrite() {
     }
   }, [editReviewId, isEdit, navigate, toast]);
 
-  useEffect(() => {
-    return () => resetReviewInfo();
-  }, [resetReviewInfo]);
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImages(prev => [...prev, reader.result as string]);
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
-  const handleImageRemove = (index: number) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
+  const handleImageUploadComplete = async (uploadedUrls: string[]) => {
+    try {
+      setImages(uploadedUrls);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "오류",
+        description: "이미지 업로드에 실패했습니다."
+      });
+    }
   };
 
   const handleSubmit = async () => {
@@ -76,44 +106,70 @@ export default function ReviewWrite() {
       return;
     }
 
+    if (!recruitDetail) {
+      toast({
+        variant: "destructive",
+        title: "오류",
+        description: "봉사 모집 정보를 찾을 수 없습니다."
+      });
+      return;
+    }
+
     try {
-      const reviewData = {
-        title,
-        content,
-        isPublic,
-        images,
-        imageCount: images.length
-      };
-
       if (isEdit && editReviewId) {
-        const response = await updateReview(Number(editReviewId), reviewData);
+        const review = await reviewApi.getReviewEditDetail(Number(editReviewId));
+        await updateReview(Number(editReviewId), {
+          cacheId: review.cacheId,
+          title,
+          content,
+          isPublic,
+          presignedUrl: [],
+          images,
+        });
         
-        // 새로운 이미지가 있다면 업로드
-        if (response.presignedUrl.length > 0) {
-          // 이미지 업로드 로직 구현
-          // response.presignedUrl을 사용하여 이미지 업로드
-        }
-
         toast({
           title: "성공",
           description: "리뷰가 수정되었습니다."
         });
       } else {
-        // 새 리뷰 생성 로직
+        await createReview({
+          recruitId: recruitDetail.recruit.recruitId,
+          orgId: recruitDetail.organization.orgId,
+          title,
+          content,
+          isPublic,
+          uploadedImages: images,
+          imageCount: images.length
+        });
+
+        toast({
+          title: "성공",
+          description: "후기가 등록되었습니다."
+        });
       }
       
       navigate(-1);
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error:', error); // 에러 객체 확인용 로그
+      
+      const axiosMessage = error.message || '';
+      const serverMessage = error.response?.data?.message;
+      const errorMessage = serverMessage 
+        ? `${axiosMessage}\n${serverMessage}`
+        : axiosMessage || (isEdit ? "리뷰 수정에 실패했습니다." : "리뷰 등록에 실패했습니다.");
+
       toast({
         variant: "destructive",
-        title: "오류",
-        description: isEdit ? "리뷰 수정에 실패했습니다." : "리뷰 등록에 실패했습니다."
+        title: `오류 (${error.response?.status || 500})`,
+        description: errorMessage
       });
     }
   };
 
   return (
     <div className="pb-[calc(56px+56px)]">
+      {recruitDetail && <RecruitDetailCard recruitDetail={recruitDetail} />}
+      
       <ReviewWriteHeader
         writer={{
           writerId: 1,
@@ -121,16 +177,17 @@ export default function ReviewWrite() {
           writerProfileImage: "https://picsum.photos/100/100"
         }}
         organization={{
-          orgId: orgId!,
-          orgName: "서울 환경 봉사단"
+          orgId: recruitDetail?.organization.orgId!,
+          orgName: recruitDetail?.organization.name!
         }}
       />
-      
+            <div className="space-y-6 p-4">
       <ReviewWriteImages
-        images={images}
-        onImageUpload={handleImageUpload}
-        onImageRemove={handleImageRemove}
+        onImageUploadComplete={handleImageUploadComplete}
+        existingImages={isEdit ? images : []}
+        isEdit={isEdit}
       />
+      </div>
 
       <ReviewWriteForm
         title={title}

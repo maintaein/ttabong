@@ -1,5 +1,6 @@
 package com.ttabong.util;
 
+import com.ttabong.exception.ImageProcessException;
 import io.minio.*;
 import io.minio.errors.ErrorResponseException;
 import io.minio.http.Method;
@@ -68,7 +69,7 @@ public class ImageUtil {
                             .build()
             );
         } catch (Exception e) {
-            throw new RuntimeException("Presigned URL 생성 실패: " + e.getMessage(), e);
+            throw new ImageProcessException("Presigned URL 생성 실패: " + e.getMessage(), e);
         }
     }
 

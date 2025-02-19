@@ -1,6 +1,7 @@
 package com.ttabong.repository.recruit;
 
 import com.ttabong.entity.recruit.Recruit;
+import com.ttabong.entity.recruit.Template;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -24,7 +25,7 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
             "ORDER BY r.deadline ASC")
     List<Recruit> findByTemplateId(@Param("templateId") Integer templateId);
 
-    @Query("SELECT t.org.id FROM Recruit r JOIN r.template t WHERE r.id = :recruitId")
+    @Query("SELECT t.org.id FROM Recruit r JOIN r.template t WHERE r.id = :recruitId AND r.isDeleted=false")
     Optional<Integer> findOrgIdByRecruitId(@Param("recruitId") Integer recruitId);
 
     @Query("SELECT r FROM Recruit r " +
@@ -106,6 +107,8 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
     // 특정 모집 공고 조회
     Optional<Recruit> findByIdAndIsDeletedFalse(Integer recruitId);
 
+    //해당 템플릿을 참조하는 공고가 있느냐?
+    List<Recruit> findByTemplateAndIsDeletedFalse(Template template);
 
     @Query("SELECT t.group.id FROM Recruit r JOIN r.template t WHERE r.id = :recruitId")
     Optional<Integer> findGroupIdByRecruitId(@Param("recruitId") Integer recruitId);

@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Set;
+
 @RestController
 @RequestMapping("") //자동 기본값이 /api
 public class UserController extends LoggerConfig {
@@ -26,31 +28,37 @@ public class UserController extends LoggerConfig {
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         logger.info("1. 유저로그인, <POST> \"/user/login\"");
 
-        if (loginRequest.getUserType() == null || loginRequest.getUserType().isEmpty()) {
-            return ResponseEntity.badRequest().body("userType이 필요합니다.");
+        if (!Set.of("volunteer", "organization").contains(loginRequest.getUserType())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new LoginResponse(400, "잘못된 회원 타입입니다.", null, null, null));
         }
+
 
         UserLoginResponseDto loginResult = userService.login(loginRequest);
 
-        if (loginResult != null) {
-            String accessToken = jwtProvider.createToken(loginResult.getUserId().toString(), loginRequest.getUserType());
-
-            return ResponseEntity.ok(new LoginResponse(
-                    200, "로그인 성공", accessToken, loginResult.getName(), loginResult.getEmail()
-            ));
+        if (loginResult.getStatus() != 200) {
+            return ResponseEntity.status(loginResult.getStatus())
+                    .body(new LoginResponse(
+                            loginResult.getStatus(),
+                            loginResult.getMessage(),
+                            null, null, null
+                    ));
         }
 
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new LoginResponse(401, "이메일 또는 비밀번호가 일치하지 않습니다.", null, null, null));
+        String accessToken = jwtProvider.createToken(loginResult.getUserId().toString(), loginRequest.getUserType());
+
+        return ResponseEntity.ok(new LoginResponse(
+                200, "로그인 성공", accessToken, loginResult.getName(), loginResult.getEmail()
+        ));
     }
 
 
     @PostMapping("/volunteer/register")
     public ResponseEntity<?> registerVolunteer(@RequestBody VolunteerRegisterRequest request) {
-        logger.info("2. 유저 회원가입, <POST> \"volunteer/register\"");
-        String registerResult = userService.registerVolunteer(request);
+        logger.info("2. 봉사자 회원가입, <POST> \"volunteer/register\"");
+        boolean isRegistered = userService.registerVolunteer(request);
 
-        if (registerResult.isEmpty()) {
+        if (isRegistered) {
             return ResponseEntity.status(HttpStatus.CREATED).body(new RegisterResponse(201, "봉사자 회원가입이 완료되었습니다."));
         }
 
@@ -60,8 +68,9 @@ public class UserController extends LoggerConfig {
     @PostMapping("/org/register")
     public ResponseEntity<?> registerOrganization(@RequestBody OrganizationRegisterRequest request) {
         logger.info("3. 기관 회원가입 <POST> \"/org/register\"");
-        String registerResult = userService.registerOrganization(request);
-        if (registerResult.isEmpty()) {
+        boolean isRegistered = userService.registerOrganization(request);
+
+        if (isRegistered) {
             return ResponseEntity.status(HttpStatus.CREATED).body(new RegisterResponse(201, "기관 회원가입이 완료되었습니다."));
         }
 
@@ -76,17 +85,16 @@ public class UserController extends LoggerConfig {
 
         if ("find".equalsIgnoreCase(type)) {
             message = exists ? "해당 이메일이 존재합니다." : "해당 이메일을 찾을 수 없습니다.";
+            return ResponseEntity.status(exists ? HttpStatus.OK : HttpStatus.NOT_FOUND)
+                    .body(new EmailCheckResponse(exists ? 200 : 404, exists, message));
         } else if ("register".equalsIgnoreCase(type)) {
             message = exists ? "이미 사용 중인 이메일입니다." : "사용 가능한 이메일입니다.";
+            return ResponseEntity.status(exists ? HttpStatus.CONFLICT : HttpStatus.OK)
+                    .body(new EmailCheckResponse(exists ? 409 : 200, exists, message));
         } else {
             return ResponseEntity.badRequest().body(new EmailCheckResponse(400, false, "잘못된 타입입니다."));
         }
-
-        if ("find".equalsIgnoreCase(type) && !exists) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new EmailCheckResponse(404, exists, message));
-        }
-
-        return ResponseEntity.ok(new EmailCheckResponse(200, exists, message));
     }
+
 
 }

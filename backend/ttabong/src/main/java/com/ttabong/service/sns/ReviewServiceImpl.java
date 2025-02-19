@@ -7,23 +7,20 @@ import com.ttabong.dto.sns.response.*;
 import com.ttabong.dto.user.AuthDto;
 import com.ttabong.entity.recruit.*;
 import com.ttabong.entity.sns.Review;
-import com.ttabong.entity.sns.ReviewComment;
 import com.ttabong.entity.sns.ReviewImage;
 import com.ttabong.entity.user.Organization;
 import com.ttabong.entity.user.User;
 import com.ttabong.exception.*;
 import com.ttabong.repository.recruit.ApplicationRepository;
 import com.ttabong.repository.recruit.RecruitRepository;
+import com.ttabong.repository.sns.ReviewCommentRepository;
 import com.ttabong.repository.sns.ReviewImageRepository;
 import com.ttabong.repository.sns.ReviewRepository;
 import com.ttabong.repository.user.OrganizationRepository;
 import com.ttabong.repository.user.UserRepository;
 import com.ttabong.util.CacheUtil;
 import com.ttabong.util.ImageUtil;
-import io.minio.CopyObjectArgs;
-import io.minio.CopySource;
-import io.minio.MinioClient;
-import io.minio.RemoveObjectArgs;
+import io.minio.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -48,6 +45,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final RecruitRepository recruitRepository;
     private final ApplicationRepository applicationRepository;
     private final ReviewImageRepository reviewImageRepository;
+    private final ReviewCommentRepository reviewCommentRepository;
     private final CacheUtil cacheUtil;
     private final ImageUtil imageUtil;
     private final MinioClient minioClient;
@@ -86,7 +84,7 @@ public class ReviewServiceImpl implements ReviewService {
                     .orElseThrow(() -> new NotFoundException("기관 정보 없음"));
 
             if (!template.getOrg().getUser().getId().equals(authDto.getUserId())) {
-                throw new ForbiddenException("해당 기관의 리뷰만 작성할 수 있습니다.");
+                throw new ForbiddenException("해당 기관의 리뷰만 작성할 수 없습니다.");
             }
 
         } else {
@@ -96,9 +94,7 @@ public class ReviewServiceImpl implements ReviewService {
             }
 
             organization = template.getOrg();
-
-            parentReview = reviewRepository.findFirstByOrgWriterAndRecruit(recruit.getId())
-                    .orElse(null);
+            parentReview = reviewRepository.findFirstByOrgWriterAndRecruit(recruit.getId()).orElse(null);
         }
 
         final Review review = Review.builder()
@@ -118,47 +114,56 @@ public class ReviewServiceImpl implements ReviewService {
 
         reviewRepository.save(review);
 
-        List<ReviewImage> imageSlots = IntStream.range(0, requestDto.getImageCount())
+        List<String> uploadedPaths = uploadImagesToMinio(requestDto.getUploadedImages());
+
+        List<String> verifiedPaths = new ArrayList<>();
+        for (String imagePath : uploadedPaths) {
+            try {
+                minioClient.statObject(
+                        StatObjectArgs.builder()
+                                .bucket("ttabong-bucket")
+                                .object(imagePath)
+                                .build()
+                );
+                verifiedPaths.add(imagePath);
+            } catch (Exception e) {
+                throw new ImageProcessException("MinIO에 이미지 저장 실패: " + imagePath, e);
+            }
+        }
+
+        List<ReviewImage> imageSlots = IntStream.range(0, verifiedPaths.size())
                 .mapToObj(i -> ReviewImage.builder()
                         .review(review)
                         .template(template)
-                        .imageUrl(null)
+                        .imageUrl(verifiedPaths.get(i))
                         .isThumbnail(i == 0)
                         .isDeleted(false)
                         .createdAt(Instant.now())
                         .build())
                 .collect(Collectors.toList());
 
-        for (int i = 0; i < imageSlots.size() - 1; i++) {
-            imageSlots.get(i).setNextImage(imageSlots.get(i + 1));
-        }
-
         reviewImageRepository.saveAll(imageSlots);
-        uploadImagesToMinio(requestDto.getUploadedImages(), imageSlots, authDto);
 
         return ReviewCreateResponseDto.builder()
                 .message("리뷰가 생성되었습니다.")
-                .uploadedImages(requestDto.getUploadedImages())
+                .uploadedImages(verifiedPaths)
                 .build();
     }
 
 
-    public void uploadImagesToMinio(List<String> uploadedImages, List<ReviewImage> imageSlots, AuthDto authDto) {
+    public List<String> uploadImagesToMinio(List<String> uploadedImages) {
 
-        checkToken(authDto);
+        List<String> uploadedPaths = new ArrayList<>();
 
-        IntStream.range(0, uploadedImages.size()).forEach(i -> {
-            final String objectPath = cacheUtil.findObjectPath(uploadedImages.get(i));
+        for (String presignedUrl : uploadedImages) {
+            final String objectPath = cacheUtil.findObjectPath(presignedUrl);
             if (objectPath == null) {
-                throw new ImageProcessException("유효하지 않은  presigned URL입니다.");
+                throw new ImageProcessException("유효하지 않은 presigned URL입니다.");
             }
+            uploadedPaths.add(objectPath);
+        }
 
-            // 기존 슬롯 업데이트 (Presigned URL이 아니라, objectPath를 저장)
-            ReviewImage imageSlot = imageSlots.get(i);
-            imageSlot.setImageUrl(objectPath);
-            imageSlot.setThumbnail(i == 0);
-            reviewImageRepository.save(imageSlot);
-        });
+        return uploadedPaths;
     }
 
 
@@ -307,6 +312,17 @@ public class ReviewServiceImpl implements ReviewService {
                                 .build()
                 );
 
+                try {
+                    minioClient.statObject(
+                            StatObjectArgs.builder()
+                                    .bucket("ttabong-bucket")
+                                    .object(newObjectPath)
+                                    .build()
+                    );
+                } catch (Exception e) {
+                    throw new ImageProcessException("MinIO에서 저장된 파일을 찾을 수 없음: " + newObjectPath, e);
+                }
+
                 minioClient.removeObject(
                         RemoveObjectArgs.builder()
                                 .bucket("ttabong-bucket")
@@ -414,6 +430,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
 
+
     @Override
     @Transactional(readOnly = true)
     public List<AllReviewPreviewResponseDto> readAllReviews(Integer cursor, Integer limit) {
@@ -435,28 +452,37 @@ public class ReviewServiceImpl implements ReviewService {
                     return AllReviewPreviewResponseDto.builder()
                             .review(AllReviewPreviewResponseDto.ReviewDto.builder()
                                     .reviewId(review.getId())
-                                    .recruitId(review.getRecruit() != null ? review.getRecruit().getId() : null)
+                                    .recruitId(Optional.ofNullable(review.getRecruit()).map(Recruit::getId).orElse(null))
                                     .title(review.getTitle())
                                     .content(review.getContent())
                                     .isDeleted(review.getIsDeleted())
-                                    .updatedAt(review.getUpdatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime()) // Instant → LocalDateTime 변환
-                                    .createdAt(review.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime()) // Instant → LocalDateTime 변환
+                                    .updatedAt(Optional.ofNullable(review.getUpdatedAt())
+                                            .map(updatedAt -> updatedAt.atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                                            .orElse(LocalDateTime.now()))
+                                    .createdAt(Optional.ofNullable(review.getCreatedAt())
+                                            .map(createdAt -> createdAt.atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                                            .orElse(LocalDateTime.now()))
                                     .build())
-                            .writer(review.getWriter() != null ? AllReviewPreviewResponseDto.WriterDto.builder()
-                                    .writerId(review.getWriter().getId())
-                                    .name(review.getWriter().getName())
-                                    .build() : null)
-                            .group(review.getRecruit() != null && review.getRecruit().getTemplate() != null &&
-                                    review.getRecruit().getTemplate().getGroup() != null ?
-                                    AllReviewPreviewResponseDto.GroupDto.builder()
-                                            .groupId(review.getRecruit().getTemplate().getGroup().getId())
-                                            .groupName(review.getRecruit().getTemplate().getGroup().getGroupName())
-                                            .build()
-                                    : null)
-                            .organization(AllReviewPreviewResponseDto.OrganizationDto.builder()
-                                    .orgId(review.getOrg().getId())
-                                    .orgName(review.getOrg().getOrgName())
-                                    .build())
+                            .writer(Optional.ofNullable(review.getWriter())
+                                    .map(writer -> AllReviewPreviewResponseDto.WriterDto.builder()
+                                            .writerId(writer.getId())
+                                            .name(writer.getName())
+                                            .build())
+                                    .orElse(null))
+                            .group(Optional.ofNullable(review.getRecruit())
+                                    .map(recruit -> recruit.getTemplate())
+                                    .map(template -> template.getGroup())
+                                    .map(group -> AllReviewPreviewResponseDto.GroupDto.builder()
+                                            .groupId(group.getId())
+                                            .groupName(group.getGroupName())
+                                            .build())
+                                    .orElse(null))
+                            .organization(Optional.ofNullable(review.getOrg())
+                                    .map(org -> AllReviewPreviewResponseDto.OrganizationDto.builder()
+                                            .orgId(org.getId())
+                                            .orgName(org.getOrgName())
+                                            .build())
+                                    .orElse(null))
                             .images(thumbnailUrl)
                             .build();
                 })
@@ -565,8 +591,8 @@ public class ReviewServiceImpl implements ReviewService {
             }
         }
 
-        List<ReviewDetailResponseDto.CommentDto> comments = review.getReviewComments().stream()
-                .sorted(Comparator.comparing(ReviewComment::getCreatedAt))
+        List<ReviewDetailResponseDto.CommentDto> comments = reviewCommentRepository.findByReviewIdAndIsDeletedFalseOrderByCreatedAt(review.getId())
+                .stream()
                 .map(comment -> ReviewDetailResponseDto.CommentDto.builder()
                         .commentId(comment.getId())
                         .writerId(comment.getWriter().getId())
@@ -575,6 +601,7 @@ public class ReviewServiceImpl implements ReviewService {
                         .createdAt(comment.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
                         .build())
                 .collect(Collectors.toList());
+
 
         return ReviewDetailResponseDto.builder()
                 .reviewId(review.getId())
@@ -623,6 +650,9 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     @Transactional(readOnly = true)
     public List<RecruitReviewResponseDto> recruitReview(Integer recruitId) {
+
+        recruitRepository.findByIdAndIsDeletedFalse(recruitId)
+                .orElseThrow(() -> new NotFoundException("해당 모집 공고를 찾을 수 없습니다. recruitId: " + recruitId));
 
         List<Review> reviews = reviewRepository.findByRecruitIdAndIsDeletedFalse(recruitId);
 
