@@ -111,7 +111,9 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                                 .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.valueOf(10.00))
                                 .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.valueOf(12.00))
                                 .maxVolunteer(recruit.getMaxVolunteer())
-                                .participateVolCount(recruit.getParticipateVolCount())
+                                .participateVolCount(applicationRepository.countByRecruitIdAndStatusNotInAndIsDeletedFalse(
+                                        recruit.getId(), List.of("PENDING", "REJECTED")
+                                ))
                                 .status(recruit.getStatus())
                                 .updatedAt(Optional.ofNullable(recruit.getUpdatedAt())
                                         .map(d -> d.atZone(ZoneId.systemDefault()).toLocalDateTime())
@@ -188,7 +190,9 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                     .recruitId(recruit.getId())
                     .status(recruit.getStatus())
                     .maxVolunteer(recruit.getMaxVolunteer())
-                    .participateVolCount(recruit.getParticipateVolCount())
+                    .participateVolCount(applicationRepository.countByRecruitIdAndStatusNotInAndIsDeletedFalse(
+                            recruit.getId(), List.of("PENDING", "REJECTED")
+                    ))
                     .activityDate(recruit.getActivityDate() != null ? recruit.getActivityDate() : new Date())
                     .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.valueOf(10.00))
                     .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.valueOf(12.00))
@@ -624,7 +628,9 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .activityStart(recruit.getActivityStart() != null ? recruit.getActivityStart() : BigDecimal.valueOf(10.00))
                 .activityEnd(recruit.getActivityEnd() != null ? recruit.getActivityEnd() : BigDecimal.valueOf(12.00))
                 .maxVolunteer(recruit.getMaxVolunteer())
-                .participateVolCount(recruit.getParticipateVolCount())
+                .participateVolCount(applicationRepository.countByRecruitIdAndStatusNotInAndIsDeletedFalse(
+                        recruit.getId(), List.of("PENDING", "REJECTED")
+                ))
                 .status(recruit.getStatus())
                 .updatedAt(updatedAtLocalDateTime)
                 .createdAt(createdAtLocalDateTime)

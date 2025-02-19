@@ -14,6 +14,8 @@ import java.util.Optional;
 @Repository
 public interface ApplicationRepository extends JpaRepository<Application, Integer> {
 
+    int countByRecruitIdAndStatusNotInAndIsDeletedFalse(Integer recruitId, List<String> status);
+
     @Query("SELECT a FROM Application a JOIN FETCH a.volunteer v JOIN FETCH v.user u WHERE a.recruit.id = :recruitId")
     List<Application> findByRecruitIdWithUser(@Param("recruitId") Integer recruitId);
 
