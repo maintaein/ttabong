@@ -40,15 +40,7 @@ const searchSchema = z.object({
     .max(100, '기관명은 100자 이하여야 합니다'),
   status: z.string().optional(),
   region: z.string(),
-  activityDateStart: z.string()
-    .refine((date) => {
-      if (!date) return true;
-      const startDate = new Date(date);
-      const today = new Date();
-      return startDate >= today;
-    }, {
-      message: '시작일은 오늘 이후여야 합니다'
-    }),
+  activityDateStart: z.string(),
   activityDateEnd: z.string()
     .optional()
 }).refine((data) => {
@@ -57,8 +49,8 @@ const searchSchema = z.object({
   }
   return true;
 }, {
-  message: "종료일은 시작일 이후여야 합니다",
-  path: ["activityDateEnd"]
+  message: "시작일은 종료일보다 이전이어야 합니다",
+  path: ["activityDateStart"]
 });
 
 type SearchValues = z.infer<typeof searchSchema>;
@@ -199,7 +191,14 @@ export default function RecruitFind() {
                     <Input
                       type="date"
                       {...field}
-                      min={new Date().toISOString().split('T')[0]}
+                      onChange={(e) => {
+                        field.onChange(e);
+                        // 종료일이 시작일보다 이전인 경우 종료일을 시작일로 설정
+                        const endDate = form.watch('activityDateEnd');
+                        if (endDate && new Date(endDate) < new Date(e.target.value)) {
+                          form.setValue('activityDateEnd', e.target.value);
+                        }
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -217,6 +216,7 @@ export default function RecruitFind() {
                       type="date"
                       {...field}
                       min={form.watch('activityDateStart')}
+                      disabled={!form.watch('activityDateStart')}
                     />
                   </FormControl>
                   <FormMessage />
@@ -274,40 +274,43 @@ export default function RecruitFind() {
       )}
 
       <div className="space-y-4">
-        {searchResults.map((template: SearchTemplate, index) => (
-          <div 
-            key={template.templateId} 
-            ref={index === searchResults.length - 1 ? lastElementRef : null}
-            className="border rounded-lg p-4 space-y-2 cursor-pointer hover:border-primary transition-colors"
-            onClick={() => handleTemplateClick(template.templateId)}
-          >
-            {template.imageUrl && (
-              <img 
-                src={template.imageUrl} 
-                alt={template.title}
-                className="w-full h-48 object-cover rounded-md"
-              />
-            )}
-            <h3 className="font-semibold">{template.title}</h3>
-            <p className="text-sm text-muted-foreground">{template.organization.orgName}</p>
-            <p className="text-sm">{template.activityLocation}</p>
-            {template.recruits.map((recruit) => (
-              <div 
-                key={recruit.recruitId}
-                className="bg-muted p-2 rounded-md text-sm space-y-1"
-              >
-                <p>활동일: {format(new Date(recruit.activityDate), 'yyyy-MM-dd')}</p>
-                <p>모집인원: {recruit.participateVolCount}/{recruit.maxVolunteer}명</p>
-                <p>상태: {
-                  STATUS_OPTIONS.find(option => option.value === recruit.status)?.label
-                }</p>
-              </div>
-            ))}
-          </div>
-        ))}
-        {isLoading && (
-          <div className="text-center py-4">
-            데이터를 불러오는 중...
+        {isLoading ? (
+          <div className="text-center text-muted-foreground">검색중...</div>
+        ) : searchResults.length > 0 ? (
+          searchResults.map((template: SearchTemplate, index) => (
+            <div 
+              key={template.templateId} 
+              ref={index === searchResults.length - 1 ? lastElementRef : null}
+              className="border rounded-lg p-4 space-y-2 cursor-pointer hover:border-primary transition-colors"
+              onClick={() => handleTemplateClick(template.templateId)}
+            >
+              {template.imageUrl && (
+                <img 
+                  src={template.imageUrl} 
+                  alt={template.title}
+                  className="w-full h-48 object-cover rounded-md"
+                />
+              )}
+              <h3 className="font-semibold">{template.title}</h3>
+              <p className="text-sm text-muted-foreground">{template.organization.orgName}</p>
+              <p className="text-sm">{template.activityLocation}</p>
+              {template.recruits.map((recruit) => (
+                <div 
+                  key={recruit.recruitId}
+                  className="bg-muted p-2 rounded-md text-sm space-y-1"
+                >
+                  <p>활동일: {format(new Date(recruit.activityDate), 'yyyy-MM-dd')}</p>
+                  <p>모집인원: {recruit.participateVolCount}/{recruit.maxVolunteer}명</p>
+                  <p>상태: {
+                    STATUS_OPTIONS.find(option => option.value === recruit.status)?.label
+                  }</p>
+                </div>
+              ))}
+            </div>
+          ))
+        ) : (
+          <div className="text-center text-muted-foreground py-8">
+            검색 결과가 없습니다.
           </div>
         )}
       </div>
