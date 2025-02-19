@@ -11,7 +11,7 @@ import RecruitDetail from '@/pages/ChooseRecruit/org/RecruitDetail';
 import Login from '@/pages/Login';
 import MainPage from '@/pages/MainPage';
 import OrgMainPage from '@/pages/OrgMainPage';
-import RecruitFind from '@/pages/RecruitFind';
+import RecruitFind from '@/pages/RecruitFind_new'
 import ReviewFind from '@/pages/ReviewFind';
 import ReviewDetail from '@/pages/ReviewFind/ReviewDetail';
 import ReviewDetailList from '@/pages/ReviewFind/ReviewDetailList';
@@ -25,6 +25,7 @@ import ChooseRecruit from './pages/ChooseRecruit';
 import OrgDetailPage from '@/pages/OrgDetailPage';
 import MyReviews from '@/pages/MyReviews';
 import RecruitManageVolunteers from '@/pages/MainPage/RecruitManageVolunteers';
+import TemplateDetail from '@/pages/ChooseRecruit/volunteer/VolTemplateDetail';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { userId } = useUserStore();
@@ -171,6 +172,8 @@ const App: React.FC = () => {
                   </ProtectedRoute>
                 }
               />
+
+              <Route path="/templates/:templateId" element={<TemplateDetail />} />
             </Route>
           </Routes>
         </div>

@@ -136,7 +136,7 @@ export default function OrgSignUp() {
                         <Input 
                           placeholder="담당자 이름을 입력하세요" 
                           {...field} 
-                          maxLength={50}
+                          maxLength={20}
                           onKeyPress={preventNumbers}
                         />
                       </FormControl>

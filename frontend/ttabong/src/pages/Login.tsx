@@ -15,7 +15,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import type { ApiError } from '@/api/axiosInstance';
+
 import { useToast } from '@/hooks/use-toast';
 import { TopBar } from '@/components/TopBar';
 
@@ -66,10 +66,21 @@ export default function Login() {
         description: message,
       });
       navigate('/main');
-    } catch (error) {
-      const apiError = error as ApiError;
+    } catch (error: any) {
+      // 400, 403 에러 처리 (로그인 실패)
+      if (error.status === 400 || error.status === 403) {
+        toast({
+          variant: "destructive",
+          title: "로그인 실패",
+          description: error.message
+        });
+        form.setError('root', { message: error.message });
+        return;
+      }
+
+      // 리다이렉션이 필요한 경우
       try {
-        const redirectData = JSON.parse(apiError.message);
+        const redirectData = JSON.parse(error.message);
         if (redirectData.path && redirectData.state) {
           toast({
             variant: "destructive",
@@ -80,14 +91,14 @@ export default function Login() {
           return;
         }
       } catch {
-        // JSON 파싱 실패 시 일반 에러 처리
+        // 기타 에러 처리
         toast({
           variant: "destructive",
           title: "로그인 실패",
-          description: apiError.message,
+          description: error.message || '로그인에 실패했습니다.',
         });
+        form.setError('root', { message: error.message || '로그인에 실패했습니다.' });
       }
-      form.setError('root', { message: apiError.message });
     }
   };
 

@@ -65,8 +65,15 @@ export const reviewApi = {
   },
   
   getMyReviews: async (): Promise<MyReview[]> => {
-    const response = await axiosInstance.get('/reviews/mine');
-    return response.data;
+    try {
+      const response = await axiosInstance.get('/reviews/mine');
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        return [];
+      }
+      throw error;
+    }
   },
   
   createReview: async (data: CreateReviewRequest): Promise<void> => {

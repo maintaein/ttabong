@@ -9,6 +9,21 @@ import axios from 'axios';
 
 const RECRUITS_PER_PAGE = 10;  // 한 페이지당 공고 수
 
+interface SearchTemplatesParams {
+  cursor?: number | null;
+  limit?: number;
+  templateTitle?: string;
+  searchConditions?: {
+    organizationName?: string;
+    status?: string;
+    activityDate?: {
+      start: string;
+      end: string;
+    };
+    region?: string;
+  };
+}
+
 export const recruitApi = {
   getMyApplications: async (params?: GetApplicationsParams): Promise<Application[]> => {
     const { cursor = 0, limit = 10 } = params || {};
@@ -35,7 +50,7 @@ export const recruitApi = {
   },
 
   deleteRecruit: async (recruitIds: number[]) => {
-    console.log('Sending delete request:', recruitIds); // 디버깅용
+    console.log('Sending delete request:', recruitIds);
     const response = await axiosInstance.patch('/org/recruits/delete', {
       deletedRecruits: recruitIds
     });
@@ -101,4 +116,36 @@ export const recruitApi = {
       throw error;
     }
   },
+
+  getTemplateDetail: async (templateId: number) => {
+    try {
+      const response = await axiosInstance.get(`/vol/templates/${templateId}`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data?.message || '템플릿 정보를 불러오는데 실패했습니다.';
+    }
+  },
+
+  searchTemplates: async (params: SearchTemplatesParams) => {
+    try {
+      const queryParams = new URLSearchParams();
+      
+      queryParams.append('cursor', (params.cursor || 1).toString());
+      queryParams.append('limit', (params.limit || 10).toString());
+
+      const response = await axiosInstance.post(`/search/templates?${queryParams.toString()}`, {
+        templateTitle: params.templateTitle || null,
+        searchConditions: {
+          organizationName: params.searchConditions?.organizationName || null,
+          status: params.searchConditions?.status || null,
+          activityDate: params.searchConditions?.activityDate || null,
+          region: params.searchConditions?.region || null
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('템플릿 검색 실패:', error);
+      throw error;
+    }
+  }
 }; 

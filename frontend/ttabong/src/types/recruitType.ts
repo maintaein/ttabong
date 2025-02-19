@@ -169,4 +169,82 @@ export interface APITemplate {
   contactPhone: string;
   maxVolunteer: number;
   createdAt: string;
+}
+
+export interface TemplateDetail {
+  template: {
+    templateId: number;
+    title: string;
+    activityLocation: string;
+    status: 'ALL' | 'YOUTH';
+    imageId: string;
+    contactName: string;
+    contactPhone: string;
+    description: string;
+    createdAt: string;
+  };
+  group: Group;
+  category: {
+    categoryId: number;
+    name: string;
+  };
+  organization: {
+    orgId: number;
+    userId: number | null;
+    businessRegNumber: string | null;
+    orgName: string;
+    representativeName: string | null;
+    orgAddress: string | null;
+  };
+  recruits: {
+    recruitId: number;
+    deadline: string;
+    activityDate: string;
+    activityStart: number;
+    activityEnd: number;
+    maxVolunteer: number;
+    participateVolCount: number;
+    status: OrgRecruitStatus;
+    createdAt: string;
+  }[];
+}
+
+// 검색 결과용 타입들
+export interface SearchTemplateRecruit {
+  recruitId: number;
+  activityDate: string;
+  deadline: string;
+  activityStart: number;
+  activityEnd: number;
+  maxVolunteer: number;
+  participateVolCount: number;
+  status: OrgRecruitStatus;
+  updatedAt: string;
+  createdAt: string;
+}
+
+export interface SearchTemplateOrganization {
+  orgId: number;
+  orgName: string;
+}
+
+export interface SearchTemplate {
+  templateId: number;
+  categoryId: number;
+  title: string;
+  activityLocation: string;
+  status: string;
+  imageUrl: string;
+  contactName: string;
+  contactPhone: string;
+  description: string;
+  createdAt: string;
+  organization: SearchTemplateOrganization;
+  group: Group;
+  recruits: SearchTemplateRecruit[];
+}
+
+export interface SearchTemplatesResponse {
+  templates: SearchTemplate[];
+  nextCursor: number | null;
 } 
