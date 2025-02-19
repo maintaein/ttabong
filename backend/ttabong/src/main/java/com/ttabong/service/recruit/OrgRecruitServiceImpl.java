@@ -131,7 +131,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                                 .title(template.getTitle())
                                 .activityLocation(template.getActivityLocation())
                                 .status(template.getStatus())
-                                .imageUrl(null)
+                                .imageUrl(imageService.getImageUrls(template.getId(), true).get(0))
                                 .contactName(template.getContactName())
                                 .contactPhone(template.getContactPhone())
                                 .description(template.getDescription())
