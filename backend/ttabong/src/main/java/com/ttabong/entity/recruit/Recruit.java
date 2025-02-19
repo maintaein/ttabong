@@ -11,6 +11,7 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -90,7 +91,7 @@ public class Recruit {
         this.status = "RECRUITMENT_CLOSED";
     }
     public void patchUpdate(UpdateRecruitsRequestDto dto){
-        if(dto.getDeadline() != null) this.deadline = Instant.from(dto.getDeadline());
+        if(dto.getDeadline() != null) this.deadline = dto.getDeadline().atZone(ZoneId.of("Asia/Seoul")).toInstant();
         if(dto.getActivityDate() != null) this.activityDate = dto.getActivityDate();
         if(dto.getActivityStart() != null) this.activityStart = dto.getActivityStart();
         if(dto.getActivityEnd() != null) this.activityEnd = dto.getActivityEnd();

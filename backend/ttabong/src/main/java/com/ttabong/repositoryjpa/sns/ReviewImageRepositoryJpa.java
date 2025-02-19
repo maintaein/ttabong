@@ -1,5 +1,6 @@
 package com.ttabong.repositoryjpa.sns;
 
+import com.ttabong.entity.recruit.Template;
 import com.ttabong.entity.sns.ReviewImage;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,6 +18,8 @@ public interface ReviewImageRepositoryJpa extends JpaRepository<ReviewImage, Int
 
     // 특정 템플릿 또는 리뷰의 이미지 가져오기
     List<ReviewImage> findByTemplateId(Integer templateId);
+
+    List<ReviewImage> findByTemplate(Template template);
 
     List<ReviewImage> findByReviewId(Integer reviewId);
 

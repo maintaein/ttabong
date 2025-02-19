@@ -9,7 +9,6 @@ import com.ttabong.exception.*;
 import com.ttabong.repository.recruit.*;
 import com.ttabong.repository.user.OrganizationRepository;
 import com.ttabong.repository.user.VolunteerRepository;
-import com.ttabong.servicejpa.recruit.OrgRecruitService;
 import com.ttabong.util.CacheUtil;
 import com.ttabong.util.DateTimeUtil;
 import com.ttabong.util.ImageUtil;
@@ -36,7 +35,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional
 @Slf4j
-public class OrgRecruitServiceImpl implements OrgRecruitService {
+public class OrgRecruitServiceImpl implements OrgRecruitServiceNone {
 
     private final RecruitRepository recruitRepository;
     private final TemplateRepository templateRepository;
@@ -767,23 +766,23 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     }
 
     @Override
-    public void updateCompleteRecruitStatus(int recruitId) {
+    public Boolean updateCompleteRecruitStatus(int recruitId) {
         Recruit activityCompleted = recruitRepository.save(
                 Recruit.builder()
                         .id(recruitId)
                         .status("ACTIVITY_COMPLETED")
                         .build());
-        return;
+        return null;
     }
 
     @Override
-    public void updateDeadlineRecruitStatus(int recruitId) {
+    public Boolean updateDeadlineRecruitStatus(int recruitId) {
         Recruit deadLinePass = recruitRepository.save(
                 Recruit.builder()
                         .id(recruitId)
                         .status("RECRUITMENT_CLOSED")
                         .build());
-        return;
+        return null;
     }
 
     public int getMinutesToDeadlineEvent(Recruit recruit) {

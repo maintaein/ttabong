@@ -5,7 +5,6 @@ import com.ttabong.entity.sns.ReviewImage;
 import com.ttabong.entity.user.Organization;
 import jakarta.persistence.*;
 import lombok.*;
-import org.apache.catalina.Group;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -13,7 +12,6 @@ import org.hibernate.annotations.OnDeleteAction;
 import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 @Entity
@@ -88,7 +86,21 @@ public class Template {
     }
 
     public static Template updateTemplate(Template oldTemplate, UpdateTemplateRequestDto dto, TemplateGroup group, Organization org, Category category) {
-        return null;
+        return Template.builder()
+                .group(group)
+                .org(org)
+                .category(category)
+                .title(dto.getTitle())
+                .activityLocation(dto.getActivityLocation())
+                .status(dto.getStatus())
+                .contactName(dto.getContactName())
+                .contactPhone(dto.getContactPhone())
+                .description(dto.getDescription())
+                .isDeleted(false)
+                .createdAt(Instant.now())
+                .build();
+
+
     }
 
 }

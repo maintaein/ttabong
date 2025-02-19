@@ -1,13 +1,14 @@
 package com.ttabong.controller.recruit;
 
-import com.ttabong.config.LoggerConfig;
 import com.ttabong.dto.recruit.requestDto.org.*;
 import com.ttabong.dto.recruit.responseDto.org.*;
 import com.ttabong.dto.user.AuthDto;
+import com.ttabong.exception.*;
 import com.ttabong.servicejpa.recruit.OrgRecruitService;
 import com.ttabong.util.service.CacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -132,7 +133,7 @@ public class OrgRecruitController {
             @AuthenticationPrincipal AuthDto authDto) {
 
         log.info("10 공고 _ 그룹+템플릿 조회 <GET> \"/templates\"");
-        ReadTemplatesResponseDto responseDto = orgRecruitService.readTemplates(cursor, limit, authDto);
+        ReadTemplatesResponseDto responseDto = orgRecruitService.readTemplatesByGroup(cursor, limit, authDto);
 
         return ResponseEntity.ok().body(responseDto);
     }
@@ -228,5 +229,30 @@ public class OrgRecruitController {
         List<EvaluateApplicationsResponseDto> response = orgRecruitService.evaluateApplicants(recruitId, evaluateApplicationDtoList, authDto);
 
         return ResponseEntity.ok().body(response);
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<String> handleUnauthorizedException(UnauthorizedException e) {
+        return ResponseEntity.status(HttpStatusCode.valueOf(403)).body(e.getMessage());
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<String> handleNotFoundException(NotFoundException e) {
+        return ResponseEntity.status(HttpStatusCode.valueOf(404)).body(e.getMessage());
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<String> handleBadRequestException(BadRequestException e) {
+        return ResponseEntity.status(HttpStatusCode.valueOf(400)).body(e.getMessage());
+    }
+
+    @ExceptionHandler(ImageProcessException.class)
+    public ResponseEntity<String> handleImageProcessException(ImageProcessException e) {
+        return ResponseEntity.status(HttpStatusCode.valueOf(555)).body(e.getMessage());
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<String> handleForbiddenException(ForbiddenException e) {
+        return ResponseEntity.status(HttpStatusCode.valueOf(403)).body(e.getMessage());
     }
 }

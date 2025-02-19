@@ -26,7 +26,7 @@ public interface OrgRecruitService {
 
     DeleteGroupResponseDto deleteGroup(DeleteGroupDto deleteGroupDto, AuthDto authDto);
 
-    ReadTemplatesResponseDto readTemplates(Integer cursor, Integer limit, AuthDto authDto);
+    ReadTemplatesResponseDto readTemplatesByGroup(Integer cursor, Integer limit, AuthDto authDto);
 
     //CreateTemplateResponseDto createTemplate(CreateTemplateRequestDto createTemplateDto, AuthDto authDto);
 

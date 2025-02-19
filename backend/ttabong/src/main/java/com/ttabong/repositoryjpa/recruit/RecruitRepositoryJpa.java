@@ -1,18 +1,13 @@
 package com.ttabong.repositoryjpa.recruit;
 
 import com.ttabong.entity.recruit.Recruit;
-import com.ttabong.entity.recruit.Template;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,14 +23,19 @@ public interface RecruitRepositoryJpa extends JpaRepository<Recruit, Integer> {
             "AND r.isDeleted = false " +
             "ORDER BY r.id DESC")
     List<Recruit> findAvailableRecruits(@Param("cursor") Integer cursor, @Param("userId") Integer userId, Pageable pageable);
-    @EntityGraph(attributePaths = {"template", "org"})
+
+    @EntityGraph(attributePaths = {"template", "org.user"})
     List<Recruit> findRecruitByTemplateOrgIdAndIsDeletedFalse(Integer template_org_id, Pageable pageable);
-    @EntityGraph(attributePaths = {"template.group", "template.org"})
-    Recruit findRecruitByIdAndIsDeletedFalse(Integer id);
-    @EntityGraph(attributePaths = {"template.group", "template.org"})
+
+    @EntityGraph(attributePaths = {"template.group", "template.org.user"})
+    Optional<Recruit> findRecruitByIdAndIsDeletedFalse(Integer id);
+
+    @EntityGraph(attributePaths = {"template.group", "template.org.user"})
     List<Recruit> findRecruitByIdInAndIsDeletedFalse(List<Integer> recruitIds);
+
     @Query("SELECT r FROM Recruit r WHERE r.id = :recruitId AND r.isDeleted = false")
     Optional<Recruit> findByRecruitId(@Param("recruitId") Integer recruitId);
+
     Optional<Recruit> findByIdAndIsDeletedFalse(Integer recruitId);
 
 }
