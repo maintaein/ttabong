@@ -84,5 +84,14 @@ export const recruitApi = {
       status
     });
     return response.data;
+  },
+
+  getTemplateDetail: async (templateId: number) => {
+    try {
+      const response = await axiosInstance.get(`/vol/templates/${templateId}`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data?.message || '템플릿 정보를 불러오는데 실패했습니다.';
+    }
   }
 }; 
