@@ -34,6 +34,7 @@
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter-security:3.4.1" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.boot:spring-boot-starter:3.4.1" level="project" />
     <orderEntry type="library" name="Gradle: io.minio:minio:8.5.17" level="project" />
+    <orderEntry type="library" name="Gradle: net.datafaker:datafaker:2.0.2" level="project" />
     <orderEntry type="library" name="Gradle: io.jsonwebtoken:jjwt-impl:0.11.5" level="project" />
     <orderEntry type="library" name="Gradle: io.jsonwebtoken:jjwt-jackson:0.11.5" level="project" />
     <orderEntry type="library" name="Gradle: io.jsonwebtoken:jjwt-api:0.11.5" level="project" />
@@ -73,6 +74,7 @@
     <orderEntry type="library" name="Gradle: org.apache.commons:commons-compress:1.27.1" level="project" />
     <orderEntry type="library" name="Gradle: commons-codec:commons-codec:1.17.1" level="project" />
     <orderEntry type="library" name="Gradle: org.xerial.snappy:snappy-java:1.1.10.7" level="project" />
+    <orderEntry type="library" name="Gradle: com.github.mifmif:generex:1.0.2" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework.data:spring-data-keyvalue:3.4.1" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework:spring-context-support:6.2.1" level="project" />
     <orderEntry type="library" name="Gradle: org.springframework:spring-tx:6.2.1" level="project" />
@@ -120,6 +122,7 @@
     <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.25" level="project" />
     <orderEntry type="library" name="Gradle: commons-io:commons-io:2.16.1" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.commons:commons-lang3:3.17.0" level="project" />
+    <orderEntry type="library" name="Gradle: dk.brics.automaton:automaton:1.11-8" level="project" />
     <orderEntry type="library" name="Gradle: io.netty:netty-transport-native-unix-common:4.1.116.Final" level="project" />
     <orderEntry type="library" name="Gradle: io.netty:netty-codec:4.1.116.Final" level="project" />
     <orderEntry type="library" name="Gradle: io.netty:netty-resolver:4.1.116.Final" level="project" />
