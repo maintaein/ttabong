@@ -10,13 +10,13 @@ import com.ttabong.entity.recruit.Recruit;
 import com.ttabong.entity.recruit.Template;
 import com.ttabong.entity.recruit.TemplateGroup;
 import com.ttabong.entity.sns.Review;
-import com.ttabong.entity.sns.ReviewComment;
 import com.ttabong.entity.sns.ReviewImage;
 import com.ttabong.entity.user.Organization;
 import com.ttabong.entity.user.User;
 import com.ttabong.exception.*;
 import com.ttabong.repository.recruit.ApplicationRepository;
 import com.ttabong.repository.recruit.RecruitRepository;
+import com.ttabong.repository.sns.ReviewCommentRepository;
 import com.ttabong.repository.sns.ReviewImageRepository;
 import com.ttabong.repository.sns.ReviewRepository;
 import com.ttabong.repository.user.OrganizationRepository;
@@ -48,6 +48,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final RecruitRepository recruitRepository;
     private final ApplicationRepository applicationRepository;
     private final ReviewImageRepository reviewImageRepository;
+    private final ReviewCommentRepository reviewCommentRepository;
     private final CacheUtil cacheUtil;
     private final ImageUtil imageUtil;
     private final MinioClient minioClient;
@@ -597,8 +598,8 @@ public class ReviewServiceImpl implements ReviewService {
             }
         }
 
-        List<ReviewDetailResponseDto.CommentDto> comments = review.getReviewComments().stream()
-                .sorted(Comparator.comparing(ReviewComment::getCreatedAt))
+        List<ReviewDetailResponseDto.CommentDto> comments = reviewCommentRepository.findByReviewIdAndIsDeletedFalseOrderByCreatedAt(review.getId())
+                .stream()
                 .map(comment -> ReviewDetailResponseDto.CommentDto.builder()
                         .commentId(comment.getId())
                         .writerId(comment.getWriter().getId())
@@ -607,6 +608,7 @@ public class ReviewServiceImpl implements ReviewService {
                         .createdAt(comment.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
                         .build())
                 .collect(Collectors.toList());
+
 
         return ReviewDetailResponseDto.builder()
                 .reviewId(review.getId())
