@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useRef, useCallback } from 'react';
 import { useRecruitStore } from '@/stores/recruitStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

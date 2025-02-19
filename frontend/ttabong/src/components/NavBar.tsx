@@ -26,7 +26,11 @@ const NavItem = ({ to, icon: Icon, label }: NavItemProps) => {
   );
 };
 
-const NavBar = () => {
+interface NavBarProps {
+  className?: string;
+}
+
+export const NavBar = ({ className }: NavBarProps) => {
   const location = useLocation();
   const { userType } = useUserStore();
   const isLoginPage = location.pathname === '/login';
@@ -37,13 +41,14 @@ const NavBar = () => {
   const recruitLabel = userType === 'volunteer' ? '후기 작성' : '공고 등록';
 
   return (
-    <nav className="
+    <nav className={`
       fixed bottom-0 left-1/2 -translate-x-1/2 
       w-full max-w-[600px] min-w-[320px] 
       bg-background border-t border-border
       h-14
       z-50
-    ">
+      ${className || ''}
+    `}>
       <div className="flex justify-around h-full py-2">
         <NavItem to="/main" icon={Home} label="홈" />
         <NavItem to="/recruit-find" icon={Search} label="공고 검색" />
