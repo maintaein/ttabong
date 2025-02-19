@@ -711,20 +711,16 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
     @Override
     public void updateCompleteRecruitStatus(int recruitId) {
-        Recruit activityCompleted = recruitRepository.save(
-                Recruit.builder()
-                        .id(recruitId)
-                        .status("ACTIVITY_COMPLETED")
-                        .build());
+        Optional<Recruit> completeRecruit = recruitRepository.findByIdAndIsDeletedFalse(recruitId);
+        if(completeRecruit.isEmpty()) throw new NotFoundException("해당공고가 존재하지 않음");
+        completeRecruit.get().updateStatusComplete();
     }
 
     @Override
     public void updateDeadlineRecruitStatus(int recruitId) {
-        Recruit deadLinePass = recruitRepository.save(
-                Recruit.builder()
-                        .id(recruitId)
-                        .status("RECRUITMENT_CLOSED")
-                        .build());
+        Optional<Recruit> closedRecruit = recruitRepository.findByIdAndIsDeletedFalse(recruitId);
+        if(closedRecruit.isEmpty()) throw new NotFoundException("해당공고가 존재하지 않음");
+        closedRecruit.get().updateStatusComplete();
     }
 
     public int getMinutesToDeadlineEvent(Recruit recruit) {

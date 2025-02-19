@@ -715,8 +715,9 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public void createReviewAfterSchedule(int recruitId) {
+        log.info("봉사가 끝나서 관련 게시글을 생성합니다");
         Optional<Recruit> recruit = recruitRepository.findById(recruitId);
-        if(recruit.isPresent()) {
+        if(recruit.isEmpty()) {
             log.info("스케쥴러를 통해 리뷰를 생성하기 위한 공고가 없습니다");
             throw new NotFoundException("해당하는 공고가 없습니다");
         }

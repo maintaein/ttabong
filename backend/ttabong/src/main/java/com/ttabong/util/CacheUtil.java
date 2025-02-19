@@ -40,12 +40,12 @@ public class CacheUtil {
     }
 
     public boolean addCompleteEventScheduler(Integer Id, Integer time) {
-        redisTemplate.opsForValue().set("EVENT_COMPLETE: " + Id.toString(), "", time, TimeUnit.SECONDS);
+        redisTemplate.opsForValue().set("EVENT_COMPLETE: " + Id.toString(), "", time, TimeUnit.MINUTES);
         return true;
     }
 
     public boolean addDeadlineEventScheduler(Integer Id, Integer time) {
-        redisTemplate.opsForValue().set("DEADLINE_PASS: " + Id.toString(), "", time, TimeUnit.SECONDS);
+        redisTemplate.opsForValue().set("DEADLINE_PASS: " + Id.toString(), "", time, TimeUnit.MINUTES);
         return true;
     }
 

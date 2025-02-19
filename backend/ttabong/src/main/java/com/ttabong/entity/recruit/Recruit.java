@@ -83,7 +83,8 @@ public class Recruit {
 
     @OneToMany(mappedBy = "recruit")
     private Set<VolunteerReaction> volunteerReactions = new LinkedHashSet<>();
-
+    public void updateStatusComplete(){this.status = "ACTIVITY_COMPLETED";}
+    public void updateStatusClosed(){this.status = "RECRUITMENT_CLOSED";}
     public void updateDelete(){
         this.isDeleted = true;
     }
