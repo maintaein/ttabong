@@ -5,10 +5,11 @@ module.exports = {
   rules: {
     'react/react-in-jsx-scope': 'off',
     'react/jsx-uses-react': 'off',
-    'no-unused-vars': ['error', {
-      varsIgnorePattern': 'React',
-      argsIgnorePattern': '^_',
-      ignoreRestSiblings': true
-    }]
+    '@typescript-eslint/no-unused-vars': ['error', {
+      'varsIgnorePattern': 'React',
+      'argsIgnorePattern': '^_',
+      'ignoreRestSiblings': true
+    }],
+    'no-unused-vars': 'off' 
   }
 } 

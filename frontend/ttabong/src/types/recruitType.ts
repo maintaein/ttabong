@@ -169,4 +169,42 @@ export interface APITemplate {
   contactPhone: string;
   maxVolunteer: number;
   createdAt: string;
+}
+
+export interface TemplateDetail {
+  template: {
+    templateId: number;
+    title: string;
+    activityLocation: string;
+    status: 'ALL' | 'YOUTH';
+    imageId: string;
+    contactName: string;
+    contactPhone: string;
+    description: string;
+    createdAt: string;
+  };
+  group: Group;
+  category: {
+    categoryId: number;
+    name: string;
+  };
+  organization: {
+    orgId: number;
+    userId: number | null;
+    businessRegNumber: string | null;
+    orgName: string;
+    representativeName: string | null;
+    orgAddress: string | null;
+  };
+  recruits: {
+    recruitId: number;
+    deadline: string;
+    activityDate: string;
+    activityStart: number;
+    activityEnd: number;
+    maxVolunteer: number;
+    participateVolCount: number;
+    status: OrgRecruitStatus;
+    createdAt: string;
+  }[];
 } 
