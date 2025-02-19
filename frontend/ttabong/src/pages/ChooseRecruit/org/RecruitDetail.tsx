@@ -210,7 +210,7 @@ const RecruitDetail: React.FC = () => {
       toast({
         title: "신청 완료",
         description: "봉사 신청이 완료되었습니다."
-      });
+      }); 
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -260,6 +260,7 @@ const RecruitDetail: React.FC = () => {
       });
     }
   };
+
 
   if (isLoading) return <div>로딩 중...</div>;
   if (error) return <div>{error}</div>;
@@ -591,13 +592,14 @@ const RecruitDetail: React.FC = () => {
 
           {userType === 'volunteer' && (
             <div className="mt-6">
-              {recruit?.application?.status === 'PENDING' ? (
+              {recruit?.application ? (
                 <Button 
                   variant="destructive" 
                   className="w-full"
                   onClick={handleCancel}
+                  disabled={recruit.application.status !== 'PENDING'}
                 >
-                  신청 취소하기
+                  {recruit.application.status === 'PENDING' ? '신청 취소하기' : '취소 불가'}
                 </Button>
               ) : (
                 <Button 
