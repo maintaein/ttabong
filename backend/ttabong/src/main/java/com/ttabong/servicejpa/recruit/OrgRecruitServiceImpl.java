@@ -69,10 +69,13 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
             if (limit == null || limit == 0) {
                 limit = 10;
             }
+            log.info("there is nothign to catch");
             List<Recruit> recruits = recruitRepository.findRecruitByTemplateOrgIdAndIsDeletedFalse(authDto.getUserId(), PageRequest.of(cursor, limit));
-
+            log.info("before start evens starts");
             List<ReadAvailableRecruitsResponseDto.TemplateDetail> templateDetails = recruits.stream().map((recruit) -> {
+                log.info("has not even started");
                 try {
+                    log.info("builder start");
                     return ReadAvailableRecruitsResponseDto.TemplateDetail.builder()
                             .template(ReadAvailableRecruitsResponseDto.Template.builder()
                                     .templateId(recruit.getTemplate().getId())
@@ -107,11 +110,13 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                                         .build();
                             }).toList())
                             .build();
+
                 } catch (Exception e) {
                     log.error("이미지 URL생성 관련 오류 발생, {}", e.getMessage());
                     throw new RuntimeException(e);
                 }
             }).toList();
+            log.info("builder end");
             return ReadAvailableRecruitsResponseDto.builder().templates(templateDetails).build();
         } catch (NotFoundException e) {
             throw e;
@@ -303,7 +308,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
             throw new UnauthorizedException("템플릿에 대한 권한이 없습니다");
         }
         Template newTemplate =
-                Template.updateTemplate(template.get(), updateTemplateDto
+                Template.updateTemplate(updateTemplateDto
                         , templateGroupRepository.getReferenceById(updateTemplateDto.getTemplateId())
                         , organizationRepository.getReferenceById(updateTemplateDto.getOrgId())
                         , categoryRepository.getReferenceById(updateTemplateDto.getCategoryId())
