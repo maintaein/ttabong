@@ -1,9 +1,6 @@
 package com.ttabong.service.recruit;
 
-import com.ttabong.dto.recruit.responseDto.vol.MyApplicationDetailResponseDto;
-import com.ttabong.dto.recruit.responseDto.vol.MyApplicationsResponseDto;
-import com.ttabong.dto.recruit.responseDto.vol.ReadRecruitDetailResponseDto;
-import com.ttabong.dto.recruit.responseDto.vol.ReadVolRecruitsListResponseDto;
+import com.ttabong.dto.recruit.responseDto.vol.*;
 import com.ttabong.entity.recruit.Application;
 
 import java.util.List;
