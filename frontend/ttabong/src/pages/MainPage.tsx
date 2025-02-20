@@ -4,6 +4,9 @@ import { useDrag } from "react-use-gesture";
 import axiosInstance from '@/api/axiosInstance';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { recruitApi } from "@/api/recruitApi";
+import { ImageOff } from 'lucide-react';
 
 // API 응답 데이터 타입 정의
 type RecruitData = {
@@ -51,6 +54,7 @@ const MainPage: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState<number | null>(null);
   const [gone] = useState(new Set());
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchRecruits = async () => {
@@ -59,13 +63,13 @@ const MainPage: React.FC = () => {
           params: { cursor: 0, limit: 20 }
         });
         
-        const formattedData: VolunteerPost[] = response.data.templates.map((item: RecruitData, index: number) => ({
+        const formattedData: VolunteerPost[] = response.data.templates.map((item: RecruitData) => ({
           id: item.template.templateId,
           title: item.template.title,
           location: item.group.groupName,
           date: item.template.createdAt.split('T')[0],
           description: `${item.organization.orgName} | ${item.template.description}`,
-          image: item.template.imageId || `https://source.unsplash.com/400x300/?volunteer&sig=${index}`,
+          image: item.template.imageId || null,
         }));
  
         setVolunteerPosts(formattedData);
@@ -83,6 +87,26 @@ const MainPage: React.FC = () => {
     from: from(),
   }));
 
+  const handleSwipe = async (index: number, direction: number) => {
+    const isLike = direction > 0;  // 오른쪽 스와이프면 좋아요
+    const templateId = volunteerPosts[index]?.id;
+
+    try {
+      await recruitApi.reactToTemplate(templateId, isLike);
+      toast({
+        title: isLike ? "관심 봉사 등록" : "봉사 거절",
+        description: isLike ? "관심 봉사에 등록되었습니다." : "봉사를 거절했습니다."
+      });
+    } catch (error) {
+      console.error('Template reaction failed:', error);
+      toast({
+        variant: "destructive",
+        title: "오류",
+        description: "처리 중 오류가 발생했습니다."
+      });
+    }
+  };
+
   const bind = useDrag(({ args: [index], down, movement: [mx], velocity }) => {
     if (index !== currentIndex) return;
 
@@ -90,6 +114,7 @@ const MainPage: React.FC = () => {
     if (!down && trigger) {
       gone.add(index);
       setCurrentIndex(prev => prev !== null ? prev - 1 : null);
+      handleSwipe(index, mx);  // 스와이프 방향에 따라 API 호출
     }
 
     api.start((i) => {
@@ -134,12 +159,19 @@ const MainPage: React.FC = () => {
             }}
             {...bind(i)}
           >
-            {volunteerPosts[i]?.image && (
+            {volunteerPosts[i]?.image ? (
               <img
-                src={volunteerPosts[i]?.image}
-                alt={volunteerPosts[i]?.title}
+                src={volunteerPosts[i].image}
+                alt={volunteerPosts[i].title}
                 className="w-full h-[50%] object-cover"
               />
+            ) : (
+              <div className="w-full h-[50%] bg-muted flex items-center justify-center">
+                <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                  <ImageOff className="w-12 h-12" />
+                  <span className="text-sm">이미지가 없습니다</span>
+                </div>
+              </div>
             )}
             <div className="p-6 flex flex-col h-[50%]">
               <h2 className="text-xl font-bold mb-2">{volunteerPosts[i]?.title}</h2>

@@ -44,6 +44,7 @@ export interface Application {
   status: VolunteerApplicationStatus;
   evaluationDone: boolean;
   createdAt: string;
+  reviewId: number | null;
   template: {
     templateId: number;
     title: string;

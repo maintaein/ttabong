@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public interface VolRecruitService {
-    ReadVolRecruitsListResponseDto getTemplates(Integer cursor, Integer limit);
+    ReadVolRecruitsListResponseDto getTemplates(Integer cursor, Integer limit, Integer userId);
 
     ReadRecruitDetailResponseDto getTemplateById(Integer templateId);
 

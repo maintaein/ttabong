@@ -36,10 +36,10 @@ public class VolRecruitServiceImpl implements VolRecruitService {
     private final ImageUtil imageUtil;
 
 
-    // 1. 모집 공고 리스트 조회
     @Override
-    public ReadVolRecruitsListResponseDto getTemplates(Integer cursor, Integer limit) {
-        List<Template> templates = templateRepository.findTemplatesAfterCursor(cursor, limit);
+    public ReadVolRecruitsListResponseDto getTemplates(Integer cursor, Integer limit, Integer userId) {
+        // Repository 메서드에 userId를 추가해서 호출
+        List<Template> templates = templateRepository.findTemplatesAfterCursor(cursor, userId, limit);
 
         List<ReadVolRecruitsListResponseDto.TemplateWrapper> templateDetails = templates.stream()
                 .map(template -> {
