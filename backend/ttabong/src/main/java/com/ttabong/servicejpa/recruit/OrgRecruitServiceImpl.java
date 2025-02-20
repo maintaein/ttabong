@@ -320,7 +320,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         return UpdateTemplateResponse.builder()
                 .message("템플릿 수정 성공")
-                .templateId(updateTemplateDto.getTemplateId())
+                .templateId(finalNewTemplate.getId())
                 .orgId(authDto.getUserId())
                 .build();
     }
