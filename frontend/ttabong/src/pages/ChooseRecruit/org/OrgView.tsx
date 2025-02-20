@@ -4,6 +4,9 @@ import { useRecruitStore } from '@/stores/recruitStore';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { recruitApi } from "@/api/recruitApi";
+import { motion } from "framer-motion";
+import { RecruitItem } from '@/types/recruit';
+import { useNavigate } from 'react-router-dom';
 
 const STATUS_MAP = {
   'ALL': { label: '전체', className: 'bg-gray-100 text-gray-700' },
@@ -24,12 +27,13 @@ export const OrgView: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedRecruits, setSelectedRecruits] = useState<number[]>([]);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchRecruits();
   }, [fetchRecruits]);
 
-  const filteredRecruits = recruits.filter(item => 
+  const filteredRecruits: RecruitItem[] = recruits.filter(item => 
     selectedStatus === 'ALL' ? true : item.recruit.status === selectedStatus
   );
 
@@ -89,59 +93,72 @@ export const OrgView: React.FC = () => {
   if (error) return <div className="flex justify-center items-center h-[50vh] text-destructive">{error}</div>;
 
   return (
-    <div className="container max-w-2xl mx-auto px-4 py-4">
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          <h1 className="text-xl font-semibold">봉사 공고 목록</h1>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setIsEditing(!isEditing);
-                setSelectedRecruits([]);
-              }}
-            >
-              {isEditing ? '완료' : '편집'}
-            </Button>
-            {isEditing && (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleDeleteSelected}
-                disabled={selectedRecruits.length === 0}
-              >
-                선택 삭제
-              </Button>
-            )}
+    <div className="flex flex-col h-full">
+      <motion.div
+        className="flex-1"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ 
+          duration: 0.7,
+          ease: "easeOut"
+        }}
+      >
+        <div className="container max-w-2xl mx-auto px-4 py-4">
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <h1 className="text-xl font-semibold">봉사 공고 목록</h1>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setIsEditing(!isEditing);
+                    setSelectedRecruits([]);
+                  }}
+                >
+                  {isEditing ? '완료' : '편집'}
+                </Button>
+                {isEditing && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleDeleteSelected}
+                    disabled={selectedRecruits.length === 0}
+                  >
+                    선택 삭제
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {Object.entries(STATUS_MAP).map(([key, value]) => (
+                <Button
+                  key={key}
+                  variant={selectedStatus === key ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedStatus(key)}
+                  className="whitespace-nowrap"
+                >
+                  {value.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <RecruitList 
+              recruits={filteredRecruits}
+              isEditing={isEditing}
+              selectedRecruits={selectedRecruits}
+              onSelectRecruit={handleSelectRecruit}
+              onStatusChange={handleStatusChange}
+              statusOptions={statusOptions}
+              onNavigate={(path) => navigate(path)}
+            />
           </div>
         </div>
-
-        <div className="flex gap-2 overflow-x-auto pb-2">
-          {Object.entries(STATUS_MAP).map(([key, value]) => (
-            <Button
-              key={key}
-              variant={selectedStatus === key ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedStatus(key)}
-              className="whitespace-nowrap"
-            >
-              {value.label}
-            </Button>
-          ))}
-        </div>
-      </div>
-
-      <div className="mt-4">
-        <RecruitList 
-          recruits={filteredRecruits}
-          isEditing={isEditing}
-          selectedRecruits={selectedRecruits}
-          onSelectRecruit={handleSelectRecruit}
-          onStatusChange={handleStatusChange}
-          statusOptions={statusOptions}
-        />
-      </div>
+      </motion.div>
     </div>
   );
 }; 

@@ -6,6 +6,12 @@ export interface RecruitGroup {
 export interface RecruitTemplate {
   templateId: number;
   title: string;
+  description: string;
+  categoryId: number;
+  activityLocation: string;
+  contactName: string;
+  contactPhone: string;
+  images: string[];
 }
 
 export interface Recruit {

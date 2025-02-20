@@ -24,11 +24,21 @@ interface CreateTemplateResponse {
 
 export const templateApi = {
   // 템플릿 목록 조회 (이미지 없이)
-  getTemplates: async (cursor?: number) => {
-    const response = await axiosInstance.get('/org/templates', {
-      params: { cursor }
-    });
-    return response.data;
+  getTemplates: async (cursor?: number, limit: number = 10) => {
+    try {
+      console.log('템플릿 목록 요청 파라미터:', { cursor, limit });  // 요청 로그
+      const response = await axiosInstance.get('/org/templates', {
+        params: { 
+          cursor: cursor || undefined,  // 기본값 1
+          limit 
+        }
+      });
+      console.log('템플릿 목록 응답:', response.data);  // 응답 로그
+      return response.data;
+    } catch (error) {
+      console.error('템플릿 목록 조회 실패:', error);
+      throw error;
+    }
   },
 
   // 템플릿 상세 조회 (이미지 포함)
@@ -89,21 +99,27 @@ export const templateApi = {
 
   // 템플릿 생성
   createTemplate: async (data: CreateTemplateRequest) => {
-    console.log('Sending template data:', {
-      url: '/org/templates',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data, null, 2)
-    });
+    const requestData = {
+      groupId: data.groupId,
+      orgId: 1,
+      categoryId: 1,
+      title: data.title,
+      activityLocation: data.activityLocation,
+      status: 'ALL',
+      images: data.images,
+      imageCount: data.images.length,
+      contactName: data.contactName,
+      contactPhone: data.contactPhone,
+      description: data.description
+    };
 
     const response = await axiosInstance.post<CreateTemplateResponse>(
       '/org/templates',
-      data,
+      requestData,
       {
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
       }
     );
@@ -165,13 +181,6 @@ export const templateApi = {
       console.error('Template update error:', error);
       throw error;
     }
-  },
-
-  // 이미지 URL 생성 함수 추가
-  getTemplateImageUrls: (templateId: number, imageCount: number) => {
-    return Array.from({ length: imageCount }, (_, index) => 
-      `http://ttabong.store:9000/ttabong-bucket/${templateId}_${index + 1}.webp`
-    );
   },
 
   uploadImage: async (formData: FormData) => {

@@ -26,6 +26,7 @@ import OrgDetailPage from '@/pages/OrgDetailPage';
 import MyReviews from '@/pages/MyReviews';
 import RecruitManageVolunteers from '@/pages/MainPage/RecruitManageVolunteers';
 import TemplateDetail from '@/pages/ChooseRecruit/volunteer/VolTemplateDetail';
+import { IndexPage } from "@/pages/IndexPage";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { userId } = useUserStore();
@@ -45,14 +46,18 @@ function UserTypeRoute({
 }
 
 const App: React.FC = () => {
+  const hasVisited = localStorage.getItem('hasVisited');
+
   return (
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <Toaster />
       <div className="min-h-screen bg-zinc-100 dark:bg-zinc-900">
         <div className="mx-auto max-w-[600px] min-w-[320px] h-screen bg-background">
           <Routes>
+            <Route path="/" element={
+              hasVisited ? <Navigate to="/login" replace /> : <IndexPage />
+            } />
             {/* 인증이 필요없는 라우트 */}
-            <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/org-signup" element={<OrgSignUp />} />

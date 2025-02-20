@@ -9,14 +9,16 @@ interface RecruitListProps {
   onSelectRecruit: (recruitId: number) => void;
   onStatusChange: (recruitId: number, newStatus: string) => Promise<void>;
   statusOptions: { value: string; label: string; }[];
+  onNavigate: (path: string) => void;
 }
 
-export const RecruitList: React.FC<RecruitListProps> = ({ 
+export const RecruitList: React.FC<RecruitListProps> = ({
   recruits, 
   isEditing,
   selectedRecruits,
   onSelectRecruit,
   onStatusChange,
+  onNavigate
 }) => {
   if (!recruits) return null;
 
@@ -38,8 +40,9 @@ export const RecruitList: React.FC<RecruitListProps> = ({
           isSelected={selectedRecruits.includes(item.recruit.recruitId)}
           onSelect={() => onSelectRecruit(item.recruit.recruitId)}
           onStatusChange={(status) => onStatusChange(item.recruit.recruitId, status)}
+          onNavigate={() => onNavigate(`/org/recruits/${item.recruit.recruitId}`)}
         />
       ))}
     </div>
   );
-}; 
+};

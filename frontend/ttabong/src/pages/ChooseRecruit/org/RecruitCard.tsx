@@ -25,7 +25,8 @@ interface RecruitCardProps {
   isEditing: boolean;
   isSelected: boolean;
   onSelect: () => void;
-  onStatusChange: (status: string) => void;
+  onStatusChange: (status: string) => Promise<void>;
+  onNavigate: () => void;
 }
 
 export const RecruitCard: React.FC<RecruitCardProps> = ({ 
@@ -40,7 +41,16 @@ export const RecruitCard: React.FC<RecruitCardProps> = ({
 
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate(`/org/recruits/${recruitData.recruitId}`, { state: { isEditing: true } });
+    navigate(`/org/recruits/${recruitData.recruitId}`, { 
+      state: { 
+        isEditing: true,
+        recruitData: {
+          group,
+          template,
+          recruit: recruitData
+        }
+      } 
+    });
   };
 
   const handleManageVolunteers = (e: React.MouseEvent) => {
