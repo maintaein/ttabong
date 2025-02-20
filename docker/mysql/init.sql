@@ -269,24 +269,25 @@ VALUES
     -- 굿네이버스(기관 1번)의 두 번째 그룹(아동 교육 지원)
     (2, 1, 3, '초등학생 학습 멘토링', '서울 종로구 어린이도서관', 'YOUTH', '이강사', '010-3333-3333', '초등학생 대상 학습 지도 및 멘토링.', FALSE, NOW()),
     (2, 1, 4, '저소득층 아동 영어 교육', '서울 동대문구 청소년센터', 'YOUTH', '최관리', '010-4444-4444', '경제적 어려움을 겪는 아동을 위한 영어 수업 지원.', FALSE, NOW()),
-    -- 초록우산어린이재단(기관 2번)의 첫 번째 그룹(노인 돌봄 활동)
-    (3, 2, 5, '경로당 청소 및 식사 지원', '부산 수영구 경로당', 'ADULT', '장센터', '010-5555-5555', '노인을 위한 청소 및 식사 제공 봉사.', FALSE, NOW()),
-    (3, 2, 6, '독거노인 말벗 봉사', '부산 해운대구 독거노인 센터', 'ADULT', '홍담당', '010-6666-6666', '혼자 사시는 노인분들과 대화 및 산책 봉사.', FALSE, NOW()),
     -- 초록우산어린이재단(기관 2번)의 두 번째 그룹(동물 보호 봉사)
     (4, 2, 7, '유기견 보호소 봉사', '대전 유기견 보호소', 'ALL', '김보호', '010-7777-7777', '유기견 보호소에서 강아지 돌봄 봉사.', FALSE, NOW()),
-    (4, 2, 8, '길고양이 급식소 운영', '대전 중앙시장', 'ALL', '이집사', '010-8888-8888', '길고양이 급식소를 운영하며 보살피는 활동.', FALSE, NOW());
+    (4, 2, 8, '길고양이 급식소 운영', '대전 중앙시장', 'ALL', '이집사', '010-8888-8888', '길고양이 급식소를 운영하며 보살피는 활동.', FALSE, NOW()),
+    -- 초록우산어린이재단(기관 2번)의 첫 번째 그룹(노인 돌봄 활동)
+    (3, 2, 5, '경로당 청소 및 식사 지원', '부산 수영구 경로당', 'ADULT', '장센터', '010-5555-5555', '노인을 위한 청소 및 식사 제공 봉사.', FALSE, NOW()),
+    (3, 2, 6, '독거노인 말벗 봉사', '부산 해운대구 독거노인 센터', 'ADULT', '홍담당', '010-6666-6666', '혼자 사시는 노인분들과 대화 및 산책 봉사.', FALSE, NOW());
+
 
 INSERT INTO Recruit (template_id, deadline, activity_date, activity_start, activity_end, max_volunteer, participate_vol_count, status, is_deleted, updated_at, created_at)
 VALUES
-    (1, NOW() + INTERVAL 5 DAY, NOW() + INTERVAL 7 DAY, 9.00, 12.00, 20, 0, 'RECRUITING', FALSE, NOW(), NOW()),
-    (1, NOW() + INTERVAL 10 DAY, NOW() + INTERVAL 14 DAY, 14.00, 17.00, 15, 0, 'RECRUITING', FALSE, NOW(), NOW()),
-    (2, NOW() + INTERVAL 3 DAY, NOW() + INTERVAL 6 DAY, 10.00, 13.00, 25, 0, 'RECRUITING', FALSE, NOW(), NOW()),
-    (2, NOW() + INTERVAL 8 DAY, NOW() + INTERVAL 12 DAY, 13.00, 16.00, 30, 0, 'RECRUITING', FALSE, NOW(), NOW()),
-    (3, NOW() + INTERVAL 7 DAY, NOW() + INTERVAL 10 DAY, 15.00, 18.00, 10, 0, 'RECRUITING', FALSE, NOW(), NOW()),
-    (3, NOW() + INTERVAL 12 DAY, NOW() + INTERVAL 15 DAY, 16.00, 19.00, 12, 0, 'RECRUITING', FALSE, NOW(), NOW()),
-    (4, NOW() + INTERVAL 4 DAY, NOW() + INTERVAL 9 DAY, 17.00, 19.00, 10, 0, 'RECRUITING', FALSE, NOW(), NOW()),
-    (4, NOW() + INTERVAL 9 DAY, NOW() + INTERVAL 13 DAY, 14.00, 17.00, 15, 0, 'RECRUITING', FALSE, NOW(), NOW()),
-    (5, NOW() + INTERVAL 6 DAY, NOW() + INTERVAL 11 DAY, 8.00, 11.00, 20, 0, 'RECRUITING', FALSE, NOW(), NOW()),
+    (1, NOW() + INTERVAL 5 DAY, NOW() + INTERVAL 7 DAY, 9.00, 12.00, 20, 0, 'ACTIVITY_COMPLETED', FALSE, NOW(), NOW()),
+    (1, NOW() + INTERVAL 10 DAY, NOW() + INTERVAL 14 DAY, 14.00, 17.00, 15, 0, 'ACTIVITY_COMPLETED', FALSE, NOW(), NOW()),
+    (2, NOW() + INTERVAL 3 DAY, NOW() + INTERVAL 6 DAY, 10.00, 13.00, 25, 0, 'ACTIVITY_COMPLETED', FALSE, NOW(), NOW()),
+    (2, NOW() + INTERVAL 8 DAY, NOW() + INTERVAL 12 DAY, 13.00, 16.00, 30, 0, 'ACTIVITY_COMPLETED', FALSE, NOW(), NOW()),
+    (3, NOW() + INTERVAL 7 DAY, NOW() + INTERVAL 10 DAY, 15.00, 18.00, 10, 0, 'ACTIVITY_COMPLETED', FALSE, NOW(), NOW()),
+    (3, NOW() + INTERVAL 12 DAY, NOW() + INTERVAL 15 DAY, 16.00, 19.00, 12, 0, 'ACTIVITY_COMPLETED', FALSE, NOW(), NOW()),
+    (4, NOW() + INTERVAL 4 DAY, NOW() + INTERVAL 9 DAY, 17.00, 19.00, 10, 0, 'ACTIVITY_COMPLETED', FALSE, NOW(), NOW()),
+    (4, NOW() + INTERVAL 9 DAY, NOW() + INTERVAL 13 DAY, 14.00, 17.00, 15, 0, 'ACTIVITY_COMPLETED', FALSE, NOW(), NOW()),
+    (5, NOW() + INTERVAL 6 DAY, NOW() + INTERVAL 11 DAY, 8.00, 11.00, 20, 0, 'ACTIVITY_COMPLETED', FALSE, NOW(), NOW()),
     (5, NOW() + INTERVAL 10 DAY, NOW() + INTERVAL 14 DAY, 9.00, 12.00, 18, 0, 'RECRUITING', FALSE, NOW(), NOW()),
     (6, NOW() + INTERVAL 5 DAY, NOW() + INTERVAL 10 DAY, 14.00, 17.00, 10, 0, 'RECRUITING', FALSE, NOW(), NOW()),
     (6, NOW() + INTERVAL 10 DAY, NOW() + INTERVAL 15 DAY, 15.00, 18.00, 12, 0, 'RECRUITING', FALSE, NOW(), NOW()),
@@ -310,19 +311,19 @@ SET SQL_SAFE_UPDATES = 1;
 INSERT INTO Review (parent_review_id, group_id, recruit_id, org_id, writer_id, title, content, is_deleted, is_public, img_count, updated_at, created_at)
 VALUES
     (NULL, 1, 1, 1, 1, '깨끗한 하천 만들기', '강남 청담천에서 봉사활동을 했습니다. 많은 분들이 함께해서 뿌듯했어요!', FALSE, TRUE, 2, NOW(), NOW()),
-    (NULL, 2, 3, 1, 1, '아이들에게 도움을 줄 수 있어서 기뻤어요', '초등학생들을 대상으로 학습 멘토링을 진행했습니다. 의미 있는 시간이었습니다.', FALSE, TRUE, 2, NOW(), NOW()),
-    (NULL, 3, 5, 2, 2, '노인분들과 함께한 따뜻한 하루', '경로당에서 청소와 식사를 도와드렸어요. 따뜻한 시간을 보냈습니다.', FALSE, TRUE, 2, NOW(), NOW()),
-    (NULL, 4, 7, 2, 2, '유기견 보호소에서의 하루', '강아지들과 시간을 보내면서 많이 배우고 느꼈어요!', FALSE, TRUE, 2, NOW(), NOW()),
-    (NULL, 1, 2, 1, 3, '도시 숲 가꾸기 봉사 후기', '양재 시민의 숲에서 나무를 심고 정리하는 활동을 했어요.', FALSE, TRUE, 2, NOW(), NOW()),
+    (NULL, 2, 3, 1, 1, '도시 숲 가꾸기 봉사 후기', '양재 시민의 숲에서 나무를 심고 정리하는 활동을 했어요.', FALSE, TRUE, 2, NOW(), NOW()),
+    (NULL, 3, 5, 2, 2, '아이들에게 도움을 줄 수 있어서 기뻤어요', '초등학생들을 대상으로 학습 멘토링을 진행했습니다. 의미 있는 시간이었습니다.', FALSE, TRUE, 2, NOW(), NOW()),
+    (NULL, 4, 7, 2, 2, '아이들과 함께하는 즐거운 영어교실', '많이 배우고 느꼈어요!', FALSE, TRUE, 2, NOW(), NOW()),
+    (NULL, 1, 2, 1, 3, '푸른 미래를 위한 한 걸음', '더 맑은 내일을 위해 뿌듯한 하루를 보냈습니다.', FALSE, TRUE, 2, NOW(), NOW()),
     (NULL, 4, 8, 2, 3, '길고양이 급식소 운영 후기', '고양이들에게 사료를 나누어주고 관리하는 봉사를 했어요.', FALSE, TRUE, 2, NOW(), NOW());
 
 INSERT INTO Review (parent_review_id, group_id, recruit_id, org_id, writer_id, title, content, is_deleted, is_public, img_count, updated_at, created_at)
 VALUES
-    (NULL, 1, 1, 1, 4, '연탄 봉사', '사랑의 연탄 나르기', FALSE, TRUE, 1, NOW(), NOW()),
-    (NULL, 3, 5, 2, 5, '유기견 봉사', '사랑스러운 친구들과 함께하는 따뜻한 봉사', FALSE, TRUE, 1, NOW(), NOW()),
-    (NULL, 1, 2, 1, 4, '기관 관리자 리뷰 - 도시 숲 가꾸기', '나무 심기 봉사활동이 잘 마무리되었습니다.', FALSE, TRUE, 1, NOW(), NOW()),
-    (NULL, 2, 3, 1, 4, '기관 관리자 리뷰 - 학습 멘토링', '멘토링 활동에 많은 분들이 참여해주셨습니다.', FALSE, TRUE, 1, NOW(), NOW()),
-    (NULL, 4, 8, 2, 5, '기관 관리자 리뷰 - 길고양이 급식소 운영', '급식소 운영이 잘 진행되고 있습니다.', FALSE, TRUE, 1, NOW(), NOW());
+    (NULL, 1, 9, 1, 4, '연탄 봉사', '사랑의 연탄 나르기', FALSE, TRUE, 1, NOW(), NOW()),
+    (NULL, 3, 5, 2, 5, '초등학생 학습 봉사', '따뜻한 여러분 덕분에 아이들도 행복했어요', FALSE, TRUE, 1, NOW(), NOW()),
+    (NULL, 1, 2, 1, 4, '기관 관리자 리뷰 - 환경 봉사 가꾸기', '봉사활동이 잘 마무리되었습니다.', FALSE, TRUE, 1, NOW(), NOW()),
+    (NULL, 2, 3, 1, 4, '기관 관리자 리뷰 - 도시 숲 가꾸기', '나무 심기 봉사활동이 잘 마무리되었습니다.', FALSE, TRUE, 1, NOW(), NOW()),
+    (NULL, 4, 8, 2, 5, '기관 관리자 리뷰 - 저소득 아동 영어', '매우 유익한 시간이었습니다.', FALSE, TRUE, 1, NOW(), NOW());
 
 SET SQL_SAFE_UPDATES = 0;
 
@@ -341,34 +342,36 @@ ON child.recruit_id = parent.recruit_id
 SET SQL_SAFE_UPDATES = 1;
 
 -- --------------------------
-
+-- 봉사활동 정말 보람차네요. 저도 참여해 보고 싶어요!강아지들이 너무 귀엽네요! 다음번엔 저도 함께할게요.
 INSERT INTO Review_comment (writer_id, review_id, content, is_deleted, updated_at, created_at)
 VALUES
-    (2, 1, '정말 멋진 활동이네요! 저도 다음번엔 참여하고 싶어요.', FALSE, NOW(), NOW()),
+    (2, 1, '정말 멋진 활동이네요! 한번 더 참여하고 싶어요.', FALSE, NOW(), NOW()),
     (4, 1, '기관 측에서도 감사드립니다. 참여해주셔서 고맙습니다!', FALSE, NOW(), NOW()),
-    (3, 2, '저도 학습 멘토링 했었는데 아이들이 너무 좋아하더라고요!', FALSE, NOW(), NOW()),
+    (3, 2, '삭막한 도시가 푸르게 바뀌어가는 첫 걸음이네요!', FALSE, NOW(), NOW()),
     (5, 2, '우리 기관에서도 더 좋은 프로그램을 준비하겠습니다!', FALSE, NOW(), NOW()),
-    (1, 3, '봉사활동 정말 보람차네요. 저도 참여해 보고 싶어요!', FALSE, NOW(), NOW()),
-    (5, 3, '어르신들도 매우 만족하셨습니다. 감사합니다!', FALSE, NOW(), NOW()),
-    (3, 4, '강아지들이 너무 귀엽네요! 다음번엔 저도 함께할게요.', FALSE, NOW(), NOW()),
-    (4, 4, '보호소에서도 큰 도움 받았습니다. 참여해 주셔서 감사해요!', FALSE, NOW(), NOW()),
+    (1, 3, '저도 학습 멘토링 했었는데 아이들이 너무 좋아하더라고요!', FALSE, NOW(), NOW()),
+    (5, 3, '모두 매우 만족하셨습니다. 감사합니다!', FALSE, NOW(), NOW()),
+    (3, 4, '아이들이 너무 귀여워요! 즐거웠어요 :>', FALSE, NOW(), NOW()),
+    (4, 4, '저희도 큰 도움 받았습니다. 참여해 주셔서 감사해요!', FALSE, NOW(), NOW()),
     (2, 5, '숲이 깨끗해지니 기분이 너무 좋아요! 함께해서 즐거웠습니다.', FALSE, NOW(), NOW()),
     (4, 5, '환경 보호 활동은 꾸준히 필요합니다. 좋은 후기 감사합니다!', FALSE, NOW(), NOW()),
-    (1, 6, '길고양이들에게 정말 도움이 되는 활동이네요!', FALSE, NOW(), NOW()),
-    (5, 6, '우리 기관에서도 급식소 운영을 적극 지원하겠습니다.', FALSE, NOW(), NOW());
+    (1, 6, '정말 도움이 되는 활동이네요!', FALSE, NOW(), NOW()),
+    (5, 6, '앞으로도 적극 지원하겠습니다.', FALSE, NOW(), NOW());
 
 -- ---------------
 INSERT INTO Application (volunteer_id, recruit_id, status, evaluation_done, is_deleted, created_at, updated_at)
 VALUES
-    (1, 1, 'APPROVED', TRUE, FALSE, NOW(), NOW()),
-    (1, 3, 'PENDING', FALSE, FALSE, NOW(), NOW()),
+    (1, 1, 'COMPLETED', TRUE, FALSE, NOW(), NOW()),
+    (1, 3, 'COMPLETED', FALSE, FALSE, NOW(), NOW()),
     (1, 6, 'PENDING', FALSE, FALSE, NOW(), NOW()),
     (2, 1, 'APPROVED', FALSE, FALSE, NOW(), NOW()),
     (2, 5, 'APPROVED', TRUE, FALSE, NOW(), NOW()),
     (2, 4, 'APPROVED', TRUE, FALSE, NOW(), NOW()),
+    (2, 6, 'PENDING', TRUE, FALSE, NOW(), NOW()),
     (2, 7, 'REJECTED', FALSE, FALSE, NOW(), NOW()),
     (3, 2, 'COMPLETED', TRUE, FALSE, NOW(), NOW()),
-    (3, 8, 'AUTO_CANCEL', FALSE, FALSE, NOW(), NOW());
+    (3, 8, 'AUTO_CANCEL', FALSE, FALSE, NOW(), NOW()),
+    (3, 1, 'NO_SHOW', TRUE, FALSE, NOW(), NOW());
 
 INSERT INTO Review_image (review_id, template_id, image_url, is_deleted, is_thumbnail, created_at, next_image_id)
 VALUES
