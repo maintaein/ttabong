@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { ClipboardList, PenSquare, User, Calendar, Edit2, Trash2 } from 'lucide-react';
+import { ClipboardList, PenSquare, User, Calendar, Edit2, Trash2, ChevronRight } from 'lucide-react';
 import { LogoutButton } from '@/components/LogoutButton';
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -128,7 +128,7 @@ export default function MyPage() {
                   <p className="text-sm text-muted-foreground">로딩 중...</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 gap-2">
+                <div className="max-h-[400px] overflow-y-auto pr-2 space-y-2 scrollbar-thin scrollbar-thumb-primary/10 scrollbar-track-transparent hover:scrollbar-thumb-primary/20">
                   {likedTemplates.map((item) => (
                     <Card 
                       key={item.reactionId}
@@ -142,10 +142,7 @@ export default function MyPage() {
                               onCheckedChange={() => toggleReactionSelection(item.reactionId)}
                             />
                           )}
-                          <div 
-                            className="flex-1 min-w-0 py-0.5"
-                            onClick={() => !isEditMode && navigate(`/recruits/${item.recruit.recruitId}`)}
-                          >
+                          <div className="flex-1 min-w-0">
                             <div className="space-y-1">
                               <div className="flex items-center text-muted-foreground">
                                 <Calendar className="h-3 w-3 mr-1 flex-shrink-0" />
@@ -158,20 +155,39 @@ export default function MyPage() {
                               </div>
                               <div className="flex items-center text-muted-foreground">
                                 <p className="text-xs">
+                                  활동일시: {new Date(item.recruit.activityDate).toLocaleDateString('ko-KR', {
+                                    month: 'long',
+                                    day: 'numeric'
+                                  })} {Math.floor(item.recruit.activityStart)}시~{Math.floor(item.recruit.activityEnd)}시
+                                </p>
+                              </div>
+                              <div className="flex items-center text-muted-foreground">
+                                <p className="text-xs">
                                   모집인원: {item.recruit.participateVolCount}/{item.recruit.maxVolunteer}명
                                 </p>
                               </div>
+                              {!isEditMode && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-full mt-2 text-xs h-8 justify-between"
+                                  onClick={() => navigate(`/templates/${item.recruit.templateId}`)}
+                                >
+                                  자세히 보기
+                                  <ChevronRight className="h-4 w-4" />
+                                </Button>
+                              )}
                             </div>
                           </div>
                         </div>
                       </CardContent>
                     </Card>
                   ))}
-                </div>
-              )}
-              {isLoadingLikes && likedTemplates.length > 0 && (
-                <div className="flex justify-center py-3">
-                  <p className="text-xs text-muted-foreground">더 불러오는 중...</p>
+                  {isLoadingLikes && likedTemplates.length > 0 && (
+                    <div className="flex justify-center py-3">
+                      <p className="text-xs text-muted-foreground">더 불러오는 중...</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
