@@ -28,8 +28,6 @@ public interface VolunteerRepository extends JpaRepository<Volunteer, Integer> {
     @Query("SELECT v FROM Volunteer v WHERE v.user.id = :userId AND v.user.isDeleted = false")
     Optional<Volunteer> findByUserIdAndUserIsDeletedFalse(@Param("userId") int userId);
 
-    boolean existsByUserId(Integer userId);
-
     @Query("SELECT COUNT(v) > 0 FROM Volunteer v JOIN v.user u WHERE u.id = :userId AND u.isDeleted = FALSE")
     boolean existsByUserIdAndUserIsDeletedFalse(Integer userId);
 
