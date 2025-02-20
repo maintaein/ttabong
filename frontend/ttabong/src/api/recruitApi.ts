@@ -7,7 +7,7 @@ import type {
 } from '@/types/recruitType';
 import axios from 'axios';
 
-const RECRUITS_PER_PAGE = 10;  // 한 페이지당 공고 수
+const RECRUITS_PER_PAGE = 500;  // 한 페이지당 공고 수
 
 interface SearchTemplatesParams {
   cursor?: number | null;
@@ -26,7 +26,7 @@ interface SearchTemplatesParams {
 
 export const recruitApi = {
   getMyApplications: async (params?: GetApplicationsParams): Promise<Application[]> => {
-    const { cursor = 0, limit = 10 } = params || {};
+    const { cursor = 0, limit = 500 } = params || {};
     const queryParams = new URLSearchParams();
     
     queryParams.append('cursor', cursor.toString());
@@ -131,7 +131,7 @@ export const recruitApi = {
       const queryParams = new URLSearchParams();
       
       queryParams.append('cursor', (params.cursor || 1).toString());
-      queryParams.append('limit', (params.limit || 10).toString());
+      queryParams.append('limit', (params.limit || 500).toString());
 
       const response = await axiosInstance.post(`/search/templates?${queryParams.toString()}`, {
         templateTitle: params.templateTitle || null,
