@@ -2,6 +2,7 @@ import React from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { TemplateFormData } from "@/types/template";
+import { toast } from "sonner";
 
 interface Step1Props {
   templateData: TemplateFormData;
@@ -38,33 +39,76 @@ const Step1AnnouncementDetails: React.FC<Step1Props> = ({
     }));
   };
 
+  // 입력 제한 핸들러
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+
+    // 연속된 공백 체크
+    if (/\s{2,}/.test(value)) {
+      toast.error('연속된 공백은 사용할 수 없습니다.');
+      return;
+    }
+
+    // 30자 이하만 허용
+    if (value.length <= 30) {
+      setTemplateData(prev => ({
+        ...prev,
+        title: value
+      }));
+    } else {
+      toast.error('제목은 30자를 초과할 수 없습니다.');
+    }
+  };
+
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+
+    // 연속된 공백 체크
+    if (/\s{2,}/.test(value)) {
+      toast.error('연속된 공백은 사용할 수 없습니다.');
+      return;
+    }
+
+    // 100자 이하만 허용
+    if (value.length <= 100) {
+      setTemplateData(prev => ({
+        ...prev,
+        description: value
+      }));
+    } else {
+      toast.error('내용은 100자를 초과할 수 없습니다.');
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">공고 제목</label>
         <Input
           type="text"
-          placeholder="[행복한 가게] 오후시간 도서 녹음을 위한 봉사자 모집"
+          placeholder="공고 제목 입력 (최대 30자)"
           value={templateData.title}
-          onChange={(e) => setTemplateData(prev => ({
-            ...prev,
-            title: e.target.value
-          }))}
+          onChange={handleTitleChange}
           className="w-full"
+          maxLength={30}
         />
+        <div className="text-sm text-gray-500 mt-1">
+          {templateData.title.length}/30
+        </div>
       </div>
       
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">공고 내용</label>
         <Textarea
-          placeholder="상세한 공고 내용을 입력해주세요."
+          placeholder="공고 내용 입력 (최대 100자)"
           value={templateData.description}
-          onChange={(e) => setTemplateData(prev => ({
-            ...prev,
-            description: e.target.value
-          }))}
+          onChange={handleDescriptionChange}
           className="min-h-[150px]"
+          maxLength={100}
         />
+        <div className="text-sm text-gray-500 mt-1">
+          {templateData.description.length}/100
+        </div>
       </div>
       
       <div>

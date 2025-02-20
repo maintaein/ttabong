@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { type APITemplate, type Group } from '@/types/recruitType';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { useTemplateStore } from '@/stores/templateStore';
 import { toast } from "sonner";
 
@@ -155,89 +154,89 @@ const OrgMainPage: React.FC = () => {
         className="flex-1 bg-gray-50 p-4 space-y-6 mb-24"
       >
         {groups && groups.length > 0 ? (
-          groups.map((group) => (
-            <div
-              key={group.groupId}
-            >
-              <Card className="p-4 bg-white shadow-md">
-                <div className="flex justify-between items-center mb-4 border-b pb-3">
-                  <h2 className="text-lg font-semibold flex items-center">
-                    {group.groupName}
-                    <span className="text-sm text-gray-500 ml-2">(그룹)</span>
-                  </h2>
-                  <div className="flex gap-2">
-                    <button
-                      className="text-blue-500 hover:text-blue-700"
-                      onClick={() => toggleEditMode(group.groupId)}
-                    >
-                      {groupEdit.isEditing && groupEdit.groupId === group.groupId 
-                        ? "완료" 
-                        : "편집"}
-                    </button>
-                    <button 
-                      className="text-red-500 hover:text-red-700"
-                      onClick={() => openDeleteDialog('group', group.groupId)}
-                    >
-                      삭제
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  {group.templates.length > 0 ? (
-                    group.templates.map((template: APITemplate) => (
-                      <div
-                        key={template.templateId}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {groups.map((group) => (
+              <div key={group.groupId}>
+                <div className="p-4 bg-white shadow-md rounded-lg">
+                  <div className="flex justify-between items-center mb-4 border-b pb-3">
+                    <h2 className="text-lg font-semibold flex items-center">
+                      <span className="truncate" title={group.groupName}>{group.groupName}</span>
+                      <span className="text-sm text-gray-500 ml-2">(그룹)</span>
+                    </h2>
+                    <div className="flex gap-2">
+                      <button
+                        className="text-blue-500 hover:text-blue-700"
+                        onClick={() => toggleEditMode(group.groupId)}
                       >
-                        <div className="p-3 bg-gray-50 rounded-lg border hover:shadow-sm transition-shadow">
-                          <div className="flex justify-between items-start">
-                            <div className="flex items-center gap-3">
-                              {groupEdit.isEditing && groupEdit.groupId === group.groupId && (
-                                <input
-                                  type="checkbox"
-                                  checked={groupEdit.selectedTemplates.includes(template.templateId)}
-                                  onChange={() => toggleTemplateSelection(template.templateId)}
-                                  className="w-4 h-4"
-                                />
-                              )}
-                              <div onClick={() => handleUseTemplate(template, group)}>
-                                <p className="font-medium text-gray-900">{template.title}</p>
-                                <p className="text-sm text-gray-500 mt-1">{template.description}</p>
+                        {groupEdit.isEditing && groupEdit.groupId === group.groupId 
+                          ? "완료" 
+                          : "편집"}
+                      </button>
+                      <button 
+                        className="text-red-500 hover:text-red-700"
+                        onClick={() => openDeleteDialog('group', group.groupId)}
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    {group.templates.length > 0 ? (
+                      group.templates.map((template: APITemplate) => (
+                        <div
+                          key={template.templateId}
+                        >
+                          <div className="p-3 bg-gray-50 rounded-lg border hover:shadow-sm transition-shadow">
+                            <div className="flex justify-between items-start">
+                              <div className="flex items-center gap-3">
+                                {groupEdit.isEditing && groupEdit.groupId === group.groupId && (
+                                  <input
+                                    type="checkbox"
+                                    checked={groupEdit.selectedTemplates.includes(template.templateId)}
+                                    onChange={() => toggleTemplateSelection(template.templateId)}
+                                    className="w-4 h-4"
+                                  />
+                                )}
+                                <div onClick={() => handleUseTemplate(template, group)}>
+                                  <p className="font-medium text-gray-900">{template.title}</p>
+                                  <p className="text-sm text-gray-500 mt-1">{template.description}</p>
+                                </div>
                               </div>
+                              {!groupEdit.isEditing && (
+                                <button
+                                  className="text-blue-500 hover:text-blue-700"
+                                  onClick={() => handleUseTemplate(template, group)}
+                                >
+                                  사용
+                                </button>
+                              )}
                             </div>
-                            {!groupEdit.isEditing && (
-                              <button
-                                className="text-blue-500 hover:text-blue-700"
-                                onClick={() => handleUseTemplate(template, group)}
-                              >
-                                사용
-                              </button>
-                            )}
                           </div>
                         </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-center text-gray-500 py-4">
-                      아직 템플릿이 없습니다
-                    </p>
+                      ))
+                    ) : (
+                      <p className="text-center text-gray-500 py-4">
+                        아직 템플릿이 없습니다
+                      </p>
+                    )}
+                  </div>
+                  
+                  {groupEdit.isEditing && groupEdit.groupId === group.groupId && (
+                    <div className="mt-4 flex justify-end">
+                      <Button
+                        variant="destructive"
+                        onClick={deleteSelectedTemplates}
+                        disabled={groupEdit.selectedTemplates.length === 0}
+                      >
+                        선택한 템플릿 삭제
+                      </Button>
+                    </div>
                   )}
                 </div>
-                
-                {groupEdit.isEditing && groupEdit.groupId === group.groupId && (
-                  <div className="mt-4 flex justify-end">
-                    <Button
-                      variant="destructive"
-                      onClick={deleteSelectedTemplates}
-                      disabled={groupEdit.selectedTemplates.length === 0}
-                    >
-                      선택한 템플릿 삭제
-                    </Button>
-                  </div>
-                )}
-              </Card>
-            </div>
-          ))
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="text-center text-gray-500 py-4">
             아직 그룹이 없습니다

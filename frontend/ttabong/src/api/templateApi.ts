@@ -99,21 +99,27 @@ export const templateApi = {
 
   // 템플릿 생성
   createTemplate: async (data: CreateTemplateRequest) => {
-    console.log('Sending template data:', {
-      url: '/org/templates',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data, null, 2)
-    });
+    const requestData = {
+      groupId: data.groupId,
+      orgId: 1,
+      categoryId: 1,
+      title: data.title,
+      activityLocation: data.activityLocation,
+      status: 'ALL',
+      images: data.images,
+      imageCount: data.images.length,
+      contactName: data.contactName,
+      contactPhone: data.contactPhone,
+      description: data.description
+    };
 
     const response = await axiosInstance.post<CreateTemplateResponse>(
       '/org/templates',
-      data,
+      requestData,
       {
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
       }
     );
