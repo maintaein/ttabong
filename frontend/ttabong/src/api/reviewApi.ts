@@ -39,7 +39,7 @@ export const reviewApi = {
     await axiosInstance.patch(`/reviews/${reviewId}/delete`);
   },
   
-  uploadReviewImage: async (presignedUrl: string, file: File): Promise<void> => {
+  uploadReviewImage: async (file: File, presignedUrl: string): Promise<void> => {
     await fetch(presignedUrl, {
       method: 'PUT',
       body: file,

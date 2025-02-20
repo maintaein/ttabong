@@ -30,6 +30,26 @@ const STATUS_MAP = {
   ACTIVITY_COMPLETED: '활동완료'
 } as const;
 
+interface FormData {
+  title: string;
+  description: string;
+  categoryId: string | number;
+  activityLocation: string;
+  activityDate: string;
+  activityStart: number;
+  activityEnd: number;
+  deadline: string;
+  maxVolunteer: number;
+  contactName: string;
+  contactPhone: string;
+  groupId: string | number;
+  groupName: string;
+  recruitId: string | number;
+  templateId: string | number;
+  images: string[];
+  imageCount: number;
+}
+
 const RecruitDetail: React.FC = () => {
   const navigate = useNavigate();
   const { recruitId } = useParams();
@@ -38,22 +58,52 @@ const RecruitDetail: React.FC = () => {
   const [currentImageIndex] = useState(0);
   const [[page, direction], setPage] = useState([0, 0]);
   const [isEditing, setIsEditing] = useState(location.state?.isEditing || false);
-  const [formData, setFormData] = useState({
-    deadline: '',
+  const recruitData = location.state?.recruitData;
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0];  // "yyyy-MM-dd" 형식으로 변환
+  };
+
+  const initialFormData = isEditing && recruitData ? {
+    title: recruitData.template.title || '',
+    description: recruitData.template.description || '',
+    categoryId: recruitData.template.categoryId || '',
+    activityLocation: recruitData.template.activityLocation || '',
+    activityDate: formatDate(recruitData.recruit.activityDate),  // 날짜 형식 변환
+    activityStart: recruitData.recruit.activityStart || 0,
+    activityEnd: recruitData.recruit.activityEnd || 0,
+    deadline: recruitData.recruit.deadline || '',
+    maxVolunteer: recruitData.recruit.maxVolunteer || 0,
+    contactName: recruitData.template.contactName || '',
+    contactPhone: recruitData.template.contactPhone || '',
+    groupId: recruitData.group.groupId || '',
+    groupName: recruitData.group.groupName || '',
+    recruitId: recruitData.recruit.recruitId,
+    templateId: recruitData.template.templateId,
+    images: recruitData.template?.images || [],
+    imageCount: recruitData.template?.images?.length || 0
+  } : {
+    title: '',
+    description: '',
+    categoryId: '',
+    activityLocation: '',
     activityDate: '',
     activityStart: 0,
     activityEnd: 0,
+    deadline: '',
     maxVolunteer: 0,
-    title: '',
-    description: '',
-    activityLocation: '',
-    volunteerTypes: [] as string[],
-    volunteerField: [] as string[],
     contactName: '',
     contactPhone: '',
-    images: [] as string[],
+    groupId: '',
+    groupName: '',
+    recruitId: '',
+    templateId: '',
+    images: [],
     imageCount: 0
-  });
+  };
+
+  const [formData, setFormData] = useState<FormData>(initialFormData);
   const [recruit, setRecruit] = useState<OrgRecruit | null>(null);
   const { userType } = useUserStore();
   const { applyRecruit, cancelApplication } = useRecruitStore();
@@ -138,20 +188,24 @@ const RecruitDetail: React.FC = () => {
   useEffect(() => {
     if (recruitDetail) {
       setFormData({
-        deadline: recruitDetail.recruit.deadline,
-        activityDate: recruitDetail.recruit.activityDate,
-        activityStart: recruitDetail.recruit.activityStart,
-        activityEnd: recruitDetail.recruit.activityEnd,
-        maxVolunteer: recruitDetail.recruit.maxVolunteer,
-        title: recruitDetail.template.title,
-        description: recruitDetail.template.description,
-        activityLocation: recruitDetail.template.activityLocation,
-        volunteerTypes: recruitDetail.template.volunteerTypes || [],
-        volunteerField: recruitDetail.template.volunteerField || [],
-        contactName: recruitDetail.template.contactName,
-        contactPhone: recruitDetail.template.contactPhone,
-        images: recruitDetail.template.images,
-        imageCount: recruitDetail.template.images.length
+        ...formData,
+        title: recruitDetail.template.title || '',
+        description: recruitDetail.template.description || '',
+        activityLocation: recruitDetail.template.activityLocation || '',
+        contactName: recruitDetail.template.contactName || '',
+        contactPhone: recruitDetail.template.contactPhone || '',
+        categoryId: recruitDetail.template.categoryId || '',
+        groupId: recruitDetail.group.groupId || '',
+        groupName: recruitDetail.group.groupName || '',
+        recruitId: recruitDetail.recruit.recruitId || '',
+        templateId: recruitDetail.template.templateId || '',
+        images: recruitDetail.template.images || [],
+        imageCount: recruitDetail.template.images.length || 0,
+        deadline: recruitDetail.recruit.deadline || '',
+        activityDate: formatDate(recruitDetail.recruit.activityDate),  // 날짜 형식 변환
+        activityStart: recruitDetail.recruit.activityStart || 0,
+        activityEnd: recruitDetail.recruit.activityEnd || 0,
+        maxVolunteer: recruitDetail.recruit.maxVolunteer || 0
       });
     }
   }, [recruitDetail]);
@@ -161,7 +215,8 @@ const RecruitDetail: React.FC = () => {
     try {
       await recruitApi.updateRecruit(Number(recruitId), {
         ...formData,
-        recruitId: Number(recruitId)
+        recruitId: Number(recruitId),
+        imageCount: formData.images.length
       });
       toast({
         title: "성공",
@@ -263,12 +318,23 @@ const RecruitDetail: React.FC = () => {
     }
   };
 
+  // 유효성 검사 함수들 추가
+  const isValidText = (text: string) => {
+    return text.trim().length > 0 && !/^\s*$/.test(text);
+  };
+
+  const isValidPhone = (phone: string) => {
+    return /^[\d-]{1,13}$/.test(phone) && phone.replace(/-/g, '').length >= 10;
+  };
+
+  // 최대 인원 옵션
+  const maxVolunteerOptions = Array.from({length: 100}, (_, i) => i + 1);
 
   if (isLoading) return <div>로딩 중...</div>;
   if (error) return <div>{error}</div>;
   if (!recruit) return null;
 
-  const { template, recruit: recruitData, organization } = recruit;
+  const { template, recruit: recruitInfo } = recruit;
 
   return (
     <div className="container max-w-2xl mx-auto px-4 py-4 space-y-4">
@@ -298,10 +364,16 @@ const RecruitDetail: React.FC = () => {
                 <Input
                   type="date"
                   value={formData.activityDate}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    activityDate: e.target.value
-                  }))}
+                  onChange={(e) => {
+                    const newDate = e.target.value;
+                    if (new Date(newDate) > new Date(formData.deadline)) {
+                      setFormData(prev => ({
+                        ...prev,
+                        activityDate: newDate
+                      }));
+                    }
+                  }}
+                  min={formData.deadline ? formatDate(formData.deadline) : undefined}
                 />
               </div>
 
@@ -334,15 +406,18 @@ const RecruitDetail: React.FC = () => {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">최대 인원</label>
-                <Input
-                  type="number"
-                  min="1"
+                <select
                   value={formData.maxVolunteer}
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
                     maxVolunteer: Number(e.target.value)
                   }))}
-                />
+                  className="w-full rounded-md border border-input bg-background px-3 py-2"
+                >
+                  {maxVolunteerOptions.map(num => (
+                    <option key={num} value={num}>{num}명</option>
+                  ))}
+                </select>
               </div>
             </div>
           </Card>
@@ -354,10 +429,16 @@ const RecruitDetail: React.FC = () => {
                 <label className="text-sm font-medium">제목</label>
                 <Input
                   value={formData.title}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    title: e.target.value
-                  }))}
+                  onChange={(e) => {
+                    const newValue = e.target.value;
+                    if (newValue.length <= 30 && isValidText(newValue)) {
+                      setFormData(prev => ({
+                        ...prev,
+                        title: newValue
+                      }));
+                    }
+                  }}
+                  maxLength={30}
                 />
               </div>
 
@@ -365,10 +446,16 @@ const RecruitDetail: React.FC = () => {
                 <label className="text-sm font-medium">봉사 내용</label>
                 <Textarea
                   value={formData.description}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    description: e.target.value
-                  }))}
+                  onChange={(e) => {
+                    const newValue = e.target.value;
+                    if (newValue.length <= 100 && isValidText(newValue)) {
+                      setFormData(prev => ({
+                        ...prev,
+                        description: newValue
+                      }));
+                    }
+                  }}
+                  maxLength={100}
                   rows={4}
                 />
               </div>
@@ -377,21 +464,17 @@ const RecruitDetail: React.FC = () => {
                 <label className="text-sm font-medium">봉사 장소</label>
                 <Input
                   value={formData.activityLocation}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    activityLocation: e.target.value
-                  }))}
+                  onChange={(e) => {
+                    const newValue = e.target.value;
+                    if (newValue.length <= 50 && isValidText(newValue)) {
+                      setFormData(prev => ({
+                        ...prev,
+                        activityLocation: newValue
+                      }));
+                    }
+                  }}
+                  maxLength={50}
                 />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">봉사자 유형</label>
-                {/* 봉사자 유형 선택 UI */}
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">봉사 분야</label>
-                {/* 봉사 분야 선택 UI */}
               </div>
             </div>
           </Card>
@@ -403,10 +486,16 @@ const RecruitDetail: React.FC = () => {
                 <label className="text-sm font-medium">담당자</label>
                 <Input
                   value={formData.contactName}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    contactName: e.target.value
-                  }))}
+                  onChange={(e) => {
+                    const newValue = e.target.value.trim();
+                    if (newValue.length <= 10 && newValue) {
+                      setFormData(prev => ({
+                        ...prev,
+                        contactName: newValue
+                      }));
+                    }
+                  }}
+                  maxLength={10}
                 />
               </div>
 
@@ -414,10 +503,17 @@ const RecruitDetail: React.FC = () => {
                 <label className="text-sm font-medium">연락처</label>
                 <Input
                   value={formData.contactPhone}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    contactPhone: e.target.value
-                  }))}
+                  onChange={(e) => {
+                    const newValue = e.target.value;
+                    if (isValidPhone(newValue)) {
+                      setFormData(prev => ({
+                        ...prev,
+                        contactPhone: newValue
+                      }));
+                    }
+                  }}
+                  maxLength={13}
+                  placeholder="010-1234-5678"
                 />
               </div>
             </div>
@@ -448,19 +544,19 @@ const RecruitDetail: React.FC = () => {
             >
               ← 뒤로가기
             </Button>
-            <Badge>{recruitData.status}</Badge>
+            <Badge>{recruitInfo.status}</Badge>
           </div>
 
           {/* 메인 컨텐츠 */}
           <div className="space-y-6">
             {/* 사진 영역 */}
-            {template.images && template.images.length > 0 ? (
+            {recruit?.template?.images && recruit.template.images.length > 0 ? (
               <Card className="p-6 overflow-hidden relative">
                 <div className="relative h-[200px] overflow-hidden">
                   <AnimatePresence initial={false} custom={direction}>
                     <motion.img
                       key={page}
-                      src={template.images[Math.abs(page % template.images.length)]}
+                      src={recruit.template.images[Math.abs(page % recruit.template.images.length)]}
                       custom={direction}
                       variants={slideVariants}
                       initial="enter"
@@ -485,7 +581,7 @@ const RecruitDetail: React.FC = () => {
                     />
                   </AnimatePresence>
                 </div>
-                {template.images.length > 1 && (
+                {recruit.template.images.length > 1 && (
                   <>
                     <Button
                       variant="ghost"
@@ -504,7 +600,7 @@ const RecruitDetail: React.FC = () => {
                       <ChevronRight className="h-6 w-6" />
                     </Button>
                     <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2">
-                      {template.images.map((_, index) => (
+                      {recruit.template.images.map((_, index) => (
                         <div
                           key={index}
                           className={`h-2 w-2 rounded-full ${
@@ -527,25 +623,21 @@ const RecruitDetail: React.FC = () => {
             {/* 기본 정보 */}
             <Card className="p-6">
               <h1 className="text-2xl font-bold mb-2">{template.title}</h1>
-              <p className="text-gray-600 mb-4">{organization.name}</p>
+              <p className="text-gray-600 mb-4">{recruit.organization.name}</p>
               
               <div className="grid grid-cols-2 gap-6 text-sm">
                 <div>
                   <h3 className="font-semibold">봉사 일시</h3>
-                  <p>{recruitData.activityDate}</p>
-                  <p>{convertTimeToString(recruitData.activityStart)} ~ {convertTimeToString(recruitData.activityEnd)}</p>
+                  <p>{recruitInfo.activityDate}</p>
+                  <p>{convertTimeToString(recruitInfo.activityStart)} ~ {convertTimeToString(recruitInfo.activityEnd)}</p>
                 </div>
                 <div>
                   <h3 className="font-semibold">모집 현황</h3>
-                  <p>{recruitData.participateVolCount} / {recruitData.maxVolunteer}명</p>
+                  <p>{recruitInfo.participateVolCount} / {recruitInfo.maxVolunteer}명</p>
                 </div>
                 <div>
                   <h3 className="font-semibold">모집 마감일</h3>
-                  <p>{new Date(recruitData.deadline).toLocaleDateString()}</p>
-                </div>
-                <div>
-                  <h3 className="font-semibold">봉사 분야</h3>
-                  <p>{template.volunteerField?.join(', ') || '미지정'}</p>
+                  <p>{new Date(recruitInfo.deadline).toLocaleDateString()}</p>
                 </div>
               </div>
             </Card>
@@ -555,23 +647,15 @@ const RecruitDetail: React.FC = () => {
               <div className="space-y-4">
                 <div>
                   <h3 className="font-semibold">봉사 내용</h3>
-                  <p className="whitespace-pre-wrap mt-2 text-gray-600">{template.description}</p>
+                  <p className="whitespace-pre-wrap mt-2 text-gray-600">
+                    {recruitDetail?.template.description || ''}
+                  </p>
                 </div>
                 <div>
                   <h3 className="font-semibold">봉사 장소</h3>
                   <p className="mt-2 text-gray-600">
-                    {template.activityLocation === '재택'
-                      ? '재택 근무' 
-                      : template.activityLocation}
+                    {recruitDetail?.template.activityLocation || ''}
                   </p>
-                </div>
-                <div>
-                  <h3 className="font-semibold">봉사자 유형</h3>
-                  <div className="flex gap-2 flex-wrap mt-2">
-                    {template.volunteerTypes?.map((type) => (
-                      <Badge key={type} variant="outline">{type}</Badge>
-                    ))}
-                  </div>
                 </div>
               </div>
             </Card>

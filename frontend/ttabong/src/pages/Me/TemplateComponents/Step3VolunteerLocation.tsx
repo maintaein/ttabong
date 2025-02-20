@@ -1,5 +1,6 @@
 import { TemplateFormData, DaumPostcodeData } from "@/types/template";
 import React from "react";
+import { toast } from "sonner";
 
 interface Step3Props {
   templateData: {
@@ -33,6 +34,24 @@ const Step3VolunteerLocation: React.FC<Step3Props> = ({ templateData, setTemplat
       }
     }).open();
 
+  };
+
+  const handleDetailAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+
+    // 연속된 공백 체크
+    if (/\s{2,}/.test(value)) {
+      toast.error('연속된 공백은 사용할 수 없습니다.');
+      return;
+    }
+
+    // 30자 이하만 허용
+    if (value.length <= 30) {
+      setTemplateData(prev => ({
+        ...prev,
+        detailAddress: value
+      }));
+    }
   };
 
   return (
@@ -82,13 +101,14 @@ const Step3VolunteerLocation: React.FC<Step3Props> = ({ templateData, setTemplat
             <input
               type="text"
               className="w-full p-2 border rounded-md"
-              placeholder="상세 주소를 입력하세요"
+              placeholder="상세 주소를 입력하세요 (최대 30자)"
               value={templateData.detailAddress}
-              onChange={(e) => setTemplateData(prev => ({
-                ...prev,
-                detailAddress: e.target.value
-              }))}
+              onChange={handleDetailAddressChange}
+              maxLength={30}
             />
+            <div className="text-sm text-gray-500 mt-1">
+              {templateData.detailAddress.length}/30
+            </div>
           </div>
         </div>
       )}

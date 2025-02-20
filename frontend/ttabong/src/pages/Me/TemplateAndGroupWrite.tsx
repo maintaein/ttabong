@@ -8,7 +8,7 @@ import Step3VolunteerLocation from "@/pages/Me/TemplateComponents/Step3Volunteer
 import Step4ContactInfo from "@/pages/Me/TemplateComponents/Step4ContactInfo";
 import { motion, AnimatePresence } from "framer-motion";
 import { TemplateFormData } from '@/types/template';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useScroll } from '@/contexts/ScrollContext';
 import { useTemplateStore } from '@/stores/templateStore';
 import { templateApi } from '@/api/templateApi';
@@ -66,6 +66,7 @@ const TemplateAndGroupWrite: React.FC = () => {
   // 상태 추가
   const [showImageDialog, setShowImageDialog] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [showDialog, setShowDialog] = useState(false);
 
   useEffect(() => {
     if (isCompleted) {
@@ -416,6 +417,14 @@ const TemplateAndGroupWrite: React.FC = () => {
     }
   };
 
+
+  // 다이얼로그 확인 시 처리
+  const handleConfirmBack = () => {
+    setShowDialog(false);
+    navigate(-1); // 이전 페이지로 이동
+  };
+
+
   return (
     <div className="flex flex-col h-full">
       {/* 메인 컨텐츠 영역 */}
@@ -502,6 +511,25 @@ const TemplateAndGroupWrite: React.FC = () => {
               onClick={proceedWithoutImage}
             >
               예
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>작성을 취소하시겠습니까?</DialogTitle>
+            <DialogDescription>
+              저장하지 않은 내용은 모두 사라집니다.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDialog(false)}>
+              계속 작성
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmBack}>
+              작성 취소
             </Button>
           </DialogFooter>
         </DialogContent>

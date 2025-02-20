@@ -18,6 +18,7 @@ import {
 
 import { useToast } from '@/hooks/use-toast';
 import { TopBar } from '@/components/TopBar';
+import { motion } from "framer-motion";
 
 const loginSchema = z.object({
   email: z.string()
@@ -45,6 +46,8 @@ export default function Login() {
     }
   });
   const { toast } = useToast();
+  const shouldAnimate = location.state?.animateEntry;
+  const [isExiting, setIsExiting] = useState(false);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value as 'volunteer' | 'organization');
@@ -61,11 +64,18 @@ export default function Login() {
   const onSubmit = async (values: LoginValues) => {
     try {
       const message = await login(values.email, values.password, activeTab);
+      
+      // 성공 시 페이드아웃 후 페이지 전환
+      setIsExiting(true);
       toast({
         title: "로그인 성공",
         description: message,
       });
-      navigate('/main');
+      
+      setTimeout(() => {
+        navigate('/main', { state: { animateEntry: true } });
+      }, 500);
+      
     } catch (error: any) {
       // 400, 403 에러 처리 (로그인 실패)
       if (error.status === 400 || error.status === 403) {
@@ -103,9 +113,14 @@ export default function Login() {
   };
 
   return (
-    <>
+    <div>
       <TopBar showNav={false} />
-      <div className="h-[calc(100vh-56px)] overflow-y-auto">
+      <motion.div 
+        className="h-[calc(100vh-56px)] overflow-y-auto"
+        initial={{ opacity: shouldAnimate ? 0 : 1 }}
+        animate={{ opacity: isExiting ? 0 : 1 }}
+        transition={{ duration: 0.5 }}
+      >
         <div className="flex items-center justify-center p-4">
           <div className="w-full max-w-md space-y-6">
             <Tabs 
@@ -128,8 +143,8 @@ export default function Login() {
             </Tabs>
           </div>
         </div>
-      </div>
-    </>
+      </motion.div>
+    </div>
   );
 }
 
