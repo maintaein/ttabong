@@ -296,7 +296,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         Optional<Template> template = templateRepository.findTemplateById(updateTemplateDto.getTemplateId());
         if (template.isEmpty()) {
             log.info("해당 공고가 존재하지 않습니다");
-            throw new NotFoundException("해당 공고가 존재하지 않습니다");
+            //throw new NotFoundException("해당 공고가 존재하지 않습니다");
         }
         if (!template.get().getOrg().getUser().getId().equals(authDto.getUserId())) {
             log.info("{}번 템플릿에 대한 {}유저의 권한이 없습니다", updateTemplateDto.getTemplateId(), authDto.getUserId());
@@ -320,7 +320,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
 
         return UpdateTemplateResponse.builder()
                 .message("템플릿 수정 성공")
-                .templateId(updateTemplateDto.getTemplateId())
+                .templateId(finalNewTemplate.getId())
                 .orgId(authDto.getUserId())
                 .build();
     }
