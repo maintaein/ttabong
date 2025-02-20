@@ -84,54 +84,60 @@ const RecruitManageVolunteers: React.FC = () => {
     <div className="container max-w-2xl mx-auto px-4 py-4">
       <h1 className="text-2xl font-bold mb-6">지원자 관리</h1>
       
-      <div className="space-y-4">
-        {applications.map((item) => (
-          <Card key={item.application.applicationId} className="p-4">
-            <div className="flex items-start gap-4">
-              <Avatar className="h-12 w-12">
-                <AvatarImage src={item.user.profileImage} alt={item.user.name} />
-                <AvatarFallback>{item.user.name[0]}</AvatarFallback>
-              </Avatar>
-              
-              <div className="flex-1">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-semibold">{item.user.name}</h3>
-                    <p className="text-sm text-muted-foreground">{item.user.email}</p>
-                  </div>
-                  <Badge variant={item.application.status === 'PENDING' ? 'outline' : 'default'}>
-                    {STATUS_MAP[item.application.status as keyof typeof STATUS_MAP]}
-                  </Badge>
-                </div>
+      {applications.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          <p>아직 지원자가 없습니다.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {applications.map((item) => (
+            <Card key={item.application.applicationId} className="p-4">
+              <div className="flex items-start gap-4">
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={item.user.profileImage} alt={item.user.name} />
+                  <AvatarFallback>{item.user.name[0]}</AvatarFallback>
+                </Avatar>
                 
-                <div className="mt-2 text-sm text-muted-foreground">
-                  <p>추천수: {item.volunteer.recommendedCount}</p>
-                  <p>총 봉사시간: {item.volunteer.totalVolunteerHours}시간</p>
-                  <p>신청일: {new Date(item.application.createdAt).toLocaleDateString()}</p>
-                </div>
-
-                {item.application.status === 'PENDING' && (
-                  <div className="mt-4 flex justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleStatusUpdate(item, false)}
-                    >
-                      거절
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => handleStatusUpdate(item, true)}
-                    >
-                      승인
-                    </Button>
+                <div className="flex-1">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-semibold">{item.user.name}</h3>
+                      <p className="text-sm text-muted-foreground">{item.user.email}</p>
+                    </div>
+                    <Badge variant={item.application.status === 'PENDING' ? 'outline' : 'default'}>
+                      {STATUS_MAP[item.application.status as keyof typeof STATUS_MAP]}
+                    </Badge>
                   </div>
-                )}
+                  
+                  <div className="mt-2 text-sm text-muted-foreground">
+                    <p>추천수: {item.volunteer.recommendedCount}</p>
+                    <p>총 봉사시간: {item.volunteer.totalVolunteerHours}시간</p>
+                    <p>신청일: {new Date(item.application.createdAt).toLocaleDateString()}</p>
+                  </div>
+
+                  {item.application.status === 'PENDING' && (
+                    <div className="mt-4 flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleStatusUpdate(item, false)}
+                      >
+                        거절
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => handleStatusUpdate(item, true)}
+                      >
+                        승인
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </Card>
-        ))}
-      </div>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { RecruitList } from './RecruitList';
 import { useRecruitStore } from '@/stores/recruitStore';
 import { Button } from '@/components/ui/button';
-import { toast } from 'react-hot-toast';
+import { useToast } from '@/hooks/use-toast';
 import { recruitApi } from "@/api/recruitApi";
 
 const STATUS_MAP = {
@@ -12,11 +12,18 @@ const STATUS_MAP = {
   'ACTIVITY_COMPLETED': { label: '활동완료', className: 'bg-blue-100 text-blue-700' }
 } as const;
 
+// 토글 옵션에서는 활동완료 제외
+const statusOptions = [
+  { value: 'RECRUITING', label: '모집중' },
+  { value: 'RECRUITMENT_CLOSED', label: '모집마감' }
+];
+
 export const OrgView: React.FC = () => {
-  const { recruits, isLoading, error, fetchRecruits, updateRecruitStatus } = useRecruitStore();
+  const { recruits, isLoading, error, fetchRecruits, updateLocalRecruitStatus } = useRecruitStore();
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [isEditing, setIsEditing] = useState(false);
   const [selectedRecruits, setSelectedRecruits] = useState<number[]>([]);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchRecruits();
@@ -34,13 +41,20 @@ export const OrgView: React.FC = () => {
       const response = await recruitApi.deleteRecruit(selectedRecruits);
       console.log('Delete response:', response); // 디버깅용
       
-      toast.success('선택한 공고가 삭제되었습니다.');
+      toast({
+        title: "성공",
+        description: "선택한 공고가 삭제되었습니다."
+      });
       setSelectedRecruits([]);
       setIsEditing(false);
       fetchRecruits(); // 목록 새로고침
     } catch (error) {
       console.error('Delete error:', error); // 디버깅용
-      toast.error('공고 삭제에 실패했습니다.');
+      toast({
+        variant: "destructive",
+        title: "오류",
+        description: "공고 삭제에 실패했습니다."
+      });
     }
   };
 
@@ -54,11 +68,20 @@ export const OrgView: React.FC = () => {
 
   const handleStatusChange = async (recruitId: number, newStatus: string) => {
     try {
-      await updateRecruitStatus(recruitId, newStatus);
-      toast.success('상태가 변경되었습니다.');
+      if (newStatus === 'RECRUITMENT_CLOSED') {
+        await recruitApi.closeRecruit(recruitId);
+        updateLocalRecruitStatus(recruitId, newStatus);  // 로컬 상태 업데이트
+        toast({
+          title: "성공",
+          description: "공고가 마감되었습니다."
+        });
+      }
     } catch (error) {
-      console.error('상태 변경 실패:', error);
-      toast.error('상태 변경에 실패했습니다.');
+      toast({
+        variant: "destructive",
+        title: "오류",
+        description: error instanceof Error ? error.message : "상태 변경에 실패했습니다."
+      });
     }
   };
 
@@ -116,6 +139,7 @@ export const OrgView: React.FC = () => {
           selectedRecruits={selectedRecruits}
           onSelectRecruit={handleSelectRecruit}
           onStatusChange={handleStatusChange}
+          statusOptions={statusOptions}
         />
       </div>
     </div>
