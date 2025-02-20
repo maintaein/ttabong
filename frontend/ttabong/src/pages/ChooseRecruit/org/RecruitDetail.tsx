@@ -622,7 +622,8 @@ const RecruitDetail: React.FC = () => {
             </div>
           )}
 
-          {recruit?.recruit.status === 'ACTIVITY_COMPLETED' && (
+          {/* 기관 후기 작성 버튼 */}
+          {userType === 'organization' && recruit?.recruit.status === 'ACTIVITY_COMPLETED' && (
             <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t">
               <div className="container max-w-2xl mx-auto">
                 <Button 
