@@ -26,7 +26,7 @@ public interface TemplateRepository extends JpaRepository<Template, Integer> {
             "   AND r.status = 'RECRUITING' " +
             ") " +
             "ORDER BY t.id DESC")
-    List<Template> findAvailableTemplates(@Param("cursor") Integer cursor,@Param("userId") Integer userId,Pageable pageable);
+    List<Template> findAvailableTemplates(@Param("cursor") Integer cursor, @Param("userId") Integer userId, Pageable pageable);
 
     @Modifying
     @Query("UPDATE Template t " +

@@ -35,7 +35,7 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
             "AND o.user.id = :userId " +
             "AND r.isDeleted = false " +
             "ORDER BY r.id DESC")
-    List<Recruit> findAvailableRecruits(@Param("cursor") Integer cursor, @Param("userId") Integer userId,  Pageable pageable);
+    List<Recruit> findAvailableRecruits(@Param("cursor") Integer cursor, @Param("userId") Integer userId, Pageable pageable);
 
     @Modifying
     @Query("UPDATE Recruit r " +
@@ -58,7 +58,7 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
             "r.maxVolunteer = :maxVolunteer, " +
             "r.updatedAt = CURRENT_TIMESTAMP " +
             "WHERE r.id = :recruitId")
-    void updateRecruit(
+    Recruit updateRecruit(
             @Param("recruitId") Integer recruitId,
             @Param("deadline") Instant deadline,
             @Param("activityDate") Date activityDate,
@@ -69,28 +69,28 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
 
     @Modifying
     @Query("UPDATE Recruit r SET r.status = 'RECRUITMENT_CLOSED' WHERE r.id = :closeId")
-    void closeRecruit(@Param("closeId") Integer closeId);
+    Recruit closeRecruit(@Param("closeId") Integer closeId);
 
 
     @Query("SELECT r FROM Recruit r WHERE r.id = :recruitId AND r.isDeleted = false")
     Optional<Recruit> findByRecruitId(@Param("recruitId") Integer recruitId);
 
     @Query("""
-        SELECT r FROM Recruit r
-        JOIN FETCH r.template t
-        JOIN FETCH t.org o
-        JOIN FETCH t.group g
-        WHERE
-            (:templateTitle IS NULL OR t.title LIKE %:templateTitle%)
-            AND (:organizationName IS NULL OR o.orgName LIKE %:organizationName%)
-            AND (:status IS NULL OR r.status = :status)
-            AND ((:startDate IS NULL OR :endDate IS NULL) OR (r.activityDate BETWEEN :startDate AND :endDate))
-            AND (:region IS NULL OR t.activityLocation LIKE %:region%)
-            AND (:cursor IS NULL OR t.id > :cursor)
-            AND r.isDeleted = false
-            AND t.isDeleted = false
-        ORDER BY t.id DESC, r.createdAt DESC
-    """)
+                SELECT r FROM Recruit r
+                JOIN FETCH r.template t
+                JOIN FETCH t.org o
+                JOIN FETCH t.group g
+                WHERE
+                    (:templateTitle IS NULL OR t.title LIKE %:templateTitle%)
+                    AND (:organizationName IS NULL OR o.orgName LIKE %:organizationName%)
+                    AND (:status IS NULL OR r.status = :status)
+                    AND ((:startDate IS NULL OR :endDate IS NULL) OR (r.activityDate BETWEEN :startDate AND :endDate))
+                    AND (:region IS NULL OR t.activityLocation LIKE %:region%)
+                    AND (:cursor IS NULL OR t.id > :cursor)
+                    AND r.isDeleted = false
+                    AND t.isDeleted = false
+                ORDER BY t.id DESC, r.createdAt DESC
+            """)
     List<Recruit> searchRecruits(
             @Param("templateTitle") String templateTitle,
             @Param("organizationName") String organizationName,

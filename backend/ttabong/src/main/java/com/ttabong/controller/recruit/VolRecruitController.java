@@ -1,26 +1,26 @@
 package com.ttabong.controller.recruit;
 
-import com.ttabong.config.LoggerConfig;
 import com.ttabong.dto.recruit.requestDto.vol.ApplyRecruitRequestDto;
 import com.ttabong.dto.recruit.requestDto.vol.DeleteLikesRequestDto;
 import com.ttabong.dto.recruit.requestDto.vol.LikeOnRecruitRequestDto;
 import com.ttabong.dto.recruit.responseDto.vol.*;
+import com.ttabong.dto.user.AuthDto;
 import com.ttabong.entity.recruit.Application;
 import com.ttabong.service.recruit.VolRecruitService;
-import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import com.ttabong.dto.user.AuthDto;
 
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/vol")
-public class VolRecruitController extends LoggerConfig {
+public class VolRecruitController {
 
     private final VolRecruitService volRecruitService;
 
@@ -34,7 +34,7 @@ public class VolRecruitController extends LoggerConfig {
     public ResponseEntity<ReadVolRecruitsListResponseDto> listRecruits(
             @RequestParam(defaultValue = "0") Integer cursor,
             @RequestParam(defaultValue = "10") Integer limit) {
-        logger.info("1. 모집 공고 리스트 조회 <GET> \"/templates\"");
+        log.info("1. 모집 공고 리스트 조회 <GET> \"/templates\"");
 
         ReadVolRecruitsListResponseDto responseDto = volRecruitService.getTemplates(cursor, limit);
         return ResponseEntity.ok().body(responseDto);
@@ -43,7 +43,7 @@ public class VolRecruitController extends LoggerConfig {
     // 2. 특정 모집 공고 상세 조회
     @GetMapping("/templates/{templateId}")
     public ResponseEntity<ReadRecruitDetailResponseDto> recruitsDetail(@PathVariable Integer templateId) {
-        logger.info("2. 특정 모집 공고 상세 조회 <GET> \"//templates/{templateId}\"");
+        log.info("2. 특정 모집 공고 상세 조회 <GET> \"//templates/{templateId}\"");
         ReadRecruitDetailResponseDto responseDto = volRecruitService.getTemplateById(templateId);
         return ResponseEntity.ok(responseDto);
     }
@@ -52,7 +52,7 @@ public class VolRecruitController extends LoggerConfig {
     @PostMapping("/applications")
     public ResponseEntity<ApplyRecruitResponseDto> applyRecruit(
             @RequestBody ApplyRecruitRequestDto applyRecruitRequest) {
-        logger.info("3. 모집 공고 신청 <POST> \"/applications\"");
+        log.info("3. 모집 공고 신청 <POST> \"/applications\"");
 
         AuthDto authDto = (AuthDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         int userId = authDto.getUserId();
@@ -70,7 +70,7 @@ public class VolRecruitController extends LoggerConfig {
     // 4. 공고 신청 취소
     @PatchMapping("/applications/{applicationId}")
     public ResponseEntity<CancelRecruitResponseDto> cancelRecruit(@PathVariable Integer applicationId) {
-        logger.info("4. 공고 신청 취소 <PATCH> \"//applications/{applicationsId}\"");
+        log.info("4. 공고 신청 취소 <PATCH> \"//applications/{applicationsId}\"");
 
         Application application = volRecruitService.cancelRecruitApplication(applicationId);
 
@@ -89,7 +89,7 @@ public class VolRecruitController extends LoggerConfig {
     public ResponseEntity<List<MyApplicationsResponseDto>> myApplications(
             @RequestParam(defaultValue = "0") Integer cursor,
             @RequestParam(defaultValue = "10") Integer limit) {
-        logger.info("5. 신청한 공고 목록 조회 <GET> \"/applications/recruits\"");
+        log.info("5. 신청한 공고 목록 조회 <GET> \"/applications/recruits\"");
         AuthDto authDto = (AuthDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         int userId = authDto.getUserId();
 
@@ -100,7 +100,7 @@ public class VolRecruitController extends LoggerConfig {
     // 6. 특정 공고 상세 조회
     @GetMapping("/recruits/{recruitId}")
     public ResponseEntity<MyApplicationDetailResponseDto> myApplicationsDetail(@PathVariable Integer recruitId) {
-        logger.info("6. 특정공고 상세 조회 <GET> \"/recruits/{recruitId}\"");
+        log.info("6. 특정공고 상세 조회 <GET> \"/recruits/{recruitId}\"");
         AuthDto authDto = (AuthDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         int userId = authDto.getUserId();
 
@@ -112,9 +112,9 @@ public class VolRecruitController extends LoggerConfig {
     // 7. "좋아요"한 템플릿 목록 조회
     @GetMapping("/volunteer-reactions/likes")
     public ResponseEntity<List<LikedRecruitDto>> myLikesOnRecruits(
-            @RequestParam(required = false) Integer cursor,
+            @RequestParam(defaultValue = "0") Integer cursor,
             @RequestParam(defaultValue = "10") Integer limit) {
-
+        log.info("7. \"좋아요\"한 템플릿 목록 조회 <GET> \"/volunteer-reactions/likes\"");
         AuthDto authDto = (AuthDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         int userId = authDto.getUserId();
 
@@ -125,7 +125,7 @@ public class VolRecruitController extends LoggerConfig {
     // 8. 특정 템플릿 "좋아요" 혹은 "싫어요"하기
     @PostMapping("/volunteer-reactions")
     public ResponseEntity<LikeOnRecruitResponseDto> likeOnRecruit(@RequestBody LikeOnRecruitRequestDto request) {
-        logger.info("8. 특정 템플릿 \"좋아요\" 혹은 \"싫어요\"하기 <POST> \"volunteer_reactions\"");
+        log.info("8. 특정 템플릿 \"좋아요\" 혹은 \"싫어요\"하기 <POST> \"volunteer_reactions\"");
         AuthDto authDto = (AuthDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         int userId = authDto.getUserId();
 
@@ -139,7 +139,7 @@ public class VolRecruitController extends LoggerConfig {
     @PatchMapping("/volunteer-reactions/cancel")
     public ResponseEntity<?> deleteRecruitFromLike(@RequestBody DeleteLikesRequestDto request) {
         volRecruitService.deleteReactions(request.getReactionIds());
-        logger.info("9. 특 \"좋아요\"목록에서 특정 템플릿 \"좋아요\"취소 <PATCH> \"/volunteer_reactions/cancel\"");
+        log.info("9. 특 \"좋아요\"목록에서 특정 템플릿 \"좋아요\"취소 <PATCH> \"/volunteer_reactions/cancel\"");
         return ResponseEntity.noContent().build();
     }
 }

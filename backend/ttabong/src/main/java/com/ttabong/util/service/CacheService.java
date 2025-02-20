@@ -6,6 +6,6 @@ import java.util.List;
 
 public interface CacheService {
 
-    List<String>  generatePresignedUrlsForTemplate(AuthDto authDto);
+    List<String> generatePresignedUrlsForTemplate(AuthDto authDto);
 
 }

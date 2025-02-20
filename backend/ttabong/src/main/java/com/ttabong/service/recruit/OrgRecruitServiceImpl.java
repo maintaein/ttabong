@@ -9,6 +9,7 @@ import com.ttabong.exception.*;
 import com.ttabong.repository.recruit.*;
 import com.ttabong.repository.user.OrganizationRepository;
 import com.ttabong.repository.user.VolunteerRepository;
+import com.ttabong.servicejpa.recruit.OrgRecruitService;
 import com.ttabong.util.CacheUtil;
 import com.ttabong.util.DateTimeUtil;
 import com.ttabong.util.ImageUtil;
@@ -20,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -31,7 +31,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Service
 @RequiredArgsConstructor
 @Transactional
 @Slf4j
@@ -131,7 +130,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                                 .title(template.getTitle())
                                 .activityLocation(template.getActivityLocation())
                                 .status(template.getStatus())
-                                .imageUrl(null)
+                                .imageUrl(imageService.getImageUrls(template.getId(), true).get(0))
                                 .contactName(template.getContactName())
                                 .contactPhone(template.getContactPhone())
                                 .description(template.getDescription())
@@ -255,7 +254,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 ? new java.sql.Date(requestDto.getActivityDate().getTime())
                 : new java.sql.Date(System.currentTimeMillis());
 
-        recruitRepository.updateRecruit(
+        recruit = recruitRepository.updateRecruit(
                 recruitId,
                 deadlineInstant,
                 activityDate,
@@ -263,6 +262,9 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 requestDto.getActivityEnd() != null ? requestDto.getActivityEnd() : BigDecimal.valueOf(12.00),
                 requestDto.getMaxVolunteer()
         );
+
+        cacheUtil.addCompleteEventScheduler(recruitId, getMinutesToCompleteEvent(recruit));
+        cacheUtil.addDeadlineEventScheduler(recruitId, getMinutesToDeadlineEvent(recruit));
 
         return UpdateRecruitsResponseDto.builder()
                 .message("공고 수정 완료")
@@ -294,8 +296,8 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         if (!recruitOrgId.equals(userOrgId)) {
             throw new ForbiddenException("해당 공고를 마감할 권한이 없습니다.");
         }
-
         recruitRepository.closeRecruit(recruitId);
+        cacheUtil.removeDeadlineSchedule(recruitId);
 
         return CloseRecruitResponseDto.builder()
                 .message("공고 마감 완료")
@@ -415,9 +417,8 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .build();
     }
 
-    @Override
     @Transactional(readOnly = true)
-    public ReadTemplatesResponseDto readTemplates(Integer cursor, Integer limit, AuthDto authDto) {
+    public ReadTemplatesResponseDto readTemplatesByGroup(Integer cursor, Integer limit, AuthDto authDto) {
 
         Pageable pageable = PageRequest.of(cursor, limit);
         List<TemplateGroup> groups = templateGroupRepository.findGroups(pageable);
@@ -457,7 +458,7 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     }
 
 
-    @Override
+    //@Override
     public CreateTemplateResponseDto createTemplate(CreateTemplateRequestDto createTemplateDto, AuthDto authDto) {
 
         checkOrgToken(authDto);
@@ -593,6 +594,9 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build());
+
+        cacheUtil.addDeadlineEventScheduler(recruit.getId(), getMinutesToDeadlineEvent(recruit));
+        cacheUtil.addCompleteEventScheduler(recruit.getId(), getMinutesToCompleteEvent(recruit));
 
         return CreateRecruitResponseDto.builder()
                 .message("공고 생성 완료")
@@ -816,23 +820,51 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
         }).collect(Collectors.toList());
     }
 
-    public int setUpdateStatusSchedule(Recruit recruit){
+    @Override
+    public void updateCompleteRecruitStatus(int recruitId) {
+        Recruit activityCompleted = recruitRepository.save(
+                Recruit.builder()
+                        .id(recruitId)
+                        .status("ACTIVITY_COMPLETED")
+                        .build());
+        return;
+    }
+
+    @Override
+    public void updateDeadlineRecruitStatus(int recruitId) {
+        Recruit deadLinePass = recruitRepository.save(
+                Recruit.builder()
+                        .id(recruitId)
+                        .status("RECRUITMENT_CLOSED")
+                        .build());
+        return;
+    }
+
+    public int getMinutesToDeadlineEvent(Recruit recruit) {
+        LocalDateTime recruitDeadline = recruit.getDeadline()
+                .atZone(ZoneId.of("Asia/Seoul"))
+                .toLocalDateTime()
+                .plusDays(1)
+                .truncatedTo(ChronoUnit.DAYS);
+        LocalDateTime now = LocalDateTime.now();
+        return (int) ChronoUnit.MINUTES.between(now, recruitDeadline);
+    }
+
+    public int getMinutesToCompleteEvent(Recruit recruit) {
         Date activityDate = recruit.getActivityDate();
         BigDecimal activityEnd = recruit.getActivityEnd();
 
         LocalDateTime activityDateTime = activityDate.toInstant()
-                .atZone(ZoneId.systemDefault())
+                .atZone(ZoneId.of("Asia/Seoul"))
                 .toLocalDateTime();
+
         LocalDateTime activityEndTime = activityDateTime
                 .withHour(activityEnd.intValue())
                 .withMinute(activityEnd.remainder(BigDecimal.ONE).multiply(BigDecimal.valueOf(100)).intValue())
                 .withSecond(0);
+
         LocalDateTime now = LocalDateTime.now();
 
-        int remainingMinutes = (int) ChronoUnit.MINUTES.between(now, activityEndTime);
-
-        cacheUtil.eventScheduler(recruit.getId(), remainingMinutes);
-
-        return remainingMinutes;
+        return (int) ChronoUnit.MINUTES.between(now, activityEndTime);
     }
 }

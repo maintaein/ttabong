@@ -9,76 +9,76 @@ USE volunteer_service;
 
 DROP TABLE IF EXISTS User;
 CREATE TABLE User (
-    user_id        INT AUTO_INCREMENT PRIMARY KEY COMMENT '유저 ID',
-    email          VARCHAR(80) NOT NULL COMMENT '유저 이메일 (로그인 ID)',
-    name           VARCHAR(50)  NOT NULL COMMENT '유저 이름',
-    password       VARCHAR(256) NOT NULL COMMENT '비밀번호(해시로 바꾸고 넣어야 함)',
-    phone          VARCHAR(20)  NOT NULL COMMENT '전화번호',
-    total_volunteer_hours DECIMAL(7,2) DEFAULT 0.00 NOT NULL,
-    profile_image  VARCHAR(200) COMMENT '프로필 사진 경로',
-    is_deleted     BOOLEAN DEFAULT FALSE COMMENT '삭제 여부',
-    created_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '가입 일시'
+                      user_id        INT AUTO_INCREMENT PRIMARY KEY COMMENT '유저 ID',
+                      email          VARCHAR(80) NOT NULL COMMENT '유저 이메일 (로그인 ID)',
+                      name           VARCHAR(50)  NOT NULL COMMENT '유저 이름',
+                      password       VARCHAR(256) NOT NULL COMMENT '비밀번호(해시로 바꾸고 넣어야 함)',
+                      phone          VARCHAR(20)  NOT NULL COMMENT '전화번호',
+                      total_volunteer_hours DECIMAL(7,2) DEFAULT 0.00 NOT NULL,
+                      profile_image  VARCHAR(200) COMMENT '프로필 사진 경로',
+                      is_deleted     BOOLEAN DEFAULT FALSE COMMENT '삭제 여부',
+                      created_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '가입 일시'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='전체 유저 정보 테이블';
 
 DROP TABLE IF EXISTS Volunteer;
 CREATE TABLE Volunteer(
-    volunteer_id    INT AUTO_INCREMENT NOT NULL COMMENT '봉사자 아이디_자동증가값 받는 최소성 고유키',
-    user_id         INT NOT NULL COMMENT 'User(user_id) 참조',
-    preferred_time  VARCHAR(100) COMMENT '봉사 선호 시간',
-    interest_theme  VARCHAR(100) COMMENT '관심 봉사 테마',
-    duration_time   VARCHAR(100) COMMENT '봉사 선호 소요시간',
-    region          VARCHAR(30)  COMMENT '지역',
-    birth_date      DATE         COMMENT '생년월일',
-    gender          CHAR(1)      COMMENT '성별(M/F)',
-    recommended_count   INT     DEFAULT 0 COMMENT '추천 횟수',
-    not_recommended_count INT   DEFAULT 0 COMMENT '비추천 횟수',
-    PRIMARY KEY (volunteer_id),
-    CONSTRAINT fk_volunteer_extra_user
-        FOREIGN KEY (user_id) REFERENCES User(user_id)
-        ON UPDATE CASCADE ON DELETE CASCADE
+                          volunteer_id    INT AUTO_INCREMENT NOT NULL COMMENT '봉사자 아이디_자동증가값 받는 최소성 고유키',
+                          user_id         INT NOT NULL COMMENT 'User(user_id) 참조',
+                          preferred_time  VARCHAR(100) COMMENT '봉사 선호 시간',
+                          interest_theme  VARCHAR(100) COMMENT '관심 봉사 테마',
+                          duration_time   VARCHAR(100) COMMENT '봉사 선호 소요시간',
+                          region          VARCHAR(30)  COMMENT '지역',
+                          birth_date      DATE         COMMENT '생년월일',
+                          gender          CHAR(1)      COMMENT '성별(M/F)',
+                          recommended_count   INT     DEFAULT 0 COMMENT '추천 횟수',
+                          not_recommended_count INT   DEFAULT 0 COMMENT '비추천 횟수',
+                          PRIMARY KEY (volunteer_id),
+                          CONSTRAINT fk_volunteer_extra_user
+                              FOREIGN KEY (user_id) REFERENCES User(user_id)
+                                  ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='봉사자 추가 정보 테이블';
 
 DROP TABLE IF EXISTS Organization;
 CREATE TABLE Organization (
-    org_id               INT AUTO_INCREMENT PRIMARY KEY COMMENT '기관 ID_ 지금은 쓸 일이 없지만 테이블별로 관리할 기본키가 있어야 하기 때문에 생성함!',
-    user_id              INT NOT NULL COMMENT 'User(user_id) 참조',
-    business_reg_number  VARCHAR(30)  NOT NULL COMMENT '사업자등록번호',
-    org_name             VARCHAR(100) NOT NULL COMMENT '회사/점포명',
-    representative_name  VARCHAR(80)  NOT NULL COMMENT '대표 담당자명',
-    org_address          VARCHAR(200) NOT NULL COMMENT '주소',
-    created_at           DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '가입 일시',
-    CONSTRAINT fk_organization_user
-        FOREIGN KEY (user_id) REFERENCES User(user_id)
-        ON UPDATE CASCADE ON DELETE CASCADE
+                              org_id               INT AUTO_INCREMENT PRIMARY KEY COMMENT '기관 ID_ 지금은 쓸 일이 없지만 테이블별로 관리할 기본키가 있어야 하기 때문에 생성함!',
+                              user_id              INT NOT NULL COMMENT 'User(user_id) 참조',
+                              business_reg_number  VARCHAR(30)  NOT NULL COMMENT '사업자등록번호',
+                              org_name             VARCHAR(100) NOT NULL COMMENT '회사/점포명',
+                              representative_name  VARCHAR(80)  NOT NULL COMMENT '대표 담당자명',
+                              org_address          VARCHAR(200) NOT NULL COMMENT '주소',
+                              created_at           DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '가입 일시',
+                              CONSTRAINT fk_organization_user
+                                  FOREIGN KEY (user_id) REFERENCES User(user_id)
+                                      ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='봉사기관 기본 정보';
 
 DROP TABLE IF EXISTS Category;
 CREATE TABLE Category (
-    category_id INT AUTO_INCREMENT PRIMARY KEY COMMENT 'category PK',
-    name        VARCHAR(50) NOT NULL COMMENT '카테고리 이름',
-    parent_id   INT NULL COMMENT '부모 카테고리 ID, NULL이면 대분류',
-    CONSTRAINT  fk_category_parent
-        FOREIGN KEY (parent_id) REFERENCES Category(category_id)
-        ON UPDATE CASCADE ON DELETE CASCADE
+                          category_id INT AUTO_INCREMENT PRIMARY KEY COMMENT 'category PK',
+                          name        VARCHAR(50) NOT NULL COMMENT '카테고리 이름',
+                          parent_id   INT NULL COMMENT '부모 카테고리 ID, NULL이면 대분류',
+                          CONSTRAINT  fk_category_parent
+                              FOREIGN KEY (parent_id) REFERENCES Category(category_id)
+                                  ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 DROP TABLE IF EXISTS Template_group;
 CREATE TABLE IF NOT EXISTS Template_group (
-    group_id INT AUTO_INCREMENT PRIMARY KEY COMMENT '템플릿그룹 id',
-    org_id INT NOT NULL COMMENT '해당 그룹을 관리 및 이용 중인 기관ID',
-    group_name VARCHAR(100) NOT NULL DEFAULT '봉사' COMMENT '그룹명(사용자가 입력할 수 있음_기본은 "봉사")',
+                                              group_id INT AUTO_INCREMENT PRIMARY KEY COMMENT '템플릿그룹 id',
+                                              org_id INT NOT NULL COMMENT '해당 그룹을 관리 및 이용 중인 기관ID',
+                                              group_name VARCHAR(100) NOT NULL DEFAULT '봉사' COMMENT '그룹명(사용자가 입력할 수 있음_기본은 "봉사")',
     is_deleted     BOOLEAN DEFAULT FALSE COMMENT '삭제 여부',
     CONSTRAINT fk_group_org
-        FOREIGN KEY (org_id) REFERENCES Organization(org_id)
-        ON UPDATE CASCADE ON DELETE CASCADE
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+    FOREIGN KEY (org_id) REFERENCES Organization(org_id)
+    ON UPDATE CASCADE ON DELETE CASCADE
+    ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 CREATE TABLE IF NOT EXISTS Template (
-    template_id INT AUTO_INCREMENT PRIMARY KEY COMMENT '개별 템플릿 id',
-    group_id INT NOT NULL COMMENT '그룹id',
-    org_id INT COMMENT '관련 기관 id',
-    category_id INT COMMENT '봉사 분류',
-    title VARCHAR(255) COMMENT '공고 제목(봉사 제목)',
+                                        template_id INT AUTO_INCREMENT PRIMARY KEY COMMENT '개별 템플릿 id',
+                                        group_id INT NOT NULL COMMENT '그룹id',
+                                        org_id INT COMMENT '관련 기관 id',
+                                        category_id INT COMMENT '봉사 분류',
+                                        title VARCHAR(255) COMMENT '공고 제목(봉사 제목)',
     activity_location VARCHAR(255) NOT NULL COMMENT '봉사 활동 장소(재택 또는 도로명주소)',
     status ENUM('ALL', 'YOUTH', 'ADULT') NOT NULL DEFAULT 'ALL' COMMENT '봉사자 유형',
     contact_name VARCHAR(50) COMMENT '담당자명',
@@ -87,23 +87,23 @@ CREATE TABLE IF NOT EXISTS Template (
     is_deleted BOOLEAN DEFAULT FALSE COMMENT '삭제 여부',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '템플릿 생성 일시',
     CONSTRAINT fk_template_group
-        FOREIGN KEY (group_id) REFERENCES Template_group(group_id)
-        ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (group_id) REFERENCES Template_group(group_id)
+    ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT fk_template_org
-        FOREIGN KEY (org_id) REFERENCES Organization(org_id)
-        ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (org_id) REFERENCES Organization(org_id)
+    ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT fk_template_category
-        FOREIGN KEY (category_id) REFERENCES Category(category_id)
-        ON UPDATE CASCADE ON DELETE SET NULL
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+    FOREIGN KEY (category_id) REFERENCES Category(category_id)
+    ON UPDATE CASCADE ON DELETE SET NULL
+    ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 DROP TABLE IF EXISTS Recruit;
 CREATE TABLE IF NOT EXISTS Recruit (
-    recruit_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '봉사공고 ID',
-    template_id INT NOT NULL COMMENT '개별 템플릿 id',
-    deadline DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '공고 마감일 (디폴트는 오늘 날짜)',
-    activity_date DATETIME NOT NULL COMMENT '봉사활동 날짜',
-    activity_start DECIMAL(7,2) DEFAULT 0.00 NOT NULL COMMENT '봉사 시작시간',
+                                       recruit_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '봉사공고 ID',
+                                       template_id INT NOT NULL COMMENT '개별 템플릿 id',
+                                       deadline DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '공고 마감일 (디폴트는 오늘 날짜)',
+                                       activity_date DATETIME NOT NULL COMMENT '봉사활동 날짜',
+                                       activity_start DECIMAL(7,2) DEFAULT 0.00 NOT NULL COMMENT '봉사 시작시간',
     activity_end DECIMAL(7,2) DEFAULT 0.00 NOT NULL COMMENT '봉사 종료시간',
     max_volunteer INT DEFAULT 0 COMMENT '모집할 봉사자 수',
     participate_vol_count INT DEFAULT 0 COMMENT '참여한 봉사자 수',
@@ -113,109 +113,109 @@ CREATE TABLE IF NOT EXISTS Recruit (
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '수정 시각',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '공고 등록 일시',
     CONSTRAINT fk_recruit_template_id
-        FOREIGN KEY (template_id) REFERENCES Template (template_id)
-        ON UPDATE CASCADE ON DELETE CASCADE
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+    FOREIGN KEY (template_id) REFERENCES Template (template_id)
+    ON UPDATE CASCADE ON DELETE CASCADE
+    ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 DROP TABLE IF EXISTS Application;
 CREATE TABLE Application (
-    application_id     INT AUTO_INCREMENT PRIMARY KEY COMMENT '신청 ID',
-    volunteer_id INT NOT NULL COMMENT '신청한 봉사자',
-    recruit_id   INT NOT NULL COMMENT '신청 대상 공고',
-    status ENUM('PENDING', 'APPROVED', 'REJECTED', 'COMPLETED', 'AUTO_CANCEL', 'NO_SHOW') NOT NULL DEFAULT 'PENDING' COMMENT '신청 상태',
-    evaluation_done BOOLEAN DEFAULT FALSE COMMENT '평가 여부',
-    is_deleted     BOOLEAN DEFAULT FALSE COMMENT '삭제 여부',
-    created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '신청 일시',
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '상태 변경 일시',
-    CONSTRAINT fk_application_volunteer
-        FOREIGN KEY (volunteer_id) REFERENCES Volunteer(volunteer_id)
-        ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT fk_application_recruit
-        FOREIGN KEY (recruit_id) REFERENCES Recruit(recruit_id)
-        ON UPDATE CASCADE ON DELETE CASCADE
+                             application_id     INT AUTO_INCREMENT PRIMARY KEY COMMENT '신청 ID',
+                             volunteer_id INT NOT NULL COMMENT '신청한 봉사자',
+                             recruit_id   INT NOT NULL COMMENT '신청 대상 공고',
+                             status ENUM('PENDING', 'APPROVED', 'REJECTED', 'COMPLETED', 'AUTO_CANCEL', 'NO_SHOW') NOT NULL DEFAULT 'PENDING' COMMENT '신청 상태',
+                             evaluation_done BOOLEAN DEFAULT FALSE COMMENT '평가 여부',
+                             is_deleted     BOOLEAN DEFAULT FALSE COMMENT '삭제 여부',
+                             created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '신청 일시',
+                             updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '상태 변경 일시',
+                             CONSTRAINT fk_application_volunteer
+                                 FOREIGN KEY (volunteer_id) REFERENCES Volunteer(volunteer_id)
+                                     ON UPDATE CASCADE ON DELETE CASCADE,
+                             CONSTRAINT fk_application_recruit
+                                 FOREIGN KEY (recruit_id) REFERENCES Recruit(recruit_id)
+                                     ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='봉사공고 신청 상태 관리 테이블';
 
 DROP TABLE IF EXISTS Review;
 CREATE TABLE Review (
-    review_id      INT AUTO_INCREMENT PRIMARY KEY COMMENT '후기 ID',
-    parent_review_id INT NULL DEFAULT NULL COMMENT '자기참조 (FK)',
-    group_id INT NULL DEFAULT NULL COMMENT '비슷한 것을 거르기 위해 생성',
-    recruit_id INT NULL DEFAULT NULL COMMENT '어느 공고에 대한 글인가? (FK)',
-    org_id     	   INT NOT NULL COMMENT '작성하는 기관 (FK)',
-    writer_id INT NULL DEFAULT NULL COMMENT '작성자 ID(FK)',
-    title	VARCHAR(255) COMMENT '후기 제목 부분',
-    content        VARCHAR(500) NOT NULL COMMENT '후기 내용',
-    is_deleted     BOOLEAN DEFAULT FALSE COMMENT '삭제 여부',
-    is_public 	   BOOLEAN DEFAULT TRUE COMMENT '공개 여부',
-    img_count INT NULL DEFAULT NULL COMMENT '몇 개 이미지를 올렸는가?',
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '수정 시각',
-    created_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '기록 생성 일시',
-    CONSTRAINT fk_parent_review_id
-        FOREIGN KEY (parent_review_id) REFERENCES Review (review_id),
-    CONSTRAINT fk_group_id
-        FOREIGN KEY (group_id) REFERENCES Template_group (group_id),
-    CONSTRAINT fk_review_recruit
-        FOREIGN KEY (recruit_id) REFERENCES Recruit(recruit_id)
-            ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT fk_review_org
-        FOREIGN KEY (org_id) REFERENCES Organization(org_id)
-            ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT fk_writer_id
-        FOREIGN KEY (writer_id) REFERENCES User (user_id)
+                        review_id      INT AUTO_INCREMENT PRIMARY KEY COMMENT '후기 ID',
+                        parent_review_id INT NULL DEFAULT NULL COMMENT '자기참조 (FK)',
+                        group_id INT NULL DEFAULT NULL COMMENT '비슷한 것을 거르기 위해 생성',
+                        recruit_id INT NULL DEFAULT NULL COMMENT '어느 공고에 대한 글인가? (FK)',
+                        org_id     	   INT NOT NULL COMMENT '작성하는 기관 (FK)',
+                        writer_id INT NULL DEFAULT NULL COMMENT '작성자 ID(FK)',
+                        title	VARCHAR(255) COMMENT '후기 제목 부분',
+                        content        VARCHAR(500) NOT NULL COMMENT '후기 내용',
+                        is_deleted     BOOLEAN DEFAULT FALSE COMMENT '삭제 여부',
+                        is_public 	   BOOLEAN DEFAULT TRUE COMMENT '공개 여부',
+                        img_count INT NULL DEFAULT NULL COMMENT '몇 개 이미지를 올렸는가?',
+                        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '수정 시각',
+                        created_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '기록 생성 일시',
+                        CONSTRAINT fk_parent_review_id
+                            FOREIGN KEY (parent_review_id) REFERENCES Review (review_id),
+                        CONSTRAINT fk_group_id
+                            FOREIGN KEY (group_id) REFERENCES Template_group (group_id),
+                        CONSTRAINT fk_review_recruit
+                            FOREIGN KEY (recruit_id) REFERENCES Recruit(recruit_id)
+                                ON UPDATE CASCADE ON DELETE CASCADE,
+                        CONSTRAINT fk_review_org
+                            FOREIGN KEY (org_id) REFERENCES Organization(org_id)
+                                ON UPDATE CASCADE ON DELETE CASCADE,
+                        CONSTRAINT fk_writer_id
+                            FOREIGN KEY (writer_id) REFERENCES User (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='후기 테이블';
 
 DROP TABLE IF EXISTS Review_image;
 CREATE TABLE IF NOT EXISTS Review_image (
-    image_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '이미지 id',
-    template_id INT NULL COMMENT '해당 이미지가 속한 템플릿 ID (Review와 연관된 Template)',
-    review_id INT NULL COMMENT '해당 이미지가 속한 리뷰 ID',
-    image_url VARCHAR(500) COMMENT '이미지 url',
+                                            image_id INT PRIMARY KEY AUTO_INCREMENT COMMENT '이미지 id',
+                                            template_id INT NULL COMMENT '해당 이미지가 속한 템플릿 ID (Review와 연관된 Template)',
+                                            review_id INT NULL COMMENT '해당 이미지가 속한 리뷰 ID',
+                                            image_url VARCHAR(500) COMMENT '이미지 url',
     is_deleted BOOLEAN DEFAULT FALSE COMMENT '삭제 여부',
     is_thumbnail BOOLEAN DEFAULT FALSE COMMENT '대표 이미지 여부',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '이미지 생성시간',
     next_image_id INT NULL DEFAULT NULL COMMENT '다음에 올 이미지 id',
 
     CONSTRAINT fk_next_image_id
-        FOREIGN KEY (next_image_id) REFERENCES Review_image(image_id),
+    FOREIGN KEY (next_image_id) REFERENCES Review_image(image_id),
     CONSTRAINT fk_review_image_review
-        FOREIGN KEY (review_id) REFERENCES Review(review_id)
-        ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (review_id) REFERENCES Review(review_id)
+    ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT fk_review_image_template
-        FOREIGN KEY (template_id) REFERENCES Template(template_id)
-        ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+    FOREIGN KEY (template_id) REFERENCES Template(template_id)
+    ON DELETE SET NULL ON UPDATE CASCADE
+    ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 DROP TABLE IF EXISTS Review_comment;
 CREATE TABLE Review_comment (
-    comment_id    INT AUTO_INCREMENT PRIMARY KEY COMMENT '댓글 ID',
-    writer_id     INT NOT NULL COMMENT '작성자(User(user_id)) (FK)',
-    review_id     INT NOT NULL COMMENT '어느 봉사자 후기에 대한 댓글인지 (FK)',
-    content       VARCHAR(500) NOT NULL COMMENT '댓글 내용',
-    is_deleted     BOOLEAN DEFAULT FALSE COMMENT '삭제 여부',
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '수정 시각', -- 새로 추가한 컬럼
-    created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '댓글 작성 일시',
-    CONSTRAINT fk_comment_writer
-        FOREIGN KEY (writer_id) REFERENCES User(user_id)
-        ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT fk_comment_review
-        FOREIGN KEY (review_id) REFERENCES Review(review_id)
-        ON UPDATE CASCADE ON DELETE CASCADE
+                                comment_id    INT AUTO_INCREMENT PRIMARY KEY COMMENT '댓글 ID',
+                                writer_id     INT NOT NULL COMMENT '작성자(User(user_id)) (FK)',
+                                review_id     INT NOT NULL COMMENT '어느 봉사자 후기에 대한 댓글인지 (FK)',
+                                content       VARCHAR(500) NOT NULL COMMENT '댓글 내용',
+                                is_deleted     BOOLEAN DEFAULT FALSE COMMENT '삭제 여부',
+                                updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '수정 시각', -- 새로 추가한 컬럼
+                                created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '댓글 작성 일시',
+                                CONSTRAINT fk_comment_writer
+                                    FOREIGN KEY (writer_id) REFERENCES User(user_id)
+                                        ON UPDATE CASCADE ON DELETE CASCADE,
+                                CONSTRAINT fk_comment_review
+                                    FOREIGN KEY (review_id) REFERENCES Review(review_id)
+                                        ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='후기에 대한 댓글 테이블';
 
 DROP TABLE IF EXISTS Volunteer_reaction;
 CREATE TABLE Volunteer_reaction (
-    reaction_id   INT AUTO_INCREMENT PRIMARY KEY COMMENT '봉사자의 반응 ID',
-    volunteer_id  INT NOT NULL COMMENT '봉사자 ID (FK)',
-    recruit_id    INT NOT NULL COMMENT '반응한 대상 봉사공고 (FK)',
-    is_like      BOOLEAN NOT NULL COMMENT '리액션종류가 좋아요인가? TRUE(1) : 좋아요, FALSE(0) : 싫어요',
-    is_deleted     BOOLEAN DEFAULT FALSE COMMENT '삭제 여부',
-    created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '좋아요 or 싫어요 반응 누른 일시',
-    CONSTRAINT fk_reaction_volunteer
-        FOREIGN KEY (volunteer_id) REFERENCES Volunteer(volunteer_id)
-        ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT fk_reaction_recruit
-        FOREIGN KEY (recruit_id) REFERENCES Recruit(recruit_id)
-        ON UPDATE CASCADE ON DELETE CASCADE
+                                    reaction_id   INT AUTO_INCREMENT PRIMARY KEY COMMENT '봉사자의 반응 ID',
+                                    volunteer_id  INT NOT NULL COMMENT '봉사자 ID (FK)',
+                                    recruit_id    INT NOT NULL COMMENT '반응한 대상 봉사공고 (FK)',
+                                    is_like      BOOLEAN NOT NULL COMMENT '리액션종류가 좋아요인가? TRUE(1) : 좋아요, FALSE(0) : 싫어요',
+                                    is_deleted     BOOLEAN DEFAULT FALSE COMMENT '삭제 여부',
+                                    created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '좋아요 or 싫어요 반응 누른 일시',
+                                    CONSTRAINT fk_reaction_volunteer
+                                        FOREIGN KEY (volunteer_id) REFERENCES Volunteer(volunteer_id)
+                                            ON UPDATE CASCADE ON DELETE CASCADE,
+                                    CONSTRAINT fk_reaction_recruit
+                                        FOREIGN KEY (recruit_id) REFERENCES Recruit(recruit_id)
+                                            ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='봉사자가 좋아요한 공고 정보';
 
 -- ddl part//////////////////////////
@@ -238,11 +238,11 @@ INSERT INTO Category (name, parent_id) VALUES ('기타', 15);
 
 INSERT INTO User (email, name, password, phone, total_volunteer_hours, profile_image, is_deleted, created_at)
 VALUES
-    ('volunteer1@example.com', '김철수', '$2a$10$1lk5DL4n4jMV1cRhH4fsFemVHLcibKI7OHGBx5GJEACL.UOfneut6', '010-1234-5678', 12.5, '1_1.webp', FALSE, NOW()),
-    ('volunteer2@example.com', '이영희', '$2a$10$1lk5DL4n4jMV1cRhH4fsFemVHLcibKI7OHGBx5GJEACL.UOfneut6', '010-2345-6789', 30.0, '2_1.webp', FALSE, NOW()),
-    ('volunteer3@example.com', '박민수', '$2a$10$1lk5DL4n4jMV1cRhH4fsFemVHLcibKI7OHGBx5GJEACL.UOfneut6', '010-3456-7890', 5.0, '3_1.webp', FALSE, NOW()),
-    ('organization1@example.com', '굿네이버스', '$2a$10$1lk5DL4n4jMV1cRhH4fsFemVHLcibKI7OHGBx5GJEACL.UOfneut6', '010-4567-8901', 0.0, '4_1.webp', FALSE, NOW()),
-    ('organization2@example.com', '초록우산어린이재단', '$2a$10$1lk5DL4n4jMV1cRhH4fsFemVHLcibKI7OHGBx5GJEACL.UOfneut6', '010-5678-9012', 0.0, '5_1.webp', FALSE, NOW());
+    ('vol1@ssafy.com', '김철수', '$2a$10$1lk5DL4n4jMV1cRhH4fsFemVHLcibKI7OHGBx5GJEACL.UOfneut6', '010-1234-5678', 12.5, '1_1.webp', FALSE, NOW()),
+    ('vol2@ssafy.com', '이영희', '$2a$10$1lk5DL4n4jMV1cRhH4fsFemVHLcibKI7OHGBx5GJEACL.UOfneut6', '010-2345-6789', 30.0, '2_1.webp', FALSE, NOW()),
+    ('vol3@ssafy.com', '박민수', '$2a$10$1lk5DL4n4jMV1cRhH4fsFemVHLcibKI7OHGBx5GJEACL.UOfneut6', '010-3456-7890', 5.0, '3_1.webp', FALSE, NOW()),
+    ('org1@ssafy.com', '굿네이버스', '$2a$10$1lk5DL4n4jMV1cRhH4fsFemVHLcibKI7OHGBx5GJEACL.UOfneut6', '010-4567-8901', 0.0, '4_1.webp', FALSE, NOW()),
+    ('org2@ssafy.com', '초록우산어린이재단', '$2a$10$1lk5DL4n4jMV1cRhH4fsFemVHLcibKI7OHGBx5GJEACL.UOfneut6', '010-5678-9012', 0.0, '5_1.webp', FALSE, NOW());
 
 INSERT INTO Volunteer (user_id, preferred_time, interest_theme, duration_time, region, birth_date, gender, recommended_count, not_recommended_count)
 VALUES
@@ -370,23 +370,23 @@ VALUES
     (3, 2, 'COMPLETED', TRUE, FALSE, NOW(), NOW()),
     (3, 8, 'AUTO_CANCEL', FALSE, FALSE, NOW(), NOW());
 
-INSERT INTO Review_image (review_id, image_url, is_deleted, is_thumbnail, created_at, next_image_id)
+INSERT INTO Review_image (review_id, template_id, image_url, is_deleted, is_thumbnail, created_at, next_image_id)
 VALUES
-    (1, '1_1.webp', FALSE, TRUE, NOW(), NULL), -- 노인 말벗
-    (2, '2_1.webp', FALSE, FALSE, NOW(), NULL),-- 취약계층 일손 봉사
-    (3, '3_1.webp', FALSE, TRUE, NOW(), NULL), -- 공원 플로깅
-    (4, '4_1.webp', FALSE, FALSE, NOW(), NULL),-- 해외아동 교육 봉사
-    (5, '5_1.webp', FALSE, TRUE, NOW(), NULL), -- 초등학생 학습 멘토링
-    (6, '6_1.webp', FALSE, FALSE, NOW(), NULL),-- 재난지역 청소 지원 봉사
-    (7, '7_1.webp', FALSE, TRUE, NOW(), NULL), -- 저소득층 아동 영어 교육
-    (7, '7_2.webp', FALSE, FALSE, NOW(), NULL),-- 연탄봉사
-    (7, '7_3.webp', FALSE, TRUE, NOW(), NULL),
-    (7, '7_4.webp', FALSE, FALSE, NOW(), NULL),
-    (7, '7_5.webp', FALSE, TRUE, NOW(), NULL),
-    (7, '7_6.webp', FALSE, FALSE, NOW(), NULL),
-    (7, '7_7.webp', FALSE, TRUE, NOW(), NULL),
-    (7, '7_8.webp', FALSE, FALSE, NOW(), NULL),
-    (7, '7_9.webp', FALSE, TRUE, NOW(), NULL);
+    (1, 1,'1_1.webp', FALSE, TRUE, NOW(), NULL), -- 노인 말벗
+    (2, 2,'2_1.webp', FALSE, TRUE, NOW(), NULL),-- 취약계층 일손 봉사
+    (3, 3,'3_1.webp', FALSE, TRUE, NOW(), NULL), -- 공원 플로깅
+    (4, 4,'4_1.webp', FALSE, TRUE, NOW(), NULL),-- 해외아동 교육 봉사
+    (5, 1,'5_1.webp', FALSE, TRUE, NOW(), NULL), -- 초등학생 학습 멘토링
+    (6, 4,'6_1.webp', FALSE, TRUE, NOW(), NULL),-- 재난지역 청소 지원 봉사
+    (7, 1, '7_1.webp', FALSE, TRUE, NOW(), NULL), -- 저소득층 아동 영어 교육
+    (7, 1, '7_2.webp', FALSE, FALSE, NOW(), NULL),-- 연탄봉사
+    (7, 1, '7_3.webp', FALSE, FALSE, NOW(), NULL),
+    (7, 1, '7_4.webp', FALSE, FALSE, NOW(), NULL),
+    (7, 1, '7_5.webp', FALSE, FALSE, NOW(), NULL),
+    (7, 1, '7_6.webp', FALSE, FALSE, NOW(), NULL),
+    (7, 1, '7_7.webp', FALSE, FALSE, NOW(), NULL),
+    (7, 1, '7_8.webp', FALSE, FALSE, NOW(), NULL),
+    (7, 1, '7_9.webp', FALSE, FALSE, NOW(), NULL);
 
 INSERT INTO Volunteer_reaction (volunteer_id, recruit_id, is_like, created_at)
 SELECT v.volunteer_id, r.recruit_id, CASE WHEN RAND() > 0.5 THEN TRUE ELSE FALSE END, NOW()
