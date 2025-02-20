@@ -103,7 +103,7 @@ export const TopBar: React.FC<TopBarProps> = ({ showNav = true }) => {
               variant="destructive"
               onClick={() => {
                 setShowBackDialog(false);
-                navigate('/template-and-group');
+                navigate('/add-recruit');
               }}
             >
               예

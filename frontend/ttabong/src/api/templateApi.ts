@@ -24,11 +24,21 @@ interface CreateTemplateResponse {
 
 export const templateApi = {
   // 템플릿 목록 조회 (이미지 없이)
-  getTemplates: async (cursor?: number) => {
-    const response = await axiosInstance.get('/org/templates', {
-      params: { cursor }
-    });
-    return response.data;
+  getTemplates: async (cursor?: number, limit: number = 10) => {
+    try {
+      console.log('템플릿 목록 요청 파라미터:', { cursor, limit });  // 요청 로그
+      const response = await axiosInstance.get('/org/templates', {
+        params: { 
+          cursor: cursor || 1,  // 기본값 1
+          limit 
+        }
+      });
+      console.log('템플릿 목록 응답:', response.data);  // 응답 로그
+      return response.data;
+    } catch (error) {
+      console.error('템플릿 목록 조회 실패:', error);
+      throw error;
+    }
   },
 
   // 템플릿 상세 조회 (이미지 포함)
