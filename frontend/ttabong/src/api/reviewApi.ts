@@ -1,7 +1,7 @@
 import axiosInstance from './axiosInstance';
 import type { ReviewDetail, Comment, ReviewEditResponse, VisibilityResponse, RecruitReview, UpdateReviewRequest, CommentDeleteResponse, MyReview, ReviewsResponse, CreateReviewRequest, PresignedUrlResponse } from '@/types/reviewType';
 
-const REVIEWS_PER_PAGE = 9; // 한 번에 불러올 리뷰 수
+const REVIEWS_PER_PAGE = 500; // 한 번에 불러올 리뷰 수
 
 export const reviewApi = {
   getReviews: async (cursor: number = 0): Promise<ReviewsResponse> => {
