@@ -67,4 +67,5 @@ public interface TemplateRepository extends JpaRepository<Template, Integer> {
 
     Optional<Template> findByIdAndIsDeletedFalse(Integer id);
 
+    List<Template> findByIdIn(List<Integer> ids);
 }

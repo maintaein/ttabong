@@ -51,5 +51,46 @@ public interface VolunteerReactionRepository extends JpaRepository<VolunteerReac
             "AND vr.recruit.id IN (SELECT r.id FROM Recruit r WHERE r.template = :template)")
     void softDeleteByVolunteerAndTemplate(@Param("volunteer") Volunteer volunteer, @Param("template") Template template);
 
+    @Query("""
+    SELECT DISTINCT t FROM Template t 
+    WHERE t.id IN (
+        SELECT DISTINCT r.template.id FROM VolunteerReaction vr
+        JOIN vr.recruit r 
+        WHERE vr.volunteer.user.id = :userId 
+        AND vr.isLike = TRUE 
+        AND vr.isDeleted = FALSE 
+        AND vr.id < :cursor
+        ORDER BY vr.id DESC
+    )
+    ORDER BY t.id DESC Limit :limit
+    """)
+    List<Template> findLikedTemplateListByUserId(
+            @Param("userId") Integer userId, @Param("cursor") Integer cursor, @Param("limit") Integer limit);
+
+    @Query(value = "SELECT r.template_id AS templateId, MAX(vr.reaction_id) AS lastReactionId " +
+            "FROM Volunteer_reaction vr " +
+            "JOIN Recruit r ON vr.Recruit_id = r.recruit_id " +
+            "WHERE vr.volunteer_id = :userId " +
+            "  AND vr.is_like = true " +
+            "  AND vr.is_deleted = false " +
+            "GROUP BY r.template_id " +
+            "ORDER BY lastReactionId DESC " +
+            "LIMIT :limit OFFSET :cursor", nativeQuery = true)
+    List<Object[]> findDistinctLikedTemplates(@Param("userId") Integer userId,
+                                              @Param("cursor") Integer cursor,
+                                              @Param("limit") Integer limit);
+
+
+    @Query("SELECT vr FROM VolunteerReaction vr " +
+            "WHERE vr.volunteer = :volunteer " +
+            "AND vr.isLike = true " +
+            "AND vr.isDeleted = false " +
+            "AND (:cursor = 0 OR vr.id < :cursor) " +
+            "ORDER BY vr.id DESC Limit :limit")
+    List<VolunteerReaction> findLikedReactions(@Param("volunteer") Volunteer volunteer,
+                                               @Param("cursor") Integer cursor,
+                                               @Param("limit") Integer limit);
+
+
 
 }
