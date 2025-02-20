@@ -32,8 +32,8 @@ public class VolRecruitController {
     // 1. 모집 공고 리스트 조회
     @GetMapping("/templates")
     public ResponseEntity<ReadVolRecruitsListResponseDto> listRecruits(
-            @RequestParam(required = false) Integer cursor,
-            @RequestParam Integer limit) {
+            @RequestParam(defaultValue = "0") Integer cursor,
+            @RequestParam(defaultValue = "10") Integer limit) {
         log.info("1. 모집 공고 리스트 조회 <GET> \"/templates\"");
 
         ReadVolRecruitsListResponseDto responseDto = volRecruitService.getTemplates(cursor, limit);
@@ -46,7 +46,6 @@ public class VolRecruitController {
         log.info("2. 특정 모집 공고 상세 조회 <GET> \"//templates/{templateId}\"");
         ReadRecruitDetailResponseDto responseDto = volRecruitService.getTemplateById(templateId);
         return ResponseEntity.ok(responseDto);
-
     }
 
     // 3. 모집 공고 신청
@@ -84,10 +83,12 @@ public class VolRecruitController {
     }
 
 
+
     // 5. 신청한 공고 목록 조회
     @GetMapping("/applications/recruits")
     public ResponseEntity<List<MyApplicationsResponseDto>> myApplications(
-            @RequestParam Integer cursor, @RequestParam Integer limit) {
+            @RequestParam(defaultValue = "0") Integer cursor,
+            @RequestParam(defaultValue = "10") Integer limit) {
         log.info("5. 신청한 공고 목록 조회 <GET> \"/applications/recruits\"");
         AuthDto authDto = (AuthDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         int userId = authDto.getUserId();
@@ -110,14 +111,15 @@ public class VolRecruitController {
 
     // 7. "좋아요"한 템플릿 목록 조회
     @GetMapping("/volunteer-reactions/likes")
-    public ResponseEntity<Map<String, Object>> myLikesOnRecruits(
-            @RequestParam Integer cursor, @RequestParam Integer limit) {
+    public ResponseEntity<List<LikedRecruitDto>> myLikesOnRecruits(
+            @RequestParam(defaultValue = "0") Integer cursor,
+            @RequestParam(defaultValue = "10") Integer limit) {
         log.info("7. \"좋아요\"한 템플릿 목록 조회 <GET> \"/volunteer-reactions/likes\"");
         AuthDto authDto = (AuthDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         int userId = authDto.getUserId();
 
-        Map<String, Object> response = volRecruitService.getLikedTemplates(userId, cursor, limit);
-        return ResponseEntity.ok().body(response);
+        List<LikedRecruitDto> likedRecruits = volRecruitService.getLikedRecruits(userId, cursor, limit);
+        return ResponseEntity.ok(likedRecruits);
     }
 
     // 8. 특정 템플릿 "좋아요" 혹은 "싫어요"하기

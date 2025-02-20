@@ -47,9 +47,6 @@ public interface ApplicationRepository extends JpaRepository<Application, Intege
 
     // for VolRecruit -------------------------------------------
     // 사용자가 신청한 모집 공고 목록 조회
-//    @Query("SELECT a FROM Application a WHERE a.volunteer.user.id = :userId AND a.id > :cursor AND a.isDeleted = FALSE ORDER BY a.createdAt DESC")
-//    List<Application> findApplicationsByUserId(@Param("userId") Integer userId, @Param("cursor") Integer cursor, @Param("limit") Integer limit);
-
     @Query("SELECT a FROM Application a WHERE a.volunteer.id = (SELECT v.id FROM Volunteer v WHERE v.user.id = :userId) AND a.id > :cursor AND a.isDeleted = FALSE ORDER BY a.createdAt DESC Limit :limit")
     List<Application> findApplicationsByUserId(@Param("userId") Integer userId, @Param("cursor") Integer cursor, @Param("limit") Integer limit);
 
