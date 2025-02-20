@@ -5,8 +5,10 @@ import type {
   Application, 
   RecruitDetail,
   OrgRecruitStatus,
-  VolunteerApplicationStatus 
+  VolunteerApplicationStatus,
+  SearchTemplate
 } from '@/types/recruitType';
+import { AxiosError } from 'axios';
 
 // RecruitItem 타입 추가
 interface RecruitItem {
@@ -44,6 +46,21 @@ interface RecruitListItem {  // 목록용 간단한 타입
   };
 }
 
+interface SearchTemplatesParams {
+  cursor?: number;
+  limit?: number;
+  templateTitle?: string;
+  searchConditions?: {
+    organizationName?: string;
+    status?: string;
+    activityDate?: {
+      start: string;
+      end: string;
+    };
+    region?: string;
+  };
+}
+
 interface RecruitStore {
   myRecruits: Application[] | null;
   orgRecruits: OrgRecruit[] | null;
@@ -55,6 +72,9 @@ interface RecruitStore {
   selectedRecruitId: number | null;
   recruitList: RecruitListItem[] | null;
   nextCursor: number | null;
+  searchResults: SearchTemplate[];
+  searchNextCursor: number | null;
+  searchHasMore: boolean;
   fetchMyRecruits: (params?: { cursor?: number; limit?: number }) => Promise<void>;
   fetchOrgRecruits: () => Promise<void>;
   cancelApplication: (applicationId: number) => Promise<void>;
@@ -65,6 +85,9 @@ interface RecruitStore {
   fetchRecruits: () => Promise<void>;
   applyRecruit: (recruitId: number) => Promise<void>;
   updateRecruitStatus: (recruitId: number, newStatus: string) => Promise<void>;
+  updateLocalRecruitStatus: (recruitId: number, newStatus: string) => void;
+  searchTemplates: (params: SearchTemplatesParams) => Promise<void>;
+  clearSearchResults: () => void;
 }
 
 export const useRecruitStore = create<RecruitStore>((set) => ({
@@ -78,6 +101,9 @@ export const useRecruitStore = create<RecruitStore>((set) => ({
   selectedRecruitId: null,
   recruitList: null,
   nextCursor: null,
+  searchResults: [],
+  searchNextCursor: null,
+  searchHasMore: true,
 
   fetchMyRecruits: async (params) => {
     try {
@@ -95,9 +121,14 @@ export const useRecruitStore = create<RecruitStore>((set) => ({
           hasMore: response.length === (params?.limit || 10)
         });
       }
-    } catch (error: any) {
-      console.error('봉사내역 조회 실패:', error);
-      set({ error: error.response?.data?.message || '봉사내역을 불러오는데 실패했습니다.' });
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        console.error('봉사내역 조회 실패:', error);
+        set({ error: error.response?.data?.message || '봉사내역을 불러오는데 실패했습니다.' });
+      } else {
+        console.error('봉사내역 조회 실패:', error);
+        set({ error: '봉사내역을 불러오는데 실패했습니다.' });
+      }
     } finally {
       set({ isLoading: false });
     }
@@ -127,8 +158,6 @@ export const useRecruitStore = create<RecruitStore>((set) => ({
             : application.status
         })),
         recruitDetail: null 
-
-        
       });
     } catch (error) {
       console.error('봉사 신청 취소 실패:', error);
@@ -172,9 +201,9 @@ export const useRecruitStore = create<RecruitStore>((set) => ({
     try {
       const response = await recruitApi.getRecruitDetail(recruitId, userType);
       set({ recruitDetail: response, error: null });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('공고 상세 조회 실패:', error);
-      set({ error: error.response?.data?.message || '공고를 불러오는데 실패했습니다.' });
+      set({ error: error instanceof AxiosError ? error.response?.data?.message || '공고를 불러오는데 실패했습니다.' : '공고를 불러오는데 실패했습니다.' });
     } finally {
       set({ isLoading: false });
     }
@@ -189,9 +218,9 @@ export const useRecruitStore = create<RecruitStore>((set) => ({
       set({ isLoading: true, error: null });
       const response = await recruitApi.getOrgRecruits();
       set({ recruits: response.recruits });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('공고 목록 조회 실패:', error);
-      set({ error: error.response?.data?.message || '공고 목록을 불러오는데 실패했습니다.' });
+      set({ error: error instanceof AxiosError ? error.response?.data?.message || '공고 목록을 불러오는데 실패했습니다.' : '공고 목록을 불러오는데 실패했습니다.' });
     } finally {
       set({ isLoading: false });
     }
@@ -216,9 +245,9 @@ export const useRecruitStore = create<RecruitStore>((set) => ({
       };
       
       set({ recruitDetail: transformedData });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('봉사 신청 실패:', error);
-      throw error.response?.data?.message || '봉사 신청에 실패했습니다.';
+      throw error instanceof AxiosError ? error.response?.data?.message || '봉사 신청에 실패했습니다.' : '봉사 신청에 실패했습니다.';
     } finally {
       set({ isLoading: false });
     }
@@ -241,4 +270,45 @@ export const useRecruitStore = create<RecruitStore>((set) => ({
       throw error;
     }
   },
+  updateLocalRecruitStatus: (recruitId: number, newStatus: string) => {
+    set(state => ({
+      recruits: state.recruits.map(item => 
+        item.recruit.recruitId === recruitId 
+          ? { ...item, recruit: { ...item.recruit, status: newStatus as OrgRecruitStatus } }
+          : item
+      )
+    }));
+  },
+  searchTemplates: async (params) => {
+    try {
+      set({ isLoading: true, error: null });
+      const response = await recruitApi.searchTemplates(params);
+      
+      if (params.cursor) {
+        set((state) => ({
+          searchResults: [...state.searchResults, ...response.templates],
+          searchNextCursor: response.nextCursor,
+          searchHasMore: response.templates.length === (params.limit || 10)
+        }));
+      } else {
+        set({
+          searchResults: response.templates,
+          searchNextCursor: response.nextCursor,
+          searchHasMore: response.templates.length === (params.limit || 10)
+        });
+      }
+    } catch (error) {
+      console.error('템플릿 검색 실패:', error);
+      set({ error: '검색에 실패했습니다.' });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+  clearSearchResults: () => {
+    set({
+      searchResults: [],
+      searchNextCursor: null,
+      searchHasMore: true
+    });
+  }
 })); 

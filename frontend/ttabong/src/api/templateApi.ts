@@ -1,5 +1,5 @@
 import axiosInstance from './axiosInstance';
-import type { CreateTemplateRequest, APIGroup, APITemplate } from '@/types/template';
+import type { CreateTemplateRequest, APITemplate } from '@/types/template';
 import axios from 'axios';
 
 // 응답 타입 정의 추가
@@ -36,15 +36,22 @@ export const templateApi = {
     try {
       // 목록 API를 통해 템플릿 정보 가져오기
       const response = await axiosInstance.get('/org/templates');
-      const template = response.data.groups
-        .flatMap((group: APIGroup) => group.templates)
-        .find((template: APITemplate) => template.templateId === templateId);
-        
-      if (!template) {
-        throw new Error('템플릿을 찾을 수 없습니다.');
+      
+      // groups 배열을 순회하면서 해당 templateId를 가진 템플릿을 찾고, 
+      // 찾은 템플릿에 groupId를 추가
+      for (const group of response.data.groups) {
+        const template = group.templates.find(
+          (t: APITemplate) => t.templateId === templateId
+        );
+        if (template) {
+          return {
+            ...template,
+            groupId: group.groupId  // 그룹 ID 추가
+          };
+        }
       }
-
-      return template;
+      
+      throw new Error('템플릿을 찾을 수 없습니다.');
     } catch (error) {
       console.error('템플릿 상세 조회 실패:', error);
       throw error;
@@ -165,5 +172,10 @@ export const templateApi = {
     return Array.from({ length: imageCount }, (_, index) => 
       `http://ttabong.store:9000/ttabong-bucket/${templateId}_${index + 1}.webp`
     );
-  }
+  },
+
+  uploadImage: async (formData: FormData) => {
+    const response = await axiosInstance.post('/org/templates/image', formData);
+    return response.data;
+  },
 };

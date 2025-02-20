@@ -14,15 +14,18 @@ import com.ttabong.repository.recruit.RecruitRepository;
 import com.ttabong.repository.recruit.TemplateRepository;
 import com.ttabong.repository.recruit.VolunteerReactionRepository;
 import com.ttabong.repository.user.VolunteerRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.ttabong.util.ImageUtil;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@RequiredArgsConstructor
 @Service
+@Slf4j
 public class VolRecruitServiceImpl implements VolRecruitService {
 
     private final RecruitRepository recruitRepository;
@@ -30,20 +33,8 @@ public class VolRecruitServiceImpl implements VolRecruitService {
     private final VolunteerRepository volunteerRepository;
     private final ApplicationRepository applicationRepository;
     private final VolunteerReactionRepository volunteerReactionRepository;
+    private final ImageUtil imageUtil;
 
-    @Autowired
-    public VolRecruitServiceImpl(
-            RecruitRepository recruitRepository,
-            TemplateRepository templateRepository,
-            VolunteerRepository volunteerRepository,
-            ApplicationRepository applicationRepository,
-            VolunteerReactionRepository volunteerReactionRepository) {
-        this.recruitRepository = recruitRepository;
-        this.templateRepository = templateRepository;
-        this.volunteerRepository = volunteerRepository;
-        this.applicationRepository = applicationRepository;
-        this.volunteerReactionRepository = volunteerReactionRepository;
-    }
 
     // 1. 모집 공고 리스트 조회
     @Override
@@ -51,11 +42,22 @@ public class VolRecruitServiceImpl implements VolRecruitService {
         List<Template> templates = templateRepository.findTemplatesAfterCursor(cursor, limit);
 
         List<ReadVolRecruitsListResponseDto.TemplateWrapper> templateDetails = templates.stream()
-                .map(template -> new ReadVolRecruitsListResponseDto.TemplateWrapper(
-                        TemplatePreviewDto.from(template),
-                        GroupDto.from(template.getGroup()),
-                        template.getOrg() != null ? OrganizationDto.from(template.getOrg()) : null
-                ))
+                .map(template -> {
+                    TemplatePreviewDto previewDto = TemplatePreviewDto.from(template);
+                    if (previewDto.getImageId() != null) {
+                        try {
+                            previewDto.setImageId(imageUtil.getPresignedDownloadUrl(previewDto.getImageId()));
+                        } catch (Exception e) {
+                            log.info("이미지 다운로드 링크 생성 오류 발생");
+                            throw new RuntimeException("이미지 URL 생성 오류", e);
+                        }
+                    }
+                    return new ReadVolRecruitsListResponseDto.TemplateWrapper(
+                            previewDto,
+                            GroupDto.from(template.getGroup()),
+                            template.getOrg() != null ? OrganizationDto.from(template.getOrg()) : null
+                    );
+                })
                 .collect(Collectors.toList());
 
         return new ReadVolRecruitsListResponseDto(templateDetails);
@@ -64,9 +66,23 @@ public class VolRecruitServiceImpl implements VolRecruitService {
     // 2. 특정 모집 템플릿 상세 조회
     @Override
     public ReadRecruitDetailResponseDto getTemplateById(Integer templateId) {
-        return templateRepository.findByIdAndIsDeletedFalse(templateId)
+        ReadRecruitDetailResponseDto dto = templateRepository.findByIdAndIsDeletedFalse(templateId)
                 .map(ReadRecruitDetailResponseDto::from)
-                .orElseThrow(() -> new NotFoundException("해당 모집 공고를 찾을 수 없습니다."));
+                .orElseThrow(() -> new NotFoundException("해당 템플릿을 찾을 수 없습니다."));
+
+        List<String> updatedImages = dto.getTemplate().getImages().stream()
+                .map(url -> {
+                    try {
+                        return imageUtil.getPresignedDownloadUrl(url);
+                    } catch (Exception e) {
+                        log.info("이미지 다운로드 링크 생성 오류 발생");
+                        throw new RuntimeException("이미지 URL 생성 오류", e);
+                    }
+                })
+                .collect(Collectors.toList());
+        dto.getTemplate().setImages(updatedImages);
+
+        return dto;
     }
 
     // 3. 모집 공고 신청
@@ -116,12 +132,24 @@ public class VolRecruitServiceImpl implements VolRecruitService {
     public List<MyApplicationsResponseDto> getMyApplications(Integer userId, Integer cursor, Integer limit) {
         List<Application> applications = applicationRepository.findApplicationsByUserId(userId, cursor, limit);
 
-        return applications.stream()
+        List<MyApplicationsResponseDto> dtos = applications.stream()
                 .map(MyApplicationsResponseDto::from)
                 .collect(Collectors.toList());
+
+        dtos.forEach(dto -> {
+            if (dto.getTemplate() != null && dto.getTemplate().getImageId() != null) {
+                try {
+                    dto.getTemplate().setImageId(imageUtil.getPresignedDownloadUrl(dto.getTemplate().getImageId()));
+                } catch (Exception e) {
+                    log.info("이미지 다운로드 링크 생성 오류 발생");
+                    throw new RuntimeException("이미지 URL 생성 오류", e);
+                }
+            }
+        });
+        return dtos;
     }
 
-    // 6. 특정 공고 상세 조회
+    // 6. 특정 공고 상세 조회 : 이미지 최신순으로 리스트로 반환
     @Override
     public Optional<MyApplicationDetailResponseDto> getRecruitDetail(Integer userId, Integer recruitId) {
         Recruit recruit = recruitRepository.findByIdAndIsDeletedFalse(recruitId)
@@ -129,7 +157,21 @@ public class VolRecruitServiceImpl implements VolRecruitService {
 
         Optional<Application> application = applicationRepository.findApplicationByRecruitAndUser(recruitId, userId);
 
-        return Optional.of(MyApplicationDetailResponseDto.from(recruit, application.orElse(null)));
+        MyApplicationDetailResponseDto detailDto = MyApplicationDetailResponseDto.from(recruit, application.orElse(null));
+
+        List<String> updatedImages = detailDto.getTemplate().getImages().stream()
+                .map(imageUrl -> {
+                    try {
+                        return imageUtil.getPresignedDownloadUrl(imageUrl);
+                    } catch (Exception e) {
+                        log.info("이미지 다운로드 링크 생성 오류 발생");
+                        throw new RuntimeException("이미지 URL 생성 오류", e);
+                    }
+                })
+                .collect(Collectors.toList());
+        detailDto.getTemplate().setImages(updatedImages);
+
+        return Optional.of(detailDto);
     }
 
 
