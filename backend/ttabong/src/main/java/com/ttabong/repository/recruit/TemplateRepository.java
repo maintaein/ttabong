@@ -56,10 +56,6 @@ public interface TemplateRepository extends JpaRepository<Template, Integer> {
     List<Template> findByIdsAndOrgId(@Param("templateIds") List<Integer> templateIds, @Param("orgId") Integer orgId);
 
     // vol-recruit를 위해 추가 --------------------------------------------
-    // 최신 모집 공고 N개 조회
-    @Query("SELECT t FROM Template t WHERE t.isDeleted = FALSE ORDER BY t.createdAt DESC LIMIT :limit")
-    List<Template> findTopNTemplates(Integer limit);
-
     // 특정 cursor 이후의 모집 공고 조회
     @Query("SELECT t FROM Template t WHERE t.id > :cursor AND t.isDeleted = FALSE ORDER BY t.createdAt DESC LIMIT :limit")
     List<Template> findTemplatesAfterCursor(Integer cursor, Integer limit);
@@ -67,5 +63,4 @@ public interface TemplateRepository extends JpaRepository<Template, Integer> {
 
     Optional<Template> findByIdAndIsDeletedFalse(Integer id);
 
-    List<Template> findByIdIn(List<Integer> ids);
 }
