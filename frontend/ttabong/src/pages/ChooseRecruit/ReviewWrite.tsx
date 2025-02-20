@@ -10,12 +10,14 @@ import { useRecruitStore } from '@/stores/recruitStore';
 import { useImageStore } from '@/stores/imageStore';
 import { reviewApi } from '@/api/reviewApi';
 import { useToast } from '@/hooks/use-toast';
+import { useUserStore } from '@/stores/userStore';
 
 
 export default function ReviewWrite() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const { userType } = useUserStore();
   
   const { recruitDetail, fetchRecruitDetail, resetSelectedRecruitId, setSelectedRecruitId } = useRecruitStore();
   const { updateReview, createReview } = useReviewStore();
@@ -39,7 +41,7 @@ export default function ReviewWrite() {
 
     const init = async () => {
       try {
-        await fetchRecruitDetail(recruitId);
+        await fetchRecruitDetail(recruitId, userType || 'volunteer');
         await setSelectedRecruitId(recruitId);
         await fetchPresignedUrls();
       } catch (error) {

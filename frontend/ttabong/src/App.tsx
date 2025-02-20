@@ -47,7 +47,6 @@ const App: React.FC = () => {
   return (
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <Toaster />
-      <Toaster />
       <div className="min-h-screen bg-zinc-100 dark:bg-zinc-900">
         <div className="mx-auto max-w-[600px] min-w-[320px] h-screen bg-background">
           <Routes>
@@ -124,7 +123,10 @@ const App: React.FC = () => {
 
               <Route path="/main" element={
                 <ProtectedRoute>
-                  <AddRecruit />
+                  <UserTypeRoute 
+                    volunteerComponent={MainPage}
+                    orgComponent={AddRecruit}
+                  />
                 </ProtectedRoute>
               } />
 

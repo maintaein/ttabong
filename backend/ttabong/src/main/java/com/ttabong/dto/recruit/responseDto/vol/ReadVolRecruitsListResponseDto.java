@@ -20,13 +20,13 @@ public class ReadVolRecruitsListResponseDto {
     @AllArgsConstructor
     @Builder
     public static class TemplateWrapper {
-        private TemplateDto template;
+        private TemplatePreviewDto template;
         private GroupDto group;
         private OrganizationDto organization;
 
         public static TemplateWrapper from(Template template) {
             return TemplateWrapper.builder()
-                    .template(TemplateDto.from(template))
+                    .template(TemplatePreviewDto.from(template))
                     .group(GroupDto.from(template.getGroup()))
                     .organization(template.getOrg() != null ? OrganizationDto.from(template.getOrg()) : null)
                     .build();

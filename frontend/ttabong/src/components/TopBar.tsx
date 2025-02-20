@@ -39,7 +39,8 @@ export const TopBar: React.FC<TopBarProps> = ({ showNav = true }) => {
           <img 
             src="/assets/logo_color_only.svg" 
             alt="로고" 
-            className="h-8 w-auto"
+            className="h-8 w-auto cursor-pointer"
+            onClick={() => navigate('/main')}
           />
         </div>
       </div>
@@ -74,7 +75,8 @@ export const TopBar: React.FC<TopBarProps> = ({ showNav = true }) => {
           <img 
             src="/assets/logo_color_only.svg" 
             alt="로고" 
-            className="h-8 w-auto absolute left-1/2 -translate-x-1/2"
+            className="h-8 w-auto absolute left-1/2 -translate-x-1/2 cursor-pointer"
+            onClick={() => navigate('/main')}
           />
 
           <div className="w-14" /> {/* 레이아웃 균형을 위한 빈 공간 */}

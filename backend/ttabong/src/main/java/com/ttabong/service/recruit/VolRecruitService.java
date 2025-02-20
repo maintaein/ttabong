@@ -1,9 +1,6 @@
 package com.ttabong.service.recruit;
 
-import com.ttabong.dto.recruit.responseDto.vol.MyApplicationDetailResponseDto;
-import com.ttabong.dto.recruit.responseDto.vol.MyApplicationsResponseDto;
-import com.ttabong.dto.recruit.responseDto.vol.ReadRecruitDetailResponseDto;
-import com.ttabong.dto.recruit.responseDto.vol.ReadVolRecruitsListResponseDto;
+import com.ttabong.dto.recruit.responseDto.vol.*;
 import com.ttabong.entity.recruit.Application;
 
 import java.util.List;
@@ -23,7 +20,7 @@ public interface VolRecruitService {
 
     Optional<MyApplicationDetailResponseDto> getRecruitDetail(Integer userId, Integer recruitId);
 
-    Map<String, Object> getLikedTemplates(Integer userId, Integer cursor, Integer limit);
+    List<LikedRecruitDto> getLikedRecruits(Integer userId, Integer cursor, Integer limit);
 
     List<Integer> saveReaction(Integer userId, Integer templateId, Boolean isLike);
 

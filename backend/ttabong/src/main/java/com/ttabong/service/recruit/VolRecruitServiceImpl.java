@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,7 +29,7 @@ public class VolRecruitServiceImpl implements VolRecruitService {
     private final TemplateRepository templateRepository;
     private final VolunteerRepository volunteerRepository;
     private final ApplicationRepository applicationRepository;
-    private final VolunteerReactionRepository reactionRepository;
+    private final VolunteerReactionRepository volunteerReactionRepository;
 
     @Autowired
     public VolRecruitServiceImpl(
@@ -36,12 +37,12 @@ public class VolRecruitServiceImpl implements VolRecruitService {
             TemplateRepository templateRepository,
             VolunteerRepository volunteerRepository,
             ApplicationRepository applicationRepository,
-            VolunteerReactionRepository reactionRepository) {
+            VolunteerReactionRepository volunteerReactionRepository) {
         this.recruitRepository = recruitRepository;
         this.templateRepository = templateRepository;
         this.volunteerRepository = volunteerRepository;
         this.applicationRepository = applicationRepository;
-        this.reactionRepository = reactionRepository;
+        this.volunteerReactionRepository = volunteerReactionRepository;
     }
 
     // 1. 모집 공고 리스트 조회
@@ -51,7 +52,7 @@ public class VolRecruitServiceImpl implements VolRecruitService {
 
         List<ReadVolRecruitsListResponseDto.TemplateWrapper> templateDetails = templates.stream()
                 .map(template -> new ReadVolRecruitsListResponseDto.TemplateWrapper(
-                        TemplateDto.from(template),
+                        TemplatePreviewDto.from(template),
                         GroupDto.from(template.getGroup()),
                         template.getOrg() != null ? OrganizationDto.from(template.getOrg()) : null
                 ))
@@ -60,7 +61,7 @@ public class VolRecruitServiceImpl implements VolRecruitService {
         return new ReadVolRecruitsListResponseDto(templateDetails);
     }
 
-    // 2. 특정 모집 공고 상세 조회
+    // 2. 특정 모집 템플릿 상세 조회
     @Override
     public ReadRecruitDetailResponseDto getTemplateById(Integer templateId) {
         return templateRepository.findByIdAndIsDeletedFalse(templateId)
@@ -132,19 +133,27 @@ public class VolRecruitServiceImpl implements VolRecruitService {
     }
 
 
-    // 7. "좋아요"한 템플릿 목록 조회
+    // 7. "좋아요"한 공고 목록 조회.(템플릿 조회에서 공고 조회로 변경)
+    // cursor는 volunteer_reaction테이블에 적용하고, limit은 template기준으로 적용함.
     @Override
-    public Map<String, Object> getLikedTemplates(Integer userId, Integer cursor, Integer limit) {
-        List<VolunteerReaction> reactions = reactionRepository.findLikedTemplatesByUserId(userId, cursor, limit);
+    public List<LikedRecruitDto> getLikedRecruits(Integer userId, Integer cursor, Integer limit) {
+        // 봉사자 정보 조회
+        Volunteer volunteer = volunteerRepository.findByUserIdAndUserIsDeletedFalse(userId)
+                .orElseThrow(() -> new NotFoundException("봉사자를 찾을 수 없습니다."));
 
-        List<MyLikesRecruitsResponseDto> likedTemplates = reactions.stream()
-                .map(MyLikesRecruitsResponseDto::from)
+
+        // VolunteerReaction 테이블에서 좋아요한 기록 조회 (내림차순, cursor 적용)
+        List<VolunteerReaction> likedReactions = volunteerReactionRepository.findLikedReactions(volunteer, cursor, limit);
+
+        return likedReactions.stream()
+                .map(vr -> new LikedRecruitDto(
+                        vr.getId(),
+                        vr.getCreatedAt(),
+                        ReactionRecruitDto.fromRecruit(vr.getRecruit())
+                ))
                 .collect(Collectors.toList());
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("likedTemplates", likedTemplates);
-        return response;
     }
+
 
 
     // 8. 특정 템플릿 "좋아요" 혹은 "싫어요"하기
@@ -164,9 +173,9 @@ public class VolRecruitServiceImpl implements VolRecruitService {
         }
 
         //기존에 리액션을 했었는가?
-        boolean exists = reactionRepository.existsByVolunteerAndRecruitTemplate(volunteer, template);
+        boolean exists = volunteerReactionRepository.existsByVolunteerAndRecruitTemplate(volunteer, template);
         if (exists) { //그렇다면 소프트삭제
-            reactionRepository.softDeleteByVolunteerAndTemplate(volunteer, template);
+            volunteerReactionRepository.softDeleteByVolunteerAndTemplate(volunteer, template);
         }
 
         List<VolunteerReaction> newReactions = recruits.stream()
@@ -179,7 +188,7 @@ public class VolRecruitServiceImpl implements VolRecruitService {
                         .build())
                 .toList();
 
-        return reactionRepository.saveAll(newReactions).stream()
+        return volunteerReactionRepository.saveAll(newReactions).stream()
                 .map(VolunteerReaction::getId)
                 .toList();
     }
@@ -188,12 +197,11 @@ public class VolRecruitServiceImpl implements VolRecruitService {
     // 9. "좋아요" 취소
     @Override
     public void deleteReactions(List<Integer> reactionIds) {
-        if (reactionIds == null || reactionIds.isEmpty()) {
-            throw new NotFoundException("삭제할 좋아요 ID 목록이 비어 있습니다.");
-        }
-        int updatedCount = reactionRepository.softDeleteByIds(reactionIds);
-        if (updatedCount == 0) {
-            throw new NotFoundException("해당 ID의 좋아요가 존재하지 않습니다.");
+        if (reactionIds != null && !reactionIds.isEmpty()) {
+            int updatedCount = volunteerReactionRepository.softDeleteByIds(reactionIds);
+            if (updatedCount == 0) {
+                throw new NotFoundException("해당 ID의 좋아요가 존재하지 않습니다.");
+            }
         }
     }
 

@@ -57,15 +57,26 @@ export const recruitApi = {
     };
   },
 
-  getRecruitDetail: async (recruitId: number) => {
-    console.log('API 호출:', `/org/recruits/${recruitId}`);
-    const response = await axiosInstance.get(`/org/recruits/${recruitId}`);
-    console.log('API 응답:', response.data);
+  getRecruitDetail: async (recruitId: number, userType: string) => {
+    try {
+      const endpoint = userType === 'volunteer' ? 'vol' : 'org';
+      const response = await axiosInstance.get(`/${endpoint}/recruits/${recruitId}`);
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data?.message || '공고를 불러오는데 실패했습니다.';
+    }
+  },
+
+  applyRecruit: async (recruitId: number) => {
+    const response = await axiosInstance.post('/vol/applications', {
+      recruitId
+    });
     return response.data;
   },
 
-  cancelApplication: async (applicationId: number): Promise<void> => {
-    await axiosInstance.patch(`/vol/applications/${applicationId}`);
+  cancelApplication: async (applicationId: number) => {
+    const response = await axiosInstance.patch(`/vol/applications/${applicationId}`);
+    return response.data;
   },
 
   updateRecruitStatus: async (recruitId: number, status: string) => {
