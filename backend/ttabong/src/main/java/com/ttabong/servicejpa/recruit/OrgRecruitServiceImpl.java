@@ -374,12 +374,12 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
     @Override
     @Transactional(readOnly = true)
     public ReadTemplatesResponseDto readTemplatesByGroup(Integer cursor, Integer limit, AuthDto authDto) {
-        Pageable pageable = PageRequest.of(cursor, limit);
+        Pageable pageable = PageRequest.of(0, limit);
         Optional<Organization> org = organizationRepository.findByUserIdAndUserIsDeletedFalse(authDto.getUserId());
         if (org.isEmpty()) {
             throw new UnauthorizedException("유저가 존재하지 않음");
         }
-        List<TemplateGroup> templateGroup = templateGroupRepository.findByOrgAndIsDeletedFalse(org.get(), pageable);
+        List<TemplateGroup> templateGroup = templateGroupRepository.findByOrgAndIsDeletedFalseAndIdGreaterThan(org.get(), cursor, pageable);
 
         return ReadTemplatesResponseDto.builder()
                 .groups(

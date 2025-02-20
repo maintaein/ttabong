@@ -20,5 +20,5 @@ public interface TemplateGroupRepositoryJpa extends JpaRepository<TemplateGroup,
     Optional<TemplateGroup> findByOrgIdAndGroupNameAndIsDeletedFalse(Integer orgId, String groupName);
 
     @EntityGraph(attributePaths = {"templates.images"})
-    List<TemplateGroup> findByOrgAndIsDeletedFalse(Organization org, Pageable pageable);
+    List<TemplateGroup> findByOrgAndIsDeletedFalseAndIdGreaterThan(Organization org, Integer id, Pageable pageable);
 }

@@ -50,7 +50,7 @@ public class ImageUtil {
                             .bucket(bucketName)
                             .object(objectName)
                             .method(Method.PUT)
-                            .expiry(60, TimeUnit.MINUTES)
+                            .expiry(60, TimeUnit.HOURS)
                             .build()
             );
         } catch (Exception e) {
@@ -65,7 +65,7 @@ public class ImageUtil {
                             .bucket(bucketName)
                             .object(objectName)
                             .method(Method.GET)
-                            .expiry(24, TimeUnit.HOURS) // 10분 동안 유효
+                            .expiry(60, TimeUnit.HOURS) // 10분 동안 유효
                             .build()
             );
         } catch (Exception e) {
@@ -110,7 +110,7 @@ public class ImageUtil {
                         .bucket(bucketName)
                         .object(objectName)
                         .method(Method.DELETE)
-                        .expiry(24, TimeUnit.HOURS) // 10분 동안 유효
+                        .expiry(60, TimeUnit.HOURS) // 10분 동안 유효
                         .build()
         );
     }
