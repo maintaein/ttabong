@@ -57,8 +57,22 @@ public interface TemplateRepository extends JpaRepository<Template, Integer> {
 
     // vol-recruit를 위해 추가 --------------------------------------------
     // 특정 cursor 이후의 모집 공고 조회
-    @Query("SELECT t FROM Template t WHERE t.id > :cursor AND t.isDeleted = FALSE ORDER BY t.createdAt DESC LIMIT :limit")
-    List<Template> findTemplatesAfterCursor(Integer cursor, Integer limit);
+    @Query(value = "SELECT * FROM Template t " +
+            "WHERE t.template_id > :cursor " +
+            "AND t.is_deleted = FALSE " +
+            "AND NOT EXISTS ( " +
+            "    SELECT 1 FROM Volunteer_reaction vr " +
+            "    JOIN Recruit r ON vr.recruit_id = r.recruit_id " +
+            "    WHERE r.template_id = t.template_id " +
+            "      AND vr.volunteer_id = (SELECT v.volunteer_id FROM Volunteer v WHERE v.user_id = :userId) " +
+            "      AND vr.is_like = false " +
+            "      AND vr.is_deleted = FALSE " +
+            ") " +
+            "ORDER BY t.created_at DESC " +
+            "LIMIT :limit", nativeQuery = true)
+    List<Template> findTemplatesAfterCursor(@Param("cursor") Integer cursor,
+                                            @Param("userId") Integer userId,
+                                            @Param("limit") Integer limit);
 
 
     Optional<Template> findByIdAndIsDeletedFalse(Integer id);

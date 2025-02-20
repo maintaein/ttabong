@@ -36,7 +36,10 @@ public class VolRecruitController {
             @RequestParam(defaultValue = "10") Integer limit) {
         log.info("1. 모집 공고 리스트 조회 <GET> \"/templates\"");
 
-        ReadVolRecruitsListResponseDto responseDto = volRecruitService.getTemplates(cursor, limit);
+        AuthDto authDto = (AuthDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        int userId = authDto.getUserId();
+
+        ReadVolRecruitsListResponseDto responseDto = volRecruitService.getTemplates(cursor, limit, userId);
         return ResponseEntity.ok().body(responseDto);
     }
 
