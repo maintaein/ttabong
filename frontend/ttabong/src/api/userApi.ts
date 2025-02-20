@@ -37,11 +37,13 @@ export const userApi = {
     const url = `/vol/volunteer-reactions/likes?${queryString}`;
     
     const response = await axiosInstance.get(url);
-    return response.data;
+    return {
+      likedTemplates: response.data
+    };
   },
 
   cancelLikedTemplates: async (reactionIds: number[]): Promise<void> => {
-    await axiosInstance.post('/vol/volunteer-reactions/cancel', {
+    await axiosInstance.patch('/vol/volunteer-reactions/cancel', {
       reactionIds
     });
   }
