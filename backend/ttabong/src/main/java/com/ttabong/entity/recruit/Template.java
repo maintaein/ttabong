@@ -85,7 +85,7 @@ public class Template {
         this.isDeleted = true;
     }
 
-    public static Template updateTemplate(Template oldTemplate, UpdateTemplateRequestDto dto, TemplateGroup group, Organization org, Category category) {
+    public static Template updateTemplate(UpdateTemplateRequestDto dto, TemplateGroup group, Organization org, Category category) {
         return Template.builder()
                 .group(group)
                 .org(org)
