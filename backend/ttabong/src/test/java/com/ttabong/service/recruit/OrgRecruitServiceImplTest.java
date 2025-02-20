@@ -6,8 +6,9 @@ import com.ttabong.entity.user.Organization;
 import com.ttabong.entity.user.User;
 import com.ttabong.repository.recruit.RecruitRepository;
 import com.ttabong.repository.recruit.TemplateRepository;
-import com.ttabong.servicejpa.recruit.OrgRecruitService;
+import com.ttabong.servicejpa.recruit.OrgRecruitServiceImpl;
 import com.ttabong.util.CacheUtil;
+import com.ttabong.util.TimeUtil;
 import com.ttabong.util.service.ImageService;
 import net.datafaker.Faker;
 import org.junit.jupiter.api.*;
@@ -17,7 +18,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -40,7 +40,7 @@ class OrgRecruitServiceImplTest {
     private CacheUtil cacheUtil;
 
     @InjectMocks
-    private OrgRecruitService orgRecruitService;
+    private OrgRecruitServiceImpl orgRecruitService;
 
     private Faker faker;
     private User mockUser;
@@ -58,7 +58,7 @@ class OrgRecruitServiceImplTest {
                 .phone(faker.phoneNumber().cellPhone())
                 .profileImage(faker.internet().image())
                 .isDeleted(false)
-                .createdAt(Instant.from(LocalDateTime.now()))
+                .createdAt(TimeUtil.toInstant(LocalDateTime.now()))
                 .totalVolunteerHours(BigDecimal.ZERO)
                 .build();
 
