@@ -24,8 +24,7 @@ export default function ReviewDetail() {
     error, 
     fetchReviewDetail, 
     addComment, 
-    deleteReview, 
-    updateVisibility,
+    deleteReview,
     updateComment,
     deleteComment 
   } = useReviewStore();
@@ -82,11 +81,6 @@ export default function ReviewDetail() {
     }
   };
 
-  const handleVisibilityToggle = async () => {
-    if (!reviewDetail?.reviewId) return;
-    await updateVisibility(reviewDetail.reviewId, reviewDetail.isPublic);
-  };
-
   const handleUpdateComment = async (commentId: number, content: string) => {
     await updateComment(commentId, content);
   };
@@ -113,9 +107,6 @@ export default function ReviewDetail() {
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={handleEdit}>
                 수정하기
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleVisibilityToggle}>
-                {reviewDetail.isPublic ? '비공개로 전환' : '공개로 전환'}
               </DropdownMenuItem>
               <DropdownMenuItem 
                 onClick={handleDelete}
