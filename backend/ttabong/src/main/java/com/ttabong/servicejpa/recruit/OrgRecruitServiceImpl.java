@@ -389,7 +389,14 @@ public class OrgRecruitServiceImpl implements OrgRecruitService {
                                     .groupName(group.getGroupName())
                                     .templates(group.getTemplates().stream().map(template -> {
                                                 List<ReviewImage> images = reviewImageRepository.findByTemplateId(template.getId());
-                                                List<String> imagesUrls = images.stream().map(ReviewImage::getImageUrl).toList();
+                                                List<String> imagesUrls = images.stream().map((image) -> {
+                                                    try {
+                                                        return imageUtil.getPresignedDownloadUrl(image.getImageUrl());
+                                                    } catch (Exception e) {
+                                                        log.info("이미지 다운로드 링크 생성 오류 발생");
+                                                        throw new RuntimeException("이미지 URL생성에서 오류 발생");
+                                                    }
+                                                }).toList();
                                                 return ReadTemplatesResponseDto.createTemplateDto(template, group, imagesUrls);
                                             }).toList()
                                     ).build();
