@@ -39,4 +39,10 @@ export const userApi = {
     const response = await axiosInstance.get(url);
     return response.data;
   },
+
+  cancelLikedTemplates: async (reactionIds: number[]): Promise<void> => {
+    await axiosInstance.post('/vol/volunteer-reactions/cancel', {
+      reactionIds
+    });
+  }
 }; 

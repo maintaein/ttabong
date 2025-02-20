@@ -126,18 +126,22 @@ export interface VolunteerRegisterRequest extends CreateUserRequest {
 
 export interface OrganizationRegisterRequest extends CreateUserRequest, CreateOrganizationRequest {}
 
-export interface LikedTemplate {
+interface LikedRecruit {
+  recruitId: number;
   templateId: number;
-  thumbnailImg: string;
-  activityLocation: string;
-  title: string;
-  recruit: {
-    deadline: string;
-  };
-  group: {
-    groupId: number;
-    groupName: string;
-  };
+  deadline: string;
+  activityDate: string;
+  activityStart: number;
+  activityEnd: number;
+  maxVolunteer: number;
+  participateVolCount: number;
+  status: string;
+}
+
+export interface LikedTemplate {
+  reactionId: number;
+  reactionCreatedAt: string;
+  recruit: LikedRecruit;
 }
 
 export interface GetLikedTemplatesResponse {
