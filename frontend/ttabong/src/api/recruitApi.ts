@@ -147,5 +147,12 @@ export const recruitApi = {
       console.error('템플릿 검색 실패:', error);
       throw error;
     }
+  },
+
+  reactToTemplate: async (templateId: number, isLike: boolean): Promise<void> => {
+    await axiosInstance.post('/vol/volunteer-reactions', {
+      templateId,
+      isLike
+    });
   }
 }; 
