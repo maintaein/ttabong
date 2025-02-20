@@ -567,22 +567,25 @@ public class ReviewServiceImpl implements ReviewService {
         Category category = Optional.ofNullable(template).map(Template::getCategory).orElse(null);
         Organization organization = review.getOrg();
 
-        List<String> objectPaths = reviewImageRepository.findAllImagesByReviewId(review.getId())
+        List<String> objectPaths = Optional.ofNullable(reviewImageRepository.findAllImagesByReviewId(review.getId()))
+                .orElse(Collections.emptyList())
                 .stream()
                 .filter(Objects::nonNull)
                 .toList();
 
-        List<String> imageUrls = objectPaths.stream()
+        List<String> imageUrls = Optional.ofNullable(objectPaths)
+                .orElse(Collections.emptyList())
+                .stream()
                 .map(path -> {
-                    if (path == null || path.isEmpty()) return null;
                     try {
-                        return imageUtil.getPresignedDownloadUrl(path);
+                        return (path != null && !path.isEmpty()) ? imageUtil.getPresignedDownloadUrl(path) : null;
                     } catch (Exception e) {
                         return null;
                     }
                 })
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+
 
         String profileImageUrl = null;
         if (writer.getProfileImage() != null) {
@@ -593,17 +596,20 @@ public class ReviewServiceImpl implements ReviewService {
             }
         }
 
-        List<ReviewDetailResponseDto.CommentDto> comments = reviewCommentRepository.findByReviewIdAndIsDeletedFalseOrderByCreatedAt(review.getId())
+        List<ReviewDetailResponseDto.CommentDto> comments = Optional
+                .ofNullable(reviewCommentRepository.findByReviewIdAndIsDeletedFalseOrderByCreatedAt(review.getId()))
+                .orElse(Collections.emptyList())
                 .stream()
                 .map(comment -> ReviewDetailResponseDto.CommentDto.builder()
                         .commentId(comment.getId())
-                        .writerId(comment.getWriter().getId())
-                        .writerName(comment.getWriter().getName())
+                        .writerId(comment.getWriter() != null ? comment.getWriter().getId() : null)
+                        .writerName(comment.getWriter() != null ? comment.getWriter().getName() : "알 수 없음")
                         .content(comment.getContent())
-                        .createdAt(comment.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime())
+                        .createdAt(comment.getCreatedAt() != null
+                                ? comment.getCreatedAt().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime()
+                                : null)
                         .build())
                 .collect(Collectors.toList());
-
 
         return ReviewDetailResponseDto.builder()
                 .reviewId(review.getId())
