@@ -93,7 +93,7 @@ public class OrgRecruitController {
         return ResponseEntity.ok().body(response);
     }
 
-    @PatchMapping("/templates")
+    @PostMapping("/templates")
     public ResponseEntity<UpdateTemplateResponse> updateTemplate(
             @RequestBody UpdateTemplateRequestDto updateTemplateDto,
             @AuthenticationPrincipal AuthDto authDto) {
