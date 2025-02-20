@@ -2,9 +2,11 @@ package com.ttabong.dto.recruit.responseDto.org;
 
 import com.ttabong.entity.recruit.Template;
 import com.ttabong.entity.recruit.TemplateGroup;
+import com.ttabong.util.TimeUtil;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Getter
@@ -57,7 +59,7 @@ public class ReadTemplatesResponseDto {
                 .contactName(template.getContactName())
                 .contactPhone(template.getContactPhone())
                 .description(template.getDescription())
-                .createdAt(LocalDateTime.from(template.getCreatedAt()))
+                .createdAt(TimeUtil.toLocalDateTime(template.getCreatedAt()))
                 .build();
     }
 }
