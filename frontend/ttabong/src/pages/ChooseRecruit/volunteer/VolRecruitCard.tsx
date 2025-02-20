@@ -88,7 +88,7 @@ export const RecruitCard: React.FC<RecruitCardProps> = ({
             신청 취소
           </Button>
         )}
-        {isCompletedActivity && (
+        {isCompletedActivity && application.reviewId === null && (
           <Button 
             variant="default"
             onClick={handleReviewClick}
