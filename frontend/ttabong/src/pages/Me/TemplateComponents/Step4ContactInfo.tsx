@@ -1,5 +1,6 @@
 import { TemplateFormData } from "@/types/template";
 import React from "react";
+import { toast } from "sonner";
 
 interface Step4Props {
   templateData: {
@@ -28,6 +29,30 @@ const Step4ContactInfo: React.FC<Step4Props> = ({ templateData, setTemplateData 
     }));
   };
 
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+
+    // 한글만 허용 (자음, 모음 포함)
+    if (!/^[ㄱ-ㅎㅏ-ㅣ가-힣]*$/.test(value)) {
+      toast.error('한글만 입력 가능합니다.');
+      return;
+    }
+
+    // 공백 체크
+    if (/\s/.test(value)) {
+      toast.error('공백은 사용할 수 없습니다.');
+      return;
+    }
+
+    // 5자 이하만 허용
+    if (value.length <= 5) {
+      setTemplateData(prev => ({
+        ...prev,
+        contactName: value
+      }));
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div>
@@ -35,13 +60,14 @@ const Step4ContactInfo: React.FC<Step4Props> = ({ templateData, setTemplateData 
         <input
           type="text"
           className="w-full p-2 border rounded-md"
-          placeholder="김싸피"
+          placeholder="홍길동 (한글 5자 이내)"
           value={templateData.contactName}
-          onChange={(e) => setTemplateData((prev:TemplateFormData) => ({
-            ...prev,
-            contactName: e.target.value
-          }))}
+          onChange={handleNameChange}
+          maxLength={5}
         />
+        <div className="text-sm text-gray-500 mt-1">
+          {templateData.contactName.length}/5
+        </div>
       </div>
       
       <div>

@@ -9,29 +9,7 @@ import type {
   SearchTemplate
 } from '@/types/recruitType';
 import { AxiosError } from 'axios';
-
-// RecruitItem 타입 추가
-interface RecruitItem {
-  recruit: {
-    recruitId: number;
-    status: OrgRecruitStatus;
-    deadline: string;
-    activityDate: string;
-    activityStart: number;
-    activityEnd: number;
-    maxVolunteer: number;
-    participateVolCount: number;
-    createdAt: string;
-  };
-  group: {
-    groupId: number;
-    groupName: string;
-  };
-  template: {
-    templateId: number;
-    title: string;
-  };
-}
+import { RecruitItem } from '@/types/recruit';  // 기존 타입 사용
 
 interface RecruitListItem {  // 목록용 간단한 타입
   recruit: {
@@ -61,10 +39,10 @@ interface SearchTemplatesParams {
   };
 }
 
-interface RecruitStore {
+interface RecruitState {
+  recruits: RecruitItem[];  // 여기서 RecruitItem 타입 사용
   myRecruits: Application[] | null;
   orgRecruits: OrgRecruit[] | null;
-  recruits: RecruitItem[];
   isLoading: boolean;
   error: string | null;
   hasMore: boolean;
@@ -90,10 +68,10 @@ interface RecruitStore {
   clearSearchResults: () => void;
 }
 
-export const useRecruitStore = create<RecruitStore>((set) => ({
+export const useRecruitStore = create<RecruitState>((set) => ({
+  recruits: [],
   myRecruits: null,
   orgRecruits: null,
-  recruits: [],
   isLoading: false,
   error: null,
   hasMore: true,
@@ -215,14 +193,11 @@ export const useRecruitStore = create<RecruitStore>((set) => ({
   resetSelectedRecruitId: () => set({ selectedRecruitId: null }),
   fetchRecruits: async () => {
     try {
-      set({ isLoading: true, error: null });
       const response = await recruitApi.getOrgRecruits();
       set({ recruits: response.recruits });
-    } catch (error: unknown) {
+    } catch (error) {
       console.error('공고 목록 조회 실패:', error);
       set({ error: error instanceof AxiosError ? error.response?.data?.message || '공고 목록을 불러오는데 실패했습니다.' : '공고 목록을 불러오는데 실패했습니다.' });
-    } finally {
-      set({ isLoading: false });
     }
   },
   applyRecruit: async (recruitId: number) => {

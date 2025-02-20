@@ -15,6 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "react-hot-toast";
+import { Input } from "@/components/ui/input";
 
 const Step0GroupSelection: React.FC<StepProps> = ({ templateData, setTemplateData }) => {
   const [showDialog, setShowDialog] = useState(false);
@@ -38,6 +40,32 @@ const Step0GroupSelection: React.FC<StepProps> = ({ templateData, setTemplateDat
     }
   };
 
+  // 그룹명 입력 핸들러
+  const handleGroupNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    
+    // 특수문자 체크
+    if (/[!@#$%^&*(),.?":{}|<>]/.test(value)) {
+      toast.error('특수문자는 사용할 수 없습니다.');
+      return;
+    }
+
+    // 20자 이하만 허용
+    if (value.length <= 20) {
+      setNewGroupName(value);
+    }
+  };
+
+  // 그룹 추가 핸들러
+  const handleAddGroup = () => {
+    if (!newGroupName.trim()) {
+      toast.error('그룹명을 입력해주세요.');
+      return;
+    }
+
+    handleCreateGroup();
+  };
+
   // 봉사 분야 목록
   const volunteerFields = [
     "교육",
@@ -49,19 +77,22 @@ const Step0GroupSelection: React.FC<StepProps> = ({ templateData, setTemplateDat
     "기타"
   ];
 
-  // 봉사 분야 토글 함수
-  const toggleField = (field: string) => {
+  // 봉사 분야 토글 함수를 선택 함수로 변경
+  const selectField = (field: string) => {
     setTemplateData(prev => ({
       ...prev,
-      volunteerField: prev.volunteerField.includes(field)
-        ? prev.volunteerField.filter(f => f !== field)
-        : [...prev.volunteerField, field]
+      volunteerField: [field]  // 배열이지만 항상 하나의 값만 포함
     }));
   };
 
   // 오늘 날짜 생성
   const today = new Date();
   today.setHours(0, 0, 0, 0); // 시간을 00:00:00으로 설정
+
+  // 다이얼로그 열기 핸들러 수정
+  const openDialog = () => {
+    setShowDialog(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -96,25 +127,35 @@ const Step0GroupSelection: React.FC<StepProps> = ({ templateData, setTemplateDat
       </div>
 
       {/* 🔹 그룹 추가 버튼 */}
-      <Button className="mt-2" onClick={() => setShowDialog(true)}>
+      <Button className="mt-2" onClick={openDialog}>
         그룹 추가
       </Button>
 
       {/* 🔹 그룹 추가 다이얼로그 */}
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+      <Dialog open={showDialog} onOpenChange={(open) => {
+        setShowDialog(open);
+        if (!open) {
+          setNewGroupName('');
+        }
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>새 그룹 추가</DialogTitle>
           </DialogHeader>
-          <input
-            type="text"
-            className="w-full p-2 border rounded-md"
-            placeholder="그룹명 입력"
+          <Input
             value={newGroupName}
-            onChange={(e) => setNewGroupName(e.target.value)}
+            onChange={handleGroupNameChange}
+            placeholder="그룹명 입력 (최대 20자, 특수문자 제외)"
+            maxLength={20}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' && newGroupName.trim()) {
+                e.preventDefault();
+                handleAddGroup();
+              }
+            }}
           />
           <DialogFooter>
-            <Button onClick={handleCreateGroup}>추가</Button>
+            <Button onClick={handleAddGroup}>추가</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -203,25 +244,25 @@ const Step0GroupSelection: React.FC<StepProps> = ({ templateData, setTemplateDat
 
       </div>
 
-      {/* 봉사 분야 선택 추가 */}
-      <div className="mt-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">봉사 분야</label>
-        <div className="grid grid-cols-3 gap-2">
+      {/* 봉사 분야 선택 UI */}
+      <div>
+        <Label className="text-base">봉사 분야 선택</Label>
+        <div className="grid grid-cols-3 gap-2 mt-3">
           {volunteerFields.map((field) => (
             <button
               key={field}
-              onClick={() => toggleField(field)}
-              className={`px-3 py-1.5 rounded-full text-sm ${
-                templateData.volunteerField?.includes(field) || false
-                  ? "bg-primary text-white"
-                  : "bg-gray-100"
+              type="button"
+              onClick={() => selectField(field)}
+              className={`p-2 rounded-md border ${
+                templateData.volunteerField[0] === field  // 첫 번째(유일한) 값과 비교
+                  ? "bg-blue-500 text-white"
+                  : "bg-white hover:bg-gray-50"
               }`}
             >
               {field}
             </button>
           ))}
         </div>
-        <p className="text-xs text-gray-500 mt-1">* 다중선택 가능</p>
       </div>
     </div>
   );
