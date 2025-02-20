@@ -571,6 +571,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .stream()
                 .filter(Objects::nonNull)
                 .toList();
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>> "+objectPaths);
 
         List<String> imageUrls = objectPaths.stream()
                 .map(path -> {
