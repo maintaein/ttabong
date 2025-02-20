@@ -9,6 +9,7 @@ import {
   OrganizationRegisterRequest 
 } from '@/types/userType';
 import type { LikedTemplate } from '@/types/userType';
+import { toast } from "@/hooks/use-toast";
 
 interface UserState {
   userId: string | null;
@@ -26,6 +27,11 @@ interface UserState {
   hasMoreLikes: boolean;
   isLoadingLikes: boolean;
   fetchLikedTemplates: (params?: { cursor?: number; limit?: number }) => Promise<void>;
+  isEditMode: boolean;
+  selectedReactions: number[];
+  setEditMode: (isEdit: boolean) => void;
+  toggleReactionSelection: (reactionId: number) => void;
+  cancelSelectedReactions: () => Promise<void>;
 }
 
 // store 초기화 시 토큰 체크
@@ -62,6 +68,8 @@ export const useUserStore = create<UserState>()(
       likedTemplates: [],
       hasMoreLikes: true,
       isLoadingLikes: false,
+      isEditMode: false,
+      selectedReactions: [],
 
       login: async (email, password, userType) => {
         set({ isLoading: true, error: null });
@@ -165,6 +173,59 @@ export const useUserStore = create<UserState>()(
           set({ isLoadingLikes: false });
         }
       },
+
+      setEditMode: (isEdit) => {
+        set({ 
+          isEditMode: isEdit,
+          selectedReactions: isEdit ? [] : get().selectedReactions 
+        });
+      },
+
+      toggleReactionSelection: (reactionId) => {
+        set((state) => {
+          const selected = state.selectedReactions;
+          const isSelected = selected.includes(reactionId);
+          return {
+            selectedReactions: isSelected 
+              ? selected.filter(id => id !== reactionId)
+              : [...selected, reactionId]
+          };
+        });
+      },
+
+      cancelSelectedReactions: async () => {
+        const selectedIds = get().selectedReactions;
+        if (selectedIds.length === 0) {
+          toast({
+            variant: "destructive",
+            title: "삭제 실패",
+            description: "삭제할 내역을 선택해주세요."
+          });
+          return;
+        }
+
+        try {
+          await userApi.cancelLikedTemplates(selectedIds);
+          set((state) => ({
+            likedTemplates: state.likedTemplates.filter(
+              template => !selectedIds.includes(template.reactionId)
+            ),
+            selectedReactions: [],
+            isEditMode: false
+          }));
+          toast({
+            title: "삭제 성공",
+            description: "선택한 관심 봉사가 삭제되었습니다."
+          });
+        } catch (error) {
+          console.error('관심 봉사 삭제 실패:', error);
+          toast({
+            variant: "destructive",
+            title: "삭제 실패",
+            description: "관심 봉사 삭제에 실패했습니다."
+          });
+        }
+      }
     }),
     {
       name: 'user-storage',
@@ -173,7 +234,9 @@ export const useUserStore = create<UserState>()(
         userName: state.userName,
         userEmail: state.userEmail,
         userType: state.userType,
-        likedTemplates: state.likedTemplates
+        likedTemplates: state.likedTemplates,
+        isEditMode: state.isEditMode,
+        selectedReactions: state.selectedReactions
       }),
     }
   )

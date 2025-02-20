@@ -91,12 +91,12 @@ export const useRecruitStore = create<RecruitState>((set) => ({
       if (params?.cursor) {
         set((state) => ({ 
           myRecruits: [...(state.myRecruits || []), ...response],
-          hasMore: response.length === (params.limit || 10)
+          hasMore: response.length === (params.limit || 500)
         }));
       } else {
         set({ 
           myRecruits: response,
-          hasMore: response.length === (params?.limit || 10)
+          hasMore: response.length === (params?.limit || 500)
         });
       }
     } catch (error) {
@@ -263,13 +263,13 @@ export const useRecruitStore = create<RecruitState>((set) => ({
         set((state) => ({
           searchResults: [...state.searchResults, ...response.templates],
           searchNextCursor: response.nextCursor,
-          searchHasMore: response.templates.length === (params.limit || 10)
+          searchHasMore: response.templates.length === (params.limit || 500)
         }));
       } else {
         set({
           searchResults: response.templates,
           searchNextCursor: response.nextCursor,
-          searchHasMore: response.templates.length === (params.limit || 10)
+          searchHasMore: response.templates.length === (params.limit || 500)
         });
       }
     } catch (error) {

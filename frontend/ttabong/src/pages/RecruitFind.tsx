@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Bell } from "lucide-react";
-import axiosInstance from "../api/axiosInstance"; // axiosInstance 경로 확인 필요
+import axiosInstance from "../api/axiosInstance"; 
 
 const RecruitFind: React.FC = () => {
   const [posts, setPosts] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [region, setRegion] = useState<string>("서울"); // 기본 지역값
+  const [region, setRegion] = useState<string>("서울"); 
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // 🔹 API에서 공고 데이터 불러오기
   const fetchPosts = async () => {
     setLoading(true);
     try {
@@ -33,12 +32,12 @@ const RecruitFind: React.FC = () => {
     setLoading(false);
   };
 
-  // 🔹 검색 버튼 클릭 시 데이터 불러오기
+
   const handleSearch = () => {
     fetchPosts();
   };
 
-  // 🔹 최초 마운트 시 데이터 로딩
+
   useEffect(() => {
     fetchPosts();
   }, []);

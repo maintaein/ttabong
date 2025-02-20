@@ -19,8 +19,24 @@ const Step1AnnouncementDetails: React.FC<Step1Props> = ({
 }) => {
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      const newFiles = Array.from(event.target.files).slice(0, 10 - imageFiles.length);
-      setImageFiles(prev => [...prev, ...newFiles]);  // File 객체 저장
+      const files = Array.from(event.target.files);
+      
+      // 이미지 파일 형식 체크
+      const invalidFiles = files.filter(file => !file.type.startsWith('image/'));
+      if (invalidFiles.length > 0) {
+        toast.error('이미지 파일만 업로드 가능합니다.');
+        return;
+      }
+
+      // 파일 크기 제한 (각 파일 5MB 이하)
+      const oversizedFiles = files.filter(file => file.size > 5 * 1024 * 1024);
+      if (oversizedFiles.length > 0) {
+        toast.error('파일 크기는 5MB 이하여야 합니다.');
+        return;
+      }
+
+      const newFiles = files.slice(0, 10 - imageFiles.length);
+      setImageFiles(prev => [...prev, ...newFiles]);
       
       // URL 생성하여 미리보기용으로 사용
       const imageUrls = newFiles.map(file => URL.createObjectURL(file));

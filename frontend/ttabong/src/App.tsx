@@ -9,9 +9,9 @@ import RecruitDetail from '@/pages/ChooseRecruit/org/RecruitDetail';
 
 // Pages
 import Login from '@/pages/Login';
-import MainPage from '@/components/ui/tlqkf';
+import MainPage from '@/pages/MainPage';
 import OrgMainPage from '@/pages/OrgMainPage';
-import RecruitFind from '@/components/ui/whwrkxsp';
+import RecruitFind from '@/pages/RecruitFind_new'
 import ReviewFind from '@/pages/ReviewFind';
 import ReviewDetail from '@/pages/ReviewFind/ReviewDetail';
 import ReviewDetailList from '@/pages/ReviewFind/ReviewDetailList';
