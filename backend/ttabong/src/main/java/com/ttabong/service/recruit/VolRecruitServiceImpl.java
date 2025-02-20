@@ -52,7 +52,7 @@ public class VolRecruitServiceImpl implements VolRecruitService {
 
         List<ReadVolRecruitsListResponseDto.TemplateWrapper> templateDetails = templates.stream()
                 .map(template -> new ReadVolRecruitsListResponseDto.TemplateWrapper(
-                        TemplateDto.from(template),
+                        TemplatePreviewDto.from(template),
                         GroupDto.from(template.getGroup()),
                         template.getOrg() != null ? OrganizationDto.from(template.getOrg()) : null
                 ))
@@ -61,7 +61,7 @@ public class VolRecruitServiceImpl implements VolRecruitService {
         return new ReadVolRecruitsListResponseDto(templateDetails);
     }
 
-    // 2. 특정 모집 공고 상세 조회
+    // 2. 특정 모집 템플릿 상세 조회
     @Override
     public ReadRecruitDetailResponseDto getTemplateById(Integer templateId) {
         return templateRepository.findByIdAndIsDeletedFalse(templateId)
@@ -145,7 +145,6 @@ public class VolRecruitServiceImpl implements VolRecruitService {
         // VolunteerReaction 테이블에서 좋아요한 기록 조회 (내림차순, cursor 적용)
         List<VolunteerReaction> likedReactions = volunteerReactionRepository.findLikedReactions(volunteer, cursor, limit);
 
-        // 조회된 각 레코드를 LikedRecruitDto로 매핑
         return likedReactions.stream()
                 .map(vr -> new LikedRecruitDto(
                         vr.getId(),

@@ -20,6 +20,7 @@ public class RecruitDto {
     private Integer maxVolunteer;
     private Integer participateVolCount;
     private String status;
+    private Instant updatedAt;
     private Instant createdAt;
 
     public static RecruitDto from(Recruit recruit) {
@@ -32,6 +33,7 @@ public class RecruitDto {
                 .maxVolunteer(recruit.getMaxVolunteer())
                 .participateVolCount(recruit.getParticipateVolCount())
                 .status(recruit.getStatus())
+                .updatedAt(recruit.getUpdatedAt())
                 .createdAt(recruit.getCreatedAt())
                 .build();
     }

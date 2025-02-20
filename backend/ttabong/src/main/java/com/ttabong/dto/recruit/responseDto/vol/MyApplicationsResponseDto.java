@@ -15,7 +15,7 @@ public class MyApplicationsResponseDto {
     private String status;
     private Boolean evaluationDone;
     private Instant createdAt;
-    private TemplateDto template;
+    private TemplatePreviewDto template;
     private GroupDto group;
     private RecruitDto recruit;
 
@@ -25,7 +25,7 @@ public class MyApplicationsResponseDto {
                 .status(application.getStatus())
                 .evaluationDone(application.getEvaluationDone())
                 .createdAt(application.getCreatedAt())
-                .template(TemplateDto.from(application.getRecruit().getTemplate()))
+                .template(TemplatePreviewDto.from(application.getRecruit().getTemplate()))
                 .group(GroupDto.from(application.getRecruit().getTemplate().getGroup()))
                 .recruit(RecruitDto.from(application.getRecruit()))
                 .build();
