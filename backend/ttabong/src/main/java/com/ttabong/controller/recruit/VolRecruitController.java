@@ -111,15 +111,15 @@ public class VolRecruitController extends LoggerConfig {
 
     // 7. "좋아요"한 템플릿 목록 조회
     @GetMapping("/volunteer-reactions/likes")
-    public ResponseEntity<Map<String, Object>> myLikesOnRecruits(
-            @RequestParam(defaultValue = "0") Integer cursor,
+    public ResponseEntity<List<LikedRecruitDto>> myLikesOnRecruits(
+            @RequestParam(required = false) Integer cursor,
             @RequestParam(defaultValue = "10") Integer limit) {
-        logger.info("7. \"좋아요\"한 템플릿 목록 조회 <GET> \"/volunteer-reactions/likes\"");
+
         AuthDto authDto = (AuthDto) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         int userId = authDto.getUserId();
 
-        Map<String, Object> response = volRecruitService.getLikedTemplates(userId, cursor, limit);
-        return ResponseEntity.ok().body(response);
+        List<LikedRecruitDto> likedRecruits = volRecruitService.getLikedRecruits(userId, cursor, limit);
+        return ResponseEntity.ok(likedRecruits);
     }
 
     // 8. 특정 템플릿 "좋아요" 혹은 "싫어요"하기

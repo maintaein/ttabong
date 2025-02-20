@@ -112,4 +112,15 @@ public interface RecruitRepository extends JpaRepository<Recruit, Integer> {
 
     @Query("SELECT t.group.id FROM Recruit r JOIN r.template t WHERE r.id = :recruitId")
     Optional<Integer> findGroupIdByRecruitId(@Param("recruitId") Integer recruitId);
+
+    @Query("SELECT r FROM Recruit r WHERE r.template.id IN :templateIds AND r.isDeleted = FALSE")
+    List<Recruit> findRecruitsByTemplateIds(@Param("templateIds") List<Integer> templateIds);
+
+    @Query("SELECT DISTINCT r FROM Recruit r JOIN r.volunteerReactions vr " +
+            "WHERE vr.volunteer.id = :userId " +
+            "  AND vr.isLike = true " +
+            "  AND vr.isDeleted = false " +
+            "  AND r.template.id IN :templateIds")
+    List<Recruit> findLikedRecruitsByVolunteerAndTemplateIds(@Param("userId") Integer userId,
+                                                             @Param("templateIds") List<Integer> templateIds);
 }

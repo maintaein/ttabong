@@ -20,7 +20,7 @@ public interface VolRecruitService {
 
     Optional<MyApplicationDetailResponseDto> getRecruitDetail(Integer userId, Integer recruitId);
 
-    Map<String, Object> getLikedTemplates(Integer userId, Integer cursor, Integer limit);
+    List<LikedRecruitDto> getLikedRecruits(Integer userId, Integer cursor, Integer limit);
 
     List<Integer> saveReaction(Integer userId, Integer templateId, Boolean isLike);
 
