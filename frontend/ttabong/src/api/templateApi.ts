@@ -29,7 +29,7 @@ export const templateApi = {
       console.log('템플릿 목록 요청 파라미터:', { cursor, limit });  // 요청 로그
       const response = await axiosInstance.get('/org/templates', {
         params: { 
-          cursor: cursor || 1,  // 기본값 1
+          cursor: cursor || undefined,  // 기본값 1
           limit 
         }
       });
@@ -175,13 +175,6 @@ export const templateApi = {
       console.error('Template update error:', error);
       throw error;
     }
-  },
-
-  // 이미지 URL 생성 함수 추가
-  getTemplateImageUrls: (templateId: number, imageCount: number) => {
-    return Array.from({ length: imageCount }, (_, index) => 
-      `http://ttabong.store:9000/ttabong-bucket/${templateId}_${index + 1}.webp`
-    );
   },
 
   uploadImage: async (formData: FormData) => {
