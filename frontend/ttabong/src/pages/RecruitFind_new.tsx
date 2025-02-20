@@ -24,14 +24,14 @@ import {
   FormMessage
 } from '@/components/ui/form';
 
-const REGIONS = ['서울', '부산', '대구', '인천', '광주', '대전', '울산', '세종', '경기', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주'];
+const REGIONS = ['전체', '서울', '부산', '대구', '인천', '광주', '대전', '울산', '세종', '경기', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주'];
 const STATUS_OPTIONS = [
   { value: 'RECRUITING', label: '모집중' },
   { value: 'RECRUITMENT_CLOSED', label: '모집마감' },
   { value: 'ACTIVITY_COMPLETED', label: '활동완료' }
 ];
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 500;
 
 const searchSchema = z.object({
   templateTitle: z.string()
@@ -72,7 +72,7 @@ export default function RecruitFind() {
       templateTitle: '',
       organizationName: '',
       status: '',
-      region: '서울',
+      region: '전체',
       activityDateStart: '',
       activityDateEnd: ''
     }
@@ -99,16 +99,17 @@ export default function RecruitFind() {
     try {
       clearSearchResults();
       await searchTemplates({
+        cursor: 0,
         limit: ITEMS_PER_PAGE,
         templateTitle: values.templateTitle || undefined,
         searchConditions: {
           organizationName: values.organizationName || undefined,
           status: values.status || undefined,
-          region: values.region,
           activityDate: values.activityDateStart ? {
             start: values.activityDateStart,
             end: values.activityDateEnd || values.activityDateStart
-          } : undefined
+          } : undefined,
+          region: values.region === '전체' ? undefined : values.region
         }
       });
     } catch (error) {
