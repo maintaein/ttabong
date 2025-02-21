@@ -150,17 +150,17 @@ const OrgMainPage: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full">
-      <div
-        className="flex-1 bg-gray-50 p-4 space-y-6 mb-24"
-      >
+      <div className="flex-1 bg-gray-50 p-4 space-y-6 mb-24">
         {groups && groups.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-[1200px] mx-auto">
             {groups.map((group) => (
-              <div key={group.groupId}>
-                <div className="p-4 bg-white shadow-md rounded-lg">
+              <div key={group.groupId} className="w-full">
+                <div className="p-4 bg-white shadow-md rounded-lg h-full">
                   <div className="flex justify-between items-center mb-4 border-b pb-3">
                     <h2 className="text-lg font-semibold flex items-center">
-                      <span className="truncate" title={group.groupName}>{group.groupName}</span>
+                      <span className="truncate max-w-[200px]" title={group.groupName}>
+                        {group.groupName}
+                      </span>
                       <span className="text-sm text-gray-500 ml-2">(그룹)</span>
                     </h2>
                     <div className="flex gap-2">
